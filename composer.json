@@ -1,0 +1,32 @@
+{
+  "name": "ffan/dop",
+  "description": "FFan DOP",
+  "keywords": [
+    "ffan",
+    "dop"
+  ],
+  "type": "composer",
+  "authors": [
+    {
+      "name": "huangshunzhao",
+      "email": "huangshunzhao@wanda.cn",
+      "role": "Founder"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0",
+    "ffan/php/utils": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "ffan\\dop\\" : ""
+    }
+  },
+  "minimum-stability": "dev",
+  "archive": {
+    "exclude": [
+      "test",
+      ".gitignore"
+    ]
+  }
+}
