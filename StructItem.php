@@ -11,7 +11,7 @@ class StructItem extends Item
      * @var int 类型
      */
     protected $type = ItemType::STRUCT;
-    
+
     /**
      * @var string 结构体名称
      */
@@ -25,7 +25,7 @@ class StructItem extends Item
     public function setStructName($struct_name)
     {
         if (!$this->validName($struct_name)) {
-            throw new DOPException('struct name error!'. $this->getDocInfo());
+            throw new DOPException('struct name error!' . $this->getDocInfo());
         }
         $this->struct_name = $struct_name;
     }

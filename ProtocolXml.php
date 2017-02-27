@@ -171,10 +171,22 @@ class ProtocolXml
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->getDocInfo());
-                $struct_name = substr($type_str, 1, -1);
-                
+                $struct_name = trim(substr($type_str, 1, -1));
+                if (!empty($struct_name)) {
+                    $item_obj->setStructName($struct_name);
+                }
+                break;
+            case ItemType::MAP:
                 break;
         }
+    }
+
+    /**
+     * 解析私有的struct
+     */
+    private function parsePrivateStruct()
+    {
+        
     }
 
     /**
