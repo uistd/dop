@@ -1,23 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
-    <struct name="role_info">
-        <username type="str" note="用户名"/>
-        <name type="string" note="真实姓名"/>
-        <mobile type="varchar" note="手机号"/>
-        <email type="varchar" note="电子邮件"/>
-        <level type="int" note="等级"/>
-        <address type="varchar" note="地址"/>
-        <gender type="int" note="性别"/>
-    </struct>
-    <action name="demo_role">
+    <action name="add">
         <request>
-            <role_id type="int"/>
+            <int name="a"/>
+            <int name="b"/>
         </request>
-        <request method="post">
-            <role_id type="str"/>
-        </request>
-        <response>{role_info}</response>
-        <response>[int => [int=>['aaa']]]</response>
-        <response><struct name="role_info" type="<map>"/></response>
+        <response>
+            <int name="result"/>
+        </response>
     </action>
 </protocol>

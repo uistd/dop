@@ -1,6 +1,7 @@
 <?php
 namespace ffan\dop;
 
+use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
@@ -35,6 +36,11 @@ class ProtocolXml
     private $namespace;
 
     /**
+     * @var string 类名
+     */
+    private $class_name;
+
+    /**
      * ProtocolXml constructor.
      * @param string $base_path 基础目录
      * @param string $file_name 协议文件
@@ -55,6 +61,7 @@ class ProtocolXml
         if (DIRECTORY_SEPARATOR !== $dir_name[0]) {
             $dir_name = DIRECTORY_SEPARATOR . $dir_name;
         }
+        $this->class_name = basename($file_name, '.xml');
         $this->namespace = $dir_name;
         $this->parse();
     }
@@ -67,7 +74,7 @@ class ProtocolXml
         $this->path_handle = new \DOMXpath($this->xml_handle);
         $this->queryStruct();
     }
-    
+
     /**
      * 解析公用struct
      */
@@ -77,20 +84,20 @@ class ProtocolXml
         if (null === $node_list) {
             return;
         }
-        for ( $i = 0; $i < $node_list->length; ++$i )
-        {
+        for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
-            $this->parseStruct($struct);
+            $this->parseStruct($this->class_name, $struct);
         }
     }
 
     /**
      * 解析struct
+     * @param string $class_name 上级类名
      * @param \DomElement $struct
      * @throws DOPException
      */
-    private function parseStruct(\DomElement $struct)
+    private function parseStruct($class_name, \DomElement $struct)
     {
         if (!$struct->hasAttribute('name')) {
             $msg = $this->errMsg('Struct must have name attribute', $struct->getLineNo());
@@ -98,56 +105,52 @@ class ProtocolXml
         }
         $node_list = $struct->childNodes;
         $name = $struct->getAttribute('name');
-        $item_struct = new StructItem($name, $this->getDocInfo());
-        for ( $i = 0; $i < $node_list->length; ++$i )
-        {
+        $struct_class_name = $class_name . ucfirst($name) . 'Struct';
+        for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
-            $item = $this->parseItem($node);
+            $item = $this->parseItem($struct_class_name, $node);
+
         }
     }
 
     /**
      * 解析字段
+     * @param string $class_name 父级的类名
      * @param \DOMNode $item
-     * @return Item;
+     * @param bool $name_require
+     * @return Item ;
      * @throws DOPException
      */
-    private function parseItem(\DOMNode $item)
+    private function parseItem($class_name, \DOMNode $item, $name_require = true)
     {
         /** @var \DOMElement $item */
         $this->current_line_no = $item->getLineNo();
-        if (!$item->hasAttribute('type')) {
-            $msg = $this->errMsg('Attribute `type` is required');
-            throw new DOPException($msg);
+        if (!$item->hasAttribute('name')) {
+            throw new DOPException($this->errMsg('Attribute `name` required!'));
         }
-        $type_str = trim($item->getAttribute('type'));
-        if (empty($type_str)) {
-            $msg = $this->errMsg('Attribute `type` is required');
-            throw new DOPException($msg);
+        if ($name_require) {
+            $item_name = trim($item->getAttribute('name'));
+            if (empty($item_name) || !FFanStr::isValidVarName($item_name)) {
+                throw new DOPException($this->errMsg('Invalid `name` attribute'));
+            }
+            $class_name .= ucfirst($item_name);
         }
-        $item_type = ItemType::getType($type_str);
-        if (null !== $item_type) {
-            $class_name = ItemType::getClassName($item_type);
-            /** @var Item $item_obj */
-            $item_obj = new $class_name($item->nodeName, $this->getDocInfo());
-        }
+        
+        $item_obj = $this->makeItemObject($class_name, $item);
     }
 
     /**
      * 生成item对象
      * @param string $name
-     * @param string $type_str 类型字符
-     * @param \DOMNode $node 节点
-     * @param null $parent_type 上一级类型
+     * @param \DOMNode $item 节点
      * @return Item
      * @throws DOPException
      */
-    private function makeItemObject($name, $type_str, \DOMNode $node, $parent_type = null)
+    private function makeItemObject($name, \DOMNode $item)
     {
-        $type_str = trim($type_str);
-        $type = ItemType::getType($type_str);
-        if (null === $type) {
-            throw new DOPException($this->errMsg('Unknown type_str'));
+        $type = ItemType::getType($item->nodeName);
+        if (null !== $type) {
+            throw new DOPException($this->errMsg('Unknown type `' . $item->nodeName . '`'));
         }
         switch ($type) {
             case ItemType::INT:
@@ -165,13 +168,10 @@ class ProtocolXml
                 break;
             case ItemType::ARR:
                 $item_obj = new ListItem($name, $this->getDocInfo());
-                $sub_type = substr($type_str, 1, -1);
-                $name .= 'Arr';
-                $item_obj->setItem($this->makeItemObject($name, $sub_type, $node));
+                $list_item = $this->parseList($name, $item);
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->getDocInfo());
-                $struct_name = trim(substr($type_str, 1, -1));
                 if (!empty($struct_name)) {
                     $item_obj->setStructName($struct_name);
                 }
@@ -182,11 +182,30 @@ class ProtocolXml
     }
 
     /**
+     * 解析list
+     * @param string $name
+     * @param \DOMNode $item 节点
+     * @return Item
+     * @throws DOPException
+     */
+    private function parseList($name, \DOMNode $item)
+    {
+        $item_list = $item->childNodes;
+        if (0 === $item_list->length) {
+            throw new DOPException($this->errMsg('Unknown list type'));
+        } elseif ($item_list->length > 1) {
+            throw new DOPException($this->errMsg('List must have only one type'));
+        }
+        $name .= 'List';
+        return $this->parseItem($name, $item_list->item(0), false);
+    }
+
+    /**
      * 解析私有的struct
      */
     private function parsePrivateStruct()
     {
-        
+
     }
 
     /**
@@ -225,7 +244,7 @@ class ProtocolXml
         $list_type = trim(substr($type, 1, -1));
         //如果中间包含 => 表示map
         if (false !== strpos($list_type, '=>')) {
-            
+
         }
         if (empty($list_type)) {
             throw new DOPException($this->errMsg('list error'));
@@ -244,7 +263,7 @@ class ProtocolXml
      */
     private function errMsg($msg, $line_no = 0)
     {
-        return $msg .$this->getDocInfo($line_no). PHP_EOL;
+        return $msg . $this->getDocInfo($line_no) . PHP_EOL;
     }
 
     /**
@@ -257,6 +276,6 @@ class ProtocolXml
         if (0 === $line_no) {
             $line_no = $this->current_line_no;
         }
-        return 'File:'.$this->file_name .' Line:'. $line_no;
+        return 'File:' . $this->file_name . ' Line:' . $line_no;
     }
 }

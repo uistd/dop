@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol>
+    <struct name="result">
+        <int name="status" note="状态码"/>
+        <string name="message" note="消息"/>
+        <int name="data" note="数据"/>
+    </struct>
+</protocol>

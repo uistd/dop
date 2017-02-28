@@ -1,23 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
     <struct name="role_info">
-        <username type="str" note="用户名"/>
-        <name type="string" note="真实姓名"/>
-        <mobile type="varchar" note="手机号"/>
-        <email type="varchar" note="电子邮件"/>
-        <level type="int" note="等级"/>
-        <address type="varchar" note="地址"/>
-        <gender type="int" note="性别"/>
+        <string name="user_name" note="用户名"/>
+        <string name="name" note="真实姓名"/>
+        <string name="mobile" note="手机号"/>
+        <string name="email" note="电子邮件"/>
+        <int name="level" note="等级"/>
+        <string name="address" note="地址"/>
+        <int name="gender" note="性别"/>
     </struct>
     <action name="demo_role">
         <request>
-            <role_id type="int"/>
+            <int name="role_id"/>
         </request>
         <request method="post">
-            <role_id type="str"/>
+            <string name="role_ids"/>
         </request>
-        <response>{role_info}</response>
-        <response>[role_info]</response>
-        <response>[int => role_info]</response>
+        <response name="role_detail" extend="/xapi/result">
+            <struct name="data" extend="role_info"/>
+        </response>
+        <response name="role_list" extend="/xapi/result">
+            <list name="data">
+                <struct extend="role_info"/>
+            </list>
+        </response>
     </action>
 </protocol>
