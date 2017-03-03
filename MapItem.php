@@ -30,8 +30,8 @@ class MapItem extends Item
     public function setKeyType(Item $key_type)
     {
         //目前只支持int 和 string类型的key
-        if($key_type !== ItemType::INT && $key_type !== ItemType::STRING) {
-            throw new DOPException('key type error. '. $this->getDocInfo());
+        if ($key_type !== ItemType::INT && $key_type !== ItemType::STRING) {
+            throw new DOPException('key type error. ' . $this->getDocInfo());
         }
         $this->key_type = $key_type;
     }

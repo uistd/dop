@@ -24,9 +24,6 @@ class StructItem extends Item
      */
     public function setStructName($struct_name)
     {
-        if (!$this->validName($struct_name)) {
-            throw new DOPException('struct name error!' . $this->getDocInfo());
-        }
         $this->struct_name = $struct_name;
     }
 
@@ -37,15 +34,5 @@ class StructItem extends Item
     public function getStructName()
     {
         return $this->struct_name;
-    }
-
-    /**
-     * struct name是否合法
-     * @param string $name
-     * @return int
-     */
-    private function validName($name)
-    {
-        return preg_match('/^\/?[a-zA-Z_][a-zA-Z_a\d]*(\/[a-zA-Z_][a-zA-Z_\d]*)*$/', $name) > 0;
     }
 }

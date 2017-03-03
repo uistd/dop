@@ -113,10 +113,9 @@ class ItemType
             $first_char = $type[0];
             $last_char = $type[strlen($type) - 1];
             //如果{ }配对，表示 对象
-            if ('{' === $first_char && '}' === $last_char ) {
+            if ('{' === $first_char && '}' === $last_char) {
                 return ItemType::STRUCT;
-            }
-            //如果[ ]配对，表示 数组 或者 关联数组
+            } //如果[ ]配对，表示 数组 或者 关联数组
             elseif ('[' === $first_char && ']' === $last_char) {
                 //不带 => 表示数组
                 if (false === strpos($last_char, '=>')) {
