@@ -5,10 +5,10 @@ use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
- * Class ProtocolXml
+ * Class XmlProtocol
  * @package ffan
  */
-class ProtocolXml
+class XmlProtocol
 {
     /**
      * @var \DOMDocument xml_handle
@@ -31,9 +31,19 @@ class ProtocolXml
     private $current_line_no = 0;
 
     /**
+     * @var array 防止同名文件冲突的数组
+     */
+    private $name_stack = array();
+
+    /**
      * @var string 命名空间
      */
     private $namespace;
+
+    /**
+     * @var array 允许的方法
+     */
+    private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
 
     /**
      * ProtocolXml constructor.
@@ -44,7 +54,7 @@ class ProtocolXml
     {
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
-            throw new \InvalidArgumentException('Invalid file');
+            throw new \InvalidArgumentException('Invalid file:' . $full_name);
         }
         $this->file_name = $full_name;
         $this->xml_handle = new \DOMDocument();
@@ -67,6 +77,7 @@ class ProtocolXml
     {
         $this->path_handle = new \DOMXpath($this->xml_handle);
         $this->queryStruct();
+        $this->parseAction();
     }
 
     /**
@@ -81,13 +92,46 @@ class ProtocolXml
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
+            $this->current_line_no = $struct->getLineNo();
             if (!$struct->hasAttribute('name')) {
-                $msg = $this->errMsg('Struct must have name attribute', $struct->getLineNo());
+                $msg = $this->errMsg('Struct must have name attribute');
                 throw new DOPException($msg);
             }
-            $name = trim($struct->getAttribute('name')) . 'Struct';
+            $name = trim($struct->getAttribute('name'));
+            $name = FFanStr::camelName($name, true);
             $is_public = 1 === (int)$struct->getAttribute('public');
             $struct_obj = $this->parseStruct($name, $is_public, $struct);
+            ProtocolManager::addStruct($struct_obj);
+        }
+    }
+
+    /**
+     * 解析Action
+     */
+    private function parseAction()
+    {
+        $action_list = $this->path_handle->query('/protocol/action');
+        if (null === $action_list) {
+            return;
+        }
+        for ($i = 0; $i < $action_list->length; ++$i) {
+            /** @var \DOMElement $action */
+            $action = $action_list->item($i);
+            $this->current_line_no = $action->getLineNo();
+            if (!$action->hasAttribute('name')) {
+                $msg = $this->errMsg('Action must have name attribute');
+                throw new DOPException($msg);
+            }
+            $name = trim($action->getAttribute('name'));
+            if ($action->hasAttribute('method')) {
+                $method = trim($action->getAttribute('method'));
+                if (!isset(self::$http_method_list[strtoupper($method)])) {
+                    throw new DOPException($this->errMsg($method . ' is not support http method type'));
+                }
+                $name = $method . $name;
+            }
+            $name = FFanStr::camelName($name, true);
+            $struct_obj = $this->parseStruct($name, false, $action);
             ProtocolManager::addStruct($struct_obj);
         }
     }
@@ -106,16 +150,20 @@ class ProtocolXml
         $struct_obj = new Struct($this->namespace, $class_name, $is_public);
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
+            if (XML_ELEMENT_NODE !== $node->nodeType) {
+                continue;
+            }
             $this->current_line_no = $node->getLineNo();
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
                 throw new DOPException($this->errMsg('Attribute `name` required!'));
             }
             $item_name = trim($node->getAttribute('name'));
-            if (empty($item_name) || !FFanStr::isValidVarName($item_name)) {
-                throw new DOPException($this->errMsg('Invalid `name` attribute'));
-            }
+            $this->checkName($item_name);
             $item = $this->makeItemObject($class_name . ucfirst($item_name), $node);
+            if ($struct_obj->hasItem($item_name)) {
+                throw new DOPException($this->errMsg('Item name:' . $item_name . ' 已经存在'));
+            }
             $struct_obj->addItem($item_name, $item);
         }
         return $struct_obj;
@@ -176,13 +224,40 @@ class ProtocolXml
     private function parseList($name, \DOMNode $item)
     {
         $item_list = $item->childNodes;
-        if (0 === $item_list->length) {
-            throw new DOPException($this->errMsg('Unknown list type'));
-        } elseif ($item_list->length > 1) {
-            throw new DOPException($this->errMsg('List must have only one type'));
+        $type_node = null;
+        for ($i = 0; $i < $item_list->length; ++$i) {
+            $tmp_node = $item_list->item($i);
+            $this->current_line_no = $tmp_node->getLineNo();
+            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
+                continue;
+            }
+            if (null !== $type_node) {
+                throw new DOPException($this->errMsg('List只能有一个节点'));
+            }
+            $type_node = $tmp_node;
+        }
+        if (null === $type_node) {
+            throw new DOPException($this->errMsg('List下必须包括一个指定list类型的节点'));
         }
         $name .= 'List';
-        return $this->makeItemObject($name, $item_list->item(0));
+        return $this->makeItemObject($name, $type_node);
+    }
+
+    /**
+     * 把名字压入stack，避免冲突
+     * @param string $name
+     * @throws DOPException
+     */
+    private function checkName($name)
+    {
+        if (!isset($this->name_stack[$name])) {
+            throw new DOPException($this->errMsg('Name:' . $name . ' 已经存在'));
+        }
+        //是否可以做类名
+        if (empty($name) || 0 === preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name) > 0) {
+            throw new DOPException('Name:' . $name . ' is invalid');
+        }
+        $this->name_stack[$name] = true;
     }
 
     /**
@@ -235,8 +310,8 @@ class ProtocolXml
             return $name;
         } //私有的struct
         else {
-            $name .= 'Struct';
-            $this->parseStruct($name, false, $item);
+            $struct_obj = $this->parseStruct($name, false, $item);
+            ProtocolManager::addStruct($struct_obj);
         }
         return $name;
     }

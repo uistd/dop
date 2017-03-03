@@ -26,35 +26,31 @@ class ProtocolManager
     {
         $namespace = $struct->getNamespace();
         $class_name = $struct->getClassName();
-        if (!isset(self::$struct_list[$namespace])) {
-            self::$struct_list[$namespace] = array();
+        $full_name = $namespace .'/'. $class_name;
+        if (isset(self::$struct_list[$full_name])) {
+            throw new DOPException('struct:' . $full_name . ' conflict');
         }
-        if (isset(self::$struct_list[$namespace][$class_name])) {
-            throw new DOPException('struct:' . $namespace . '/' . $class_name . ' conflict');
-        }
-        self::$struct_list[$namespace][$class_name] = $struct;
+        self::$struct_list[$full_name] = $struct;
     }
 
     /**
      * 加载某个struct
-     * @param string $namespace 命名空间
-     * @param string $className 类名
+     * @param string $fullName
      * @return Struct
      */
-    public static function loadStruct($namespace, $className)
+    public static function loadStruct($fullName)
     {
 
     }
 
     /**
      * 是否存在某个Struct
-     * @param $namespace
-     * @param $className
+     * @param string $fullName
      * @return bool
      */
-    public static function hasStruct($namespace, $className)
+    public static function hasStruct($fullName)
     {
-        return isset(self::$struct_list[$namespace][$className]);
+        return isset(self::$struct_list[$fullName]);
     }
 
     /**
@@ -64,5 +60,14 @@ class ProtocolManager
     public static function pushXmlFile($file_name)
     {
         self::$xml_list[$file_name] = true;
+    }
+
+    /**
+     * 获取所有的struct
+     * @return array[Struct]
+     */
+    public static function getAll()
+    {
+        return self::$struct_list;
     }
 }

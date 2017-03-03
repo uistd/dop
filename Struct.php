@@ -109,4 +109,13 @@ class Struct
     {
         return $this->className;
     }
+
+    /**
+     * 返回所有Item
+     * @return array[Item]
+     */
+    public function getAllItem()
+    {
+        return $this->item_list;
+    }
 }

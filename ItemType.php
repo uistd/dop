@@ -60,6 +60,9 @@ class ItemType
         'smallint' => self::INT,
         'int64' => self::INT,
         'bigint' => self::INT,
+        'list' => self::ARR,
+        'struct' => self::STRUCT,
+        'map' => self::MAP
     );
 
     /**

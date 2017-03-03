@@ -8,6 +8,15 @@
         <int name="level" note="等级"/>
         <string name="address" note="地址"/>
         <int name="gender" note="性别"/>
+        <list name="exp"><int/></list>
+        <list name="info"><string/></list>
+        <list name="child">
+            <struct>
+                <int name="gender" note="性别"/>
+                <int name="age"/>
+                <string name="name"/>
+            </struct>
+        </list>
     </struct>
     <action name="demo_role">
         <request>
@@ -16,10 +25,10 @@
         <request method="post">
             <string name="role_ids"/>
         </request>
-        <response name="role_detail" extend="/xapi/result">
+        <response extend="/xapi/result">
             <struct name="data" extend="role_info"/>
         </response>
-        <response name="role_list" extend="/xapi/result">
+        <response method="post" extend="/xapi/result">
             <list name="data">
                 <struct extend="role_info"/>
             </list>
