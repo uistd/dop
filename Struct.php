@@ -43,19 +43,29 @@ class Struct
     private $is_public;
 
     /**
+     * @var int 类型
+     */
+    private $type = self::TYPE_STRUCT;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
+     * @param int $type 类型
      * @param bool $is_public 是否可以被其它文件调用
      */
-    public function __construct($namespace, $name, $is_public = false)
+    public function __construct($namespace, $name, $type = self::TYPE_STRUCT, $is_public = false)
     {
         if (!is_string($namespace) || '/' !== $namespace[0]) {
             throw new \InvalidArgumentException('namespace error');
         }
+        if ( self::TYPE_STRUCT !== $type && self::TYPE_REQUEST !== $type && self::TYPE_RESPONSE !== $type) {
+            throw new \InvalidArgumentException('Invalid type');
+        }
         $this->namespace = $namespace;
         $this->className = $name;
         $this->is_public = (bool)$is_public;
+        $this->type = $type;
     }
 
     /**
@@ -117,5 +127,14 @@ class Struct
     public function getAllItem()
     {
         return $this->item_list;
+    }
+
+    /**
+     * 获取类型
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 }
