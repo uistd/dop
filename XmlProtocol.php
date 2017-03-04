@@ -200,7 +200,7 @@ class XmlProtocol
                 throw new DOPException($this->errMsg('Attribute `name` required!'));
             }
             $item_name = trim($node->getAttribute('name'));
-            $item_name = $this->joinName($item_name);
+            $this->checkName($item_name);
             $item = $this->makeItemObject($class_name . ucfirst($item_name), $node);
             if ($struct_obj->hasItem($item_name)) {
                 throw new DOPException($this->errMsg('Item name:' . $item_name . ' 已经存在'));
@@ -280,7 +280,7 @@ class XmlProtocol
         if (null === $type_node) {
             throw new DOPException($this->errMsg('List下必须包括一个指定list类型的节点'));
         }
-        $name .= 'List';
+        //$name .= 'List';
         return $this->makeItemObject($name, $type_node);
     }
 
@@ -293,24 +293,29 @@ class XmlProtocol
      */
     private function joinName($name, $prefix = '')
     {
+        if (!empty($prefix)) {
+            $name = $prefix . $name;
+        }
         if (isset($this->name_stack[$name])) {
             throw new DOPException($this->errMsg('Name:' . $name . ' 已经存在'));
         }
         $this->name_stack[$name] = true;
-        //是否可以做类名
+        $this->checkName($name);
+        return FFanStr::camelName($name, true);
+    }
+
+    /**
+     * 检查name是否可以做类名
+     * @param string $name
+     * @throws DOPException
+     */
+    private function checkName($name)
+    {
         if (empty($name) || 0 === preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name) > 0) {
             throw new DOPException('Name:' . $name . ' is invalid');
         }
-        if (!empty($prefix)) {
-            $name = $prefix . $name;
-            if (!isset($this->name_stack[$name])) {
-                throw new DOPException($this->errMsg('Name:' . $name . ' 已经存在'));
-            }
-            $this->name_stack[$name] = true;
-        }
-        return $name;
     }
-
+    
     /**
      * 获取类名全路径
      * @param string $struct_name
