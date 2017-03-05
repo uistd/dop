@@ -56,6 +56,11 @@ class XmlProtocol
     private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
 
     /**
+     * @var bool 是否和http的method匹配
+     */
+    private $match_http_method = false;
+
+    /**
      * ProtocolXml constructor.
      * @param string $base_path 基础目录
      * @param string $file_name 协议文件
@@ -77,13 +82,21 @@ class XmlProtocol
             $dir_name = DIRECTORY_SEPARATOR . $dir_name;
         }
         $this->namespace = $dir_name . '/' . basename($file_name, '.xml');
-        $this->parse();
+    }
+
+    /**
+     * 设置与http method匹配的标志
+     * @param bool $flag
+     */
+    public function setMatchHttpMethod($flag)
+    {
+        $this->match_http_method = (bool)$flag;
     }
 
     /**
      * 解析该xml文件
      */
-    private function parse()
+    public function parse()
     {
         $this->path_handle = new \DOMXpath($this->xml_handle);
         $this->queryStruct();
@@ -132,10 +145,32 @@ class XmlProtocol
                 $msg = $this->errMsg('Action must have name attribute');
                 throw new DOPException($msg);
             }
-            $name = trim($action->getAttribute('name'));
+            $name = FFanStr::camelName(trim($action->getAttribute('name')));
+            if ($this->match_http_method) {
+                $method = $this->matchHttpMethod($action);
+                $name  = ucfirst($method).$name;
+            }
             $name = $this->joinName($name);
             $this->parseAction($name, $action);
         }
+    }
+
+    /**
+     * 匹配http method
+     * @param \DOMElement $node
+     * @return string
+     * @throws DOPException
+     */
+    private function matchHttpMethod(\DOMElement $node)
+    {
+        if (!$node->hasAttribute('method')) {
+            return 'get';
+        }
+        $method = trim($node->getAttribute('method'));
+        if (!in_array(strtoupper($method), self::$http_method_list)) {
+            throw new DOPException($this->errMsg($method . ' is not support http method type'));
+        }
+        return $method;
     }
 
     /**
@@ -147,6 +182,8 @@ class XmlProtocol
     private function parseAction($action_name, \DOMNode $action)
     {
         $node_list = $action->childNodes;
+        $request_count = 0;
+        $response_count = 0;
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->current_line_no = $node->getLineNo();
@@ -155,22 +192,22 @@ class XmlProtocol
             }
             $class_name = $action_name;
             /** @var \DOMElement $node */
-            if ($node->hasAttribute('method')) {
-                $method = trim($node->getAttribute('method'));
-                if (!in_array(strtoupper($method), self::$http_method_list)) {
-                    throw new DOPException($this->errMsg($method . ' is not support http method type'));
-                }
-                $class_name = $this->joinName($class_name, ucfirst($method));
-            }
             $node_name = strtolower($node->nodeName);
-            $class_name = $this->joinName($class_name, ucfirst($node_name));
+            var_dump($class_name, $request_count);
             if (self::REQUEST_NODE === $node_name) {
+                if ( ++$request_count > 1) {
+                    throw new DOPException($this->errMsg('Only one request node allowed'));
+                }
                 $type = Struct::TYPE_REQUEST;
             } elseif (self::RESPONSE_NODE === $node_name) {
+                if (++$response_count > 1) {
+                    throw new DOPException($this->errMsg('Only one response node allowed'));
+                }
                 $type = Struct::TYPE_RESPONSE;
             } else {
                 throw new DOPException($this->errMsg('Unknown node:'. $node_name));
             }
+            $class_name = $this->joinName($class_name, ucfirst($node_name));
             $struct_obj = $this->parseStruct($class_name, $node, $type);
             ProtocolManager::addStruct($struct_obj);
         }

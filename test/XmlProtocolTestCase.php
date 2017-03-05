@@ -3,8 +3,9 @@ namespace ffan\dop;
 
 require_once '../vendor/autoload.php';
 
-new XmlProtocol(__DIR__ . '/protocol', 'demo/role.xml');
-
+$dop = new XmlProtocol(__DIR__ . '/protocol', 'demo/role.xml');
+$dop->setMatchHttpMethod(true);
+$dop->parse();
 $all_protocol = ProtocolManager::getAll();
 
 /** @var Struct $struct */

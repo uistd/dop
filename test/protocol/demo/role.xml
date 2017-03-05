@@ -22,7 +22,7 @@
         <request>
             <int name="role_id"/>
         </request>
-        <response>
+        <response extend="/xapi/result">
             <struct name="data" extend="role_info"/>
         </response>
     </action>
@@ -30,26 +30,18 @@
         <request>
             <string name="role_ids"/>
         </request>
-        <response>
+        <response extend="/xapi/result">
             <list name="data">
                 <struct extend="role_info"/>
             </list>
         </response>
     </action>
-    <action name="demo_role" method="put">
+    <action name="demo_role" method="delete">
         <request>
             <int name="role_id"/>
         </request>
-        <request>
-            <string name="role_ids"/>
-        </request>
-        <response>
-            <struct name="data" extend="role_info"/>
-        </response>
-        <response method="put">
-            <list name="data">
-                <struct extend="role_info"/>
-            </list>
+        <response extend="/xapi/result">
+            <int name="data"/>
         </response>
     </action>
 </protocol>
