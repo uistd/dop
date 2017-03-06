@@ -61,11 +61,6 @@ class XmlProtocol
     private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
 
     /**
-     * @var bool 是否和http的method匹配
-     */
-    private $match_http_method = false;
-
-    /**
      * @var ProtocolManager
      */
     private $protocol_manager;
@@ -94,20 +89,16 @@ class XmlProtocol
         if ('.' === $dir_name) {
             $dir_name = DIRECTORY_SEPARATOR;
         }
+        //如果不是以/开始，前端加 /
         if (DIRECTORY_SEPARATOR !== $dir_name[0]) {
             $dir_name = DIRECTORY_SEPARATOR . $dir_name;
         }
-        $this->namespace = $dir_name . '/' . basename($file_name, '.xml');
+        //如果不是以 / 结尾，后面加 /
+        if (DIRECTORY_SEPARATOR !== $dir_name[strlen($dir_name) - 1]) {
+            $dir_name .= DIRECTORY_SEPARATOR;
+        }
+        $this->namespace = $dir_name . basename($file_name, '.xml');
         $this->protocol_manager = $manager;
-    }
-
-    /**
-     * 设置与http method匹配的标志
-     * @param bool $flag
-     */
-    public function setMatchHttpMethod($flag)
-    {
-        $this->match_http_method = (bool)$flag;
     }
     
     /**
@@ -185,40 +176,17 @@ class XmlProtocol
                 throw new DOPException($msg);
             }
             $name = FFanStr::camelName(trim($action->getAttribute('name')));
-            if ($this->match_http_method) {
-                $method = $this->matchHttpMethod($action);
-                $name  = ucfirst($method).$name;
-            }
-            $name = $this->joinName($name);
             $this->parseAction($name, $action);
         }
     }
 
     /**
-     * 匹配http method
-     * @param \DOMElement $node
-     * @return string
-     * @throws DOPException
-     */
-    private function matchHttpMethod(\DOMElement $node)
-    {
-        if (!$node->hasAttribute('method')) {
-            return 'get';
-        }
-        $method = trim($node->getAttribute('method'));
-        if (!in_array(strtoupper($method), self::$http_method_list)) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg($method . ' is not support http method type'));
-        }
-        return $method;
-    }
-
-    /**
      * 解析request
      * @param $action_name
-     * @param \DOMNode $action
+     * @param \DOMElement $action
      * @throws DOPException
      */
-    private function parseAction($action_name, \DOMNode $action)
+    private function parseAction($action_name, \DOMElement $action)
     {
         $node_list = $action->childNodes;
         $request_count = 0;
@@ -230,7 +198,6 @@ class XmlProtocol
                 continue;
             }
             $class_name = $action_name;
-            /** @var \DOMElement $node */
             $node_name = strtolower($node->nodeName);
             if (self::REQUEST_NODE === $node_name) {
                 if ( ++$request_count > 1) {
@@ -245,7 +212,17 @@ class XmlProtocol
             } else {
                 throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown node:'. $node_name));
             }
-            $class_name = $this->joinName($class_name, ucfirst($node_name));
+            $node_name = ucfirst($node_name);
+            if ($action->hasAttribute('method')) {
+                $method = trim($action->getAttribute('method'));
+                if (!in_array(strtoupper($method), self::$http_method_list)) {
+                    $err_msg = $this->protocol_manager->fixErrorMsg($method . ' is not support http method type');
+                    throw new DOPException($err_msg);
+                }
+                $node_name = ucfirst($method). $node_name;
+            }
+            $class_name = $this->joinName($class_name, $node_name);
+            /** @var \DOMElement $node */
             $this->parseStruct($class_name, $node, $type);
         }
     }
@@ -435,18 +412,17 @@ class XmlProtocol
         if (!preg_match('/^\/?[a-zA-Z_][a-zA-Z_a\d]*(\/[a-zA-Z_][a-zA-Z_\d]*)*$/', $struct_name)) {
             throw new DOPException($this->protocol_manager->fixErrorMsg('Invalid struct name:' . $struct_name));
         }
-        $struct_name = FFanStr::camelName($struct_name, true);
+        $class_name = FFanStr::camelName(basename($struct_name));
+        $dir_name = dirname($struct_name);
+        //没有目录
+        if ('.' === $dir_name) {
+            return $this->namespace .'/'. $class_name;
+        }
         //补全
         if ('/' !== $struct_name[0]) {
-            //如果完全没有 / 表示当前namespace 
-            if (false === strpos($struct_name, '/')) {
-                $struct_name = $this->namespace .'/'. $struct_name;
-            } //同级目录下
-            else {
-                $struct_name = dirname($this->namespace) . '/' . $struct_name;
-            }
+            $dir_name = $this->namespace .'/'. $dir_name;
         }
-        return $struct_name;
+        return $dir_name .'/'. $class_name;
     }
 
     /**
