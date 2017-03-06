@@ -19,6 +19,16 @@ class XmlProtocol
      * 返回节点
      */
     const RESPONSE_NODE = 'response';
+
+    /**
+     * 解析步骤：struct
+     */
+    const QUERY_STEP_STRUCT = 1;
+
+    /**
+     * 解析步骤：action
+     */
+    const QUERY_STEP_ACTION = 2;
     
     /**
      * @var \DOMDocument xml_handle
@@ -34,11 +44,6 @@ class XmlProtocol
      * @var string 文件名
      */
     private $file_name;
-
-    /**
-     * @var int 当前行号
-     */
-    private $current_line_no = 0;
 
     /**
      * @var array 防止同名文件冲突的数组
@@ -61,12 +66,23 @@ class XmlProtocol
     private $match_http_method = false;
 
     /**
+     * @var ProtocolManager
+     */
+    private $protocol_manager;
+
+    /**
+     * @var int 已经解析的步骤
+     */
+    private $query_step = 0;
+
+    /**
      * ProtocolXml constructor.
-     * @param string $base_path 基础目录
+     * @param ProtocolManager $manager
      * @param string $file_name 协议文件
      */
-    public function __construct($base_path, $file_name)
+    public function __construct(ProtocolManager $manager, $file_name)
     {
+        $base_path = $manager->getBasePath();
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
             throw new \InvalidArgumentException('Invalid file:' . $full_name);
@@ -82,6 +98,7 @@ class XmlProtocol
             $dir_name = DIRECTORY_SEPARATOR . $dir_name;
         }
         $this->namespace = $dir_name . '/' . basename($file_name, '.xml');
+        $this->protocol_manager = $manager;
     }
 
     /**
@@ -92,13 +109,24 @@ class XmlProtocol
     {
         $this->match_http_method = (bool)$flag;
     }
-
+    
+    /**
+     * 获取Xpath
+     * @return \DOMXpath
+     */
+    private function getPathHandle()
+    {
+        if (null === $this->path_handle) {
+            $this->path_handle = new \DOMXpath($this->xml_handle);
+        }
+        return $this->path_handle;
+    }
+    
     /**
      * 解析该xml文件
      */
-    public function parse()
+    public function query()
     {
-        $this->path_handle = new \DOMXpath($this->xml_handle);
         $this->queryStruct();
         $this->queryAction();
     }
@@ -106,25 +134,30 @@ class XmlProtocol
     /**
      * 解析公用struct
      */
-    private function queryStruct()
+    public function queryStruct()
     {
-        $node_list = $this->path_handle->query('/protocol/struct');
+        //已经解析过了，就打标志，避免重复解析
+        if ($this->query_step & self::QUERY_STEP_STRUCT) {
+            return;
+        }
+        $this->query_step &= self::QUERY_STEP_STRUCT;
+        $path_handle = $this->getPathHandle();
+        $node_list = $path_handle->query('/protocol/struct');
         if (null === $node_list) {
             return;
         }
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
-            $this->current_line_no = $struct->getLineNo();
+            $this->setLineNumber($struct->getLineNo());
             if (!$struct->hasAttribute('name')) {
-                $msg = $this->errMsg('Struct must have name attribute');
+                $msg = $this->protocol_manager->fixErrorMsg('Struct must have name attribute');
                 throw new DOPException($msg);
             }
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
-            $is_public = 1 === (int)$struct->getAttribute('public');
-            $struct_obj = $this->parseStruct($name, $struct, $is_public);
-            ProtocolManager::addStruct($struct_obj);
+            $is_public = true === (bool)$struct->getAttribute('public');
+            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_STRUCT, false);
         }
     }
 
@@ -133,16 +166,22 @@ class XmlProtocol
      */
     private function queryAction()
     {
-        $action_list = $this->path_handle->query('/protocol/action');
+        //已经解析过了，就打标志，避免重复解析
+        if ($this->query_step & self::QUERY_STEP_ACTION) {
+            return;
+        }
+        $this->query_step &= self::QUERY_STEP_ACTION;
+        $path_handle = $this->getPathHandle();
+        $action_list = $path_handle->query('/protocol/action');
         if (null === $action_list) {
             return;
         }
         for ($i = 0; $i < $action_list->length; ++$i) {
             /** @var \DOMElement $action */
             $action = $action_list->item($i);
-            $this->current_line_no = $action->getLineNo();
+            $this->setLineNumber($action->getLineNo());
             if (!$action->hasAttribute('name')) {
-                $msg = $this->errMsg('Action must have name attribute');
+                $msg = $this->protocol_manager->fixErrorMsg('Action must have name attribute');
                 throw new DOPException($msg);
             }
             $name = FFanStr::camelName(trim($action->getAttribute('name')));
@@ -168,7 +207,7 @@ class XmlProtocol
         }
         $method = trim($node->getAttribute('method'));
         if (!in_array(strtoupper($method), self::$http_method_list)) {
-            throw new DOPException($this->errMsg($method . ' is not support http method type'));
+            throw new DOPException($this->protocol_manager->fixErrorMsg($method . ' is not support http method type'));
         }
         return $method;
     }
@@ -186,30 +225,28 @@ class XmlProtocol
         $response_count = 0;
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
-            $this->current_line_no = $node->getLineNo();
+            $this->setLineNumber($node->getLineNo());
             if (XML_ELEMENT_NODE !== $node->nodeType) {
                 continue;
             }
             $class_name = $action_name;
             /** @var \DOMElement $node */
             $node_name = strtolower($node->nodeName);
-            var_dump($class_name, $request_count);
             if (self::REQUEST_NODE === $node_name) {
                 if ( ++$request_count > 1) {
-                    throw new DOPException($this->errMsg('Only one request node allowed'));
+                    throw new DOPException($this->protocol_manager->fixErrorMsg('Only one request node allowed'));
                 }
                 $type = Struct::TYPE_REQUEST;
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
-                    throw new DOPException($this->errMsg('Only one response node allowed'));
+                    throw new DOPException($this->protocol_manager->fixErrorMsg('Only one response node allowed'));
                 }
                 $type = Struct::TYPE_RESPONSE;
             } else {
-                throw new DOPException($this->errMsg('Unknown node:'. $node_name));
+                throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown node:'. $node_name));
             }
             $class_name = $this->joinName($class_name, ucfirst($node_name));
-            $struct_obj = $this->parseStruct($class_name, $node, $type);
-            ProtocolManager::addStruct($struct_obj);
+            $this->parseStruct($class_name, $node, $type);
         }
     }
 
@@ -217,32 +254,62 @@ class XmlProtocol
      * 解析struct
      * @param string $class_name 上级类名
      * @param \DomElement $struct
-     * @param bool $is_public
-     * @param int $type
+     * @param bool $is_public 是否可以被extend
+     * @param int $type 类型
+     * @param bool $allow_extend 是否允许extend其它struct
      * @return Struct
      * @throws DOPException
      */
-    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT)
+    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
     {
         $node_list = $struct->childNodes;
-        $struct_obj = new Struct($this->namespace, $class_name, $type, $is_public);
+        $item_arr = array();
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             if (XML_ELEMENT_NODE !== $node->nodeType) {
                 continue;
             }
-            $this->current_line_no = $node->getLineNo();
+            $this->setLineNumber($node->getLineNo());
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
-                throw new DOPException($this->errMsg('Attribute `name` required!'));
+                throw new DOPException($this->protocol_manager->fixErrorMsg('Attribute `name` required!'));
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
             $item = $this->makeItemObject($class_name . ucfirst($item_name), $node);
-            if ($struct_obj->hasItem($item_name)) {
-                throw new DOPException($this->errMsg('Item name:' . $item_name . ' 已经存在'));
+            if (isset($item_arr[$item_name])) {
+                throw new DOPException($this->protocol_manager->fixErrorMsg('Item name:' . $item_name . ' 已经存在'));
             }
-            $struct_obj->addItem($item_name, $item);
+            $item_arr[$item_name] = $item;
+        }
+        $extend_struct = null;
+        //继承关系
+        if ($struct->hasAttribute('extend')) {
+            if (!$allow_extend) {
+                throw new DOPException('Extend只允许在<action>标签内使用');
+            }
+            $struct_name = trim($struct->getAttribute('extend'));
+            $struct_name = $this->getFullName($struct_name);
+            $extend_struct = $this->protocol_manager->loadStruct($struct_name);
+            if (null === $extend_struct) {
+                throw new DOPException($this->protocol_manager->fixErrorMsg('无法找到Struct ' . $struct_name));
+            } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {
+                throw new DOPException($this->protocol_manager->fixErrorMsg('struct:' . $struct_name . ' is not public!'));
+            }
+        }
+        if (!empty($item_arr)) {
+            $struct_obj = new Struct($this->namespace, $class_name, $type, $is_public);
+            foreach ($item_arr as $name => $struct) {
+                $struct_obj->addItem($name, $struct);
+            }
+            if ($extend_struct) {
+                $struct_obj->extend($extend_struct);
+            }
+            $this->protocol_manager->addStruct($struct_obj);
+        } elseif ($extend_struct) {
+            $struct_obj = $extend_struct;
+        } else {
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Empty struct'));
         }
         return $struct_obj;
     }
@@ -258,7 +325,7 @@ class XmlProtocol
     {
         $type = ItemType::getType($item->nodeName);
         if (null === $type) {
-            throw new DOPException($this->errMsg('Unknown type `' . $item->nodeName . '`'));
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown type `' . $item->nodeName . '`'));
         }
         switch ($type) {
             case ItemType::STRING:
@@ -305,17 +372,17 @@ class XmlProtocol
         $type_node = null;
         for ($i = 0; $i < $item_list->length; ++$i) {
             $tmp_node = $item_list->item($i);
-            $this->current_line_no = $tmp_node->getLineNo();
+            $this->setLineNumber($tmp_node->getLineNo());
             if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
                 continue;
             }
             if (null !== $type_node) {
-                throw new DOPException($this->errMsg('List只能有一个节点'));
+                throw new DOPException($this->protocol_manager->fixErrorMsg('List只能有一个节点'));
             }
             $type_node = $tmp_node;
         }
         if (null === $type_node) {
-            throw new DOPException($this->errMsg('List下必须包括一个指定list类型的节点'));
+            throw new DOPException($this->protocol_manager->fixErrorMsg('List下必须包括一个指定list类型的节点'));
         }
         //$name .= 'List';
         return $this->makeItemObject($name, $type_node);
@@ -334,7 +401,7 @@ class XmlProtocol
             $name = $prefix . $name;
         }
         if (isset($this->name_stack[$name])) {
-            throw new DOPException($this->errMsg('Name:' . $name . ' 已经存在'));
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Name:' . $name . ' 已经存在'));
         }
         $this->name_stack[$name] = true;
         $this->checkName($name);
@@ -362,20 +429,21 @@ class XmlProtocol
     private function getFullName($struct_name)
     {
         if (empty($struct_name)) {
-            throw new DOPException($this->errMsg('struct name error'));
+            throw new DOPException($this->protocol_manager->fixErrorMsg('struct name error'));
         }
         //名称不合法
         if (!preg_match('/^\/?[a-zA-Z_][a-zA-Z_a\d]*(\/[a-zA-Z_][a-zA-Z_\d]*)*$/', $struct_name)) {
-            throw new DOPException($this->errMsg('Invalid struct name:' . $struct_name));
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Invalid struct name:' . $struct_name));
         }
+        $struct_name = FFanStr::camelName($struct_name, true);
         //补全
         if ('/' !== $struct_name[0]) {
             //如果完全没有 / 表示当前namespace 
             if (false === strpos($struct_name, '/')) {
-                $struct_name = $this->namespace . $struct_name;
+                $struct_name = $this->namespace .'/'. $struct_name;
             } //同级目录下
             else {
-                $struct_name = basename($this->namespace) . '/' . $struct_name;
+                $struct_name = dirname($this->namespace) . '/' . $struct_name;
             }
         }
         return $struct_name;
@@ -392,44 +460,17 @@ class XmlProtocol
     {
         //如果是引用其它Struct，加载其它Struct
         /** @var \DOMElement $item */
-        if ($item->hasAttribute('class')) {
-            $name = $this->getFullName(trim($item->getAttribute('class')));
-            $refer_struct = ProtocolManager::loadStruct($name);
-            if (null === $refer_struct) {
-                throw new DOPException($this->errMsg('无法找到Struct ' . $name));
-            } elseif (!$refer_struct->isPublic() && $this->namespace !== $refer_struct->getNamespace()) {
-                throw new DOPException($this->errMsg('struct:' . $name . ' is not public!'));
-            }
-            return $name;
-        } //私有的struct
-        else {
-            $struct_obj = $this->parseStruct($name, $item);
-            ProtocolManager::addStruct($struct_obj);
-        }
+        $this->parseStruct($name, $item);
         return $name;
     }
 
     /**
-     * 错误消息
-     * @param string $msg 消息
-     * @param int $line_no 行号
-     * @return string
+     * 设置行号
+     * @param string $line_number
      */
-    private function errMsg($msg, $line_no = 0)
+    private function setLineNumber($line_number)
     {
-        return $msg . $this->getDocInfo($line_no) . PHP_EOL;
-    }
-
-    /**
-     * 获取文档信息
-     * @param int $line_no
-     * @return string
-     */
-    private function getDocInfo($line_no = 0)
-    {
-        if (0 === $line_no) {
-            $line_no = $this->current_line_no;
-        }
-        return 'File:' . $this->file_name . ' Line:' . $line_no;
+        $position_info = 'File:' . $this->file_name . ' Line:' . $line_number;
+        $this->protocol_manager->setCurrentProtocolDocInfo($position_info);
     }
 }

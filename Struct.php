@@ -48,6 +48,11 @@ class Struct
     private $type = self::TYPE_STRUCT;
 
     /**
+     * @var Struct
+     */
+    private $parent;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -81,6 +86,20 @@ class Struct
         }
         $this->item_list[$name] = $item;
         return true;
+    }
+
+    /**
+     * 设置继承
+     * @param Struct $parent_struct
+     * @throws DOPException
+     */
+    public function extend(Struct $parent_struct)
+    {
+        //如果已经继承了
+        if (null !== $this->parent) {
+            throw new DOPException('Struct:'. $this->namespace . $this->className .' 不支持多重继承');
+        }
+        $this->parent = $parent_struct;
     }
 
     /**
