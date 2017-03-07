@@ -1,7 +1,9 @@
 <?php
 namespace ffan\dop;
 
+use ffan\php\tpl\Tpl;
 use ffan\php\utils\Utils as FFanUtils;
+use ffan\php\utils\Config as FFanConfig;
 
 /**
  * Class DOPGenerator 生成文件
@@ -36,6 +38,7 @@ abstract class DOPGenerator
     public function __construct(ProtocolManager $protocol_manager)
     {
         $this->protocol_manager = $protocol_manager;
+        FFanConfig::add('ffan-tpl', array('tpl_dir' => 'tpl'));
     }
 
     /**
@@ -87,5 +90,17 @@ abstract class DOPGenerator
         $base_path = $this->buildBasePath();
         $build_path = FFanUtils::joinPath($base_path, $namespace);
         FFanUtils::pathWriteCheck($build_path);
+        /**
+         * @var string $class_name
+         * @var Struct $struct
+         */
+        foreach ($class_list as $class_name => $struct) {
+            $tpl_data = array(
+                'args' => $this->buildArgs(),
+                'struct' => $struct,
+                'class_name' => $class_name
+            );
+            Tpl::get('php.tpl', $tpl_data);
+        }
     }
 }
