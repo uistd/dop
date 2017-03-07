@@ -38,7 +38,12 @@ class ProtocolManager
     /**
      * @var string 命名空间
      */
-    private $namespace = 'dop';
+    private $main_namespace = 'dop';
+
+    /**
+     * @var array 配置
+     */
+    private $config;
 
     /**
      * 初始化
@@ -48,7 +53,7 @@ class ProtocolManager
      * @param array $config 其它配置项
      * @throws DOPException
      */
-    public function __construct($base_path, $build_path = 'dop', $config = array())
+    public function __construct($base_path, $build_path = 'dop', array $config = array())
     {
         if (!is_dir($base_path)) {
             throw new DOPException('Protocol path:'. $base_path .' not exist!');
@@ -57,15 +62,16 @@ class ProtocolManager
             throw new DOPException('Protocol path:'. $base_path .' is not readable');
         }
         //如果build_path参数不正确，修正为dop
-        if (!is_string($build_path) || FFanstr::isValidVarName($build_path)) {
+        if (!is_string($build_path) || !FFanstr::isValidVarName($build_path)) {
             $build_path = 'dop';
         }
-        $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
+        $this->build_path = $build_path;
         $this->base_path = $base_path;
-        //如果配置了namespace
-        if (isset($config['namespace']) && FFanStr::isValidVarName($config['namespace'])) {
-            $this->namespace = $config['namespace']; 
+        //如果配置了main_namespace(命名空间前缀)
+        if (isset($config['main_namespace'])) {
+            $this->main_namespace = $config['main_namespace']; 
         }
+        $this->config = $config;
     }
 
     /**
@@ -195,9 +201,42 @@ class ProtocolManager
 
     /**
      * 获取基础目录
+     * @return string
      */
     public function getBasePath()
     {
         return $this->base_path;
+    }
+
+    /**
+     * 获取文件生成目录
+     * @return string
+     */
+    public function getBuildPath()
+    {
+        return $this->build_path;
+    }
+
+    /**
+     * 获取main_namespace
+     * @return string
+     */
+    public function getMainNameSpace()
+    {
+        return $this->main_namespace;
+    }
+
+    /**
+     * 获取配置
+     * @param string $key
+     * @param null $default 如果不存在这个值的默认值
+     * @return null
+     */
+    public function getConfig($key, $default = null)
+    {
+        if (!isset($this->config[$key])) {
+            return $default;
+        }
+        return $this->config[$key];
     }
 }
