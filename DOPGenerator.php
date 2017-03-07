@@ -69,7 +69,7 @@ abstract class DOPGenerator
      * 整理生成文件的参数
      * @return array
      */
-    abstract protected function buildArgs();
+    abstract protected function buildTplData();
 
     /**
      * 获取编译的基础目录
@@ -95,11 +95,9 @@ abstract class DOPGenerator
          * @var Struct $struct
          */
         foreach ($class_list as $class_name => $struct) {
-            $tpl_data = array(
-                'args' => $this->buildArgs(),
-                'struct' => $struct,
-                'class_name' => $class_name
-            );
+            $tpl_data = $this->buildTplData();
+            $tpl_data['struct' ] = $struct->export();
+            $tpl_data['class_name' ] = $class_name;
             Tpl::get('php.tpl', $tpl_data);
         }
     }

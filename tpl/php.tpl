@@ -1,7 +1,8 @@
-<?php
-namespace {{$main_namespace}};
 
-class {{$struct->getClassName()}}
+
+{{$code_namespace}} {{$main_namespace}};
+
+class {{$class_name}}
 {
 
 }

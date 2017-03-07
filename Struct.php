@@ -156,4 +156,24 @@ class Struct
     {
         return $this->type;
     }
+
+    /**
+     * 导出为数组格式，方便生成文件
+     * @return array
+     */
+    public function export()
+    {
+        $result = array(
+            'is_extend' => null === $this->parent,
+            'class_name' => $this->className,
+            //'item'
+        );
+        if ($this->parent) {
+            $result['parent'] = array(
+                'class' => $this->parent->getClassName(),
+                'namespace' => $this->parent->getNamespace()
+            ); 
+        }
+        return $result;
+    }
 }
