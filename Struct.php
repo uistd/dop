@@ -80,10 +80,11 @@ class Struct
 
     /**
      * 注释
+     * @param string $note
      */
-    public function setNote()
+    public function setNote($note)
     {
-        
+        $this->note = Item::fixLine(trim($note));
     }
 
     /**
@@ -179,6 +180,7 @@ class Struct
         $result = array(
             'is_extend' => null === $this->parent,
             'class_name' => $this->className,
+            'note' => $this->note,
             'item_list' => $this->getAllItem()
         );
         if ($this->parent) {

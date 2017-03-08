@@ -93,6 +93,20 @@ class ItemType
     );
 
     /**
+     * 每一种类型对应的字符串
+     * @var array
+     */
+    private static $type_str_set = array(
+        self::STRING => 'string',
+        self::FLOAT => 'float',
+        self::BINARY => 'string',
+        self::INT => 'int',
+        self::STRUCT => 'struct',
+        self::ARR => 'list',
+        self::MAP => 'map'
+    );
+
+    /**
      * 获取对应的类名
      * @param string $type
      * @return string
@@ -100,6 +114,20 @@ class ItemType
     public static function getClassName($type)
     {
         return isset(self::$class_set[$type]) ? self::$class_set[$type] : 'Item';
+    }
+
+    /**
+     * 获取类型
+     * @param int $type
+     * @return string
+     * @throws DOPException
+     */
+    public static function getTypeName($type)
+    {
+        if (!isset(self::$type_str_set[$type])) {
+            throw new DOPException('Type:'. $type .' is not support!');
+        }
+        return self::$type_str_set[$type];
     }
 
     /**

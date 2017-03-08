@@ -19,12 +19,7 @@ abstract class DOPGenerator
     /**
      * @var string request的模板
      */
-    protected $request_tpl;
-
-    /**
-     * @var string response的模板
-     */
-    protected $response_tpl;
+    protected $tpl;
 
     /**
      * @var int 文件单位
@@ -43,6 +38,7 @@ abstract class DOPGenerator
             'cache_result' => false
         );
         FFanConfig::add('ffan-tpl', $conf_arr);
+        Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
     }
 
     /**
@@ -102,7 +98,7 @@ abstract class DOPGenerator
             $tpl_data = $this->buildTplData();
             $tpl_data['struct' ] = $struct->export();
             $tpl_data['class_name' ] = $class_name;
-            $result = Tpl::get('php.tpl', $tpl_data);
+            $result = Tpl::get($this->tpl, $tpl_data);
             echo $result, PHP_EOL;
         }
     }

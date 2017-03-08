@@ -14,4 +14,15 @@ class {{$class_name}}
     public ${{$name}}{{if null !== $item->default}} = {{$item->default}}{{/if}};
     
 {{/foreach}}
+    /**
+    * 初始化数据
+    * @param array $data
+    * @return void
+    */
+    public function init($data)
+    {
+    {{foreach $struct.item_list as $name => $item}}
+    {{php_item_int var_name=$name rank=1 data_name="data" item=$item}}
+    {{/foreach}}
+    }
 }

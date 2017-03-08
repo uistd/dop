@@ -9,6 +9,10 @@ use ffan\php\tpl\Tpl;
  */
 class PhpGenerator extends DOPGenerator
 {
+    /**
+     * @var string 模板文件
+     */
+    protected $tpl = 'php/php.tpl';
 
     /**
      * PhpGenerator constructor.
@@ -18,10 +22,21 @@ class PhpGenerator extends DOPGenerator
     {
         parent::__construct($protocol_manager);
         //注册一些私有的修正器
-        Tpl::registerGrep('php_ns', array('\ffan\dop\PhpGenerator', 'phpNameSpace'));
-        Tpl::registerGrep('php_var_type', array('\ffan\dop\PhpGenerator', 'varType'));
+        Tpl::registerGrep('php_ns', array('ffan\dop\PhpGenerator', 'phpNameSpace'));
+        Tpl::registerGrep('php_var_type', array('ffan\dop\PhpGenerator', 'varType'));
+        Tpl::registerPlugin('php_item_int', array('ffan\dop\PhpGenerator', 'phpItemInit'));
     }
 
+    /**
+     * 变更初始化
+     * @param array $args
+     * @return string
+     */
+    public static function phpItemInit($args)
+    {
+        return Tpl::get('php/item_init.tpl', $args);
+    }
+    
     /**
      * PHP命名空间的修正器
      * @param string $ns

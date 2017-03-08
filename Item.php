@@ -96,9 +96,9 @@ abstract class Item
     /**
      * 将多行转换成1行
      * @param string $str
-     * @return mixed|string
+     * @return string
      */
-    protected static function fixLine($str)
+    public static function fixLine($str)
     {
         static $patten  = array("\r\n", "\n", "\r");
         $str = str_replace($patten, '', $str);
