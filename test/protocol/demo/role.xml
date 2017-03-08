@@ -4,7 +4,7 @@
         <string name="user_name" note="用户名"/>
         <string name="name" note="真实姓名"/>
         <string name="mobile" note="手机号"/>
-        <string name="email" note="电子邮件"/>
+        <string name="email" note="电子邮件" default="demo@wanda.cn"/>
         <int name="level" note="等级"/>
         <string name="address" note="地址"/>
         <string name="country" note="国籍" default="中国"/>

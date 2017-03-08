@@ -15,14 +15,15 @@ class {{$class_name}}
     
 {{/foreach}}
     /**
-    * 初始化数据
-    * @param array $data
-    * @return void
-    */
+     * 初始化数据
+     * @param array $data
+     * @return void
+     */
     public function init($data)
     {
-    {{foreach $struct.item_list as $name => $item}}
-    {{php_item_int var_name=$name rank=1 data_name="data" item=$item}}
-    {{/foreach}}
+{{foreach $struct.item_list as $name => $item}}
+    {*循环初始化变量*}
+    {{php_item_init var_name=$name rank=1 data_name="data" item=$item}}
+{{/foreach}}
     }
 }

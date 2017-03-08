@@ -15,7 +15,7 @@ class StructItem extends Item
     /**
      * @var string 结构体名称
      */
-    private $struct_name;
+    protected $struct_name;
 
     /**
      * 设置struct_name

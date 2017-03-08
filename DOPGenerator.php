@@ -39,6 +39,32 @@ abstract class DOPGenerator
         );
         FFanConfig::add('ffan-tpl', $conf_arr);
         Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
+        Tpl::registerGrep('indent_space', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
+        Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
+    }
+
+    /**
+     * 处理缩进和空格
+     * @param int $rank
+     * @param int $indent
+     * @return string
+     */
+    public static function indentSpace($rank, $indent = 0)
+    {
+        //var_dump($indent);
+        $rank += $indent;
+        return str_repeat(' ', $rank * 4);
+    }
+
+    /**
+     * 生成临时变量
+     * @param string $var
+     * @param string $type
+     * @return string
+     */
+    public static function tmpVarName($var, $type)
+    {
+        return $var .'_'. $type;
     }
 
     /**
