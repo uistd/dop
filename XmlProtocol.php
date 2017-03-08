@@ -276,8 +276,12 @@ class XmlProtocol
         }
         if (!empty($item_arr)) {
             $struct_obj = new Struct($this->namespace, $class_name, $type, $is_public);
-            foreach ($item_arr as $name => $struct) {
-                $struct_obj->addItem($name, $struct);
+            //如果有注释
+            if ($struct->hasAttribute('note')) {
+
+            }
+            foreach ($item_arr as $name => $item) {
+                $struct_obj->addItem($name, $item);
             }
             if ($extend_struct) {
                 $struct_obj->extend($extend_struct);
@@ -306,32 +310,43 @@ class XmlProtocol
         }
         switch ($type) {
             case ItemType::STRING:
-                $item_obj = new StringItem($name);
+                $item_obj = new StringItem($name, $this->protocol_manager);
                 break;
             case ItemType::FLOAT:
-                $item_obj = new FloatItem($name);
+                $item_obj = new FloatItem($name, $this->protocol_manager);
                 break;
             case ItemType::BINARY:
-                $item_obj = new BinaryItem($name);
+                $item_obj = new BinaryItem($name, $this->protocol_manager);
                 break;
             case ItemType::ARR:
-                $item_obj = new ListItem($name);
+                $item_obj = new ListItem($name, $this->protocol_manager);
                 $list_item = $this->parseList($name, $item);
                 $item_obj->setItem($list_item);
                 break;
             case ItemType::STRUCT:
-                $item_obj = new StructItem($name);
+                $item_obj = new StructItem($name, $this->protocol_manager);
                 $struct_name = $this->parsePrivateStruct($name, $item);
                 $item_obj->setStructName($struct_name);
                 break;
             case ItemType::MAP:
-                $item_obj = new MapItem($name);
+                $item_obj = new MapItem($name, $this->protocol_manager);
                 break;
             case ItemType::INT:
             default:
-                $item_obj = new IntItem($name);
+                $item_obj = new IntItem($name, $this->protocol_manager);
                 $item_obj->setByte(ItemType::getIntByte($type));
                 break;
+        }
+        //注释
+        /** @var \DOMElement $item */
+        if ($item->hasAttribute('note')){
+            $note = trim($item->getAttribute('note'));
+            $item_obj->setNote($note);
+        }
+        //默认值
+        if ($item->hasAttribute('default')) {
+            $default = $item->getAttribute('default');
+            $item_obj->setDefault($default);
         }
         return $item_obj;
     }

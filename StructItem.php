@@ -35,4 +35,14 @@ class StructItem extends Item
     {
         return $this->struct_name;
     }
+
+    /**
+     * 设置默认值
+     * @param string $value
+     * @throws DOPException
+     */
+    public function setDefault($value)
+    {
+        throw new DOPException($this->protocol_manager->fixErrorMsg('`default` is disabled in struct type'));
+    }
 }

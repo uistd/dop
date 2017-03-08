@@ -7,12 +7,13 @@
         <string name="email" note="电子邮件"/>
         <int name="level" note="等级"/>
         <string name="address" note="地址"/>
-        <int name="gender" note="性别"/>
+        <string name="country" note="国籍" default="中国"/>
+        <int name="gender" note="性别" default="1"/>
         <list name="exp"><int/></list>
         <list name="info"><string/></list>
         <list name="child">
             <struct>
-                <int name="gender" note="性别"/>
+                <int name="gender" default="1" note="性别"/>
                 <int name="age"/>
                 <string name="name"/>
             </struct>

@@ -38,7 +38,11 @@ abstract class DOPGenerator
     public function __construct(ProtocolManager $protocol_manager)
     {
         $this->protocol_manager = $protocol_manager;
-        FFanConfig::add('ffan-tpl', array('tpl_dir' => 'tpl'));
+        $conf_arr = array(
+            'tpl_dir' => 'tpl',
+            'cache_result' => false
+        );
+        FFanConfig::add('ffan-tpl', $conf_arr);
     }
 
     /**
@@ -98,7 +102,8 @@ abstract class DOPGenerator
             $tpl_data = $this->buildTplData();
             $tpl_data['struct' ] = $struct->export();
             $tpl_data['class_name' ] = $class_name;
-            Tpl::get('php.tpl', $tpl_data);
+            $result = Tpl::get('php.tpl', $tpl_data);
+            echo $result, PHP_EOL;
         }
     }
 }

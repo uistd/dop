@@ -53,6 +53,11 @@ class Struct
     private $parent;
 
     /**
+     * @var string 注释 
+     */
+    private $note;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -71,6 +76,14 @@ class Struct
         $this->className = $name;
         $this->is_public = (bool)$is_public;
         $this->type = $type;
+    }
+
+    /**
+     * 注释
+     */
+    public function setNote()
+    {
+        
     }
 
     /**
@@ -166,7 +179,7 @@ class Struct
         $result = array(
             'is_extend' => null === $this->parent,
             'class_name' => $this->className,
-            //'item'
+            'item_list' => $this->getAllItem()
         );
         if ($this->parent) {
             $result['parent'] = array(

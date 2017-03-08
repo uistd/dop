@@ -44,4 +44,14 @@ class MapItem extends Item
     {
         $this->value_type = $value_type;
     }
+    
+    /**
+     * 设置默认值
+     * @param string $value
+     * @throws DOPException
+     */
+    public function setDefault($value)
+    {
+        throw new DOPException($this->protocol_manager->fixErrorMsg('`default` is disabled in map type'));
+    }
 }

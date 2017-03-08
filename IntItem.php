@@ -71,4 +71,17 @@ class IntItem extends Item
     {
         return $this->is_unsigned;
     }
+
+    /**
+     * 设置默认值
+     * @param string $value
+     * @throws DOPException
+     */
+    public function setDefault($value)
+    {
+        if (!is_numeric($value)) {
+            throw new DOPException('默认值只能是int类型');
+        }
+        $this->default = $value;
+    }
 }
