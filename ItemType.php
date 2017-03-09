@@ -52,6 +52,7 @@ class ItemType
         'string' => self::STRING,
         'float' => self::FLOAT,
         'bin' => self::BINARY,
+        'binary' => self::BINARY,
         'int' => self::INT,
         'int32' => self::INT,
         'int8' => self::INT,

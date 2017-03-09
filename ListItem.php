@@ -10,7 +10,7 @@ class ListItem extends Item
     /**
      * @var Item 数组
      */
-    private $item;
+    protected $item;
 
     /**
      * @var int 类型

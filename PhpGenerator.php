@@ -23,7 +23,7 @@ class PhpGenerator extends DOPGenerator
         parent::__construct($protocol_manager);
         //注册一些私有的修正器
         //命名空间
-        Tpl::registerGrep('php_ns', array('ffan\dop\PhpGenerator', 'phpNameSpace'));
+        Tpl::registerGrep('php_ns', array($this, 'phpNameSpace'));
         //类型
         Tpl::registerGrep('php_var_type', array('ffan\dop\PhpGenerator', 'varType'));
         //变量值初始化
@@ -34,26 +34,40 @@ class PhpGenerator extends DOPGenerator
         Tpl::registerGrep('php_array_check', function($type){
             return ItemType::ARR === $type || ItemType::MAP === $type || ItemType::STRUCT === $type;
         });
+        //类型强转
+        Tpl::registerGrep('php_convert_value', array('ffan\dop\PhpGenerator', 'convertValue'));
     }
 
+    /**
+     * @param string $type
+     * @return string
+     */
+    public static function convertValue($type)
+    {
+        $re = '';
+        switch ($type) {
+            case ItemType::FLOAT:
+                $re = '(float)';
+                break;
+            case ItemType::INT:
+                $re = '(int)';
+                break;
+            case ItemType::STRING:
+                $re = '(string)';
+                break;
+        }
+        return $re;
+    }
+    
     /**
      * 是否是简单的类型
      * 简单类型就可以直接赋值
      * @param int $type
-     * @param Item $item
      * @return bool
      */
-    public static function isSimpleType($type, $item)
+    public static function isSimpleType($type)
     {
-        if (ItemType::BINARY === $type || ItemType::FLOAT === $type || ItemType::STRING === $type || ItemType::INT === $type) {
-            return true;
-        }
-        if (ItemType::ARR === $type) {
-            /** @var ListItem $item */
-            $sub_item = $item->getItem();
-            return self::isSimpleType($sub_item->getType(), $sub_item);
-        }
-        return false;
+        return ItemType::BINARY === $type || ItemType::FLOAT === $type || ItemType::STRING === $type || ItemType::INT === $type;
     }
 
     /**
@@ -71,9 +85,16 @@ class PhpGenerator extends DOPGenerator
      * @param string $ns
      * @return mixed|string
      */
-    public static function phpNameSpace($ns)
+    public function phpNameSpace($ns)
     {
+        $main_ns = $this->protocol_manager->getMainNameSpace();
+        if (!empty(is_string($main_ns))) {
+            $ns = $main_ns . $ns;
+        }
         $ns = str_replace('/', '\\', $ns);
+        if ('\\' === $ns[0]) {
+            
+        }
         return $ns;
     }
 
@@ -121,12 +142,23 @@ class PhpGenerator extends DOPGenerator
     protected function buildTplData()
     {
         $build_arg = array(
-            'main_namespace' => $this->protocol_manager->getMainNameSpace(),
             'path_define_var' => $this->protocol_manager->getConfig('path_define_var', 'DOP_PATH'),
             'build_path' => $this->protocol_manager->getBuildPath(),
             'code_namespace' => 'namespace',
             'code_php_tag' => "<?php\n"
         );
         return $build_arg;
+    }
+
+    /**
+     * 生成文件名
+     * @param string $build_path
+     * @param Struct $struct
+     * @return string
+     */
+    protected function buildFileName($build_path, Struct $struct)
+    {
+        $class_name = $struct->getClassName();
+        return $build_path .$class_name .'.php';
     }
 }

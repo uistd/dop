@@ -38,7 +38,7 @@ class ProtocolManager
     /**
      * @var string 命名空间
      */
-    private $main_namespace = 'dop';
+    private $main_namespace = 'ffan\dop';
 
     /**
      * @var array 配置
@@ -69,7 +69,7 @@ class ProtocolManager
         $this->base_path = $base_path;
         //如果配置了main_namespace(命名空间前缀)
         if (isset($config['main_namespace'])) {
-            $this->main_namespace = $config['main_namespace']; 
+            $this->main_namespace = trim($config['main_namespace'], ' \\/'); 
         }
         $this->config = $config;
     }

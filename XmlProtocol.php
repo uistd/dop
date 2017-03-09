@@ -330,6 +330,7 @@ class XmlProtocol
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->protocol_manager);
+                $this->parseMap($name, $item, $item_obj);
                 break;
             case ItemType::INT:
             default:
@@ -380,6 +381,43 @@ class XmlProtocol
         return $this->makeItemObject($name, $type_node);
     }
 
+    /**
+     * 解析Map
+     * @param string $name
+     * @param \DOMNode $item 节点
+     * @param MapItem $item_obj
+     * @throws DOPException
+     */
+    private function parseMap($name, \DOMNode $item, MapItem $item_obj)
+    {
+        $item_list = $item->childNodes;
+        $key_node = null;
+        $value_node = null;
+        for ($i = 0; $i < $item_list->length; ++$i) {
+            $tmp_node = $item_list->item($i);
+            $this->setLineNumber($tmp_node->getLineNo());
+            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
+                continue;
+            }
+            if (null === $key_node) {
+                $key_node = $tmp_node;
+                $key_item = $this->makeItemObject($name, $key_node);
+                $item_obj->setKeyItem($key_item);
+            } elseif (null === $value_node) {
+                $value_node = $tmp_node;
+                $name .= 'Map';
+                $value_item = $this->makeItemObject($name, $value_node);
+                $item_obj->setValueItem($value_item);
+            } else {
+                throw new DOPException($this->protocol_manager->fixErrorMsg('Map下只能有两个节点'));
+            }
+            $key_node = $tmp_node;
+        }
+        if (null === $key_node || null === $value_node) {
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Map下必须包含两个节点'));
+        }
+    }    
+    
     /**
      * 判断名称是否可用
      * @param string $name 类名

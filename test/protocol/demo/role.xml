@@ -11,7 +11,7 @@
         <int name="gender" note="性别" default="1"/>
         <list name="exp"><int/></list>
         <list name="info"><string/></list>
-        <list name="child">
+        <list name="children">
             <struct>
                 <int name="gender" default="1" note="性别"/>
                 <int name="age"/>
@@ -43,6 +43,19 @@
         </request>
         <response extend="/xapi/result">
             <int name="data"/>
+        </response>
+    </action>
+    <action name="demo_role" method="put">
+        <request>
+            <string name="role_ids"/>
+        </request>
+        <response extend="/xapi/result">
+            <map name="data">
+                <int note="role_id"/>
+                <struct extend="role_info" note="用户信息">
+                    <string name="remark" note="备注"/>
+                </struct>
+            </map>
         </response>
     </action>
 </protocol>

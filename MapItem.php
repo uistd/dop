@@ -10,12 +10,12 @@ class MapItem extends Item
     /**
      * @var Item 键类型
      */
-    private $key_type;
+    protected $key_item;
 
     /**
      * @var Item 值类型
      */
-    private $value_type;
+    protected $value_item;
 
     /**
      * @var int 类型
@@ -24,25 +24,26 @@ class MapItem extends Item
 
     /**
      * 设置键类型
-     * @param Item $key_type
+     * @param Item $key_item
      * @throws DOPException
      */
-    public function setKeyType(Item $key_type)
+    public function setKeyItem(Item $key_item)
     {
+        $type = $key_item->getType();
         //目前只支持int 和 string类型的key
-        if ($key_type !== ItemType::INT && $key_type !== ItemType::STRING) {
-            throw new DOPException('key type error. ' . $this->getDocInfo());
+        if ( $type !== ItemType::INT && $type !== ItemType::STRING) {
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Map的key只能是int or string类型'));
         }
-        $this->key_type = $key_type;
+        $this->key_item = $key_item;
     }
 
     /**
      * 设置值类型
-     * @param Item $value_type
+     * @param Item $value_item
      */
-    public function setValueType(Item $value_type)
+    public function setValueItem(Item $value_item)
     {
-        $this->value_type = $value_type;
+        $this->value_item = $value_item;
     }
     
     /**

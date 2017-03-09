@@ -64,7 +64,7 @@ abstract class DOPGenerator
      */
     public static function tmpVarName($var, $type)
     {
-        return $var .'_'. $type;
+        return $type .'_'. (string)$var;
     }
 
     /**
@@ -107,6 +107,14 @@ abstract class DOPGenerator
     }
 
     /**
+     * 生成文件名
+     * @param string $build_path
+     * @param Struct $struct
+     * @return string
+     */
+    abstract protected function buildFileName($build_path, Struct $struct);
+    
+    /**
      * 生成文件
      * @param string $namespace 命令空间
      * @param array[Struct]$class_list
@@ -124,8 +132,9 @@ abstract class DOPGenerator
             $tpl_data = $this->buildTplData();
             $tpl_data['struct' ] = $struct->export();
             $tpl_data['class_name' ] = $class_name;
-            $result = Tpl::get($this->tpl, $tpl_data);
-            echo $result, PHP_EOL;
+            $result = Tpl::get($this->tpl, $tpl_data) . PHP_EOL;
+            $file_name = $this->buildFileName($build_path, $struct);
+            file_put_contents($file_name, $result);
         }
     }
 }
