@@ -4,11 +4,11 @@
 
 {{if !empty($import_struct)}}
     {{foreach $import_struct as $include_name => $v}}
-require '{{$include_name|php_require:$struct.namespace}}';
+require_once '{{$include_name|php_require:$struct.namespace}}';
     {{/foreach}}
 {{/if}}
 {{if $struct.is_extend}}
-require '{{$struct.parent.full_name|php_require:$struct.namespace}}';
+require_once '{{$struct.parent.full_name|php_require:$struct.namespace}}';
 {{/if}}
 {{if $struct.is_extend && $struct.parent.namespace !== $struct.namespace}}
 
