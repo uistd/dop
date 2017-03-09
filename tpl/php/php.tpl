@@ -1,10 +1,20 @@
 {{$code_php_tag}}
 {{$main_ns = $struct.namespace|php_ns}}
 {{$code_namespace}} {{$main_ns}};
+
+{{if !empty($import_struct)}}
+    {{foreach $import_struct as $include_name => $v}}
+require '{{$include_name|php_require:$struct.namespace}}';
+    {{/foreach}}
+{{/if}}
 {{if $struct.is_extend}}
+require '{{$struct.parent.full_name|php_require:$struct.namespace}}';
+{{/if}}
+{{if $struct.is_extend && $struct.parent.namespace !== $struct.namespace}}
 
 use {{$struct.parent.namespace|php_ns}}\{{$struct.parent.class}};
 {{/if}}
+
 /**
  * Class {{$class_name}} {{if !empty($node)}}$note{{/if}} 
  * @package {{$main_ns}}
@@ -26,11 +36,12 @@ class {{$class_name}}{{if $struct.is_extend}} extends {{$struct.parent.class}}{{
     public function init($data)
     {
 {{if $struct.is_extend}}
-    parent::init($data);
+        parent::init($data);
 {{/if}}
 {{foreach $struct.item_list as $name => $item}}
     {*循环初始化变量*}
     {{php_item_init var_name="this->"|joinStr:$name key_name=$name rank=0 data_name="data" item=$item}}
+    
 {{/foreach}}
     }
 }

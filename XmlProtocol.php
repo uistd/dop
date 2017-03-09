@@ -482,15 +482,15 @@ class XmlProtocol
      * 解析私有的struct
      * @param string $name
      * @param \DOMNode $item 节点
-     * @return String
+     * @return Struct
      * @throws DOPException
      */
     private function parsePrivateStruct($name, \DOMNode $item)
     {
         //如果是引用其它Struct，加载其它Struct
         /** @var \DOMElement $item */
-        $this->parseStruct($name, $item);
-        return $name;
+        $struct = $this->parseStruct($name, $item);
+        return $struct;
     }
 
     /**

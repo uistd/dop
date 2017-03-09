@@ -2,6 +2,7 @@
 namespace ffan\dop;
 
 use ffan\php\tpl\Tpl;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class PhpGenerator
@@ -31,11 +32,13 @@ class PhpGenerator extends DOPGenerator
         //检查是不是非常 简单的类型
         Tpl::registerGrep('php_simple_type', array('ffan\dop\PhpGenerator', 'isSimpleType'));
         //是否需要检查是否需要判断数组
-        Tpl::registerGrep('php_array_check', function($type){
+        Tpl::registerGrep('php_array_check', function ($type) {
             return ItemType::ARR === $type || ItemType::MAP === $type || ItemType::STRUCT === $type;
         });
         //类型强转
         Tpl::registerGrep('php_convert_value', array('ffan\dop\PhpGenerator', 'convertValue'));
+        //require 路径
+        Tpl::registerGrep('php_require', array($this, 'requirePath'));
     }
 
     /**
@@ -57,6 +60,40 @@ class PhpGenerator extends DOPGenerator
                 break;
         }
         return $re;
+    }
+
+    /**
+     * require 路径判断
+     * @param string $require_path 引用的类路径
+     * @param string $this_ns 当前的域名
+     * @return string
+     */
+    public function requirePath($require_path, $this_ns)
+    {
+        $class_name = basename($require_path);
+        $path = dirname($require_path);
+        if ($this_ns === $path) {
+            $file_name = $class_name;
+        } else {
+            $require_path_arr = FFanStr::split($path, '/');
+            $current_path_arr = FFanStr::split($this_ns, '/');
+            $len = min(count($current_path_arr), count($require_path_arr));
+            for ($i = 0; $i < $len; ++$i) {
+                $tmp_path = current($require_path_arr);
+                $tmp_ns = current($current_path_arr);
+                if ($tmp_ns !== $tmp_path) {
+                    break;
+                }
+                array_shift($require_path_arr);
+                array_shift($current_path_arr);
+            }
+            $relative_path = str_repeat('../', count($current_path_arr));
+            if (!empty($require_path_arr)) {
+                $relative_path .= join('/', $require_path_arr) .'/';
+            }
+            $file_name = $relative_path . $class_name;
+        }
+        return $file_name .'.php';
     }
     
     /**

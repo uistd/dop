@@ -1,3 +1,4 @@
+{{$rank++}}
 {*值是否是数组，如果是数组，需要加 isset *}
 {{if isset($key_name)}}
     {{$array_check = true}}
@@ -24,8 +25,8 @@
     {{$tmp_var_name = $key_name|tmp_var_name:'struct'}}
     {*这里多写4个空格，因为连续的 模板标签之间的空格会被忽略*}
     {{$blank_space}}    ${{$tmp_var_name}} = new {{$item->struct_name}};
-    {{$blank_space}}${{$tmp_var_name}}->init(${{$data_value}});
-    {{$blank_space}}${{$var_name}} = ${{$tmp_var_name}};
+    {{$blank_space}}    ${{$tmp_var_name}}->init(${{$data_value}});
+    {{$blank_space}}    ${{$var_name}} = ${{$tmp_var_name}};
 {*枚举数组*}
 {{elseif 'list' === $item_type}}
     {*循环变量*}
@@ -35,11 +36,10 @@
     {{$blank_space}}    ${{$result_var_name}} = array();
     {*list类型*}
     {{$sub_item = $item->item}}
-    {{$blank_space}}foreach (${{$data_value}} as ${{$for_var_name}}) {
-    {{$new_rank = $rank + 1}}
-{{php_item_init var_name=$for_var_name rank=$new_rank data_name=$for_var_name item=$sub_item}}
+    {{$blank_space}}    foreach (${{$data_value}} as ${{$for_var_name}}) {
+{{php_item_init var_name=$for_var_name rank=$rank data_name=$for_var_name item=$sub_item}}
     {{$blank_space}}        ${{$result_var_name}}[] = ${{$for_var_name}};
-    {{$blank_space}}}
+    {{$blank_space}}    }
     {{$blank_space}}    ${{$var_name}} = ${{$result_var_name}};
 {*关联数组*}
 {{elseif 'map' === $item_type}}
@@ -55,11 +55,10 @@
     {*value类型*}
     {{$value_item = $item->value_item}}
     {{$blank_space}}foreach (${{$data_value}} as ${{$key_var_name}} => ${{$for_var_name}}) {
-    {{$new_rank = $rank + 1}}
-{{php_item_init var_name=$key_var_name rank=$new_rank data_name=$key_var_name item=$key_item}}
-{{php_item_init var_name=$for_var_name rank=$new_rank data_name=$for_var_name item=$value_item}}
+{{php_item_init var_name=$key_var_name rank=$rank data_name=$key_var_name item=$key_item}}
+{{php_item_init var_name=$for_var_name rank=$rank data_name=$for_var_name item=$value_item}}
     {{$blank_space}}    ${{$result_var_name}}[${{$key_var_name}}] = ${{$for_var_name}};
-    {{$blank_space}}}
+    {{$blank_space}}    }
     {{$blank_space}}    ${{$var_name}} = ${{$result_var_name}};
 {{/if}}
 {{if $array_check}}

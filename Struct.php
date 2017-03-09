@@ -172,22 +172,55 @@ class Struct
     }
 
     /**
+     * 获取全路径名
+     * @return string
+     */
+    public function getFullName()
+    {
+        return $this->namespace .'/'. $this->className;
+    }
+
+    /**
      * 导出为数组格式，方便生成文件
      * @return array
      */
     public function export()
     {
+        $import_struct = array();
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($this->item_list as $name => $item) {
+            $type = $item->getType();
+            if (ItemType::ARR === $type) {
+                /** @var ListItem $item */
+                $item = $item->getItem();
+            }
+            elseif (ItemType::MAP === $type) {
+                /** @var MapItem $item */
+                $item = $item->getValueItem();
+            }
+            //如果是struct
+            if (ItemType::STRUCT === $item->getType()) {
+                /** @var StructItem $item */
+                $struct = $item->getStruct();
+                $import_struct[$struct->getFullName()] = true;
+            }
+        }
         $result = array(
             'is_extend' => null !== $this->parent,
             'class_name' => $this->className,
             'note' => $this->note,
             'item_list' => $this->getAllItem(),
-            'namespace' => $this->namespace
+            'namespace' => $this->namespace,
+            'import_struct' => $import_struct
         );
         if ($this->parent) {
             $result['parent'] = array(
                 'class' => $this->parent->getClassName(),
-                'namespace' => $this->parent->getNamespace()
+                'namespace' => $this->parent->getNamespace(),
+                'full_name' => $this->parent->getFullName()
             ); 
         }
         return $result;

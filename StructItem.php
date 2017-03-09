@@ -18,13 +18,18 @@ class StructItem extends Item
     protected $struct_name;
 
     /**
-     * 设置struct_name
-     * @param string $struct_name
-     * @throws DOPException
+     * @var Struct
      */
-    public function setStructName($struct_name)
+    private $struct;
+    
+    /**
+     * 设置struct_name
+     * @param Struct $struct
+     */
+    public function setStructName(Struct $struct)
     {
-        $this->struct_name = $struct_name;
+        $this->struct_name = $struct->getClassName();
+        $this->struct = $struct;
     }
 
     /**
@@ -34,6 +39,15 @@ class StructItem extends Item
     public function getStructName()
     {
         return $this->struct_name;
+    }
+
+    /**
+     * 获取struct
+     * @return Struct
+     */
+    public function getStruct()
+    {
+        return $this->struct;
     }
 
     /**

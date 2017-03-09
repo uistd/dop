@@ -45,6 +45,15 @@ class MapItem extends Item
     {
         $this->value_item = $value_item;
     }
+
+    /**
+     * 获取值的item
+     * @return Item
+     */
+    public function getValueItem()
+    {
+        return $this->value_item;
+    }
     
     /**
      * 设置默认值

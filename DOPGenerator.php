@@ -132,7 +132,7 @@ abstract class DOPGenerator
             $tpl_data = $this->buildTplData();
             $tpl_data['struct' ] = $struct->export();
             $tpl_data['class_name' ] = $class_name;
-            $result = Tpl::get($this->tpl, $tpl_data) . PHP_EOL;
+            $result = Tpl::get($this->tpl, $tpl_data);
             $file_name = $this->buildFileName($build_path, $struct);
             file_put_contents($file_name, $result);
         }
