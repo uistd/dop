@@ -278,7 +278,7 @@ class XmlProtocol
             $struct_obj = new Struct($this->namespace, $class_name, $type, $is_public);
             //如果有注释
             if ($struct->hasAttribute('note')) {
-                $struct_obj->setNote($struct->getAttribute('node'));
+                $struct_obj->setNote($struct->getAttribute('note'));
             }
             foreach ($item_arr as $name => $item) {
                 $struct_obj->addItem($name, $item);

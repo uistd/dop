@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
-    <struct name="role_info">
+    <struct name="role_info" note="用户信息">
         <string name="user_name" note="用户名"/>
         <string name="name" note="真实姓名"/>
         <string name="mobile" note="手机号"/>
@@ -9,8 +9,19 @@
         <string name="address" note="地址"/>
         <string name="country" note="国籍" default="中国"/>
         <int name="gender" note="性别" default="1"/>
-        <list name="exp"><int/></list>
-        <list name="info"><string/></list>
+        <list name="exp">
+            <int/>
+        </list>
+        <list name="info">
+            <string/>
+        </list>
+        <list name="demo" info="测试">
+            <list>
+                <list>
+                    <int/>
+                </list>
+            </list>
+        </list>
         <list name="children">
             <struct>
                 <int name="gender" default="1" note="性别"/>
@@ -54,6 +65,11 @@
                 <int note="role_id"/>
                 <struct extend="role_info" note="用户信息">
                     <string name="remark" note="备注"/>
+                    <struct name="demo">
+                        <string name="user_name" note="用户名"/>
+                        <string name="name" note="真实姓名"/>
+                        <string name="mobile" note="手机号"/>
+                    </struct>
                 </struct>
             </map>
         </response>
