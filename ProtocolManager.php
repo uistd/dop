@@ -34,7 +34,7 @@ class ProtocolManager
      * @var string 协议生成文件的路径
      */
     private $build_path;
-    
+
     /**
      * @var string 命名空间
      */
@@ -56,10 +56,10 @@ class ProtocolManager
     public function __construct($base_path, $build_path = 'dop', array $config = array())
     {
         if (!is_dir($base_path)) {
-            throw new DOPException('Protocol path:'. $base_path .' not exist!');
+            throw new DOPException('Protocol path:' . $base_path . ' not exist!');
         }
         if (!is_readable($base_path)) {
-            throw new DOPException('Protocol path:'. $base_path .' is not readable');
+            throw new DOPException('Protocol path:' . $base_path . ' is not readable');
         }
         //如果build_path参数不正确，修正为dop
         if (!is_string($build_path) || !FFanstr::isValidVarName($build_path)) {
@@ -69,7 +69,7 @@ class ProtocolManager
         $this->base_path = $base_path;
         //如果配置了main_namespace(命名空间前缀)
         if (isset($config['main_namespace'])) {
-            $this->main_namespace = trim($config['main_namespace'], ' \\/'); 
+            $this->main_namespace = trim($config['main_namespace'], ' \\/');
         }
         $this->config = $config;
     }
@@ -83,7 +83,7 @@ class ProtocolManager
     {
         $namespace = $struct->getNamespace();
         $class_name = $struct->getClassName();
-        $full_name = $namespace .'/'. $class_name;
+        $full_name = $namespace . '/' . $class_name;
         if (isset($this->struct_list[$full_name])) {
             throw new DOPException($this->fixErrorMsg('struct:' . $full_name . ' conflict'));
         }
@@ -104,9 +104,9 @@ class ProtocolManager
         //类名
         $struct_name = basename($class_name);
         if (empty($struct_name)) {
-            throw new DOPException($this->fixErrorMsg('Can not loadStruct '. $class_name));
+            throw new DOPException($this->fixErrorMsg('Can not loadStruct ' . $class_name));
         }
-        $xml_file = dirname($class_name). '.xml';
+        $xml_file = dirname($class_name) . '.xml';
         $xml_protocol = $this->loadXmlProtocol($xml_file);
         $xml_protocol->queryStruct();
         if ($this->hasStruct($class_name)) {
@@ -139,6 +139,45 @@ class ProtocolManager
     {
         $xml_protocol = $this->loadXmlProtocol($file);
         $xml_protocol->query();
+    }
+
+    /**
+     * 编译整个目录
+     */
+    public function build()
+    {
+        $file_list = array();
+        $this->getBuildFileList($this->base_path, $file_list);
+        $path = FFanUtils::fixWithRuntimePath('');
+        $build_cache = FFanUtils::joinFilePath($path, 'dop.cache.php');
+        $cache_arr = false;
+        if (is_file($build_cache)) {
+            $cache_str = file_get_contents($build_cache);
+            if (false !== $cache_str) {
+                $cache_arr = unserialize($cache_str);
+            }
+        }
+    }
+
+    /**
+     * 获取所有需要编译的文件列表
+     * @param string $dir 目录名
+     * @param array $file_list
+     */
+    private function getBuildFileList($dir, &$file_list)
+    {
+        $dir_handle = opendir($dir);
+        if (false === $dir_handle) {
+            return;
+        }
+        while (false != ($file = readdir($dir_handle))) {
+            if ('.' === $file[0] ) {
+                continue;
+            }
+            if ('.xml' !== substr(strtolower($file), -4)) {
+                continue;
+            }
+        }
     }
 
     /**
