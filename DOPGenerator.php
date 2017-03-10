@@ -38,22 +38,28 @@ abstract class DOPGenerator
             'cache_result' => false
         );
         FFanConfig::add('ffan-tpl', $conf_arr);
+        //变量类型的 字符串 表示
         Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
-        Tpl::registerGrep('indent_space', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
+        //生成缩进值
+        Tpl::registerGrep('indent', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
+        //生成临时变量
         Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
     }
 
     /**
      * 处理缩进和空格
      * @param int $rank
-     * @param int $indent
      * @return string
      */
-    public static function indentSpace($rank, $indent = 0)
+    public static function indentSpace($rank)
     {
-        //var_dump($indent);
-        $rank += $indent;
-        return str_repeat(' ', $rank * 4);
+        static $cache_space = array();
+        if (isset($cache_space[$rank])) {
+            return $cache_space[$rank];
+        }
+        $str = str_repeat(' ', $rank * 4);
+        $cache_space[$rank] = $str;
+        return $str;
     }
 
     /**

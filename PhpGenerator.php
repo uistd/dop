@@ -29,6 +29,8 @@ class PhpGenerator extends DOPGenerator
         Tpl::registerGrep('php_var_type', array('ffan\dop\PhpGenerator', 'varType'));
         //变量值初始化
         Tpl::registerPlugin('php_item_init', array('ffan\dop\PhpGenerator', 'phpItemInit'));
+        //数据导出成数组
+        Tpl::registerPlugin('php_export_array', array('ffan\dop\PhpGenerator', 'phpExportArray'));
         //检查是不是非常 简单的类型
         Tpl::registerGrep('php_simple_type', array('ffan\dop\PhpGenerator', 'isSimpleType'));
         //是否需要检查是否需要判断数组
@@ -38,7 +40,7 @@ class PhpGenerator extends DOPGenerator
         //类型强转
         Tpl::registerGrep('php_convert_value', array('ffan\dop\PhpGenerator', 'convertValue'));
         //require 路径
-        Tpl::registerGrep('php_require', array($this, 'requirePath'));
+        Tpl::registerGrep('php_require', array('ffan\dop\PhpGenerator', 'requirePath'));
     }
 
     /**
@@ -68,28 +70,36 @@ class PhpGenerator extends DOPGenerator
      * @param string $this_ns 当前的域名
      * @return string
      */
-    public function requirePath($require_path, $this_ns)
+    public static function requirePath($require_path, $this_ns)
     {
+        static $cache_path = array();
         $class_name = basename($require_path);
         $path = dirname($require_path);
         if ($this_ns === $path) {
             $file_name = $class_name;
         } else {
-            $require_path_arr = FFanStr::split($path, '/');
-            $current_path_arr = FFanStr::split($this_ns, '/');
-            $len = min(count($current_path_arr), count($require_path_arr));
-            for ($i = 0; $i < $len; ++$i) {
-                $tmp_path = current($require_path_arr);
-                $tmp_ns = current($current_path_arr);
-                if ($tmp_ns !== $tmp_path) {
-                    break;
+            //两个目录之间的相对关系增加缓存机制，减少系统开销时间
+            $key = $path .':'. $this_ns;
+            if (isset($cache_path[$key])) {
+                $relative_path = $cache_path[$key];
+            } else {
+                $require_path_arr = FFanStr::split($path, '/');
+                $current_path_arr = FFanStr::split($this_ns, '/');
+                $len = min(count($current_path_arr), count($require_path_arr));
+                for ($i = 0; $i < $len; ++$i) {
+                    $tmp_path = current($require_path_arr);
+                    $tmp_ns = current($current_path_arr);
+                    if ($tmp_ns !== $tmp_path) {
+                        break;
+                    }
+                    array_shift($require_path_arr);
+                    array_shift($current_path_arr);
                 }
-                array_shift($require_path_arr);
-                array_shift($current_path_arr);
-            }
-            $relative_path = str_repeat('../', count($current_path_arr));
-            if (!empty($require_path_arr)) {
-                $relative_path .= join('/', $require_path_arr) .'/';
+                $relative_path = str_repeat('../', count($current_path_arr));
+                if (!empty($require_path_arr)) {
+                    $relative_path .= join('/', $require_path_arr) .'/';
+                }
+                $cache_path[$key] = $relative_path;
             }
             $file_name = $relative_path . $class_name;
         }
@@ -115,6 +125,16 @@ class PhpGenerator extends DOPGenerator
     public static function phpItemInit($args)
     {
         return Tpl::get('php/item_init.tpl', $args);
+    }
+
+    /**
+     * 导出为数组
+     * @param array $args
+     * @return string
+     */
+    public static function phpExportArray($args)
+    {
+        return Tpl::get('php/export_array.tpl', $args);
     }
 
     /**

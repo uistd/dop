@@ -163,6 +163,21 @@ class Struct
     }
 
     /**
+     * 返回所有的Item包括Extend的Item
+     * @return array[Item]
+     */
+    public function getAllExtendItem()
+    {
+        if (!$this->parent) {
+            return $this->item_list;
+        }
+        $item_list = $this->item_list;
+        $parent_item = $this->parent->getAllExtendItem();
+        $item_list += $parent_item;
+        return $item_list;
+    }
+
+    /**
      * 获取类型
      * @return int
      */
@@ -213,6 +228,7 @@ class Struct
             'class_name' => $this->className,
             'note' => $this->note,
             'item_list' => $this->getAllItem(),
+            'extend_item_list' => $this->getAllExtendItem(),
             'namespace' => $this->namespace,
             'import_struct' => $import_struct
         );

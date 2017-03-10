@@ -1,5 +1,7 @@
+{*<?php标签*}
 {{$code_php_tag}}
 {{$main_ns = $struct.namespace|php_ns}}
+{*namespace*}
 {{$code_namespace}} {{$main_ns}};
 
 {{if !empty($struct.import_struct)}}
@@ -16,7 +18,7 @@ use {{$struct.parent.namespace|php_ns}}\{{$struct.parent.class}};
 {{/if}}
 
 /**
- * Class {{$class_name}} {{if !empty($struct.note)}}{{$struct.note}}{{/if}} 
+ * Class {{$class_name}}{{if !empty($struct.note)}} {{$struct.note}}{{/if}} 
  * @package {{$main_ns}}
  */
 class {{$class_name}}{{if $struct.is_extend}} extends {{$struct.parent.class}}{{/if}}
@@ -35,13 +37,24 @@ class {{$class_name}}{{if $struct.is_extend}} extends {{$struct.parent.class}}{{
      */
     public function init($data)
     {
-{{if $struct.is_extend}}
-        parent::init($data);
-{{/if}}
-{{foreach $struct.item_list as $name => $item}}
+{{foreach $struct.extend_item_list as $name => $item}}
     {*循环初始化变量*}
-    {{php_item_init var_name="this->"|joinStr:$name key_name=$name rank=0 data_name="data" item=$item}}
-    
+    {{php_item_init var_name="this->"|joinStr:$name key_name=$name rank=2 data_name="data" item=$item}}
 {{/foreach}}
+    }
+
+    /**
+     * 将值转成数组输出
+     * @return array
+     */
+    public function toArray()
+    {
+        $result = array();
+{{foreach $struct.item_list as $name => $item}}
+    {*循环导出变量*}
+    {{$result_name = "result"|joinStr:"['"|joinStr:$name|joinStr:"']"}}
+    {{php_export_array var_name="this->"|joinStr:$name result_var=$result_name rank=2 item=$item isset_check=true}}
+{{/foreach}}
+        return $result;
     }
 }
