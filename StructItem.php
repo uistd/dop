@@ -21,7 +21,7 @@ class StructItem extends Item
      * @var Struct
      */
     private $struct;
-    
+
     /**
      * 设置struct_name
      * @param Struct $struct

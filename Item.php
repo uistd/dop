@@ -31,7 +31,7 @@ abstract class Item
      * @var string 默认值
      */
     protected $default;
-    
+
     /**
      * Item constructor.
      * @param string $name 名称
@@ -61,7 +61,7 @@ abstract class Item
         if (!is_string($note)) {
             return;
         }
-        $this->note = self::fixLine($note); 
+        $this->note = self::fixLine($note);
     }
 
     /**
@@ -69,7 +69,7 @@ abstract class Item
      * @param string $value
      * @return void
      */
-    abstract public function setDefault($value); 
+    abstract public function setDefault($value);
 
     /**
      * 获取属性的魔术方法
@@ -77,9 +77,10 @@ abstract class Item
      * @return mixed
      * @throws DOPException
      */
-    public function __get($name) {
+    public function __get($name)
+    {
         if (!property_exists($this, $name)) {
-            throw new DOPException('No property '. $name);
+            throw new DOPException('No property ' . $name);
         }
         return $this->$name;
     }
@@ -100,7 +101,7 @@ abstract class Item
      */
     public static function fixLine($str)
     {
-        static $patten  = array("\r\n", "\n", "\r");
+        static $patten = array("\r\n", "\n", "\r");
         $str = str_replace($patten, '', $str);
         return $str;
     }

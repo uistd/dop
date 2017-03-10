@@ -126,7 +126,7 @@ class ItemType
     public static function getTypeName($type)
     {
         if (!isset(self::$type_str_set[$type])) {
-            throw new DOPException('Type:'. $type .' is not support!');
+            throw new DOPException('Type:' . $type . ' is not support!');
         }
         return self::$type_str_set[$type];
     }

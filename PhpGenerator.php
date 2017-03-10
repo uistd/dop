@@ -79,7 +79,7 @@ class PhpGenerator extends DOPGenerator
             $file_name = $class_name;
         } else {
             //两个目录之间的相对关系增加缓存机制，减少系统开销时间
-            $key = $path .':'. $this_ns;
+            $key = $path . ':' . $this_ns;
             if (isset($cache_path[$key])) {
                 $relative_path = $cache_path[$key];
             } else {
@@ -97,15 +97,15 @@ class PhpGenerator extends DOPGenerator
                 }
                 $relative_path = str_repeat('../', count($current_path_arr));
                 if (!empty($require_path_arr)) {
-                    $relative_path .= join('/', $require_path_arr) .'/';
+                    $relative_path .= join('/', $require_path_arr) . '/';
                 }
                 $cache_path[$key] = $relative_path;
             }
             $file_name = $relative_path . $class_name;
         }
-        return $file_name .'.php';
+        return $file_name . '.php';
     }
-    
+
     /**
      * 是否是简单的类型
      * 简单类型就可以直接赋值
@@ -150,7 +150,7 @@ class PhpGenerator extends DOPGenerator
         }
         $ns = str_replace('/', '\\', $ns);
         if ('\\' === $ns[0]) {
-            
+
         }
         return $ns;
     }
@@ -216,6 +216,6 @@ class PhpGenerator extends DOPGenerator
     protected function buildFileName($build_path, Struct $struct)
     {
         $class_name = $struct->getClassName();
-        return $build_path .$class_name .'.php';
+        return $build_path . $class_name . '.php';
     }
 }

@@ -46,6 +46,11 @@ class ProtocolManager
     private $config;
 
     /**
+     * @var string 编译结果
+     */
+    private $build_message;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
@@ -147,22 +152,142 @@ class ProtocolManager
     public function build()
     {
         $file_list = array();
+        $this->build_message = '';
         $this->getBuildFileList($this->base_path, $file_list);
+        if ($this->getConfig('build_cache')) {
+            $this->cacheFilter($file_list);
+        }
+        if (empty($file_list)) {
+            $this->buildLog('无需要编译的文件');
+        } else {
+            $this->doBuild($file_list);
+        }
+        //返回提示消息内容
+        return $this->build_message;
+    }
+
+    /**
+     * 通过缓存过滤掉已经不需要编译的xml文件
+     * @param array $file_list 整个目录所有列表
+     */
+    private function cacheFilter(&$file_list)
+    {
+        $this->buildLogNotice('检查编译缓存');
         $path = FFanUtils::fixWithRuntimePath('');
-        $build_cache = FFanUtils::joinFilePath($path, 'dop.cache.php');
-        $cache_arr = false;
-        if (is_file($build_cache)) {
-            $cache_str = file_get_contents($build_cache);
-            if (false !== $cache_str) {
-                $cache_arr = unserialize($cache_str);
+        $cache_file = FFanUtils::joinFilePath($path, 'dop.cache.php');
+        if (!is_file($cache_file)) {
+            $this->buildLogNotice('缓存文件不存在');
+            return;
+        }
+        $cache_str = file_get_contents($cache_file);
+        if (false === $cache_str) {
+            return;
+        }
+        $cache_arr = unserialize($cache_str);
+        //如果不是数组 或者 没有签名这个key
+        if (!is_array($cache_arr) || !isset($cache_arr['sign'])) {
+            $this->buildLogError('缓存数据错误');
+            return;
+        }
+        $sign_str = $cache_arr['sign'];
+        unset($cache_arr['sign']);
+        //缓存签名不同，不可用
+        if ($sign_str !== $this->signCacheArr($cache_arr)) {
+            $this->buildLogError('缓存签名出错');
+            return;
+        }
+        //缓存的目录和当前的base_path不同
+        if ($cache_arr['base_path'] !== $this->base_path) {
+            $this->buildLogNotice('编译目录改变, 缓存不可用');
+            return;
+        }
+        //生成文件的目标文件夹不同
+        if ($cache_arr['build_path'] !== $this->build_path) {
+            $this->buildLogNotice('生成文件目录改变, 缓存不可用');
+            return;
+        }
+        //配置文件发生变化了
+        if ($cache_arr['config'] !== $this->configMd5()) {
+            $this->buildLogNotice('编译配置改变, 缓存不可用');
+            return;
+        }
+        $build_cache_list = $cache_arr['build_file_arr'];
+        foreach ($file_list as $key => $file) {
+            //不再缓存里
+            if (!isset($build_cache_list[$file])) {
+                continue;
+            }
+            $last_time = filemtime($file);
+            if ($build_cache_list[$file] === $last_time) {
+                $this->buildLog($file . ' 编译结果已经缓存, 无需编译');
+                unset($file_list[$key]);
             }
         }
     }
 
     /**
+     * 编译日志
+     * @param string $msg 消息内容
+     * @param string $type 类型
+     */
+    private function buildLog($msg, $type = 'ok')
+    {
+        $content = '[' . $type . ']' . $msg . PHP_EOL;
+        $this->build_message .= $content;
+    }
+
+    /**
+     * 错误日志
+     * @param string $msg 日志消息
+     */
+    private function buildLogError($msg)
+    {
+        $this->buildLog($msg, 'error');
+    }
+
+    /**
+     * 普通日志
+     * @param string $msg 日志消息
+     */
+    private function buildLogNotice($msg)
+    {
+        $this->buildLog($msg, 'notice');
+    }
+
+    /**
+     * 待编译的所有文件
+     * @param array $file_list
+     */
+    private function doBuild($file_list)
+    {
+        if (empty($file_list)) {
+            return;
+        }
+    }
+
+    /**
+     * 获取当前配置文件的md5码
+     * @return string
+     */
+    private function configMd5()
+    {
+        return md5(serialize($this->config));
+    }
+
+    /**
+     * 缓存签名，用于校验缓存值是否有效
+     * @param array $cache_arr
+     * @return string
+     */
+    private function signCacheArr($cache_arr)
+    {
+        return md5(serialize($cache_arr));
+    }
+
+    /**
      * 获取所有需要编译的文件列表
      * @param string $dir 目录名
-     * @param array $file_list
+     * @param array $file_list 存结果的数组
      */
     private function getBuildFileList($dir, &$file_list)
     {
@@ -171,11 +296,27 @@ class ProtocolManager
             return;
         }
         while (false != ($file = readdir($dir_handle))) {
-            if ('.' === $file[0] ) {
+            if ('.' === $file[0]) {
                 continue;
             }
-            if ('.xml' !== substr(strtolower($file), -4)) {
-                continue;
+            $file_path = $dir . DIRECTORY_SEPARATOR . $file;
+            if (is_dir($file_path)) {
+                if (!FFanStr::isValidVarName($file)) {
+                    $this->buildLogError($file_list . ' 目录名:' . $file . '不能用作命名空间');
+                    continue;
+                }
+                $this->getBuildFileList($file_path, $file_list);
+            } else {
+                if ('.xml' !== substr(strtolower($file), -4)) {
+                    $this->buildLogError($file_list . '非XML文件');
+                    continue;
+                }
+                $tmp_name = basename($file, '.xml');
+                if (!FFanStr::isValidVarName($tmp_name)) {
+                    $this->buildLogError($file_list . ' 目录名:' . $tmp_name . '不能用作命名空间');
+                    continue;
+                }
+                $file_list[] = $file_path;
             }
         }
     }
@@ -215,7 +356,7 @@ class ProtocolManager
     public function setCurrentProtocolDocInfo($doc_info)
     {
         if (!is_string($doc_info)) {
-            throw new \InvalidArgumentException('Invalid doc_info'); 
+            throw new \InvalidArgumentException('Invalid doc_info');
         }
         $this->protocol_doc_info = $doc_info;
     }
@@ -235,7 +376,7 @@ class ProtocolManager
      */
     public function fixErrorMsg($msg)
     {
-        return $msg .' at '. $this->protocol_doc_info;
+        return $msg . ' at ' . $this->protocol_doc_info;
     }
 
     /**

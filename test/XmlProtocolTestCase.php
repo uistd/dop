@@ -10,8 +10,8 @@ $all_protocol = $manager->getAll();
 
 /** @var Struct $struct */
 foreach ($all_protocol as $struct) {
-    echo $struct->getNamespace() .':'. $struct->getClassName(), PHP_EOL;
-    
+    echo $struct->getNamespace() . ':' . $struct->getClassName(), PHP_EOL;
+
     //print_r($struct->getAllItem());
 }
 

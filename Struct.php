@@ -53,7 +53,7 @@ class Struct
     private $parent;
 
     /**
-     * @var string 注释 
+     * @var string 注释
      */
     private $note;
 
@@ -69,7 +69,7 @@ class Struct
         if (!is_string($namespace) || '/' !== $namespace[0]) {
             throw new \InvalidArgumentException('namespace error');
         }
-        if ( self::TYPE_STRUCT !== $type && self::TYPE_REQUEST !== $type && self::TYPE_RESPONSE !== $type) {
+        if (self::TYPE_STRUCT !== $type && self::TYPE_REQUEST !== $type && self::TYPE_RESPONSE !== $type) {
             throw new \InvalidArgumentException('Invalid type');
         }
         $this->namespace = $namespace;
@@ -111,7 +111,7 @@ class Struct
     {
         //如果已经继承了
         if (null !== $this->parent) {
-            throw new DOPException('Struct:'. $this->namespace . $this->className .' 不支持多重继承');
+            throw new DOPException('Struct:' . $this->namespace . $this->className . ' 不支持多重继承');
         }
         $this->parent = $parent_struct;
     }
@@ -192,7 +192,7 @@ class Struct
      */
     public function getFullName()
     {
-        return $this->namespace .'/'. $this->className;
+        return $this->namespace . '/' . $this->className;
     }
 
     /**
@@ -211,8 +211,7 @@ class Struct
             if (ItemType::ARR === $type) {
                 /** @var ListItem $item */
                 $item = $item->getItem();
-            }
-            elseif (ItemType::MAP === $type) {
+            } elseif (ItemType::MAP === $type) {
                 /** @var MapItem $item */
                 $item = $item->getValueItem();
             }
@@ -237,7 +236,7 @@ class Struct
                 'class' => $this->parent->getClassName(),
                 'namespace' => $this->parent->getNamespace(),
                 'full_name' => $this->parent->getFullName()
-            ); 
+            );
         }
         return $result;
     }

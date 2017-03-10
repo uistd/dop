@@ -25,7 +25,7 @@ abstract class DOPGenerator
      * @var int 文件单位
      */
     protected $file_unit;
-    
+
     /**
      * Generator constructor.
      * @param ProtocolManager $protocol_manager
@@ -70,7 +70,7 @@ abstract class DOPGenerator
      */
     public static function tmpVarName($var, $type)
     {
-        return $type .'_'. (string)$var;
+        return $type . '_' . (string)$var;
     }
 
     /**
@@ -119,11 +119,11 @@ abstract class DOPGenerator
      * @return string
      */
     abstract protected function buildFileName($build_path, Struct $struct);
-    
+
     /**
      * 生成文件
      * @param string $namespace 命令空间
-     * @param array[Struct]$class_list
+     * @param array [Struct]$class_list
      */
     private function generateFile($namespace, $class_list)
     {
@@ -136,8 +136,8 @@ abstract class DOPGenerator
          */
         foreach ($class_list as $class_name => $struct) {
             $tpl_data = $this->buildTplData();
-            $tpl_data['struct' ] = $struct->export();
-            $tpl_data['class_name' ] = $class_name;
+            $tpl_data['struct'] = $struct->export();
+            $tpl_data['class_name'] = $class_name;
             $result = Tpl::get($this->tpl, $tpl_data);
             $file_name = $this->buildFileName($build_path, $struct);
             file_put_contents($file_name, $result);

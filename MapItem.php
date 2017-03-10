@@ -31,7 +31,7 @@ class MapItem extends Item
     {
         $type = $key_item->getType();
         //目前只支持int 和 string类型的key
-        if ( $type !== ItemType::INT && $type !== ItemType::STRING) {
+        if ($type !== ItemType::INT && $type !== ItemType::STRING) {
             throw new DOPException($this->protocol_manager->fixErrorMsg('Map的key只能是int or string类型'));
         }
         $this->key_item = $key_item;
@@ -54,7 +54,7 @@ class MapItem extends Item
     {
         return $this->value_item;
     }
-    
+
     /**
      * 设置默认值
      * @param string $value

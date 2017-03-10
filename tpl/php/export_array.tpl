@@ -90,7 +90,7 @@
     {*值类型转换*}
     {{$convert = $item->type|php_convert_value}}
     {{if $isset_check}}
-        {{$rank|indent}}${{$result_var}} = isset(${{$var_name}}) ? {{$convert}}${{$var_name}} : null;
+        {{$rank|indent}}${{$result_var}} = null === ${{$var_name}} ?: {{$convert}}${{$var_name}};
     {{else}}
         {{$rank|indent}}${{$result_var}} = {{$convert}}${{$var_name}};
     {{/if}}

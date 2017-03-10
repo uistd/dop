@@ -29,7 +29,7 @@ class XmlProtocol
      * 解析步骤：action
      */
     const QUERY_STEP_ACTION = 2;
-    
+
     /**
      * @var \DOMDocument xml_handle
      */
@@ -100,7 +100,7 @@ class XmlProtocol
         $this->namespace = $dir_name . basename($file_name, '.xml');
         $this->protocol_manager = $manager;
     }
-    
+
     /**
      * 获取Xpath
      * @return \DOMXpath
@@ -112,7 +112,7 @@ class XmlProtocol
         }
         return $this->path_handle;
     }
-    
+
     /**
      * 解析该xml文件
      */
@@ -200,7 +200,7 @@ class XmlProtocol
             $class_name = $action_name;
             $node_name = strtolower($node->nodeName);
             if (self::REQUEST_NODE === $node_name) {
-                if ( ++$request_count > 1) {
+                if (++$request_count > 1) {
                     throw new DOPException($this->protocol_manager->fixErrorMsg('Only one request node allowed'));
                 }
                 $type = Struct::TYPE_REQUEST;
@@ -210,7 +210,7 @@ class XmlProtocol
                 }
                 $type = Struct::TYPE_RESPONSE;
             } else {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown node:'. $node_name));
+                throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown node:' . $node_name));
             }
             $node_name = ucfirst($node_name);
             if ($action->hasAttribute('method')) {
@@ -219,7 +219,7 @@ class XmlProtocol
                     $err_msg = $this->protocol_manager->fixErrorMsg($method . ' is not support http method type');
                     throw new DOPException($err_msg);
                 }
-                $node_name = ucfirst($method). $node_name;
+                $node_name = ucfirst($method) . $node_name;
             }
             $class_name = $this->joinName($class_name, $node_name);
             /** @var \DOMElement $node */
@@ -340,7 +340,7 @@ class XmlProtocol
         }
         //注释
         /** @var \DOMElement $item */
-        if ($item->hasAttribute('note')){
+        if ($item->hasAttribute('note')) {
             $note = trim($item->getAttribute('note'));
             $item_obj->setNote($note);
         }
@@ -416,8 +416,8 @@ class XmlProtocol
         if (null === $key_node || null === $value_node) {
             throw new DOPException($this->protocol_manager->fixErrorMsg('Map下必须包含两个节点'));
         }
-    }    
-    
+    }
+
     /**
      * 判断名称是否可用
      * @param string $name 类名
@@ -449,7 +449,7 @@ class XmlProtocol
             throw new DOPException('Name:' . $name . ' is invalid');
         }
     }
-    
+
     /**
      * 获取类名全路径
      * @param string $struct_name
@@ -469,13 +469,13 @@ class XmlProtocol
         $dir_name = dirname($struct_name);
         //没有目录
         if ('.' === $dir_name) {
-            return $this->namespace .'/'. $class_name;
+            return $this->namespace . '/' . $class_name;
         }
         //补全
         if ('/' !== $struct_name[0]) {
-            $dir_name = $this->namespace .'/'. $dir_name;
+            $dir_name = $this->namespace . '/' . $dir_name;
         }
-        return $dir_name .'/'. $class_name;
+        return $dir_name . '/' . $class_name;
     }
 
     /**

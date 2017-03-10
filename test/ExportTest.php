@@ -28,3 +28,6 @@ $arr = get_object_vars($role);
 
 echo json_encode($arr);
 print_r($arr);
+
+var_dump(isset($role->exp));
+var_dump(null === $role->exp);
