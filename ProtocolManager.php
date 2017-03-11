@@ -2,7 +2,6 @@
 namespace ffan\dop;
 
 use ffan\php\utils\Str as FFanStr;
-use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class ProtocolManager
@@ -10,6 +9,16 @@ use ffan\php\utils\Utils as FFanUtils;
  */
 class ProtocolManager
 {
+    /**
+     * 编译语言： php
+     */
+    const LANG_PHP = 'php';
+
+    /**
+     * 编译语言：js
+     */
+    const LANG_JS = 'js';
+
     /**
      * @var array 所有的struct列表
      */
@@ -128,6 +137,9 @@ class ProtocolManager
      */
     private function loadXmlProtocol($xml_file)
     {
+        if ('/' !== $xml_file[0]) {
+            $xml_file = '/'. $xml_file;
+        }
         if (isset($this->xml_list[$xml_file])) {
             return $this->xml_list[$xml_file];
         }
@@ -147,82 +159,12 @@ class ProtocolManager
     }
 
     /**
-     * 编译整个目录
+     * 编译成PHP代码
+     * @return string
      */
-    public function build()
+    public function buildPhp()
     {
-        $file_list = array();
-        $this->build_message = '';
-        $this->getBuildFileList($this->base_path, $file_list);
-        if ($this->getConfig('build_cache')) {
-            $this->cacheFilter($file_list);
-        }
-        if (empty($file_list)) {
-            $this->buildLog('无需要编译的文件');
-        } else {
-            $this->doBuild($file_list);
-        }
-        //返回提示消息内容
-        return $this->build_message;
-    }
-
-    /**
-     * 通过缓存过滤掉已经不需要编译的xml文件
-     * @param array $file_list 整个目录所有列表
-     */
-    private function cacheFilter(&$file_list)
-    {
-        $this->buildLogNotice('检查编译缓存');
-        $path = FFanUtils::fixWithRuntimePath('');
-        $cache_file = FFanUtils::joinFilePath($path, 'dop.cache.php');
-        if (!is_file($cache_file)) {
-            $this->buildLogNotice('缓存文件不存在');
-            return;
-        }
-        $cache_str = file_get_contents($cache_file);
-        if (false === $cache_str) {
-            return;
-        }
-        $cache_arr = unserialize($cache_str);
-        //如果不是数组 或者 没有签名这个key
-        if (!is_array($cache_arr) || !isset($cache_arr['sign'])) {
-            $this->buildLogError('缓存数据错误');
-            return;
-        }
-        $sign_str = $cache_arr['sign'];
-        unset($cache_arr['sign']);
-        //缓存签名不同，不可用
-        if ($sign_str !== $this->signCacheArr($cache_arr)) {
-            $this->buildLogError('缓存签名出错');
-            return;
-        }
-        //缓存的目录和当前的base_path不同
-        if ($cache_arr['base_path'] !== $this->base_path) {
-            $this->buildLogNotice('编译目录改变, 缓存不可用');
-            return;
-        }
-        //生成文件的目标文件夹不同
-        if ($cache_arr['build_path'] !== $this->build_path) {
-            $this->buildLogNotice('生成文件目录改变, 缓存不可用');
-            return;
-        }
-        //配置文件发生变化了
-        if ($cache_arr['config'] !== $this->configMd5()) {
-            $this->buildLogNotice('编译配置改变, 缓存不可用');
-            return;
-        }
-        $build_cache_list = $cache_arr['build_file_arr'];
-        foreach ($file_list as $key => $file) {
-            //不再缓存里
-            if (!isset($build_cache_list[$file])) {
-                continue;
-            }
-            $last_time = filemtime($file);
-            if ($build_cache_list[$file] === $last_time) {
-                $this->buildLog($file . ' 编译结果已经缓存, 无需编译');
-                unset($file_list[$key]);
-            }
-        }
+        return $this->doBuild(self::LANG_PHP);
     }
 
     /**
@@ -230,7 +172,7 @@ class ProtocolManager
      * @param string $msg 消息内容
      * @param string $type 类型
      */
-    private function buildLog($msg, $type = 'ok')
+    public function buildLog($msg, $type = 'ok')
     {
         $content = '[' . $type . ']' . $msg . PHP_EOL;
         $this->build_message .= $content;
@@ -240,48 +182,71 @@ class ProtocolManager
      * 错误日志
      * @param string $msg 日志消息
      */
-    private function buildLogError($msg)
+    public function buildLogError($msg)
     {
         $this->buildLog($msg, 'error');
     }
 
     /**
-     * 普通日志
-     * @param string $msg 日志消息
-     */
-    private function buildLogNotice($msg)
-    {
-        $this->buildLog($msg, 'notice');
-    }
-
-    /**
      * 待编译的所有文件
-     * @param array $file_list
+     * @param int $build_lang 编译语言
+     * @return bool
      */
-    private function doBuild($file_list)
+    private function doBuild($build_lang)
     {
+        $file_list = array();
+        $this->build_message = '';
+        $this->getBuildFileList($this->base_path, $file_list);
+        $result = true;
         if (empty($file_list)) {
-            return;
+            $this->buildLog('没有需要编译的文件');
+        } else {
+            $base_len = strlen($this->base_path);
+            try {
+                foreach ($file_list as $xml_file) {
+                    //传入的文件，不需要再包含base_path
+                    $file = substr($xml_file, $base_len + 1);
+                    $this->parseFile($file);
+                    $this->buildLog('Parse '. $file);
+                }
+                $this->generateFile($build_lang);
+                $this->buildLog('done!');
+            } catch (DOPException $exception) {
+                $msg = $exception->getMessage();
+                $line = $exception->getCode();
+                $file = $exception->getFile();
+                $this->buildLogError($msg);
+                $result = false;
+            }
         }
+        return $result;
     }
 
     /**
-     * 获取当前配置文件的md5码
+     * 获取编译的日志
      * @return string
      */
-    private function configMd5()
+    public function getBuildLog()
     {
-        return md5(serialize($this->config));
+        return $this->build_message;
     }
 
     /**
-     * 缓存签名，用于校验缓存值是否有效
-     * @param array $cache_arr
-     * @return string
+     * 生成最终的文件
+     * @param int $build_lang 编译语言
+     * @throws DOPException
      */
-    private function signCacheArr($cache_arr)
+    private function generateFile($build_lang)
     {
-        return md5(serialize($cache_arr));
+        switch ($build_lang) {
+            case self::LANG_PHP:
+                $build_obj = new PhpGenerator($this);
+                break;
+            default:
+                throw new DOPException('不支持的语言:'. $build_lang);
+                break;
+        }
+        $build_obj->generate();
     }
 
     /**

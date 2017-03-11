@@ -131,7 +131,7 @@ class XmlProtocol
         if ($this->query_step & self::QUERY_STEP_STRUCT) {
             return;
         }
-        $this->query_step &= self::QUERY_STEP_STRUCT;
+        $this->query_step |= self::QUERY_STEP_STRUCT;
         $path_handle = $this->getPathHandle();
         $node_list = $path_handle->query('/protocol/struct');
         if (null === $node_list) {

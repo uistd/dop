@@ -149,9 +149,6 @@ class PhpGenerator extends DOPGenerator
             $ns = $main_ns . $ns;
         }
         $ns = str_replace('/', '\\', $ns);
-        if ('\\' === $ns[0]) {
-
-        }
         return $ns;
     }
 
