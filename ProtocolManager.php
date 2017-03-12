@@ -242,6 +242,9 @@ class ProtocolManager
             case self::LANG_PHP:
                 $build_obj = new PhpGenerator($this);
                 break;
+            case self::LANG_JS:
+                $build_obj = new JsGenerator($this);
+                break;
             default:
                 throw new DOPException('不支持的语言:'. $build_lang);
                 break;

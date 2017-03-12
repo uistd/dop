@@ -2,6 +2,7 @@
 namespace ffan\dop;
 
 use ffan\php\tpl\Tpl;
+use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -214,5 +215,34 @@ class PhpGenerator extends DOPGenerator
     {
         $class_name = $struct->getClassName();
         return $build_path . $class_name . '.php';
+    }
+
+    /**
+     * 生成文件
+     * @param string $namespace 命令空间
+     * @param array [Struct] $class_list
+     * @param array $tpl_data 模板数据
+     * @throws DOPException
+     */
+    protected function generateFile($namespace, $class_list, $tpl_data)
+    {
+        $base_path = $this->buildBasePath();
+        $build_path = FFanUtils::joinPath($base_path, $namespace);
+        FFanUtils::pathWriteCheck($build_path);
+        /**
+         * @var string $class_name
+         * @var Struct $struct
+         */
+        foreach ($class_list as $class_name => $struct) {
+            $tpl_data['struct'] = $struct->export();
+            $tpl_data['class_name'] = $class_name;
+            $result = Tpl::get($this->tpl, $tpl_data);
+            $file_name = $this->buildFileName($build_path, $struct);
+            $re = file_put_contents($file_name, $result);
+            if (!$re) {
+                throw new DOPException('Can not put contents to file:' . $file_name);
+            }
+            $this->protocol_manager->buildLog('Generate file:' . $file_name);
+        }
     }
 }

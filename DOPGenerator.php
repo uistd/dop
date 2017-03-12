@@ -92,8 +92,9 @@ abstract class DOPGenerator
             }
             $protocol_list[$namespace][$struct->getClassName()] = $struct;
         }
+        $tpl_data = $this->buildTplData();
         foreach ($protocol_list as $namespace => $class_list) {
-            $this->generateFile($namespace, $class_list);
+            $this->generateFile($namespace, $class_list, $tpl_data);
         }
     }
 
@@ -123,29 +124,9 @@ abstract class DOPGenerator
     /**
      * 生成文件
      * @param string $namespace 命令空间
-     * @param array [Struct]$class_list
+     * @param array[Struct] $class_list
+     * @param array $tpl_data 模板数据
      * @throws DOPException
      */
-    private function generateFile($namespace, $class_list)
-    {
-        $base_path = $this->buildBasePath();
-        $build_path = FFanUtils::joinPath($base_path, $namespace);
-        FFanUtils::pathWriteCheck($build_path);
-        /**
-         * @var string $class_name
-         * @var Struct $struct
-         */
-        foreach ($class_list as $class_name => $struct) {
-            $tpl_data = $this->buildTplData();
-            $tpl_data['struct'] = $struct->export();
-            $tpl_data['class_name'] = $class_name;
-            $result = Tpl::get($this->tpl, $tpl_data);
-            $file_name = $this->buildFileName($build_path, $struct);
-            $re = file_put_contents($file_name, $result);
-            if (!$re) {
-                throw new DOPException('Can not put contents to file:'. $file_name);
-            }
-            $this->protocol_manager->buildLog('Generate file:'. $file_name);
-        }
-    }
+    abstract protected function generateFile($namespace, $class_list, $tpl_data);
 }
