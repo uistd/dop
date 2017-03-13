@@ -244,6 +244,12 @@ class ProtocolManager
                 $build_obj = new JsGenerator($this);
                 break;
             default:
+                //尝试使用自定义类
+                $class_name = $this->getConfig('generator_class');
+                $build_obj = new $class_name($this);
+                if (!$build_obj instanceof DOPGenerator) {
+                    throw new DOPException('无法使用自定义生成类：'. $class_name);
+                }
                 throw new DOPException('不支持的语言:'. $build_lang);
                 break;
         }
