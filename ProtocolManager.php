@@ -213,8 +213,6 @@ class ProtocolManager
                 $this->buildLog('done!');
             } catch (DOPException $exception) {
                 $msg = $exception->getMessage();
-                $line = $exception->getCode();
-                $file = $exception->getFile();
                 $this->buildLogError($msg);
                 $result = false;
             }
