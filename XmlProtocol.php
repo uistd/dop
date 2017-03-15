@@ -71,6 +71,11 @@ class XmlProtocol
     private $query_step = 0;
 
     /**
+     * @var string xml文件名称
+     */
+    private $xml_file_name;
+    
+    /**
      * ProtocolXml constructor.
      * @param ProtocolManager $manager
      * @param string $file_name 协议文件
@@ -78,6 +83,7 @@ class XmlProtocol
     public function __construct(ProtocolManager $manager, $file_name)
     {
         $base_path = $manager->getBasePath();
+        $this->xml_file_name = $file_name;
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
             throw new \InvalidArgumentException('Invalid file:' . $full_name);
@@ -267,7 +273,7 @@ class XmlProtocol
             }
             $struct_name = trim($struct->getAttribute('extend'));
             $struct_name = $this->getFullName($struct_name);
-            $extend_struct = $this->protocol_manager->loadStruct($struct_name);
+            $extend_struct = $this->protocol_manager->loadRequireStruct($struct_name, $this->xml_file_name);
             if (null === $extend_struct) {
                 throw new DOPException($this->protocol_manager->fixErrorMsg('无法找到Struct ' . $struct_name));
             } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {

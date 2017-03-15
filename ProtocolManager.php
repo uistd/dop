@@ -60,6 +60,16 @@ class ProtocolManager
     private $build_message;
 
     /**
+     * @var array 文件之间的依赖关系
+     */
+    private $require_map;
+
+    /**
+     * @var BuildCache 编译缓存
+     */
+    private $cache;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
@@ -85,6 +95,9 @@ class ProtocolManager
         if (isset($config['main_namespace'])) {
             $this->main_namespace = trim($config['main_namespace'], ' \\/');
         }
+        //这里将 base_path 和 build path 写入config，为了做缓存需要
+        $config['__base_path__'] = $base_path;
+        $config['__build_path__'] = $build_path;
         $this->config = $config;
     }
 
@@ -105,12 +118,13 @@ class ProtocolManager
     }
 
     /**
-     * 加载某个struct
-     * @param string $class_name
+     * 加载依赖的某个struct
+     * @param string $class_name 依赖的class
+     * @param string $current_xml 当前正在解析的xml文件
      * @return Struct|null
      * @throws DOPException
      */
-    public function loadStruct($class_name)
+    public function loadRequireStruct($class_name, $current_xml)
     {
         if ($this->hasStruct($class_name)) {
             return $this->struct_list[$class_name];
@@ -121,12 +135,26 @@ class ProtocolManager
             throw new DOPException($this->fixErrorMsg('Can not loadStruct ' . $class_name));
         }
         $xml_file = dirname($class_name) . '.xml';
+        $this->setRequireRelation($xml_file, $current_xml);
         $xml_protocol = $this->loadXmlProtocol($xml_file);
         $xml_protocol->queryStruct();
         if ($this->hasStruct($class_name)) {
             return $this->struct_list[$class_name];
         }
         return null;
+    }
+
+    /**
+     * 设置xml之间的依赖关系
+     * @param string $require_xml
+     * @param string $current_xml
+     */
+    private function setRequireRelation($require_xml, $current_xml)
+    {
+        if (!isset($this->require_map[$current_xml])) {
+            $this->require_map[$current_xml] = array();
+        }
+        $this->require_map[$current_xml][$require_xml] = true;
     }
 
     /**
@@ -188,26 +216,39 @@ class ProtocolManager
     }
 
     /**
+     * notice日志
+     * @param string $msg 日志消息
+     */
+    public function buildLogNotice($msg)
+    {
+        $this->buildLog($msg, 'notice');
+    }
+
+    /**
      * 待编译的所有文件
      * @param int $build_lang 编译语言
      * @return bool
      */
     private function doBuild($build_lang)
     {
+        //加载一些缓存数据
+        $this->cache = new BuildCache($this, $this->config);
+        $require = $this->cache->loadCache('require');
+        if (is_array($require)) {
+            $this->require_map = $require;
+        }
         $file_list = array();
         $this->build_message = '';
         $this->getBuildFileList($this->base_path, $file_list);
+        $this->filterCacheFile($file_list);
         $result = true;
         if (empty($file_list)) {
             $this->buildLog('没有需要编译的文件');
         } else {
-            $base_len = strlen($this->base_path);
             try {
                 foreach ($file_list as $xml_file) {
-                    //传入的文件，不需要再包含base_path
-                    $file = substr($xml_file, $base_len + 1);
-                    $this->parseFile($file);
-                    $this->buildLog('Parse '. $file);
+                    $this->parseFile($xml_file);
+                    $this->buildLog('Parse '. $xml_file);
                 }
                 $this->generateFile($build_lang);
                 $this->buildLog('done!');
@@ -218,6 +259,15 @@ class ProtocolManager
             }
         }
         return $result;
+    }
+
+    /**
+     * 过滤已经编译过缓存过的文件
+     * @param array $file_list
+     */
+    private function filterCacheFile($file_list)
+    {
+        //todo
     }
 
     /**
@@ -267,6 +317,7 @@ class ProtocolManager
         if (false === $dir_handle) {
             return;
         }
+        $base_len = strlen($this->base_path);
         while (false != ($file = readdir($dir_handle))) {
             if ('.' === $file[0]) {
                 continue;
@@ -288,6 +339,7 @@ class ProtocolManager
                     $this->buildLogError($file_list . ' 目录名:' . $tmp_name . '不能用作命名空间');
                     continue;
                 }
+                $xml_file = substr($file_path, $base_len + 1);
                 $file_list[] = $file_path;
             }
         }
