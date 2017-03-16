@@ -135,6 +135,9 @@ class ProtocolManager
             throw new DOPException($this->fixErrorMsg('Can not loadStruct ' . $class_name));
         }
         $xml_file = dirname($class_name) . '.xml';
+        if ('/' === $xml_file[0]) {
+            $xml_file = substr($xml_file, 1);
+        }
         $this->setRequireRelation($xml_file, $current_xml);
         $xml_protocol = $this->loadXmlProtocol($xml_file);
         $xml_protocol->queryStruct();
@@ -151,10 +154,10 @@ class ProtocolManager
      */
     private function setRequireRelation($require_xml, $current_xml)
     {
-        if (!isset($this->require_map[$current_xml])) {
-            $this->require_map[$current_xml] = array();
+        if (!isset($this->require_map[$require_xml])) {
+            $this->require_map[$require_xml] = array();
         }
-        $this->require_map[$current_xml][$require_xml] = true;
+        $this->require_map[$require_xml][$current_xml] = true;
     }
 
     /**
@@ -165,12 +168,10 @@ class ProtocolManager
      */
     private function loadXmlProtocol($xml_file)
     {
-        if ('/' !== $xml_file[0]) {
-            $xml_file = '/'. $xml_file;
-        }
         if (isset($this->xml_list[$xml_file])) {
             return $this->xml_list[$xml_file];
         }
+        $this->buildLog('Load ' . $xml_file);
         $protocol_obj = new XmlProtocol($this, $xml_file);
         $this->xml_list[$xml_file] = $protocol_obj;
         return $protocol_obj;
@@ -231,24 +232,25 @@ class ProtocolManager
      */
     private function doBuild($build_lang)
     {
-        //加载一些缓存数据
-        $this->cache = new BuildCache($this, $this->config);
-        $require = $this->cache->loadCache('require');
-        if (is_array($require)) {
-            $this->require_map = $require;
-        }
         $file_list = array();
         $this->build_message = '';
         $this->getBuildFileList($this->base_path, $file_list);
-        $this->filterCacheFile($file_list);
+        $build_list = $this->filterCacheFile($file_list);
         $result = true;
-        if (empty($file_list)) {
+        if (empty($build_list)) {
             $this->buildLog('没有需要编译的文件');
         } else {
             try {
-                foreach ($file_list as $xml_file) {
+                foreach ($build_list as $xml_file => $v) {
                     $this->parseFile($xml_file);
-                    $this->buildLog('Parse '. $xml_file);
+                }
+                //检查所有的struct，如果是来自没有修改过的文件的，就标记为不用编译
+                /** @var Struct $struct */
+                foreach ($this->struct_list as $struct) {
+                    $file = $struct->getFile();
+                    if (!isset($build_list[$file])) {
+                        $struct->setNeedBuild(false);
+                    }
                 }
                 $this->generateFile($build_lang);
                 $this->buildLog('done!');
@@ -258,16 +260,92 @@ class ProtocolManager
                 $result = false;
             }
         }
+        if ($result) {
+            $this->saveCache($file_list, $this->require_map);
+        }
+        
         return $result;
     }
 
     /**
      * 过滤已经编译过缓存过的文件
      * @param array $file_list
+     * @return array
      */
     private function filterCacheFile($file_list)
     {
-        //todo
+        //不使用缓存
+        if ($this->getConfig('disable_cache')) {
+            return $file_list;
+        }
+        //加载一些缓存数据
+        $cache = $this->getBuildCache();
+        $cache_data = $cache->loadCache('build');
+        if (!is_array($cache_data)) {
+            return $file_list;
+        }
+        $this->require_map = $cache_data['require_map'];
+        $file_build_time = $cache_data['build_time'];
+        $new_file_list = array();
+        //如果文件没有发生改变，就不编译
+        foreach ($file_list as $xml_file => $modify_time) {
+            if (isset($file_build_time[$xml_file]) && $file_build_time[$xml_file] === $modify_time) {
+                $this->buildLogNotice($xml_file . ' no changes.');
+                continue;
+            }
+            $new_file_list[$xml_file] = $modify_time;
+        }
+        //文件发生改变了，把依赖该文件的xml也找出来，所有依赖该文件的都要重新编译
+        $relation_arr = array();
+        foreach ($new_file_list as $xml_file => $modify_time) {
+            if (!isset($this->require_map[$xml_file])) {
+                continue;
+            }
+            foreach ($this->require_map[$xml_file] as $file => $v) {
+                $relation_arr[$file] = $v;
+            }
+        }
+        //将影响的文件合并入$new_file_list
+        foreach ($relation_arr as $file => $v) {
+            //文件已经不存在了
+            if (!isset($file_list[$file])) {
+                continue;
+            }
+            $this->buildLogNotice($file . ' required.');
+            $new_file_list[$file] = $file_list[$file];
+        }
+        return $new_file_list;
+    }
+
+    /**
+     * 保存缓存
+     * @param array $file_time
+     * @param array $require_map
+     */
+    private function saveCache($file_time, $require_map)
+    {
+        //不使用缓存
+        if ($this->getConfig('disable_cache')) {
+            return;
+        }
+        $cache_data = array(
+            'require_map' => $require_map,
+            'build_time' => $file_time
+        );
+        $cache = $this->getBuildCache();
+        $cache->saveCache('build', $cache_data);
+    }
+    
+    /**
+     * 获取缓存实例
+     * @return BuildCache
+     */
+    private function getBuildCache()
+    {
+        if (!$this->cache) {
+            $this->cache = new BuildCache($this, $this->config);
+        }
+        return $this->cache;
     }
 
     /**
@@ -340,7 +418,7 @@ class ProtocolManager
                     continue;
                 }
                 $xml_file = substr($file_path, $base_len + 1);
-                $file_list[] = $file_path;
+                $file_list[$xml_file] = filemtime($file_path);
             }
         }
     }

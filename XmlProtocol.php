@@ -281,7 +281,7 @@ class XmlProtocol
             }
         }
         if (!empty($item_arr)) {
-            $struct_obj = new Struct($this->namespace, $class_name, $type, $is_public);
+            $struct_obj = new Struct($this->namespace, $class_name, $this->xml_file_name, $type, $is_public);
             //如果有注释
             if ($struct->hasAttribute('note')) {
                 $struct_obj->setNote($struct->getAttribute('note'));

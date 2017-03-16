@@ -58,13 +58,24 @@ class Struct
     private $note;
 
     /**
+     * @var string 所在文件
+     */
+    private $file;
+
+    /**
+     * @var bool 是否需要编译
+     */
+    private $need_build = true;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
+     * @param string $file 所在的文件
      * @param int $type 类型
      * @param bool $is_public 是否可以被其它文件调用
      */
-    public function __construct($namespace, $name, $type = self::TYPE_STRUCT, $is_public = false)
+    public function __construct($namespace, $name, $file, $type = self::TYPE_STRUCT, $is_public = false)
     {
         if (!is_string($namespace) || '/' !== $namespace[0]) {
             throw new \InvalidArgumentException('namespace error');
@@ -72,10 +83,38 @@ class Struct
         if (self::TYPE_STRUCT !== $type && self::TYPE_REQUEST !== $type && self::TYPE_RESPONSE !== $type) {
             throw new \InvalidArgumentException('Invalid type');
         }
+        $this->file = $file;
         $this->namespace = $namespace;
         $this->className = $name;
         $this->is_public = (bool)$is_public;
         $this->type = $type;
+    }
+
+    /**
+     * 设置是否需要编译的标志
+     * @param bool $flag
+     */
+    public function setNeedBuild($flag)
+    {
+        $this->need_build = (bool)$flag;
+    }
+
+    /**
+     * 获取所在的文件
+     * @return string
+     */
+    public function getFile()
+    {
+        return $this->file;
+    }
+
+    /**
+     * 是否需要编译
+     * @return bool
+     */
+    public function needBuild()
+    {
+        return $this->need_build;
     }
 
     /**

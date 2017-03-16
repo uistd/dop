@@ -60,7 +60,6 @@ class BuildCache
     {
         $cache_file = $this->cacheFileName($name);
         if (!is_file($cache_file)) {
-            $this->manager->buildLogNotice('不存在缓存文件：' . $name);
             return null;
         }
         $contents = file_get_contents($cache_file);
@@ -88,7 +87,7 @@ class BuildCache
         if (false === $re) {
             $this->manager->buildLogError('写入缓存' . $name . '失败');
         } else {
-            $this->manager->buildLog('生成缓存：' . $name);
+            $this->manager->buildLog('生成缓存：' . $cache_file);
         }
     }
 
@@ -99,8 +98,8 @@ class BuildCache
      */
     private function cacheFileName($name)
     {
-        $path = FFanUtils::fixWithRuntimePath('');
-        return FFanUtils::joinFilePath($path, $name . '.cache');
+        $path = FFanUtils::fixWithRuntimePath($this->manager->getBuildPath());
+        return FFanUtils::joinFilePath($path, '.' . $name . '.cache');
     }
 
     /**
@@ -146,9 +145,10 @@ class BuildCache
         }
         //数据签名不可用
         if (md5($result[self::DATA_KEY]) !== $result[self::SIGN_KEY]) {
+            $this->manager->buildLogNotice('Cache data sign error');
             return null;
         }
-        return $this->unpack($result[self::DATA_KEY]);
+        return $this->decode($result[self::DATA_KEY]);
     }
 
     /**

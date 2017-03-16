@@ -234,6 +234,9 @@ class PhpGenerator extends DOPGenerator
          * @var Struct $struct
          */
         foreach ($class_list as $class_name => $struct) {
+            if (!$struct->needBuild()) {
+                continue;
+            }
             $tpl_data['struct'] = $struct->export();
             $tpl_data['class_name'] = $class_name;
             $result = Tpl::get($this->tpl, $tpl_data);
