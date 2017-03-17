@@ -7,36 +7,32 @@ use ffan\php\utils\Str as FFanStr;
  * Class ValidatorPlugin 数据有效性检验
  * @package ffan\dop
  */
-class ValidatorPlugin
+class ValidatorPlugin extends Plugin
 {
     /**
-     * @var ProtocolManager
+     * @var string 属性名前缀
      */
-    private $manager;
+    protected $attribute_name_prefix = 'v';
 
     /**
-     * ValidatorPlugin constructor.
-     * @param ProtocolManager $manager
+     * @var string
      */
-    public function __construct(ProtocolManager $manager)
-    {
-        $this->manager = $manager;
-    }
+    protected $name = 'validator';
 
     /**
-     * 规则读取
+     * 初始化
      * @param \DOMElement $node
      * @param Item $item
-     * @return ValidRule
+     * @return array
      */
-    private function readRule(\DOMElement $node, Item $item)
+    public function init(\DOMElement $node, Item $item)
     {
         if (!$this->isSupport($item)) {
             return null;
         }
         $valid_rule = new ValidRule();
         $valid_rule->data_from = $this->readValidFrom($node);
-        $valid_rule->is_require = $this->readRequireSet($node);
+        $valid_rule->is_require = $this->readBool($node, 'require', false);
         $type = $item->getType();
         //如果是字符串
         if (ItemType::STRING === $type) {
@@ -46,8 +42,9 @@ class ValidatorPlugin
         } elseif (ItemType::FLOAT === $type) {
             $this->readFloatSet($node, $valid_rule);
         }
+        return get_object_vars($valid_rule);
     }
-
+    
     /**
      * int 配置
      * @param \DOMElement $node
@@ -109,66 +106,6 @@ class ValidatorPlugin
     }
 
     /**
-     * 读取一个bool值
-     * @param \DOMElement $node
-     * @param string $name
-     * @param bool $default 默认值
-     * @return bool
-     */
-    private function readBool($node, $name, $default = false)
-    {
-        $set_str = $this->read($node, $name, $default);
-        return (bool)$set_str;
-    }
-
-    /**
-     * 字符串长度限制
-     * @param \DOMElement $node
-     * @param string $name
-     * @param bool $is_int
-     * @return array|null
-     */
-    private function readSplitSet($node, $name, $is_int = true)
-    {
-        $set_str = $this->read($node, $name);
-        $min = null;
-        $max = null;
-        if (!empty($set_str)) {
-            if (false === strpos($set_str, ',')) {
-                $max = $set_str;
-            } else {
-                $tmp = explode(',', $set_str);
-                $min = trim($tmp[0]);
-                $max = trim($tmp[1]);
-            }
-            if ($is_int) {
-                $min = (int)$min;
-                $max = (int)$max;
-            } else {
-                $min = (float)$min;
-                $max = (float)$max;
-            }
-            if ($max < $min) {
-                $msg = $this->manager->fixErrorMsg('v-length:'. $set_str .' 无效');
-                $this->manager->buildLogError($msg);
-                $max = $min = null;
-            }
-        }
-        return [$min, $max];
-    }
-
-    /**
-     * 是否是必须的参数
-     * @param \DOMElement $node
-     * @return bool
-     */
-    private function readRequireSet($node)
-    {
-        $set_str = $this->read($node, 'require', false);
-        return (bool)$set_str;
-    }
-
-    /**
      * 读取允许的from值
      * @param \DOMElement $node
      * @return int
@@ -212,31 +149,5 @@ class ValidatorPlugin
             return $this->isSupport($item->getItem());
         }
         return ItemType::FLOAT === $type && ItemType::STRING === $type && ItemType::INT;
-    }
-
-    /**
-     * 读取一条规则
-     * @param \DOMElement $node
-     * @param string $name 规则名
-     * @param null $default
-     * @return mixed
-     */
-    private function read($node, $name, $default = null)
-    {
-        $attr_name = $this->attributeName($name);
-        if (!$node->hasAttribute($attr_name)) {
-            return $default;
-        }
-        return trim($node->getAttribute($attr_name));
-    }
-
-    /**
-     * 属性名称
-     * @param string $name 属性名
-     * @return string
-     */
-    private function attributeName($name)
-    {
-        return 'v-' . $name;
     }
 }

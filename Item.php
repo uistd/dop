@@ -33,6 +33,11 @@ abstract class Item
     protected $default;
 
     /**
+     * @var array 插件数据
+     */
+    protected $plugin_data_arr;
+
+    /**
      * Item constructor.
      * @param string $name 名称
      * @param ProtocolManager $manger
@@ -104,5 +109,15 @@ abstract class Item
         static $patten = array("\r\n", "\n", "\r");
         $str = str_replace($patten, '', $str);
         return $str;
+    }
+
+    /**
+     * 添加插件数据
+     * @param string $plugin_name
+     * @param array $data
+     */
+    public function addPluginData($plugin_name, array $data)
+    {
+        $this->plugin_data_arr[$plugin_name] = $data;
     }
 }
