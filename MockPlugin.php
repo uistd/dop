@@ -1,6 +1,7 @@
 <?php
 namespace ffan\dop;
 
+use ffan\php\tpl\Tpl;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -12,8 +13,8 @@ class MockPlugin extends Plugin
     /**
      * @var string
      */
-     protected $name = 'mock';
-    
+    protected $name = 'mock';
+
     /**
      * @var string 属性前缀
      */
@@ -51,7 +52,7 @@ class MockPlugin extends Plugin
         if (!$find_flag && $node->hasAttribute($attr_enum)) {
             $enum_set = FFanStr::split($this->read($node, 'enum'));
             if (empty($enum_set)) {
-                $msg = $this->manager->fixErrorMsg($attr_enum .' 属性填写出错');
+                $msg = $this->manager->fixErrorMsg($attr_enum . ' 属性填写出错');
                 throw new DOPException($msg);
             }
             $mock_rule->enum_set = $enum_set;
@@ -87,5 +88,20 @@ class MockPlugin extends Plugin
             return $this->isSupport($sub_item);
         }
         return ItemType::FLOAT === $type && ItemType::STRING === $type && ItemType::INT;
+    }
+
+    /**
+     * 生成代码
+     * @param Struct $struct
+     * @return string
+     */
+    public function generateCode(Struct $struct)
+    {
+        $tpl_type = $this->manager->getBuildTplType();
+        $tpl = $tpl_type . '/plugin_' . $this->name;
+        if (!Tpl::hasTpl($tpl)) {
+            return '';
+        }
+        return Tpl::get($tpl, $struct);
     }
 }

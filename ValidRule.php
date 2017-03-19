@@ -120,7 +120,7 @@ class ValidRule
      * @var int 小数点精度
      */
     public $precision;
-    
+
     /**
      * 数据类型格式化
      * @param string $type

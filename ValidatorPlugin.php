@@ -2,6 +2,7 @@
 namespace ffan\dop;
 
 use ffan\php\utils\Str as FFanStr;
+use ffan\php\tpl\Tpl;
 
 /**
  * Class ValidatorPlugin 数据有效性检验
@@ -44,13 +45,14 @@ class ValidatorPlugin extends Plugin
         }
         return get_object_vars($valid_rule);
     }
-    
+
     /**
      * int 配置
      * @param \DOMElement $node
      * @param ValidRule $valid_rule
      */
-    private function readIntSet($node, $valid_rule){
+    private function readIntSet($node, $valid_rule)
+    {
         list($min, $max) = $this->readSplitSet($node, 'range');
         if (null !== $min) {
             $valid_rule->min_value = $min;
@@ -75,7 +77,7 @@ class ValidatorPlugin extends Plugin
             $valid_rule->max_value = $max;
         }
     }
-    
+
     /**
      * 字符串配置
      * @param \DOMElement $node
@@ -149,5 +151,20 @@ class ValidatorPlugin extends Plugin
             return $this->isSupport($item->getItem());
         }
         return ItemType::FLOAT === $type && ItemType::STRING === $type && ItemType::INT;
+    }
+
+    /**
+     * 生成代码
+     * @param Struct $struct
+     * @return string
+     */
+    public function generateCode(Struct $struct)
+    {
+        $tpl_type = $this->manager->getBuildTplType();
+        $tpl = $tpl_type . '/plugin_' . $this->name;
+        if (!Tpl::hasTpl($tpl)) {
+            return '';
+        }
+        return Tpl::get($tpl, $struct);
     }
 }

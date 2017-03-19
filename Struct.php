@@ -265,6 +265,7 @@ class Struct
             'is_extend' => null !== $this->parent,
             'class_name' => $this->className,
             'note' => $this->note,
+            'type' => $this->type,
             'item_list' => $this->getAllItem(),
             'extend_item_list' => $this->getAllExtendItem(),
             'namespace' => $this->namespace,

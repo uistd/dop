@@ -74,7 +74,7 @@ class XmlProtocol
      * @var string xml文件名称
      */
     private $xml_file_name;
-    
+
     /**
      * ProtocolXml constructor.
      * @param ProtocolManager $manager
@@ -304,15 +304,15 @@ class XmlProtocol
     /**
      * 生成item对象
      * @param string $name
-     * @param \DOMNode $item 节点
+     * @param \DOMNode $dom_node 节点
      * @return Item
      * @throws DOPException
      */
-    private function makeItemObject($name, \DOMNode $item)
+    private function makeItemObject($name, $dom_node)
     {
-        $type = ItemType::getType($item->nodeName);
+        $type = ItemType::getType($dom_node->nodeName);
         if (null === $type) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown type `' . $item->nodeName . '`'));
+            throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown type `' . $dom_node->nodeName . '`'));
         }
         switch ($type) {
             case ItemType::STRING:
@@ -326,17 +326,17 @@ class XmlProtocol
                 break;
             case ItemType::ARR:
                 $item_obj = new ListItem($name, $this->protocol_manager);
-                $list_item = $this->parseList($name, $item);
+                $list_item = $this->parseList($name, $dom_node);
                 $item_obj->setItem($list_item);
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->protocol_manager);
-                $struct_name = $this->parsePrivateStruct($name, $item);
+                $struct_name = $this->parsePrivateStruct($name, $dom_node);
                 $item_obj->setStructName($struct_name);
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->protocol_manager);
-                $this->parseMap($name, $item, $item_obj);
+                $this->parseMap($name, $dom_node, $item_obj);
                 break;
             case ItemType::INT:
             default:
@@ -345,17 +345,41 @@ class XmlProtocol
                 break;
         }
         //注释
-        /** @var \DOMElement $item */
-        if ($item->hasAttribute('note')) {
-            $note = trim($item->getAttribute('note'));
+        /** @var \DOMElement $dom_node */
+        if ($dom_node->hasAttribute('note')) {
+            $note = trim($dom_node->getAttribute('note'));
             $item_obj->setNote($note);
         }
         //默认值
-        if ($item->hasAttribute('default')) {
-            $default = $item->getAttribute('default');
+        if ($dom_node->hasAttribute('default')) {
+            $default = $dom_node->getAttribute('default');
             $item_obj->setDefault($default);
         }
+        $this->parsePlugin($dom_node, $item_obj);
         return $item_obj;
+    }
+
+    /**
+     * 插件解析
+     * @param \DOMElement $dom_node 节点
+     * @param Item $item
+     */
+    private function parsePlugin($dom_node, $item)
+    {
+        $plugin_list = $this->protocol_manager->getPluginList();
+        if (null === $plugin_list) {
+            return;
+        }
+        /**
+         * @var string $name
+         * @var Plugin $plugin
+         */
+        foreach ($plugin_list as $name => $plugin) {
+            $options = $plugin->init($dom_node, $item);
+            if (null !== $options) {
+                $item->addPluginData($name, $options);
+            }
+        }
     }
 
     /**

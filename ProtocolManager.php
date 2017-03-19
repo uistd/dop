@@ -10,14 +10,14 @@ use ffan\php\utils\Str as FFanStr;
 class ProtocolManager
 {
     /**
-     * 编译语言： php
+     * 编译模板： php
      */
-    const LANG_PHP = 'php';
+    const BUILD_TPL_PHP = 'php';
 
     /**
-     * 编译语言：js
+     * 编译模板：js
      */
-    const LANG_JS = 'js';
+    const BUILD_TPL_JS = 'js';
 
     /**
      * @var array 所有的struct列表
@@ -70,6 +70,16 @@ class ProtocolManager
     private $cache;
 
     /**
+     * @var array 插件
+     */
+    private $plugin_list;
+
+    /**
+     * @var int 编译模板
+     */
+    private $build_tpl_type;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
@@ -99,6 +109,7 @@ class ProtocolManager
         $config['__base_path__'] = $base_path;
         $config['__build_path__'] = $build_path;
         $this->config = $config;
+        $this->initPlugin();
     }
 
     /**
@@ -193,7 +204,7 @@ class ProtocolManager
      */
     public function buildPhp()
     {
-        return $this->doBuild(self::LANG_PHP);
+        return $this->doBuild(self::BUILD_TPL_PHP);
     }
 
     /**
@@ -263,7 +274,7 @@ class ProtocolManager
         if ($result) {
             $this->saveCache($file_list, $this->require_map);
         }
-        
+
         return $result;
     }
 
@@ -335,7 +346,7 @@ class ProtocolManager
         $cache = $this->getBuildCache();
         $cache->saveCache('build', $cache_data);
     }
-    
+
     /**
      * 获取缓存实例
      * @return BuildCache
@@ -359,16 +370,16 @@ class ProtocolManager
 
     /**
      * 生成最终的文件
-     * @param int $build_lang 编译语言
+     * @param int $build_tpl 编译模板
      * @throws DOPException
      */
-    private function generateFile($build_lang)
+    private function generateFile($build_tpl)
     {
-        switch ($build_lang) {
-            case self::LANG_PHP:
+        switch ($build_tpl) {
+            case self::BUILD_TPL_PHP:
                 $build_obj = new PhpGenerator($this);
                 break;
-            case self::LANG_JS:
+            case self::BUILD_TPL_JS:
                 $build_obj = new JsGenerator($this);
                 break;
             default:
@@ -376,9 +387,9 @@ class ProtocolManager
                 $class_name = $this->getConfig('generator_class');
                 $build_obj = new $class_name($this);
                 if (!$build_obj instanceof DOPGenerator) {
-                    throw new DOPException('无法使用自定义生成类：'. $class_name);
+                    throw new DOPException('无法使用自定义生成类：' . $class_name);
                 }
-                throw new DOPException('不支持的语言:'. $build_lang);
+                throw new DOPException('不支持的编译模板:' . $build_tpl);
                 break;
         }
         $build_obj->generate();
@@ -520,5 +531,48 @@ class ProtocolManager
             return $default;
         }
         return $this->config[$key];
+    }
+
+    /**
+     * 初始化插件
+     * @throws DOPException
+     */
+    private function initPlugin()
+    {
+        $plugin_list = $this->getConfig('plugin');
+        if (!is_array($plugin_list)) {
+            return;
+        }
+        foreach ($plugin_list as $name => $plugin_conf) {
+            switch ($name) {
+                case 'validator':
+                    $plugin = new ValidatorPlugin($this);
+                    break;
+                case 'mock':
+                    $plugin = new MockPlugin($this);
+                    break;
+                default:
+                    throw new DOPException('Plugin ' . $name . ' not recognized!');
+            }
+            $this->plugin_list[$name] = $plugin;
+        }
+    }
+
+    /**
+     * 获取插件列表
+     * @return array|null
+     */
+    public function getPluginList()
+    {
+        return $this->plugin_list;
+    }
+
+    /**
+     * 获取当前编译的模板类型
+     * @return string
+     */
+    public function getBuildTplType()
+    {
+        return $this->build_tpl_type;
     }
 }

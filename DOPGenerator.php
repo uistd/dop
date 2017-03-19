@@ -44,6 +44,8 @@ abstract class DOPGenerator
         Tpl::registerGrep('indent', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
         //生成临时变量
         Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
+        //插件代码
+        Tpl::registerPlugin('plugin_code', array($this, 'pluginCode'));
     }
 
     /**
@@ -60,6 +62,29 @@ abstract class DOPGenerator
         $str = str_repeat(' ', $rank * 4);
         $cache_space[$rank] = $str;
         return $str;
+    }
+
+    /**
+     * 插件代码入口
+     * @param array
+     * @return string
+     */
+    public function pluginCode($args)
+    {
+        $plugin_list = $this->protocol_manager->getPluginList();
+        if (null === $plugin_list) {
+            return '';
+        }
+        $plugin_code = '';
+        /**
+         * @var string $name
+         * @var Plugin $plugin
+         */
+        foreach ($plugin_list as $name => $plugin) {
+            $plugin_code .= $plugin->generateCode($args);
+            $plugin_code .= PHP_EOL;
+        }
+        return $plugin_code;
     }
 
     /**
@@ -124,7 +149,7 @@ abstract class DOPGenerator
     /**
      * 生成文件
      * @param string $namespace 命令空间
-     * @param array[Struct] $class_list
+     * @param array [Struct] $class_list
      * @param array $tpl_data 模板数据
      * @throws DOPException
      */

@@ -11,7 +11,7 @@ abstract class Plugin
      * @var string 插件相关属性名的前缀
      */
     protected $attribute_name_prefix;
-    
+
     /**
      * @var ProtocolManager;
      */
@@ -21,14 +21,21 @@ abstract class Plugin
      * @var string 插件名
      */
     protected $name;
-    
+
+    /**
+     * @var null|array 插件配置
+     */
+    protected $config;
+
     /**
      * PluginInterface constructor.
      * @param ProtocolManager $manager
+     * @param array $config
      */
-    public function __construct(ProtocolManager $manager)
+    public function __construct(ProtocolManager $manager, $config = null)
     {
         $this->manager = $manager;
+        $this->config = $config;
     }
 
     /**
@@ -51,7 +58,7 @@ abstract class Plugin
         }
         return $this->name;
     }
-    
+
     /**
      * 字符串长度限制
      * @param \DOMElement $node
@@ -80,7 +87,7 @@ abstract class Plugin
                 $max = (float)$max;
             }
             if ($max < $min) {
-                $msg = $this->manager->fixErrorMsg('v-length:'. $set_str .' 无效');
+                $msg = $this->manager->fixErrorMsg('v-length:' . $set_str . ' 无效');
                 $this->manager->buildLogError($msg);
                 $max = $min = null;
             }
@@ -116,7 +123,7 @@ abstract class Plugin
         }
         return trim($node->getAttribute($attr_name));
     }
-    
+
     /**
      * 属性名称
      * @param string $name 属性名
@@ -134,4 +141,25 @@ abstract class Plugin
         }
         return $result . $name;
     }
+
+    /**
+     * 获取插件的配置
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    protected function getConfig($key, $default = null)
+    {
+        if (!isset($this->config[$key])) {
+            return $default;
+        }
+        return $this->config[$key];
+    }
+
+    /**
+     * 生成代码
+     * @param Struct $struct
+     * @return string
+     */
+    abstract public function generateCode(Struct $struct);
 }
