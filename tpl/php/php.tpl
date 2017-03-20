@@ -57,4 +57,5 @@ class {{$class_name}}{{if $struct.is_extend}} extends {{$struct.parent.class}}{{
 {{/foreach}}
         return $result;
     }
+    {{plugin_code struct=$struct.self}}
 }

@@ -238,11 +238,12 @@ class ProtocolManager
 
     /**
      * 待编译的所有文件
-     * @param int $build_lang 编译语言
+     * @param int $build_tpl 编译模板类型
      * @return bool
      */
-    private function doBuild($build_lang)
+    private function doBuild($build_tpl)
     {
+        $this->build_tpl_type = $build_tpl;
         $file_list = array();
         $this->build_message = '';
         $this->getBuildFileList($this->base_path, $file_list);
@@ -263,7 +264,7 @@ class ProtocolManager
                         $struct->setNeedBuild(false);
                     }
                 }
-                $this->generateFile($build_lang);
+                $this->generateFile($build_tpl);
                 $this->buildLog('done!');
             } catch (DOPException $exception) {
                 $msg = $exception->getMessage();

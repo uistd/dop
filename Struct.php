@@ -20,7 +20,7 @@ class Struct
     /**
      * 返回包
      */
-    const TYPE_RESPONSE = 3;
+    const TYPE_RESPONSE = 4;
 
     /**
      * @var array
@@ -68,6 +68,11 @@ class Struct
     private $need_build = true;
 
     /**
+     * @var int 被引用的类型
+     */
+    private $refer_type = 0;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -88,6 +93,25 @@ class Struct
         $this->className = $name;
         $this->is_public = (bool)$is_public;
         $this->type = $type;
+    }
+
+    /**
+     * 增加一种被引用的类型
+     * @param int $type 类型 
+     */
+    public function addReferType($type)
+    {
+        $this->refer_type |= $type;
+    }
+
+    /**
+     * 是否被指定的类型引用
+     * @param int $type
+     * @return bool
+     */
+    public function hasReferType($type)
+    {
+        return ($this->refer_type & $type) === $type;
     }
 
     /**
@@ -269,7 +293,8 @@ class Struct
             'item_list' => $this->getAllItem(),
             'extend_item_list' => $this->getAllExtendItem(),
             'namespace' => $this->namespace,
-            'import_struct' => $import_struct
+            'import_struct' => $import_struct,
+            'self' => $this
         );
         if ($this->parent) {
             $result['parent'] = array(

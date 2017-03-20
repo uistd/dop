@@ -26,7 +26,7 @@ class StructItem extends Item
      * 设置struct_name
      * @param Struct $struct
      */
-    public function setStructName(Struct $struct)
+    public function setStruct(Struct $struct)
     {
         $this->struct_name = $struct->getClassName();
         $this->struct = $struct;

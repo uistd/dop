@@ -1,5 +1,6 @@
 <?php
 namespace ffan\dop;
+use ffan\php\tpl\Tpl;
 
 /**
  * Class Plugin
@@ -26,6 +27,16 @@ abstract class Plugin
      * @var null|array 插件配置
      */
     protected $config;
+
+    /**
+     * @var bool 是否存在插件的模板
+     */
+    protected $has_tpl;
+
+    /**
+     * @var string 模板文件
+     */
+    protected $tpl_name;
 
     /**
      * PluginInterface constructor.
@@ -162,4 +173,30 @@ abstract class Plugin
      * @return string
      */
     abstract public function generateCode(Struct $struct);
+
+    /**
+     * 是否存在插件的模板文件
+     * @return bool
+     */
+    protected function hasPluginTpl()
+    {
+        if (null === $this->has_tpl) {
+            $tpl_name = $this->getPluginTplName();
+            $this->has_tpl = Tpl::hasTpl($tpl_name);
+        }
+        return $this->has_tpl;
+    }
+
+    /**
+     * 获取模板文件
+     * @return string
+     */
+    protected function getPluginTplName()
+    {
+        if (null === $this->tpl_name) {
+            $tpl_type = $this->manager->getBuildTplType();
+            $this->tpl_name = $tpl_type . '/plugin_' . $this->name;
+        }
+        return $this->tpl_name;
+    }
 }

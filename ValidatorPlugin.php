@@ -3,6 +3,7 @@ namespace ffan\dop;
 
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\tpl\Tpl;
+use ffan\php\utils\Str;
 
 /**
  * Class ValidatorPlugin 数据有效性检验
@@ -160,11 +161,19 @@ class ValidatorPlugin extends Plugin
      */
     public function generateCode(Struct $struct)
     {
-        $tpl_type = $this->manager->getBuildTplType();
-        $tpl = $tpl_type . '/plugin_' . $this->name;
-        if (!Tpl::hasTpl($tpl)) {
+        $type = $struct->getType();
+        //如果这是一个struct，没有被request引用，不需要生成相关代码
+        if (Struct::TYPE_STRUCT === $type && !$struct->hasReferType(Struct::TYPE_REQUEST)) {
+            return '';
+        }//如果不是请求的协议
+        elseif (Struct::TYPE_REQUEST !== $type) {
             return '';
         }
-        return Tpl::get($tpl, $struct);
+        //如果模板文件不存在
+        if (!$this->hasPluginTpl()) {
+            return '';
+        }
+        $tpl_name = $this->getPluginTplName();
+        return Tpl::get($tpl_name, $struct);
     }
 }

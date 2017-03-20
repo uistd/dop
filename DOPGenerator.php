@@ -81,7 +81,7 @@ abstract class DOPGenerator
          * @var Plugin $plugin
          */
         foreach ($plugin_list as $name => $plugin) {
-            $plugin_code .= $plugin->generateCode($args);
+            $plugin_code .= $plugin->generateCode($args['struct']);
             $plugin_code .= PHP_EOL;
         }
         return $plugin_code;

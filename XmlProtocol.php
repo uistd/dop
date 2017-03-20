@@ -76,6 +76,11 @@ class XmlProtocol
     private $xml_file_name;
 
     /**
+     * @var int 当前正在解析的struct类型
+     */
+    private $current_struct_type;
+
+    /**
      * ProtocolXml constructor.
      * @param ProtocolManager $manager
      * @param string $file_name 协议文件
@@ -143,6 +148,7 @@ class XmlProtocol
         if (null === $node_list) {
             return;
         }
+        $this->current_struct_type = Struct::TYPE_STRUCT;
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
@@ -228,8 +234,9 @@ class XmlProtocol
                 $node_name = ucfirst($method) . $node_name;
             }
             $class_name = $this->joinName($class_name, $node_name);
+            $this->current_struct_type = $type;
             /** @var \DOMElement $node */
-            $this->parseStruct($class_name, $node, $type);
+            $this->parseStruct($class_name, $node, false, $type);
         }
     }
 
@@ -331,8 +338,9 @@ class XmlProtocol
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->protocol_manager);
-                $struct_name = $this->parsePrivateStruct($name, $dom_node);
-                $item_obj->setStructName($struct_name);
+                $struct_obj = $this->parsePrivateStruct($name, $dom_node);
+                $item_obj->setStruct($struct_obj);
+                $struct_obj->addReferType($this->current_struct_type);
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->protocol_manager);
