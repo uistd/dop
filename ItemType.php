@@ -18,7 +18,7 @@ class ItemType
     const INT = 2;
 
     /**
-     * 浮点数
+     * 单精度浮点数
      */
     const FLOAT = 3;
 
@@ -43,6 +43,11 @@ class ItemType
     const MAP = 7;
 
     /**
+     * 双精度浮点数
+     */
+    const DOUBLE = 8;
+
+    /**
      * 类型设置
      * @var array
      */
@@ -63,7 +68,8 @@ class ItemType
         'bigint' => self::INT,
         'list' => self::ARR,
         'struct' => self::STRUCT,
-        'map' => self::MAP
+        'map' => self::MAP,
+        'double' => self::DOUBLE
     );
 
     /**
@@ -90,7 +96,8 @@ class ItemType
         self::INT => 'ItemInt',
         self::STRUCT => 'ItemStruct',
         self::ARR => 'ItemList',
-        self::MAP => 'ItemMap'
+        self::MAP => 'ItemMap',
+        self::DOUBLE => 'ItemDouble'
     );
 
     /**
@@ -104,7 +111,8 @@ class ItemType
         self::INT => 'int',
         self::STRUCT => 'struct',
         self::ARR => 'list',
-        self::MAP => 'map'
+        self::MAP => 'map',
+        self::DOUBLE => 'double'
     );
 
     /**
@@ -141,21 +149,6 @@ class ItemType
         $type = strtolower($type);
         if (isset(self::$typeSets[$type])) {
             return self::$typeSets[$type];
-        } else {
-            $first_char = $type[0];
-            $last_char = $type[strlen($type) - 1];
-            //如果{ }配对，表示 对象
-            if ('{' === $first_char && '}' === $last_char) {
-                return ItemType::STRUCT;
-            } //如果[ ]配对，表示 数组 或者 关联数组
-            elseif ('[' === $first_char && ']' === $last_char) {
-                //不带 => 表示数组
-                if (false === strpos($last_char, '=>')) {
-                    return ItemType::ARR;
-                } else {
-                    return ItemType::MAP;
-                }
-            }
         }
         return null;
     }

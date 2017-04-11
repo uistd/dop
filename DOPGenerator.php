@@ -1,7 +1,6 @@
 <?php
 namespace ffan\dop;
 
-use ffan\php\tpl\Tpl;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Config as FFanConfig;
 
@@ -33,11 +32,7 @@ abstract class DOPGenerator
     public function __construct(ProtocolManager $protocol_manager)
     {
         $this->protocol_manager = $protocol_manager;
-        $conf_arr = array(
-            'tpl_dir' => 'tpl',
-            'cache_result' => false
-        );
-        FFanConfig::add('ffan-tpl', $conf_arr);
+        /**
         //变量类型的 字符串 表示
         Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
         //生成缩进值
@@ -46,6 +41,7 @@ abstract class DOPGenerator
         Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
         //插件代码
         Tpl::registerPlugin('plugin_code', array($this, 'pluginCode'));
+         */
     }
 
     /**
@@ -121,6 +117,15 @@ abstract class DOPGenerator
         foreach ($protocol_list as $namespace => $class_list) {
             $this->generateFile($namespace, $class_list, $tpl_data);
         }
+        $this->generateCommon();
+    }
+
+    /**
+     * 生成一些common文件
+     */
+    protected function generateCommon()
+    {
+        
     }
 
     /**

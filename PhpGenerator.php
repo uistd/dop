@@ -1,7 +1,7 @@
 <?php
+
 namespace ffan\dop;
 
-use ffan\php\tpl\Tpl;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
 
@@ -23,6 +23,7 @@ class PhpGenerator extends DOPGenerator
     public function __construct(ProtocolManager $protocol_manager)
     {
         parent::__construct($protocol_manager);
+        /*
         //注册一些私有的修正器
         //命名空间
         Tpl::registerGrep('php_ns', array($this, 'phpNameSpace'));
@@ -42,30 +43,30 @@ class PhpGenerator extends DOPGenerator
         Tpl::registerGrep('php_convert_value', array('ffan\dop\PhpGenerator', 'convertValue'));
         //require 路径
         Tpl::registerGrep('php_require', array('ffan\dop\PhpGenerator', 'requirePath'));
+        */
     }
 
     /**
      * @param string $type
      * @return string
-     */
     public static function convertValue($type)
-    {
-        $re = '';
-        switch ($type) {
-            case ItemType::FLOAT:
-                $re = '(float)';
-                break;
-            case ItemType::INT:
-                $re = '(int)';
-                break;
-            case ItemType::STRING:
-                $re = '(string)';
-                break;
-        }
-        return $re;
-    }
-
-    /**
+     * {
+     * $re = '';
+     * switch ($type) {
+     * case ItemType::FLOAT:
+     * $re = '(float)';
+     * break;
+     * case ItemType::INT:
+     * $re = '(int)';
+     * break;
+     * case ItemType::STRING:
+     * $re = '(string)';
+     * break;
+     * }
+     * return $re;
+     * }
+     *
+     * /**
      * require 路径判断
      * @param string $require_path 引用的类路径
      * @param string $this_ns 当前的域名
@@ -122,22 +123,20 @@ class PhpGenerator extends DOPGenerator
      * 变更初始化
      * @param array $args
      * @return string
-     */
     public static function phpItemInit($args)
-    {
-        return Tpl::get('php/item_init.tpl', $args);
-    }
+     * {
+     * return Tpl::get('php/item_init.tpl', $args);
+     * }*/
 
     /**
      * 导出为数组
      * @param array $args
      * @return string
-     */
     public static function phpExportArray($args)
-    {
-        return Tpl::get('php/export_array.tpl', $args);
-    }
-
+     * {
+     * return Tpl::get('php/export_array.tpl', $args);
+     * }
+     */
     /**
      * PHP命名空间的修正器
      * @param string $ns
@@ -237,9 +236,7 @@ class PhpGenerator extends DOPGenerator
             if (!$struct->needBuild()) {
                 continue;
             }
-            $tpl_data['struct'] = $struct->export();
-            $tpl_data['class_name'] = $class_name;
-            $result = Tpl::get($this->tpl, $tpl_data);
+            $result = $this->make($struct);
             $file_name = $this->buildFileName($build_path, $struct);
             $re = file_put_contents($file_name, $result);
             if (!$re) {
@@ -247,5 +244,83 @@ class PhpGenerator extends DOPGenerator
             }
             $this->protocol_manager->buildLog('Generate file:' . $file_name);
         }
+    }
+
+    /**
+     * 通用文件生成
+     */
+    protected function generateCommon()
+    {
+        print_r($this->protocol_manager->getAllFileList());
+    }
+
+    /**
+     * 生成PHP代码文件
+     * @param Struct $struct
+     * @return string
+     */
+    private function make($struct)
+    {
+        $php_class = new CodeBuf();
+        $name_space = $struct->getNamespace();
+        $php_class->push('<?php');
+        $main_class_name = $struct->getClassName();
+        $parent_struct = $struct->getParent();
+        $php_class->emptyLine();
+        $ns = $this->phpNameSpace($name_space);
+        $php_class->push('namespace ' . $ns . ';');
+        $php_class->emptyLine();
+
+        //所有依赖的对象
+        $import_class = $struct->getImportStruct();
+        foreach ($import_class as $class_name) {
+            $php_class->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
+        }
+        //如果有父类，加入父类
+        if ($struct->hasExtend()) {
+
+            $php_class->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
+            //如果不是同一个全名空间
+            if ($parent_struct->getNamespace() !== $name_space) {
+                $php_class->emptyLine();
+                $use_name_space = self::phpNameSpace($parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
+                $php_class->push('use ' . $use_name_space . ';');
+            }
+        }
+        $php_class->push('/**');
+        $node_str = $struct->getNote();
+        $php_class->lineTmp(' * ' . $main_class_name);
+        if (!empty($node_str)) {
+            $php_class->lineTmp(' ' . $node_str);
+        }
+        $php_class->lineFin();
+        $php_class->push(' */');
+        $php_class->lineTmp('class ' . $main_class_name);
+        if ($struct->hasExtend()) {
+            $php_class->lineTmp(' extends ' . $parent_struct->getClassName());
+        }
+        $php_class->lineFin();
+        $php_class->push('{');
+        //缩进
+        $php_class->indentIncrease();
+        $item_list = $struct->getAllItem();
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($item_list as $name => $item) {
+            $php_class->push('/**');
+            $item_type = self::varType($item);
+            $php_class->push(' * @var ' . $item_type . ' ' . $item->getNote());
+            $php_class->push(' */');
+            $php_class->lineTmp('public $' . $name);
+            if ($item->hasDefault()) {
+                $php_class->lineTmp(' = ' . $item->getDefault());
+            }
+            $php_class->lineTmp(';')->lineFin()->emptyLine();
+        }
+        $php_class->indentDecrease();
+        $php_class->push('}')->emptyLine();
+        return $php_class->dump();
     }
 }

@@ -120,4 +120,31 @@ abstract class Item
     {
         $this->plugin_data_arr[$plugin_name] = $data;
     }
+
+    /**
+     * 获取注释
+     * @return string
+     */
+    public function getNote()
+    {
+        return $this->note;
+    }
+
+    /**
+     * 是否有设置默认值
+     * @return bool
+     */
+    public function hasDefault()
+    {
+        return null !== $this->default;
+    }
+
+    /**
+     * 获取默认值
+     * @return mixed
+     */
+    public function getDefault()
+    {
+        return $this->default;
+    }
 }

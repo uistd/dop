@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 /**
@@ -97,7 +98,7 @@ class Struct
 
     /**
      * 增加一种被引用的类型
-     * @param int $type 类型 
+     * @param int $type 类型
      */
     public function addReferType($type)
     {
@@ -259,25 +260,13 @@ class Struct
     }
 
     /**
-     * 导出为数组格式，方便生成文件
+     * 获取需要import的其它struct
      * @return array
      */
-    public function export()
+    public function getImportStruct()
     {
         $import_struct = array();
-        /**
-         * @var string $name
-         * @var Item $item
-         */
         foreach ($this->item_list as $name => $item) {
-            $type = $item->getType();
-            if (ItemType::ARR === $type) {
-                /** @var ListItem $item */
-                $item = $item->getItem();
-            } elseif (ItemType::MAP === $type) {
-                /** @var MapItem $item */
-                $item = $item->getValueItem();
-            }
             //如果是struct
             if (ItemType::STRUCT === $item->getType()) {
                 /** @var StructItem $item */
@@ -285,24 +274,78 @@ class Struct
                 $import_struct[$struct->getFullName()] = true;
             }
         }
-        $result = array(
-            'is_extend' => null !== $this->parent,
-            'class_name' => $this->className,
-            'note' => $this->note,
-            'type' => $this->type,
-            'item_list' => $this->getAllItem(),
-            'extend_item_list' => $this->getAllExtendItem(),
-            'namespace' => $this->namespace,
-            'import_struct' => $import_struct,
-            'self' => $this
-        );
-        if ($this->parent) {
-            $result['parent'] = array(
-                'class' => $this->parent->getClassName(),
-                'namespace' => $this->parent->getNamespace(),
-                'full_name' => $this->parent->getFullName()
-            );
-        }
-        return $result;
+        return array_keys($import_struct);
     }
+
+    /**
+     * 是否子类
+     * @return bool
+     */
+    public function hasExtend()
+    {
+        return null !== $this->parent;
+    }
+
+    /**
+     * 获取父类
+     * @return Struct|null
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+
+    /**
+     * 获取注释信息
+     */
+    public function getNote()
+    {
+        return $this->note;
+    }
+
+    /**
+     * 导出为数组格式，方便生成文件
+     * @return array
+
+    public function export()
+     * {
+     *
+     *
+     * foreach ($this->item_list as $name => $item) {
+     * $type = $item->getType();
+     * if (ItemType::ARR === $type) {
+     *
+     * $item = $item->getItem();
+     * } elseif (ItemType::MAP === $type) {
+     *
+     * $item = $item->getValueItem();
+     * }
+     * //如果是struct
+     * if (ItemType::STRUCT === $item->getType()) {
+     *
+     * $struct = $item->getStruct();
+     * $import_struct[$struct->getFullName()] = true;
+     * }
+     * }
+     * $result = array(
+     * 'is_extend' => null !== $this->parent,
+     * 'class_name' => $this->className,
+     * 'note' => $this->note,
+     * 'type' => $this->type,
+     * 'item_list' => $this->getAllItem(),
+     * 'extend_item_list' => $this->getAllExtendItem(),
+     * 'namespace' => $this->namespace,
+     * 'import_struct' => $import_struct,
+     * 'self' => $this
+     * );
+     * if ($this->parent) {
+     * $result['parent'] = array(
+     * 'class' => $this->parent->getClassName(),
+     * 'namespace' => $this->parent->getNamespace(),
+     * 'full_name' => $this->parent->getFullName()
+     * );
+     * }
+     * return $result;
+     * }
+     */
 }

@@ -30,6 +30,11 @@ class ProtocolManager
     private $xml_list = [];
 
     /**
+     * @var array 所有的协议文件
+     */
+    private $all_file_list;
+
+    /**
      * @var string 当前正在使用的文件和行号
      */
     private $protocol_doc_info = '';
@@ -237,6 +242,21 @@ class ProtocolManager
     }
 
     /**
+     * 获取所有的文件列表
+     * @return array
+     */
+    public function getAllFileList()
+    {
+        if (null !== $this->all_file_list) {
+            return $this->all_file_list;
+        }
+        $file_list = array();
+        $this->getBuildFileList($this->base_path, $file_list);
+        $this->all_file_list = $file_list;
+        return $file_list;
+    }
+
+    /**
      * 待编译的所有文件
      * @param int $build_tpl 编译模板类型
      * @return bool
@@ -244,9 +264,8 @@ class ProtocolManager
     private function doBuild($build_tpl)
     {
         $this->build_tpl_type = $build_tpl;
-        $file_list = array();
+        $file_list = $this->getAllFileList();
         $this->build_message = '';
-        $this->getBuildFileList($this->base_path, $file_list);
         $build_list = $this->filterCacheFile($file_list);
         $result = true;
         if (empty($build_list)) {
