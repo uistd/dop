@@ -96,8 +96,9 @@ abstract class DOPGenerator
 
     /**
      * 生成文件
+     * @param BuildOption $build_opt 生成参数
      */
-    public function generate()
+    public function generate($build_opt)
     {
         $all_list = $this->protocol_manager->getAll();
         if (empty($all_list)) {

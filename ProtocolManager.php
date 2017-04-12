@@ -2,6 +2,7 @@
 namespace ffan\dop;
 
 use ffan\php\utils\Str as FFanStr;
+use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class ProtocolManager
@@ -9,16 +10,6 @@ use ffan\php\utils\Str as FFanStr;
  */
 class ProtocolManager
 {
-    /**
-     * 编译模板： php
-     */
-    const BUILD_TPL_PHP = 'php';
-
-    /**
-     * 编译模板：js
-     */
-    const BUILD_TPL_JS = 'js';
-
     /**
      * @var array 所有的struct列表
      */
@@ -43,16 +34,6 @@ class ProtocolManager
      * @var string 协议基础路径
      */
     private $base_path;
-
-    /**
-     * @var string 协议生成文件的路径
-     */
-    private $build_path;
-
-    /**
-     * @var string 命名空间
-     */
-    private $main_namespace = 'ffan\dop';
 
     /**
      * @var array 配置
@@ -88,11 +69,10 @@ class ProtocolManager
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
-     * @param string $build_path 生成文件的目录
      * @param array $config 其它配置项
      * @throws DOPException
      */
-    public function __construct($base_path, $build_path = 'dop', array $config = array())
+    public function __construct($base_path, array $config = array())
     {
         if (!is_dir($base_path)) {
             throw new DOPException('Protocol path:' . $base_path . ' not exist!');
@@ -100,19 +80,9 @@ class ProtocolManager
         if (!is_readable($base_path)) {
             throw new DOPException('Protocol path:' . $base_path . ' is not readable');
         }
-        //如果build_path参数不正确，修正为dop
-        if (!is_string($build_path) || !FFanstr::isValidVarName($build_path)) {
-            $build_path = 'dop';
-        }
-        $this->build_path = $build_path;
         $this->base_path = $base_path;
-        //如果配置了main_namespace(命名空间前缀)
-        if (isset($config['main_namespace'])) {
-            $this->main_namespace = trim($config['main_namespace'], ' \\/');
-        }
         //这里将 base_path 和 build path 写入config，为了做缓存需要
         $config['__base_path__'] = $base_path;
-        $config['__build_path__'] = $build_path;
         $this->config = $config;
         $this->initPlugin();
     }
@@ -204,12 +174,14 @@ class ProtocolManager
     }
 
     /**
-     * 编译成PHP代码
+     * 生成PHP代码
+     * @param BuildOption $build_opt 生成文件参数
      * @return string
      */
-    public function buildPhp()
+    public function buildPhp(BuildOption $build_opt)
     {
-        return $this->doBuild(self::BUILD_TPL_PHP);
+        FFanUtils::joinPath($build_opt->build_path, 'php');
+        return $this->doBuild($build_opt, BuildOption::BUILD_CODE_PHP);
     }
 
     /**
@@ -258,15 +230,17 @@ class ProtocolManager
 
     /**
      * 待编译的所有文件
-     * @param int $build_tpl 编译模板类型
+     * @param BuildOption $build_opt 生成参数
+     * @param int $build_type 生成代码类型
      * @return bool
      */
-    private function doBuild($build_tpl)
+    private function doBuild($build_opt, $build_type)
     {
-        $this->build_tpl_type = $build_tpl;
+        $build_path = $build_opt->build_path;
+        $this->build_tpl_type = $build_type;
         $file_list = $this->getAllFileList();
         $this->build_message = '';
-        $build_list = $this->filterCacheFile($file_list);
+        $build_list = $build_opt->allow_cache ? $this->filterCacheFile($file_list, $build_path) : $file_list;
         $result = true;
         if (empty($build_list)) {
             $this->buildLog('没有需要编译的文件');
@@ -283,7 +257,7 @@ class ProtocolManager
                         $struct->setNeedBuild(false);
                     }
                 }
-                $this->generateFile($build_tpl);
+                $this->generateFile($build_opt, $build_type);
                 $this->buildLog('done!');
             } catch (DOPException $exception) {
                 $msg = $exception->getMessage();
@@ -291,8 +265,8 @@ class ProtocolManager
                 $result = false;
             }
         }
-        if ($result) {
-            $this->saveCache($file_list, $this->require_map);
+        if ($result && $build_opt->allow_cache) {
+            $this->saveCache($file_list, $this->require_map, $build_path);
         }
 
         return $result;
@@ -301,16 +275,13 @@ class ProtocolManager
     /**
      * 过滤已经编译过缓存过的文件
      * @param array $file_list
+     * @param string $build_path 代码生成目录
      * @return array
      */
-    private function filterCacheFile($file_list)
+    private function filterCacheFile($file_list, $build_path)
     {
-        //不使用缓存
-        if ($this->getConfig('disable_cache')) {
-            return $file_list;
-        }
         //加载一些缓存数据
-        $cache = $this->getBuildCache();
+        $cache = $this->getBuildCache($build_path);
         $cache_data = $cache->loadCache('build');
         if (!is_array($cache_data)) {
             return $file_list;
@@ -352,29 +323,27 @@ class ProtocolManager
      * 保存缓存
      * @param array $file_time
      * @param array $require_map
+     * @param string $build_path 代码生成目录
      */
-    private function saveCache($file_time, $require_map)
+    private function saveCache($file_time, $require_map, $build_path)
     {
-        //不使用缓存
-        if ($this->getConfig('disable_cache')) {
-            return;
-        }
         $cache_data = array(
             'require_map' => $require_map,
             'build_time' => $file_time
         );
-        $cache = $this->getBuildCache();
+        $cache = $this->getBuildCache($build_path);
         $cache->saveCache('build', $cache_data);
     }
 
     /**
      * 获取缓存实例
+     * @param string $build_path 代码生成目录
      * @return BuildCache
      */
-    private function getBuildCache()
+    private function getBuildCache($build_path)
     {
         if (!$this->cache) {
-            $this->cache = new BuildCache($this, $this->config);
+            $this->cache = new BuildCache($this, $this->config, $build_path);
         }
         return $this->cache;
     }
@@ -390,16 +359,17 @@ class ProtocolManager
 
     /**
      * 生成最终的文件
+     * @param BuildOption $build_opt 生成参数
      * @param int $build_tpl 编译模板
      * @throws DOPException
      */
-    private function generateFile($build_tpl)
+    private function generateFile($build_opt, $build_tpl)
     {
         switch ($build_tpl) {
-            case self::BUILD_TPL_PHP:
+            case BuildOption::BUILD_CODE_PHP:
                 $build_obj = new PhpGenerator($this);
                 break;
-            case self::BUILD_TPL_JS:
+            case BuildOption::BUILD_CODE_JS:
                 $build_obj = new JsGenerator($this);
                 break;
             default:
@@ -412,7 +382,7 @@ class ProtocolManager
                 throw new DOPException('不支持的编译模板:' . $build_tpl);
                 break;
         }
-        $build_obj->generate();
+        $build_obj->generate($build_opt);
     }
 
     /**
@@ -519,24 +489,6 @@ class ProtocolManager
     public function getBasePath()
     {
         return $this->base_path;
-    }
-
-    /**
-     * 获取文件生成目录
-     * @return string
-     */
-    public function getBuildPath()
-    {
-        return $this->build_path;
-    }
-
-    /**
-     * 获取main_namespace
-     * @return string
-     */
-    public function getMainNameSpace()
-    {
-        return $this->main_namespace;
     }
 
     /**

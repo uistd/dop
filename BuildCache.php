@@ -40,15 +40,22 @@ class BuildCache
     private $private_key;
 
     /**
+     * @var string 代码生成目录
+     */
+    private $build_path;
+
+    /**
      * BuildCache constructor.
      * @param ProtocolManager $manager
      * @param array $config
+     * @param string $build_path
      */
-    public function __construct(ProtocolManager $manager, $config)
+    public function __construct(ProtocolManager $manager, $config, $build_path)
     {
         $this->manager = $manager;
         //直接使用配置作key，配置发生变化的时候，缓存失效
         $this->private_key = md5(serialize($config));
+        $this->build_path = $build_path;
     }
 
     /**
@@ -98,7 +105,7 @@ class BuildCache
      */
     private function cacheFileName($name)
     {
-        $path = FFanUtils::fixWithRuntimePath($this->manager->getBuildPath());
+        $path = FFanUtils::fixWithRuntimePath($this->build_path);
         return FFanUtils::joinFilePath($path, '.' . $name . '.cache');
     }
 
