@@ -24,3 +24,5 @@ function dop_protocol_autoload($full_name)
     /** @noinspection PhpIncludeInspection */
     require_once $file_name;
 }
+//注册加载处理函数
+spl_autoload_register('dop_protocol_autoload');

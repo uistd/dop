@@ -16,11 +16,6 @@ abstract class DOPGenerator
     protected $protocol_manager;
 
     /**
-     * @var string request的模板
-     */
-    protected $tpl;
-
-    /**
      * @var int 文件单位
      */
     protected $file_unit;
@@ -120,9 +115,8 @@ abstract class DOPGenerator
             }
             $protocol_list[$namespace][$struct->getClassName()] = $struct;
         }
-        $tpl_data = $this->buildTplData();
         foreach ($protocol_list as $namespace => $class_list) {
-            $this->generateFile($namespace, $class_list, $tpl_data);
+            $this->generateFile($namespace, $class_list);
         }
         $this->generateCommon();
     }
@@ -145,6 +139,21 @@ abstract class DOPGenerator
     }
 
     /**
+     * 初始化模板配置
+     */
+    protected function initTpl()
+    {
+        static $is_init = false;
+        if ($is_init) {
+            return;
+        }
+        FFanConfig::add('ffan-tpl', array(
+            'tpl_dir' => 'tpl'
+        ));
+        $is_init = true;
+    }
+
+    /**
      * 生成文件名
      * @param string $build_path
      * @param Struct $struct
@@ -156,8 +165,7 @@ abstract class DOPGenerator
      * 生成文件
      * @param string $namespace 命令空间
      * @param array [Struct] $class_list
-     * @param array $tpl_data 模板数据
      * @throws DOPException
      */
-    abstract protected function generateFile($namespace, $class_list, $tpl_data);
+    abstract protected function generateFile($namespace, $class_list);
 }

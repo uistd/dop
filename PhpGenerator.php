@@ -4,7 +4,7 @@ namespace ffan\dop;
 
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
-use ffan\php\tpl\Tpl;
+use ffan\php\tpl\Tpl as FFanTpl;
 
 /**
  * Class PhpGenerator
@@ -223,10 +223,9 @@ class PhpGenerator extends DOPGenerator
      * 生成文件
      * @param string $namespace 命令空间
      * @param array [Struct] $class_list
-     * @param array $tpl_data 模板数据
      * @throws DOPException
      */
-    protected function generateFile($namespace, $class_list, $tpl_data)
+    protected function generateFile($namespace, $class_list)
     {
         $base_path = $this->buildBasePath();
         $build_path = FFanUtils::joinPath($base_path, $namespace);
@@ -263,14 +262,13 @@ class PhpGenerator extends DOPGenerator
             $ns = $prefix . '\\' . str_replace('/', '\\', $path);
             $autoload_set[$ns] = 'DOP_PHP_PROTOCOL_BASE .'. $path;
         }
-        $file_content = Tpl::get('php/dop.tpl', array(
+        $this->initTpl();
+        $file_content = FFanTpl::get('php/dop.tpl', array(
             'namespace_set' => $autoload_set
         ));
         $build_path = $this->buildBasePath();
         $file = $build_path .'dop.php';
-        var_dump($file);
-        var_dump($file_content);
-        file_put_contents($file, $$file_content);
+        file_put_contents($file, $file_content);
     }
 
     /**
