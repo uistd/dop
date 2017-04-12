@@ -26,12 +26,19 @@ abstract class DOPGenerator
     protected $file_unit;
 
     /**
+     * @var BuildOption 生成参数
+     */
+    protected $build_opt;
+
+    /**
      * Generator constructor.
      * @param ProtocolManager $protocol_manager
+     * @param BuildOption $build_opt
      */
-    public function __construct(ProtocolManager $protocol_manager)
+    public function __construct(ProtocolManager $protocol_manager, BuildOption $build_opt)
     {
         $this->protocol_manager = $protocol_manager;
+        $this->build_opt = $build_opt;
         /**
         //变量类型的 字符串 表示
         Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
@@ -96,9 +103,8 @@ abstract class DOPGenerator
 
     /**
      * 生成文件
-     * @param BuildOption $build_opt 生成参数
      */
-    public function generate($build_opt)
+    public function generate()
     {
         $all_list = $this->protocol_manager->getAll();
         if (empty($all_list)) {
@@ -130,18 +136,12 @@ abstract class DOPGenerator
     }
 
     /**
-     * 整理生成文件的参数
-     * @return array
-     */
-    abstract protected function buildTplData();
-
-    /**
      * 获取编译的基础目录
      * @return string
      */
     protected function buildBasePath()
     {
-        return FFanUtils::fixWithRuntimePath($this->protocol_manager->getBuildPath());
+        return FFanUtils::fixWithRuntimePath($this->build_opt->build_path);
     }
 
     /**

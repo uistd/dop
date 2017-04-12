@@ -2,6 +2,8 @@
 
 namespace ffan\dop;
 
+use ffan\php\utils\Utils as FFanUtils;
+
 /**
  * Class BuildOption 生成文件参数
  * @package ffan\dop
@@ -47,15 +49,24 @@ class BuildOption
      * @var bool 是否使用缓存，默认会缓存编译的结果，避免每次都全量编译
      */
     public $allow_cache = true;
-    
+
     /**
-     * BuildOption constructor.
+     * 数据修正
+     * @param string $code_type
      */
-    public function __construct()
+    public function fix($code_type)
     {
         //初始化代码生成目录
         if (null === $this->build_path) {
             $this->build_path = __DIR__ . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR;
+        }
+        $this->build_path = FFanUtils::joinPath($this->build_path, $code_type);
+        //命名空间前缀
+        if (!is_string($this->namespace_prefix)) {
+            $this->namespace_prefix = '';
+        } else {
+            //清除两边的空格 和 \ / 符号
+            $this->namespace_prefix = trim($this->namespace_prefix, '\\/ ');
         }
     }
 }

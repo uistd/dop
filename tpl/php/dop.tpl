@@ -1,3 +1,4 @@
+<?php
 define('DOP_PHP_PROTOCOL_BASE', __DIR__ . DIRECTORY_SEPARATOR);
 /**
 * autoload 方法
@@ -8,7 +9,7 @@ function dop_protocol_autoload($full_name)
     $ns_pos = strrpos($full_name, '\\');
     $ns = substr($full_name, 0, $ns_pos);
     $namespace_set = array(
-    {{foreach $namespace_list as $ns => $path}}
+    {{foreach $namespace_set as $ns => $path}}
         '{{$ns}}' => '{{$path}}',
     {{/foreach}}
     );

@@ -2,7 +2,6 @@
 namespace ffan\dop;
 
 use ffan\php\utils\Str as FFanStr;
-use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class ProtocolManager
@@ -180,7 +179,6 @@ class ProtocolManager
      */
     public function buildPhp(BuildOption $build_opt)
     {
-        FFanUtils::joinPath($build_opt->build_path, 'php');
         return $this->doBuild($build_opt, BuildOption::BUILD_CODE_PHP);
     }
 
@@ -236,6 +234,7 @@ class ProtocolManager
      */
     private function doBuild($build_opt, $build_type)
     {
+        $build_opt->fix($build_type);
         $build_path = $build_opt->build_path;
         $this->build_tpl_type = $build_type;
         $file_list = $this->getAllFileList();
@@ -367,10 +366,10 @@ class ProtocolManager
     {
         switch ($build_tpl) {
             case BuildOption::BUILD_CODE_PHP:
-                $build_obj = new PhpGenerator($this);
+                $build_obj = new PhpGenerator($this, $build_opt);
                 break;
             case BuildOption::BUILD_CODE_JS:
-                $build_obj = new JsGenerator($this);
+                $build_obj = new JsGenerator($this, $build_opt);
                 break;
             default:
                 //尝试使用自定义类
@@ -382,7 +381,7 @@ class ProtocolManager
                 throw new DOPException('不支持的编译模板:' . $build_tpl);
                 break;
         }
-        $build_obj->generate($build_opt);
+        $build_obj->generate();
     }
 
     /**

@@ -4,6 +4,7 @@ namespace ffan\dop;
 
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
+use ffan\php\tpl\Tpl;
 
 /**
  * Class PhpGenerator
@@ -19,10 +20,11 @@ class PhpGenerator extends DOPGenerator
     /**
      * PhpGenerator constructor.
      * @param ProtocolManager $protocol_manager
+     * @param BuildOption $build_opt
      */
-    public function __construct(ProtocolManager $protocol_manager)
+    public function __construct(ProtocolManager $protocol_manager, BuildOption $build_opt)
     {
-        parent::__construct($protocol_manager);
+        parent::__construct($protocol_manager, $build_opt);
         /*
         //注册一些私有的修正器
         //命名空间
@@ -65,8 +67,9 @@ class PhpGenerator extends DOPGenerator
      * }
      * return $re;
      * }
-     *
-     * /**
+     */
+
+    /**
      * require 路径判断
      * @param string $require_path 引用的类路径
      * @param string $this_ns 当前的域名
@@ -144,9 +147,9 @@ class PhpGenerator extends DOPGenerator
      */
     public function phpNameSpace($ns)
     {
-        $main_ns = $this->protocol_manager->getMainNameSpace();
-        if (!empty(is_string($main_ns))) {
-            $ns = $main_ns . $ns;
+        $prefix = $this->build_opt->namespace_prefix;
+        if (is_string($prefix)) {
+            $ns = $prefix . $ns;
         }
         $ns = str_replace('/', '\\', $ns);
         return $ns;
@@ -197,7 +200,7 @@ class PhpGenerator extends DOPGenerator
     {
         $build_arg = array(
             'path_define_var' => $this->protocol_manager->getConfig('path_define_var', 'DOP_PATH'),
-            'build_path' => $this->protocol_manager->getBuildPath(),
+            'build_path' => $this->build_opt->build_path,
             'code_namespace' => 'namespace',
             'code_php_tag' => "<?php\n"
         );
@@ -251,7 +254,23 @@ class PhpGenerator extends DOPGenerator
      */
     protected function generateCommon()
     {
-        print_r($this->protocol_manager->getAllFileList());
+        $all_files = $this->protocol_manager->getAllFileList();
+        $prefix = $this->build_opt->namespace_prefix;
+        $autoload_set = array();
+        foreach ($all_files as $file => $m) {
+            //除去.xml，其它 就是路径信息
+            $path = substr($file, -4);
+            $ns = $prefix . '\\' . str_replace('/', '\\', $path);
+            $autoload_set[$ns] = 'DOP_PHP_PROTOCOL_BASE .'. $path;
+        }
+        $file_content = Tpl::get('php/dop.tpl', array(
+            'namespace_set' => $autoload_set
+        ));
+        $build_path = $this->buildBasePath();
+        $file = $build_path .'dop.php';
+        var_dump($file);
+        var_dump($file_content);
+        file_put_contents($file, $$file_content);
     }
 
     /**
