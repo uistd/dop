@@ -51,6 +51,11 @@ class BuildOption
     public $allow_cache = true;
 
     /**
+     * @var bool 是否手动require file
+     */
+    public $php_require_file = false;
+
+    /**
      * 数据修正
      * @param string $code_type
      */

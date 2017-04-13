@@ -253,14 +253,19 @@ class PhpGenerator extends DOPGenerator
      */
     protected function generateCommon()
     {
+        //如果是手动require文件，那就不生成dop.php文件
+        if ($this->build_opt->php_require_file) {
+            return;
+        }
         $all_files = $this->protocol_manager->getAllFileList();
         $prefix = $this->build_opt->namespace_prefix;
         $autoload_set = array();
+        print_r($all_files);
         foreach ($all_files as $file => $m) {
             //除去.xml，其它 就是路径信息
-            $path = substr($file, -4);
+            $path = substr($file, 0, -4);
             $ns = $prefix . '\\' . str_replace('/', '\\', $path);
-            $autoload_set[$ns] = 'DOP_PHP_PROTOCOL_BASE .'. $path;
+            $autoload_set[$ns] = $path;
         }
         $this->initTpl();
         $file_content = FFanTpl::get('php/dop.tpl', array(
@@ -286,17 +291,20 @@ class PhpGenerator extends DOPGenerator
         $php_class->emptyLine();
         $ns = $this->phpNameSpace($name_space);
         $php_class->push('namespace ' . $ns . ';');
-        $php_class->emptyLine();
-
-        //所有依赖的对象
-        $import_class = $struct->getImportStruct();
-        foreach ($import_class as $class_name) {
-            $php_class->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
+        // 如果手动require
+        if ($this->build_opt->php_require_file) {
+            //所有依赖的对象
+            $import_class = $struct->getImportStruct();
+            foreach ($import_class as $class_name) {
+                $php_class->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
+            }  
         }
+
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
-
-            $php_class->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
+            if ($this->build_opt->php_require_file) {
+                $php_class->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
+            }
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
                 $php_class->emptyLine();
@@ -304,6 +312,7 @@ class PhpGenerator extends DOPGenerator
                 $php_class->push('use ' . $use_name_space . ';');
             }
         }
+        $php_class->emptyLine();
         $php_class->push('/**');
         $node_str = $struct->getNote();
         $php_class->lineTmp(' * ' . $main_class_name);

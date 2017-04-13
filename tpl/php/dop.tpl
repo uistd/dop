@@ -17,8 +17,8 @@ function dop_protocol_autoload($full_name)
     if (!isset($namespace_set[$ns])) {
         return;
     }
-    $base_path = $namespace_set[$ns];
-    $class_name = substr($full_name, $ns_pos);
+    $base_path = DOP_PHP_PROTOCOL_BASE . $namespace_set[$ns] . DIRECTORY_SEPARATOR;
+    $class_name = substr($full_name, $ns_pos + 1);
     $file_name = $base_path . $class_name .'.php';
     if (!is_file($file_name)) {
         return;
