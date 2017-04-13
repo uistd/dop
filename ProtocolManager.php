@@ -1,6 +1,7 @@
 <?php
 namespace ffan\dop;
 
+use ffan\dop\php\PhpGenerator;
 use ffan\php\utils\Str as FFanStr;
 
 /**

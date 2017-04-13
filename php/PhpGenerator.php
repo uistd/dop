@@ -1,7 +1,17 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\php;
 
+use ffan\dop\BuildOption;
+use ffan\dop\CodeBuf;
+use ffan\dop\DOPException;
+use ffan\dop\DOPGenerator;
+use ffan\dop\Item;
+use ffan\dop\ItemType;
+use ffan\dop\ListItem;
+use ffan\dop\ProtocolManager;
+use ffan\dop\Struct;
+use ffan\dop\StructItem;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\tpl\Tpl as FFanTpl;
@@ -260,7 +270,6 @@ class PhpGenerator extends DOPGenerator
         $all_files = $this->protocol_manager->getAllFileList();
         $prefix = $this->build_opt->namespace_prefix;
         $autoload_set = array();
-        print_r($all_files);
         foreach ($all_files as $file => $m) {
             //除去.xml，其它 就是路径信息
             $path = substr($file, 0, -4);
@@ -344,6 +353,15 @@ class PhpGenerator extends DOPGenerator
                 $php_class->lineTmp(' = ' . $item->getDefault());
             }
             $php_class->lineTmp(';')->lineFin()->emptyLine();
+        }
+        $struct_type = $struct->getType();
+        //如果需要生成 encode 方法
+        if ($this->isBuildEncodeMethod($struct_type)) {
+            
+        }
+        //如果需要生成 decode 方法
+        if ($this->isBuildDecodeMethod($struct_type)) {
+            
         }
         $php_class->indentDecrease();
         $php_class->push('}')->emptyLine();

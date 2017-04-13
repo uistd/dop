@@ -38,7 +38,7 @@ class BuildOption
     /**
      * @var int 指定编译哪一侧的协议
      */
-    public $build_side;
+    public $build_side = self::SIDE_CLIENT;
 
     /**
      * @var string 命名空间前缀

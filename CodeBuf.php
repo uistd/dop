@@ -126,4 +126,15 @@ class CodeBuf
         $this->str_buffer = '';
         $this->tmp_line_str = '';
     }
+
+    /**
+     * 将传入的buf合并入该buf
+     * @param CodeBuf $buf
+     */
+    public function merge(CodeBuf $buf)
+    {
+        $content = $buf->dump();
+        $this->str_buffer .= $content;
+        $buf->clean();
+    }
 }

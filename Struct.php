@@ -11,7 +11,7 @@ class Struct
     /**
      * 普通struct
      */
-    const TYPE_STRUCT = 1;
+    const TYPE_STRUCT = 3;
 
     /**
      * 请求包
@@ -21,7 +21,7 @@ class Struct
     /**
      * 返回包
      */
-    const TYPE_RESPONSE = 4;
+    const TYPE_RESPONSE = 1;
 
     /**
      * @var array

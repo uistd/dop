@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 use ffan\php\utils\Utils as FFanUtils;
@@ -35,14 +36,14 @@ abstract class DOPGenerator
         $this->protocol_manager = $protocol_manager;
         $this->build_opt = $build_opt;
         /**
-        //变量类型的 字符串 表示
-        Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
-        //生成缩进值
-        Tpl::registerGrep('indent', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
-        //生成临时变量
-        Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
-        //插件代码
-        Tpl::registerPlugin('plugin_code', array($this, 'pluginCode'));
+         * //变量类型的 字符串 表示
+         * Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
+         * //生成缩进值
+         * Tpl::registerGrep('indent', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
+         * //生成临时变量
+         * Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
+         * //插件代码
+         * Tpl::registerPlugin('plugin_code', array($this, 'pluginCode'));
          */
     }
 
@@ -126,7 +127,7 @@ abstract class DOPGenerator
      */
     protected function generateCommon()
     {
-        
+
     }
 
     /**
@@ -151,6 +152,67 @@ abstract class DOPGenerator
             'tpl_dir' => 'tpl'
         ));
         $is_init = true;
+    }
+
+    /**
+     * 是否需要生成Encode方法
+     * @param int $type
+     * @return bool
+     */
+    protected function isBuildEncodeMethod($type)
+    {
+        $result = false;
+        switch ($type) {
+            //如果是response,服务端生成
+            case Struct::TYPE_RESPONSE:
+                if (BuildOption::SIDE_SERVER === $this->build_opt->build_side) {
+                    $result = true;
+                }
+                break;
+                //如果是Request 客户端生成
+            case Struct::TYPE_REQUEST:
+                if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
+                    $result = true;
+                }
+                break;
+            case Struct::TYPE_STRUCT:
+                $result = true;
+                break;
+            default:
+                throw new \InvalidArgumentException('Unknown type');
+        }
+        return $result;
+    }
+
+
+    /**
+     * 是否需要生成Decode方法
+     * @param int $type
+     * @return bool
+     */
+    protected function isBuildDecodeMethod($type)
+    {
+        $result = false;
+        switch ($type) {
+            //如果是response,客户端生成
+            case Struct::TYPE_RESPONSE:
+                if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
+                    $result = true;
+                }
+                break;
+            //如果是Request 服务端生成
+            case Struct::TYPE_REQUEST:
+                if (BuildOption::SIDE_SERVER === $this->build_opt->build_side) {
+                    $result = true;
+                }
+                break;
+            case Struct::TYPE_STRUCT:
+                $result = true;
+                break;
+            default:
+                throw new \InvalidArgumentException('Unknown type');
+        }
+        return $result;
     }
 
     /**
