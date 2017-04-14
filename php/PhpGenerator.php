@@ -356,15 +356,38 @@ class PhpGenerator extends DOPGenerator
         }
         $struct_type = $struct->getType();
         //如果需要生成 encode 方法
-        if ($this->isBuildEncodeMethod($struct_type)) {
-            
+        if ($this->isBuildPackMethod($struct_type)) {
+            $this->buildPackMethod($php_class, $struct);
         }
         //如果需要生成 decode 方法
         if ($this->isBuildDecodeMethod($struct_type)) {
-            
+            $this->buildUnpackMethod($php_class, $struct);
         }
         $php_class->indentDecrease();
         $php_class->push('}')->emptyLine();
         return $php_class->dump();
+    }
+
+    /**
+     * 生成打包方法
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
+     */
+    private function buildPackMethod($code_buf, $struct)
+    {
+        
+    }
+
+    /**
+     * 生成解包方法
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
+     */
+    private function buildUnpackMethod($code_buf, $struct)
+    {
+        //json
+        if ($this->build_opt->pack_type & BuildOption::PACK_TYPE_JSON) {
+            JsonPack::buildUnPackMethod($struct, $code_buf);
+        }
     }
 }

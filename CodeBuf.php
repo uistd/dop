@@ -29,6 +29,11 @@ class CodeBuf
     private $tmp_line_str;
 
     /**
+     * @var array 方法名缓存
+     */
+    private $method_list;
+
+    /**
      * CodeBuf constructor.
      * @param bool $blank_indent 是否使用空格替代缩进
      */
@@ -145,5 +150,19 @@ class CodeBuf
         $content = $buf->dump();
         $this->str_buffer .= $content;
         $buf->clean();
+    }
+
+    /**
+     * 添加一个方法名， 成功 返回true 失败返回false 表示方法名已经存在了
+     * @param string $method_name
+     * @return bool
+     */
+    public function addMethod($method_name)
+    {
+        if (isset($this->method_list[$method_name])) {
+            return false;
+        }
+        $this->method_list[$method_name] = true;
+        return true;
     }
 }

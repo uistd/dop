@@ -47,6 +47,15 @@ class MapItem extends Item
     }
 
     /**
+     * 获取键的item
+     * @return Item
+     */
+    public function getKeyItem()
+    {
+        return $this->key_item;
+    }
+
+    /**
      * 获取值的item
      * @return Item
      */

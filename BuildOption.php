@@ -31,6 +31,21 @@ class BuildOption
     const BUILD_CODE_JS = 'js';
 
     /**
+     * 使用json打包
+     */
+    const PACK_TYPE_JSON = 0x1;
+
+    /**
+     * 使用二进制打包
+     */
+    const PACK_TYPE_BINARY = 0x2;
+
+    /**
+     * 使用msgpack打包
+     */
+    const PACK_TYPE_MSGPACK = 0x4;
+
+    /**
      * @var string 生成文件目录
      */
     public $build_path;
@@ -54,6 +69,11 @@ class BuildOption
      * @var bool 是否手动require file
      */
     public $php_require_file = false;
+
+    /**
+     * @var int 数据打包类型，默认是JSON
+     */
+    public $pack_type = self::PACK_TYPE_JSON;
 
     /**
      * 数据修正

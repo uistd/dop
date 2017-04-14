@@ -159,7 +159,7 @@ abstract class DOPGenerator
      * @param int $type
      * @return bool
      */
-    protected function isBuildEncodeMethod($type)
+    protected function isBuildPackMethod($type)
     {
         $result = false;
         switch ($type) {
