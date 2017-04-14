@@ -338,7 +338,7 @@ class PhpGenerator extends DOPGenerator
         $php_class->push('{');
         //缩进
         $php_class->indentIncrease();
-        $item_list = $struct->getAllItem();
+        $item_list = $struct->getAllExtendItem();
         /**
          * @var string $name
          * @var Item $item

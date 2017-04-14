@@ -176,7 +176,9 @@ abstract class DOPGenerator
                 }
                 break;
             case Struct::TYPE_STRUCT:
-                $result = true;
+                if (0 !== $this->build_opt->build_side) {
+                    $result = true;
+                }
                 break;
             default:
                 throw new \InvalidArgumentException('Unknown type');
@@ -207,7 +209,9 @@ abstract class DOPGenerator
                 }
                 break;
             case Struct::TYPE_STRUCT:
-                $result = true;
+                if (0 !== $this->build_opt->build_side) {
+                    $result = true;
+                }
                 break;
             default:
                 throw new \InvalidArgumentException('Unknown type');

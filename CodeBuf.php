@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 /**
@@ -104,14 +105,22 @@ class CodeBuf
 
     /**
      * 生成缩进
+     * @return string
      */
     private function indentSpace()
     {
-        return str_repeat($this->indent_space, $this->indent);
+        static $indent, $result;
+        if ($this->indent === $indent) {
+            return $result;
+        }
+        $indent = $this->indent;
+        $result = str_repeat($this->indent_space, $this->indent);
+        return $result;
     }
 
     /**
      * 输出内容
+     * @return string
      */
     public function dump()
     {

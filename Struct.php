@@ -74,6 +74,11 @@ class Struct
     private $refer_type = 0;
 
     /**
+     * @var array 所有item包括继承的
+     */
+    private $all_extend_item;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -235,9 +240,13 @@ class Struct
         if (!$this->parent) {
             return $this->item_list;
         }
+        if (!$this->all_extend_item) {
+            return $this->all_extend_item;
+        }
         $item_list = $this->item_list;
         $parent_item = $this->parent->getAllExtendItem();
         $item_list += $parent_item;
+        $this->all_extend_item = $item_list;
         return $item_list;
     }
 
