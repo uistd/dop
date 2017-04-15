@@ -58,7 +58,6 @@ abstract class Plugin
      * 初始化
      * @param \DOMElement $node
      * @param Item $item
-     * @return array
      */
     abstract public function init(\DOMElement $node, Item $item);
 

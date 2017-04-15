@@ -36,55 +36,29 @@ abstract class DOPGenerator
     {
         $this->protocol_manager = $protocol_manager;
         $this->build_opt = $build_opt;
-        /**
-         * //变量类型的 字符串 表示
-         * Tpl::registerGrep('item_type_name', array('ffan\\dop\\ItemType', 'getTypeName'));
-         * //生成缩进值
-         * Tpl::registerGrep('indent', array('ffan\\dop\\DOPGenerator', 'indentSpace'));
-         * //生成临时变量
-         * Tpl::registerGrep('tmp_var_name', array('ffan\\dop\\DOPGenerator', 'tmpVarName'));
-         * //插件代码
-         * Tpl::registerPlugin('plugin_code', array($this, 'pluginCode'));
-         */
-    }
-
-    /**
-     * 处理缩进和空格
-     * @param int $rank
-     * @return string
-     */
-    public static function indentSpace($rank)
-    {
-        static $cache_space = array();
-        if (isset($cache_space[$rank])) {
-            return $cache_space[$rank];
-        }
-        $str = str_repeat(' ', $rank * 4);
-        $cache_space[$rank] = $str;
-        return $str;
     }
 
     /**
      * 插件代码入口
-     * @param array
-     * @return string
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
      */
-    public function pluginCode($args)
+    public function pluginCode($code_buf, $struct)
     {
         $plugin_list = $this->protocol_manager->getPluginList();
         if (null === $plugin_list) {
-            return '';
+            return;
         }
-        $plugin_code = '';
         /**
          * @var string $name
          * @var Plugin $plugin
          */
         foreach ($plugin_list as $name => $plugin) {
-            //$plugin_code .= $plugin->generateCode($args['struct']);
-            
+            if (!$this->build_opt->usePlugin($name)) {
+                continue;
+            }
+            $plugin->generateCode($code_buf, $struct);
         }
-        return $plugin_code;
     }
 
     /**
@@ -170,7 +144,7 @@ abstract class DOPGenerator
                     $result = true;
                 }
                 break;
-                //如果是Request 客户端生成
+            //如果是Request 客户端生成
             case Struct::TYPE_REQUEST:
                 if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
                     $result = true;

@@ -21,7 +21,8 @@
   "autoload": {
     "psr-4": {
       "ffan\\dop\\" : "base",
-      "ffan\\dop\\php\\" : "php",
+      "ffan\\dop\\php\\" : "pack/php",
+      "ffan\\dop\\js\\" : "pack/javascript",
       "ffan\\dop\\plugin\\" : "plugin"
     }
   },

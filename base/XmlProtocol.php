@@ -1,6 +1,7 @@
 <?php
 namespace ffan\dop;
 
+use ffan\dop\plugin\Plugin;
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 
@@ -383,10 +384,7 @@ class XmlProtocol
          * @var Plugin $plugin
          */
         foreach ($plugin_list as $name => $plugin) {
-            $options = $plugin->init($dom_node, $item);
-            if (null !== $options) {
-                $item->addPluginData($name, $options);
-            }
+            $plugin->init($dom_node, $item);
         }
     }
 

@@ -69,17 +69,6 @@ class PhpGenerator extends DOPGenerator
     }
 
     /**
-     * 是否是简单的类型
-     * 简单类型就可以直接赋值
-     * @param int $type
-     * @return bool
-     */
-    public static function isSimpleType($type)
-    {
-        return ItemType::BINARY === $type || ItemType::FLOAT === $type || ItemType::STRING === $type || ItemType::INT === $type;
-    }
-
-    /**
      * PHP命名空间的修正器
      * @param string $ns
      * @return mixed|string
@@ -277,6 +266,8 @@ class PhpGenerator extends DOPGenerator
         if ($this->isBuildUnpackMethod($struct_type)) {
             $this->buildUnpackMethod($php_class, $struct);
         }
+        //其它插件相关代码
+        $this->pluginCode($php_class, $struct);
         $php_class->indentDecrease();
         $php_class->push('}');
         return $php_class->dump();

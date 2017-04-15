@@ -1,5 +1,5 @@
 <?php
-namespace ffan\dop\plugin;
+namespace ffan\dop\plugin\validator;
 
 /**
  * Class ValidRule 数据有效规则

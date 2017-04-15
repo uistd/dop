@@ -1,11 +1,12 @@
 <?php
 
-namespace ffan\dop\plugin;
+namespace ffan\dop\plugin\validator;
 
 use ffan\dop\CodeBuf;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
+use ffan\dop\plugin\Plugin;
 use ffan\dop\Struct;
 use ffan\php\utils\Str as FFanStr;
 
@@ -29,12 +30,11 @@ class ValidatorPlugin extends Plugin
      * 初始化
      * @param \DOMElement $node
      * @param Item $item
-     * @return array
      */
     public function init(\DOMElement $node, Item $item)
     {
         if (!$this->isSupport($item)) {
-            return null;
+            return;
         }
         $valid_rule = new ValidRule();
         $valid_rule->data_from = $this->readValidFrom($node);
@@ -48,7 +48,7 @@ class ValidatorPlugin extends Plugin
         } elseif (ItemType::FLOAT === $type) {
             $this->readFloatSet($node, $valid_rule);
         }
-        return get_object_vars($valid_rule);
+        $item->addPluginData($this->name, $valid_rule);
     }
 
     /**

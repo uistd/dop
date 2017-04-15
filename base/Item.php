@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 /**
@@ -114,11 +115,21 @@ abstract class Item
     /**
      * 添加插件数据
      * @param string $plugin_name
-     * @param array $data
+     * @param object $data
      */
-    public function addPluginData($plugin_name, array $data)
+    public function addPluginData($plugin_name, $data)
     {
         $this->plugin_data_arr[$plugin_name] = $data;
+    }
+
+    /**
+     * 获取插件数据
+     * @param string $plugin_name
+     * @return Object
+     */
+    public function getPluginData($plugin_name)
+    {
+        return isset($this->plugin_data_arr[$plugin_name]) ? $this->plugin_data_arr[$plugin_name] : null;
     }
 
     /**

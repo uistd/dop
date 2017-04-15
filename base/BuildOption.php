@@ -76,6 +76,11 @@ class BuildOption
     public $pack_type = self::PACK_TYPE_JSON;
 
     /**
+     * @var string 使用的插件, plugin1, plugin2
+     */
+    public $use_plugin = 'all';
+
+    /**
      * 数据修正
      * @param string $code_type
      */
@@ -93,5 +98,21 @@ class BuildOption
             //清除两边的空格 和 \ / 符号
             $this->namespace_prefix = trim($this->namespace_prefix, '\\/ ');
         }
+        $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
+    }
+
+    /**
+     * 是否使用某个插件
+     * @param string $plugin_name 插件名称
+     * @return boolean
+     */
+    public function usePlugin($plugin_name)
+    {
+        //如果配置了all，表示使用所有的插件
+        if (false !== strpos($this->use_plugin, 'all,')) {
+            return true;
+        }
+        $plugin_name .= ',';
+        return false !== strpos($this->use_plugin, $plugin_name);
     }
 }

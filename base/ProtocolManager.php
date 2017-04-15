@@ -1,9 +1,10 @@
 <?php
 namespace ffan\dop;
 
+use ffan\dop\js\JsGenerator;
 use ffan\dop\php\PhpGenerator;
-use ffan\dop\plugin\MockPlugin;
-use ffan\dop\plugin\ValidatorPlugin;
+use ffan\dop\plugin\mock\MockPlugin;
+use ffan\dop\plugin\validator\ValidatorPlugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**

@@ -1,11 +1,12 @@
 <?php
-namespace ffan\dop\plugin;
+namespace ffan\dop\plugin\mock;
 
 use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
+use ffan\dop\plugin\Plugin;
 use ffan\dop\Struct;
 use ffan\php\utils\Str as FFanStr;
 
@@ -29,13 +30,12 @@ class MockPlugin extends Plugin
      * 初始化
      * @param \DOMElement $node
      * @param Item $item
-     * @return array
      * @throws DOPException
      */
     public function init(\DOMElement $node, Item $item)
     {
         if (!$this->isSupport($item)) {
-            return null;
+            return;
         }
         $mock_rule = new MockRule();
         $find_flag = false;
@@ -70,10 +70,9 @@ class MockPlugin extends Plugin
             $mock_rule->fixed_value = $this->read($node, '');
             $find_flag = true;
         }
-        if (!$find_flag) {
-            return null;
+        if ($find_flag) {
+            $item->addPluginData($this->name, $mock_rule);
         }
-        return get_object_vars($mock_rule);
     }
 
     /**
