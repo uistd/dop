@@ -20,7 +20,9 @@
   },
   "autoload": {
     "psr-4": {
-      "ffan\\dop\\" : ""
+      "ffan\\dop\\" : "base",
+      "ffan\\dop\\php\\" : "php",
+      "ffan\\dop\\plugin\\" : "plugin"
     }
   },
   "minimum-stability": "dev",

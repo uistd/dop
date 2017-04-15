@@ -1,9 +1,13 @@
 <?php
-namespace ffan\dop;
 
+namespace ffan\dop\plugin;
+
+use ffan\dop\CodeBuf;
+use ffan\dop\Item;
+use ffan\dop\ItemType;
+use ffan\dop\ListItem;
+use ffan\dop\Struct;
 use ffan\php\utils\Str as FFanStr;
-use ffan\php\tpl\Tpl;
-use ffan\php\utils\Str;
 
 /**
  * Class ValidatorPlugin 数据有效性检验
@@ -156,24 +160,11 @@ class ValidatorPlugin extends Plugin
 
     /**
      * 生成代码
+     * @param CodeBuf $code_buf
      * @param Struct $struct
-     * @return string
      */
-    public function generateCode(Struct $struct)
+    public function generateCode(CodeBuf $code_buf, Struct $struct)
     {
-        $type = $struct->getType();
-        //如果这是一个struct，没有被request引用，不需要生成相关代码
-        if (Struct::TYPE_STRUCT === $type && !$struct->hasReferType(Struct::TYPE_REQUEST)) {
-            return '';
-        }//如果不是请求的协议
-        elseif (Struct::TYPE_REQUEST !== $type) {
-            return '';
-        }
-        //如果模板文件不存在
-        if (!$this->hasPluginTpl()) {
-            return '';
-        }
-        $tpl_name = $this->getPluginTplName();
-        return Tpl::get($tpl_name, $struct);
+        // TODO: Implement generateCode() method.
     }
 }

@@ -1,7 +1,12 @@
 <?php
-namespace ffan\dop;
+namespace ffan\dop\plugin;
 
-use ffan\php\tpl\Tpl;
+use ffan\dop\CodeBuf;
+use ffan\dop\DOPException;
+use ffan\dop\Item;
+use ffan\dop\ItemType;
+use ffan\dop\ListItem;
+use ffan\dop\Struct;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -92,16 +97,11 @@ class MockPlugin extends Plugin
 
     /**
      * 生成代码
+     * @param CodeBuf $code_buf
      * @param Struct $struct
-     * @return string
      */
-    public function generateCode(Struct $struct)
+    public function generateCode(CodeBuf $code_buf, Struct $struct)
     {
-        $tpl_type = $this->manager->getBuildTplType();
-        $tpl = $tpl_type . '/plugin_' . $this->name;
-        if (!Tpl::hasTpl($tpl)) {
-            return '';
-        }
-        return Tpl::get($tpl, $struct);
+        // TODO: Implement generateCode() method.
     }
 }

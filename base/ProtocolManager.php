@@ -2,6 +2,8 @@
 namespace ffan\dop;
 
 use ffan\dop\php\PhpGenerator;
+use ffan\dop\plugin\MockPlugin;
+use ffan\dop\plugin\ValidatorPlugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**

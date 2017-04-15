@@ -2,6 +2,7 @@
 
 namespace ffan\dop;
 
+use ffan\dop\plugin\Plugin;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Config as FFanConfig;
 
@@ -80,8 +81,8 @@ abstract class DOPGenerator
          * @var Plugin $plugin
          */
         foreach ($plugin_list as $name => $plugin) {
-            $plugin_code .= $plugin->generateCode($args['struct']);
-            $plugin_code .= PHP_EOL;
+            //$plugin_code .= $plugin->generateCode($args['struct']);
+            
         }
         return $plugin_code;
     }

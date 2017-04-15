@@ -1,5 +1,10 @@
 <?php
-namespace ffan\dop;
+namespace ffan\dop\plugin;
+use ffan\dop\CodeBuf;
+use ffan\dop\DOPException;
+use ffan\dop\Item;
+use ffan\dop\ProtocolManager;
+use ffan\dop\Struct;
 use ffan\php\tpl\Tpl;
 
 /**
@@ -169,10 +174,10 @@ abstract class Plugin
 
     /**
      * 生成代码
+     * @param CodeBuf $code_buf
      * @param Struct $struct
-     * @return string
      */
-    abstract public function generateCode(Struct $struct);
+    abstract public function generateCode(CodeBuf $code_buf, Struct $struct);
 
     /**
      * 是否存在插件的模板文件

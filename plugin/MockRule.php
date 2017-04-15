@@ -1,5 +1,5 @@
 <?php
-namespace ffan\dop;
+namespace ffan\dop\plugin;
 
 /**
  * Class MockRule
