@@ -47,8 +47,19 @@ class CodeBuf
     }
 
     /**
+     * 再写入一行代码，并且这行代码需要缩进
+     * @param string $str 代码
+     * @return $this
+     */
+    public function pushIndent($str)
+    {
+        $str = $this->indent_space . $str;
+        return $this->push($str);
+    }
+
+    /**
      * 写入完整一行代码
-     * @param string $str
+     * @param string $str 代码
      * @return $this
      */
     public function push($str)
@@ -92,20 +103,24 @@ class CodeBuf
 
     /**
      * 增加缩进
+     * @return $this
      */
     public function indentIncrease()
     {
         $this->indent++;
+        return $this;
     }
 
     /**
      * 减少缩进
+     * @return $this
      */
     public function indentDecrease()
     {
-        if (--$this->indent) {
+        if (--$this->indent < 0) {
             $this->indent = 0;
         }
+        return $this;
     }
 
     /**

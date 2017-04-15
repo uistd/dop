@@ -9,7 +9,6 @@ use ffan\dop\DOPGenerator;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
-use ffan\dop\ProtocolManager;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
 use ffan\php\utils\Utils as FFanUtils;
@@ -26,58 +25,6 @@ class PhpGenerator extends DOPGenerator
      * @var string 模板文件
      */
     protected $tpl = 'php/php.tpl';
-
-    /**
-     * PhpGenerator constructor.
-     * @param ProtocolManager $protocol_manager
-     * @param BuildOption $build_opt
-     */
-    public function __construct(ProtocolManager $protocol_manager, BuildOption $build_opt)
-    {
-        parent::__construct($protocol_manager, $build_opt);
-        /*
-        //注册一些私有的修正器
-        //命名空间
-        Tpl::registerGrep('php_ns', array($this, 'phpNameSpace'));
-        //类型
-        Tpl::registerGrep('php_var_type', array('ffan\dop\PhpGenerator', 'varType'));
-        //变量值初始化
-        Tpl::registerPlugin('php_item_init', array('ffan\dop\PhpGenerator', 'phpItemInit'));
-        //数据导出成数组
-        Tpl::registerPlugin('php_export_array', array('ffan\dop\PhpGenerator', 'phpExportArray'));
-        //检查是不是非常 简单的类型
-        Tpl::registerGrep('php_simple_type', array('ffan\dop\PhpGenerator', 'isSimpleType'));
-        //是否需要检查是否需要判断数组
-        Tpl::registerGrep('php_array_check', function ($type) {
-            return ItemType::ARR === $type || ItemType::MAP === $type || ItemType::STRUCT === $type;
-        });
-        //类型强转
-        Tpl::registerGrep('php_convert_value', array('ffan\dop\PhpGenerator', 'convertValue'));
-        //require 路径
-        Tpl::registerGrep('php_require', array('ffan\dop\PhpGenerator', 'requirePath'));
-        */
-    }
-
-    /**
-     * @param string $type
-     * @return string
-    public static function convertValue($type)
-     * {
-     * $re = '';
-     * switch ($type) {
-     * case ItemType::FLOAT:
-     * $re = '(float)';
-     * break;
-     * case ItemType::INT:
-     * $re = '(int)';
-     * break;
-     * case ItemType::STRING:
-     * $re = '(string)';
-     * break;
-     * }
-     * return $re;
-     * }
-     */
 
     /**
      * require 路径判断
@@ -133,24 +80,6 @@ class PhpGenerator extends DOPGenerator
     }
 
     /**
-     * 变更初始化
-     * @param array $args
-     * @return string
-    public static function phpItemInit($args)
-     * {
-     * return Tpl::get('php/item_init.tpl', $args);
-     * }*/
-
-    /**
-     * 导出为数组
-     * @param array $args
-     * @return string
-    public static function phpExportArray($args)
-     * {
-     * return Tpl::get('php/export_array.tpl', $args);
-     * }
-     */
-    /**
      * PHP命名空间的修正器
      * @param string $ns
      * @return mixed|string
@@ -200,21 +129,6 @@ class PhpGenerator extends DOPGenerator
                 break;
         }
         return $str;
-    }
-
-    /**
-     * 整理生成文件的参数
-     * @return array
-     */
-    protected function buildTplData()
-    {
-        $build_arg = array(
-            'path_define_var' => $this->protocol_manager->getConfig('path_define_var', 'DOP_PATH'),
-            'build_path' => $this->build_opt->build_path,
-            'code_namespace' => 'namespace',
-            'code_php_tag' => "<?php\n"
-        );
-        return $build_arg;
     }
 
     /**
@@ -360,11 +274,11 @@ class PhpGenerator extends DOPGenerator
             $this->buildPackMethod($php_class, $struct);
         }
         //如果需要生成 decode 方法
-        if ($this->isBuildDecodeMethod($struct_type)) {
+        if ($this->isBuildUnpackMethod($struct_type)) {
             $this->buildUnpackMethod($php_class, $struct);
         }
         $php_class->indentDecrease();
-        $php_class->push('}')->emptyLine();
+        $php_class->push('}');
         return $php_class->dump();
     }
 
@@ -375,7 +289,10 @@ class PhpGenerator extends DOPGenerator
      */
     private function buildPackMethod($code_buf, $struct)
     {
-        
+        //json
+        if ($this->build_opt->pack_type & BuildOption::PACK_TYPE_JSON) {
+            JsonPack::buildPackMethod($struct, $code_buf);
+        }
     }
 
     /**
@@ -387,7 +304,7 @@ class PhpGenerator extends DOPGenerator
     {
         //json
         if ($this->build_opt->pack_type & BuildOption::PACK_TYPE_JSON) {
-            JsonPack::buildUnPackMethod($struct, $code_buf);
+            JsonPack::buildUnpackMethod($struct, $code_buf);
         }
     }
 }

@@ -22,5 +22,5 @@ interface PackInterface
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    public static function buildUnPackMethod($struct, $code_buf);
+    public static function buildUnpackMethod($struct, $code_buf);
 }

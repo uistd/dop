@@ -28,7 +28,29 @@ class ArrayPack implements PackInterface
      */
     public static function buildPackMethod($struct, $code_buf)
     {
-
+        $method_name = 'arrayPack';
+        if (!$code_buf->addMethod($method_name)) {
+            return;
+        }
+        $code_buf->emptyLine();
+        $code_buf->push('/**');
+        $code_buf->push(' * 转成数组');
+        $code_buf->push(' * @return array');
+        $code_buf->push(' */');
+        $code_buf->push('public function ' . $method_name . '()');
+        $code_buf->push('{');
+        $code_buf->indentIncrease();
+        $code_buf->push('$result = array();');
+        $all_item = $struct->getAllExtendItem();
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item as $name => $item) {
+            self::packItemValue($code_buf, '$this->' . $name, "result['" . $name . "']", $item, 0);
+        }
+        $code_buf->push('return $result;');
+        $code_buf->indentDecrease()->push('}');
     }
 
     /**
@@ -37,7 +59,7 @@ class ArrayPack implements PackInterface
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    public static function buildUnPackMethod($struct, $code_buf)
+    public static function buildUnpackMethod($struct, $code_buf)
     {
         $method_name = 'arrayUnpack';
         if (!$code_buf->addMethod($method_name)) {
@@ -59,8 +81,124 @@ class ArrayPack implements PackInterface
         foreach ($all_item as $name => $item) {
             self::unpackItemValue($code_buf, '$this->' . $name, 'data', $item, 0, $name);
         }
-        $code_buf->indentDecrease();
-        $code_buf->push('}');
+        $code_buf->indentDecrease()->push('}');
+    }
+
+    /**
+     * 打包一项数据
+     * @param CodeBuf $code_buf
+     * @param string $var_name 变量名
+     * @param string $result_var 保存结果变量名
+     * @param Item $item 节点对象
+     * @param int $depth 深度
+     * @throws DOPException
+     */
+    private static function packItemValue($code_buf, $var_name, $result_var, $item, $depth = 0)
+    {
+        $item_type = $item->getType();
+        switch ($item_type) {
+            case ItemType::INT:
+                self::packItemCode($code_buf, $result_var, $var_name, 'int', $depth);
+                break;
+            case ItemType::FLOAT:
+            case ItemType::DOUBLE:
+                self::packItemCode($code_buf, $result_var, $var_name, 'float', $depth);
+                break;
+            case ItemType::STRING:
+            case ItemType::BINARY:
+                self::packItemCode($code_buf, $result_var, $var_name, 'string', $depth);
+                break;
+            case ItemType::ARR:
+                $result_var_name = DOPGenerator::tmpVarName($depth, 'tmp_arr');
+                $code_buf->push('$' . $result_var_name . ' = array();');
+                self::packArrayCheckCode($code_buf, $var_name, $depth);
+                $for_var_name = DOPGenerator::tmpVarName($depth, 'item');
+                /** @var ListItem $item */
+                $sub_item = $item->getItem();
+                $code_buf->push('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
+                $code_buf->indentIncrease();
+                self::packItemValue($code_buf, $for_var_name, $result_var_name . '[]', $sub_item, $depth + 1);
+                $code_buf->indentDecrease()->push('}');
+                if (0 === $depth) {
+                    $code_buf->indentDecrease()->push('}');
+                }
+                $code_buf->push('$' . $result_var . ' = $' . $result_var_name .';');
+                break;
+            case ItemType::MAP:
+                $result_var_name = DOPGenerator::tmpVarName($depth, 'tmp_' . $item->getName());
+                $code_buf->push('$' . $result_var_name . ' = array();');
+                self::packArrayCheckCode($code_buf, $var_name, $depth);
+                $key_var_name = DOPGenerator::tmpVarName($depth, 'key');
+                $for_var_name = DOPGenerator::tmpVarName($depth, 'item');
+                /** @var MapItem $item */
+                $key_item = $item->getKeyItem();
+                $value_item = $item->getValueItem();
+                $code_buf->push('foreach ($' . $var_name . ' as $' . $key_var_name . ' => $' . $for_var_name . ') {');
+                $code_buf->indentIncrease();
+                self::packItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
+                self::packItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
+                $code_buf->push('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
+                $code_buf->indentDecrease()->push('}');
+                if (0 === $depth) {
+                    $code_buf->indentDecrease()->push('}');
+                }
+                $code_buf->push('$' . $result_var . ' = $' . $result_var_name . ';');
+                break;
+            case ItemType::STRUCT:
+                /** @var StructItem $item */
+                if (0 === $depth) {
+                    $code_buf->push('if ($' . $var_name . ') instanceof ' . $item->getStructName() . ') {');
+                    $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
+                    $code_buf->push('} else {');
+                    $code_buf->pushIndent('$' . $result_var . ' = array();');
+                    $code_buf->push('}');
+                } else {
+                    $code_buf->push('if (!$' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
+                    $code_buf->pushIndent('continue;');
+                    $code_buf->push('}');
+                    $code_buf->push('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
+                }
+                break;
+            default:
+                throw new DOPException('Unknown type:' . $item_type);
+
+        }
+    }
+
+    /**
+     * 生成判断数组的代码
+     * @param CodeBuf $code_buf
+     * @param string $var_name
+     * @param int $depth
+     */
+    private static function packArrayCheckCode($code_buf, $var_name, $depth)
+    {
+        if (0 === $depth) {
+            $code_buf->push('if (is_array($' . $var_name . ')) {');
+            $code_buf->indentIncrease();
+        } else {
+            $code_buf->push('if (!is_array($' . $var_name . ')) {');
+            $code_buf->pushIndent('continue;');
+            $code_buf->push('}');
+        }
+    }
+
+    /**
+     * 生成打包一个节点的代码
+     * @param CodeBuf $code_buf
+     * @param string $result_var
+     * @param string $var_name
+     * @param string $convert_type 强转类型
+     * @param int $depth 深度
+     */
+    private static function packItemCode($code_buf, $result_var, $var_name, $convert_type, $depth)
+    {
+        //如果是最外层，要判断值是不是null
+        if (0 === $depth) {
+            $code_buf->push('$' . $result_var . ' = null === $' . $var_name . ' ?: (' . $convert_type . ')$' . $var_name . ';');
+        } else {
+            $code_buf->push('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name .';');
+        }
     }
 
     /**
@@ -78,7 +216,7 @@ class ArrayPack implements PackInterface
         $item_type = $item->getType();
         if ($key_name) {
             $isset_check = true;
-            $data_value = $data_name . '[' . $key_name . ']';
+            $data_value = $data_name . '[\'' . $key_name . '\']';
         } else {
             $isset_check = false;
             $key_name = $var_name;
@@ -86,21 +224,16 @@ class ArrayPack implements PackInterface
         }
         //是否需要判断值是否是数组
         $array_type_check = (ItemType::ARR === $item_type || ItemType::MAP === $item_type || ItemType::STRUCT === $item_type);
-        //判断值是否存在
-        if ($isset_check) {
-            $code_buf->push('if (!isset($' . $data_value . ')) {');
-            $code_buf->indentIncrease();
-            $code_buf->push('continue;');
-            $code_buf->indentDecrease();
-            $code_buf->push('}');
-        }
-        //判断是否是数组
         if ($isset_check && $array_type_check) {
-            $code_buf->push('if (!is_array($' . $data_value . ') {');
+            $code_buf->push('if (isset($' . $data_value . ') && is_array($' . $data_value . ')) {');
             $code_buf->indentIncrease();
+        } elseif ($isset_check) {
+            $code_buf->push('if (isset($' . $data_value . ')) {');
             $code_buf->indentIncrease();
-            $code_buf->push('continue;');
-            $code_buf->indentDecrease();
+        } //如果只用判断是否为数组，不为数组就continue
+        elseif ($array_type_check) {
+            $code_buf->push('if (!is_array($' . $data_value . ')) {');
+            $code_buf->pushIndent('continue;');
             $code_buf->push('}');
         }
         switch ($item_type) {
@@ -134,7 +267,7 @@ class ArrayPack implements PackInterface
                 $sub_item = $item->getItem();
                 $code_buf->push('foreach ($' . $data_value . ' as $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
-                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $sub_item, ++$depth);
+                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $sub_item, $depth + 1);
                 $code_buf->push('$' . $result_var_name . '[] = $' . $for_var_name . ';');
                 $code_buf->indentDecrease();
                 $code_buf->push('}');
@@ -154,8 +287,8 @@ class ArrayPack implements PackInterface
                 $value_item = $item->getValueItem();
                 $code_buf->push('foreach ($' . $data_value . ' as $' . $key_var_name . ' => $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
-                self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, ++$depth);
-                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth);
+                self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
+                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
                 $code_buf->push('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
                 $code_buf->indentDecrease();
                 $code_buf->push('}');
@@ -163,6 +296,10 @@ class ArrayPack implements PackInterface
                 break;
             default:
                 throw new DOPException('Unknown type:' . $item_type);
+        }
+        if ($isset_check) {
+            $code_buf->indentDecrease();
+            $code_buf->push('}');
         }
     }
 }

@@ -233,14 +233,14 @@ class Struct
 
     /**
      * 返回所有的Item包括Extend的Item
-     * @return array[Item]
+     * @return array
      */
     public function getAllExtendItem()
     {
         if (!$this->parent) {
             return $this->item_list;
         }
-        if (!$this->all_extend_item) {
+        if ($this->all_extend_item) {
             return $this->all_extend_item;
         }
         $item_list = $this->item_list;
