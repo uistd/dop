@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\php;
+namespace ffan\dop\pack\php;
 
 use ffan\dop\CodeBuf;
 use ffan\dop\PackInterface;

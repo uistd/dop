@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 use ffan\dop\plugin\Plugin;

@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\php;
+namespace ffan\dop\pack\php;
 
 use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
@@ -184,7 +184,7 @@ class PhpGenerator extends DOPGenerator
             'namespace_set' => $autoload_set
         ));
         $build_path = $this->buildBasePath();
-        $file = $build_path .'dop.php';
+        $file = $build_path . 'dop.php';
         file_put_contents($file, $file_content);
     }
 
@@ -209,7 +209,7 @@ class PhpGenerator extends DOPGenerator
             $import_class = $struct->getImportStruct();
             foreach ($import_class as $class_name) {
                 $php_class->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
-            }  
+            }
         }
 
         //如果有父类，加入父类

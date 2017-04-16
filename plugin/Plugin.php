@@ -1,11 +1,13 @@
 <?php
+
 namespace ffan\dop\plugin;
+
 use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
 use ffan\dop\Item;
 use ffan\dop\ProtocolManager;
 use ffan\dop\Struct;
-use ffan\php\tpl\Tpl;
+use ffan\dop\BuildOption;
 
 /**
  * Class Plugin
@@ -42,6 +44,11 @@ abstract class Plugin
      * @var string 模板文件
      */
     protected $tpl_name;
+
+    /**
+     * @var array 语言支持缓存
+     */
+    private $code_support = [];
 
     /**
      * PluginInterface constructor.
@@ -173,34 +180,62 @@ abstract class Plugin
 
     /**
      * 生成代码
+     * @param BuildOption $build_opt
      * @param CodeBuf $code_buf
      * @param Struct $struct
      */
-    abstract public function generateCode(CodeBuf $code_buf, Struct $struct);
-
-    /**
-     * 是否存在插件的模板文件
-     * @return bool
-     */
-    protected function hasPluginTpl()
+    public function generateCode(BuildOption $build_opt, CodeBuf $code_buf, Struct $struct)
     {
-        if (null === $this->has_tpl) {
-            $tpl_name = $this->getPluginTplName();
-            $this->has_tpl = Tpl::hasTpl($tpl_name);
+        $code_type = $build_opt->getCodeType();
+        if ($this->codeTypeSupport($code_type)) {
+            $class_name = $this->codeClassName($code_type, true);
+            $args = array($build_opt, $code_buf, $struct);
+            call_user_func_array(array($class_name, 'pluginCode'), $args);
         }
-        return $this->has_tpl;
     }
 
     /**
-     * 获取模板文件
+     * 是否支持某种语言
+     * @param string $code_type
+     * @return bool
+     */
+    private function codeTypeSupport($code_type)
+    {
+        if (isset($this->code_support[$code_type])) {
+            return $this->code_support[$code_type];
+        }
+        $class_name = $this->codeClassName($code_type);
+        $file = __DIR__ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . $class_name . '.php';
+        $is_support = false;
+        if (is_file($file)) {
+            /** @noinspection PhpIncludeInspection */
+            require_once $file;
+            //类是否存在
+            if (class_exists($class_name)) {
+                $implements = class_implements($class_name);
+                //类是否 实现接口 PluginCode
+                if (isset($implements['PluginCode'])) {
+                    $is_support = true;
+                }
+            }
+        }
+        $this->code_support[$code_type] = $is_support;
+        return $is_support;
+    }
+
+    /**
+     * 生成代码的类名
+     * @param string $code_type
+     * @param bool $ns 是否带全名空间
      * @return string
      */
-    protected function getPluginTplName()
+    private function codeClassName($code_type, $ns = false)
     {
-        if (null === $this->tpl_name) {
-            $tpl_type = $this->manager->getBuildTplType();
-            $this->tpl_name = $tpl_type . '/plugin_' . $this->name;
+        $class_name = ucfirst($code_type) . ucfirst($this->name) . 'Code';
+        if ($ns) {
+            $ns_str = 'ffan\\dop\\plugin\\'. $this->name;
+            $class_name = $ns_str .'\\'. $class_name;
         }
-        return $this->tpl_name;
+        return $class_name;
     }
 }

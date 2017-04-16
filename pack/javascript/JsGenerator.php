@@ -1,5 +1,7 @@
 <?php
-namespace ffan\dop\js;
+
+namespace ffan\dop\pack\js;
+
 use ffan\dop\DOPException;
 use ffan\dop\DOPGenerator;
 use ffan\dop\Struct;

@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop\plugin\validator;
 
 /**

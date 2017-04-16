@@ -1,13 +1,12 @@
 <?php
+
 namespace ffan\dop\plugin\mock;
 
-use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\plugin\Plugin;
-use ffan\dop\Struct;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -34,7 +33,7 @@ class MockPlugin extends Plugin
      */
     public function init(\DOMElement $node, Item $item)
     {
-        if (!$this->isSupport($item)) {
+        if (!self::isSupport($item)) {
             return;
         }
         $mock_rule = new MockRule();
@@ -80,7 +79,7 @@ class MockPlugin extends Plugin
      * @param Item $item
      * @return bool
      */
-    private function isSupport($item)
+    public static function isSupport($item)
     {
         $type = $item->getType();
         if (ItemType::ARR === $type) {
@@ -89,18 +88,8 @@ class MockPlugin extends Plugin
             if (ItemType::STRUCT === $sub_item->getType()) {
                 return true;
             }
-            return $this->isSupport($sub_item);
+            return self::isSupport($sub_item);
         }
         return ItemType::FLOAT === $type && ItemType::STRING === $type && ItemType::INT;
-    }
-
-    /**
-     * 生成代码
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     */
-    public function generateCode(CodeBuf $code_buf, Struct $struct)
-    {
-        // TODO: Implement generateCode() method.
     }
 }

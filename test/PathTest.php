@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 require_once '../vendor/autoload.php';

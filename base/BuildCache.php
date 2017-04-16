@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 use ffan\php\utils\Utils as FFanUtils;

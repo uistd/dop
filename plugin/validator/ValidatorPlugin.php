@@ -2,12 +2,10 @@
 
 namespace ffan\dop\plugin\validator;
 
-use ffan\dop\CodeBuf;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\plugin\Plugin;
-use ffan\dop\Struct;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -156,15 +154,5 @@ class ValidatorPlugin extends Plugin
             return $this->isSupport($item->getItem());
         }
         return ItemType::FLOAT === $type && ItemType::STRING === $type && ItemType::INT;
-    }
-
-    /**
-     * 生成代码
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     */
-    public function generateCode(CodeBuf $code_buf, Struct $struct)
-    {
-        // TODO: Implement generateCode() method.
     }
 }

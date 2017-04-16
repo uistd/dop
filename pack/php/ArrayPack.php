@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\php;
+namespace ffan\dop\pack\php;
 
 use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
@@ -122,7 +122,7 @@ class ArrayPack implements PackInterface
                 if (0 === $depth) {
                     $code_buf->indentDecrease()->push('}');
                 }
-                $code_buf->push('$' . $result_var . ' = $' . $result_var_name .';');
+                $code_buf->push('$' . $result_var . ' = $' . $result_var_name . ';');
                 break;
             case ItemType::MAP:
                 $result_var_name = DOPGenerator::tmpVarName($depth, 'tmp_' . $item->getName());
@@ -197,7 +197,7 @@ class ArrayPack implements PackInterface
         if (0 === $depth) {
             $code_buf->push('$' . $result_var . ' = null === $' . $var_name . ' ?: (' . $convert_type . ')$' . $var_name . ';');
         } else {
-            $code_buf->push('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name .';');
+            $code_buf->push('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name . ';');
         }
     }
 

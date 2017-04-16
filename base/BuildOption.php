@@ -81,6 +81,11 @@ class BuildOption
     public $use_plugin = 'all';
 
     /**
+     * @var string 语言类型
+     */
+    private $code_type;
+
+    /**
      * 数据修正
      * @param string $code_type
      */
@@ -99,6 +104,7 @@ class BuildOption
             $this->namespace_prefix = trim($this->namespace_prefix, '\\/ ');
         }
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
+        $this->code_type = $code_type;
     }
 
     /**
@@ -114,5 +120,14 @@ class BuildOption
         }
         $plugin_name .= ',';
         return false !== strpos($this->use_plugin, $plugin_name);
+    }
+
+    /**
+     * 获取代码类型
+     * @return string
+     */
+    public function getCodeType()
+    {
+        return $this->code_type;
     }
 }
