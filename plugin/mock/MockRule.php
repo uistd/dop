@@ -11,17 +11,22 @@ class MockRule
     /**
      * 指定范围随机
      */
-    const TYPE_RANGE = 1;
+    const MOCK_RANGE = 1;
 
     /**
      * 指定值随机
      */
-    const TYPE_ENUM = 2;
+    const MOCK_ENUM = 2;
 
     /**
      * 固定值
      */
-    const TYPE_FIXED = 3;
+    const MOCK_FIXED = 3;
+
+    /**
+     * 内置类型
+     */
+    const MOCK_TYPE = 4;
 
     /**
      * @var int 数据mock方式
@@ -52,4 +57,9 @@ class MockRule
      * @var mixed 固定值
      */
     public $fixed_value;
+
+    /**
+     * @var string 内置的类型
+     */
+    public $type;
 }

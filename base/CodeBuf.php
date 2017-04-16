@@ -14,9 +14,9 @@ class CodeBuf
     private $indent = 0;
 
     /**
-     * @var string 内容缓存
+     * @var array 内容缓存
      */
-    private $str_buffer = '';
+    private $str_buffer = [];
 
     /**
      * @var string 缩进
@@ -32,6 +32,11 @@ class CodeBuf
      * @var array 方法名缓存
      */
     private $method_list;
+
+    /**
+     * @var int 包含子buffer的数量
+     */
+    private $sub_buffer_count = 0;
 
     /**
      * CodeBuf constructor.
@@ -64,8 +69,20 @@ class CodeBuf
      */
     public function push($str)
     {
-        $line_str = $this->indentSpace() . $str . PHP_EOL;
-        $this->str_buffer .= $line_str;
+        $line_str = $this->indentSpace() . $str;
+        $this->str_buffer[] = $line_str;
+        return $this;
+    }
+
+    /**
+     * 直接写入一个Buffer，输出的时候，会先将buffer的内容输出
+     * @param CodeBuf $buffer
+     * @return $this
+     */
+    public function pushBuffer(CodeBuf $buffer)
+    {
+        $this->str_buffer[] = $buffer;
+        $this->sub_buffer_count++;
         return $this;
     }
 
@@ -75,7 +92,7 @@ class CodeBuf
      */
     public function emptyLine()
     {
-        $this->str_buffer .= PHP_EOL;
+        $this->str_buffer[] = '';
         return $this;
     }
 
@@ -144,7 +161,31 @@ class CodeBuf
      */
     public function dump()
     {
-        return $this->str_buffer;
+        if ($this->sub_buffer_count > 0) {
+            $this->mergeSubBuffer();
+        }
+        $result = join(PHP_EOL, $this->str_buffer);
+        $this->clean();
+        return $result;
+    }
+
+    /**
+     * 将子buffer和主内容合并
+     */
+    private function mergeSubBuffer()
+    {
+        foreach ($this->str_buffer as &$each_content) {
+            if (!is_object($each_content)) {
+                continue;
+            }
+            if (!$each_content instanceof CodeBuf) {
+                continue;
+            }
+            $each_content = $each_content->dump();
+            if (--$this->sub_buffer_count <= 0) {
+                break;
+            }
+        }
     }
 
     /**
@@ -152,19 +193,8 @@ class CodeBuf
      */
     public function clean()
     {
-        $this->str_buffer = '';
+        $this->str_buffer = [];
         $this->tmp_line_str = '';
-    }
-
-    /**
-     * 将传入的buf合并入该buf
-     * @param CodeBuf $buf
-     */
-    public function merge(CodeBuf $buf)
-    {
-        $content = $buf->dump();
-        $this->str_buffer .= $content;
-        $buf->clean();
     }
 
     /**

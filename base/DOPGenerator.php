@@ -40,10 +40,11 @@ abstract class DOPGenerator
 
     /**
      * 插件代码入口
+     * @param BuildOption $build_opt
      * @param CodeBuf $code_buf
      * @param Struct $struct
      */
-    public function pluginCode($code_buf, $struct)
+    public function pluginCode($build_opt, $code_buf, $struct)
     {
         $plugin_list = $this->protocol_manager->getPluginList();
         if (null === $plugin_list) {
@@ -57,7 +58,7 @@ abstract class DOPGenerator
             if (!$this->build_opt->usePlugin($name)) {
                 continue;
             }
-            $plugin->generateCode($code_buf, $struct);
+            $plugin->generateCode($build_opt, $code_buf, $struct);
         }
     }
 
@@ -124,7 +125,7 @@ abstract class DOPGenerator
             return;
         }
         FFanConfig::add('ffan-tpl', array(
-            'tpl_dir' => 'tpl'
+            'tpl_dir' => 'pack/tpl'
         ));
         $is_init = true;
     }

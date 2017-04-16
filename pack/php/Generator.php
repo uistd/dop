@@ -19,7 +19,7 @@ use ffan\php\tpl\Tpl as FFanTpl;
  * Class PhpGenerator
  * @package ffan\dop
  */
-class PhpGenerator extends DOPGenerator
+class Generator extends DOPGenerator
 {
     /**
      * @var string 模板文件
@@ -69,13 +69,14 @@ class PhpGenerator extends DOPGenerator
     }
 
     /**
-     * PHP命名空间的修正器
+     * PHP命名空间                                                                                                                                                                  
+     * @param BuildOption $build_opt
      * @param string $ns
-     * @return mixed|string
+     * @return string
      */
-    public function phpNameSpace($ns)
+    public static function phpNameSpace($build_opt, $ns)
     {
-        $prefix = $this->build_opt->namespace_prefix;
+        $prefix = $build_opt->namespace_prefix;
         if (is_string($prefix)) {
             $ns = $prefix . $ns;
         }
@@ -185,7 +186,7 @@ class PhpGenerator extends DOPGenerator
         ));
         $build_path = $this->buildBasePath();
         $file = $build_path . 'dop.php';
-        file_put_contents($file, $file_content);
+        file_put_contents($file, '<?php'. PHP_EOL .$file_content);
     }
 
     /**
@@ -201,7 +202,7 @@ class PhpGenerator extends DOPGenerator
         $main_class_name = $struct->getClassName();
         $parent_struct = $struct->getParent();
         $php_class->emptyLine();
-        $ns = $this->phpNameSpace($name_space);
+        $ns = self::phpNameSpace($this->build_opt, $name_space);
         $php_class->push('namespace ' . $ns . ';');
         // 如果手动require
         if ($this->build_opt->php_require_file) {
@@ -220,7 +221,7 @@ class PhpGenerator extends DOPGenerator
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
                 $php_class->emptyLine();
-                $use_name_space = self::phpNameSpace($parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
+                $use_name_space = self::phpNameSpace($this->build_opt, $parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
                 $php_class->push('use ' . $use_name_space . ';');
             }
         }
@@ -267,7 +268,7 @@ class PhpGenerator extends DOPGenerator
             $this->buildUnpackMethod($php_class, $struct);
         }
         //其它插件相关代码
-        $this->pluginCode($php_class, $struct);
+        $this->pluginCode($this->build_opt, $php_class, $struct);
         $php_class->indentDecrease();
         $php_class->push('}');
         return $php_class->dump();

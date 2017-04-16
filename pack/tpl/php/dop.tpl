@@ -1,4 +1,3 @@
-<?php
 define('DOP_PHP_PROTOCOL_BASE', __DIR__ . DIRECTORY_SEPARATOR);
 /**
 * autoload 方法

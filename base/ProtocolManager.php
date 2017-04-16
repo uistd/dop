@@ -3,7 +3,7 @@
 namespace ffan\dop;
 
 use ffan\dop\pack\js\JsGenerator;
-use ffan\dop\pack\php\PhpGenerator;
+use ffan\dop\pack\php\Generator;
 use ffan\dop\plugin\mock\MockPlugin;
 use ffan\dop\plugin\validator\ValidatorPlugin;
 use ffan\php\utils\Str as FFanStr;
@@ -371,7 +371,7 @@ class ProtocolManager
     {
         switch ($build_tpl) {
             case BuildOption::BUILD_CODE_PHP:
-                $build_obj = new PhpGenerator($this, $build_opt);
+                $build_obj = new Generator($this, $build_opt);
                 break;
             case BuildOption::BUILD_CODE_JS:
                 $build_obj = new JsGenerator($this, $build_opt);

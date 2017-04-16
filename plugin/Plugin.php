@@ -208,13 +208,14 @@ abstract class Plugin
         $file = __DIR__ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . $class_name . '.php';
         $is_support = false;
         if (is_file($file)) {
+            $full_class = $this->codeClassName($code_type, true);
             /** @noinspection PhpIncludeInspection */
             require_once $file;
             //类是否存在
-            if (class_exists($class_name)) {
-                $implements = class_implements($class_name);
+            if (class_exists($full_class)) {
+                $implements = class_implements($full_class);
                 //类是否 实现接口 PluginCode
-                if (isset($implements['PluginCode'])) {
+                if (isset($implements['ffan\\dop\\plugin\\PluginCode'])) {
                     $is_support = true;
                 }
             }

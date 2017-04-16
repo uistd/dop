@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
     <struct name="role_info" note="用户信息">
-        <string name="user_name" note="用户名"/>
-        <string name="name" note="真实姓名"/>
-        <string name="mobile" note="手机号"/>
-        <string name="email" note="电子邮件" default="demo@wanda.cn"/>
-        <int name="level" note="等级"/>
-        <string name="address" note="地址"/>
-        <string name="country" note="国籍" default="中国"/>
-        <int name="gender" note="性别" default="1"/>
-        <list name="exp">
-            <int/>
+        <string name="user_name" note="用户名" mock-range="8,15"/>
+        <string name="name" note="真实姓名" mock-range="6, 9"/>
+        <string name="mobile" note="手机号" mock-type="mobile"/>
+        <string name="email" note="电子邮件" default="demo@wanda.cn" mock-type="email"/>
+        <int name="level" note="等级" mock-range="10, 20"/>
+        <string name="address" note="地址" mock-range="20, 30"/>
+        <string name="country" note="国籍" default="中国" mock="中国"/>
+        <int name="gender" note="性别" default="1" mock-enum="1,2"/>
+        <list name="exp" mock-range="1, 10">
+            <int mock-range="100, 10000"/>
         </list>
-        <list name="info">
-            <string/>
+        <list name="info" mock-range="1,2">
+            <string mock-range="10,20"/>
         </list>
-        <list name="demo" info="测试">
-            <list>
-                <list>
-                    <int/>
+        <list name="demo" info="测试" mock-range="1,10">
+            <list mock-range="1,10">
+                <list mock-range="1,10">
+                    <int mock-range="20,110000"/>
                 </list>
             </list>
         </list>
-        <list name="children">
+        <list name="children" mock-range="1,3">
             <struct>
-                <int name="gender" default="1" note="性别"/>
-                <int name="age"/>
-                <string name="name"/>
+                <int name="gender" default="1" note="性别" mock-enum="1,2"/>
+                <int name="age" mock-range="1, 30"/>
+                <string name="name" mock-type="chinese_name"/>
             </struct>
         </list>
     </struct>
@@ -40,7 +40,7 @@
     </action>
     <action name="demo_role" method="post">
         <request>
-            <string name="role_ids"/>
+            <string name="role_ids" mock-enum="10,20|30,35"/>
         </request>
         <response extend="/xapi/result">
             <list name="data">
@@ -50,7 +50,7 @@
     </action>
     <action name="demo_role" method="delete">
         <request>
-            <int name="role_id"/>
+            <int name="role_id" mock="10"/>
         </request>
         <response extend="/xapi/result">
             <int name="data"/>
@@ -64,11 +64,11 @@
             <map name="data">
                 <int note="role_id"/>
                 <struct extend="role_info" note="用户信息">
-                    <string name="remark" note="备注"/>
+                    <string name="remark" note="备注" mock="note"/>
                     <struct name="demo">
-                        <string name="user_name" note="用户名"/>
-                        <string name="name" note="真实姓名"/>
-                        <string name="mobile" note="手机号"/>
+                        <string name="user_name" note="用户名" mock-range="6,10"/>
+                        <string name="name" note="真实姓名" mock-type="chinese_name"/>
+                        <string name="mobile" note="手机号" mock-type="mobile"/>
                     </struct>
                 </struct>
             </map>
