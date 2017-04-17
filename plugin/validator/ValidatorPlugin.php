@@ -22,7 +22,7 @@ class ValidatorPlugin extends Plugin
     /**
      * @var string
      */
-    protected $name = 'validator';
+    protected static $name = 'validator';
 
     /**
      * 初始化

@@ -14,7 +14,7 @@ class MockBase
      * @param int $max_len
      * @return string
      */
-    public static function mockStrRange($min_len, $max_len)
+    public static function strRangeMock($min_len, $max_len)
     {
         static $str_table = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $total_len = strlen($str_table);
@@ -30,7 +30,7 @@ class MockBase
      * 生成手机号
      * @return string
      */
-    public static function mockTypeMobile()
+    public static function mobileTypeMock()
     {
         //手机有效号码前3位
         $prefix_number = array(
@@ -47,7 +47,7 @@ class MockBase
      * 生成邮箱
      * @return string
      */
-    public static function mockTypeEmail()
+    public static function emailTypeMock()
     {
         //暂时就生成QQ邮箱
         $code = (string)mt_rand(10000000, 999999999999);
@@ -57,12 +57,9 @@ class MockBase
     /**
      * 随机生成
      */
-    public static function mockTypeChineseName()
+    public static function chineseNameTypeMock()
     {
-        static $first_name_table = array('赵', '钱', '孙', '李', '周', '吴', '郑', '王', '冯', '陈', '褚', '卫', '蒋', '沈', '韩', '杨', '朱', '秦', '尤', '许',
-            '何', '吕', '施', '张', '孔', '曹', '严', '华', '金', '魏', '陶', '姜', '戚', '谢', '邹', '喻', '柏', '水', '窦', '章', '云', '苏', '潘', '葛',
-            '奚', '范', '彭', '郎', '鲁', '韦', '昌', '马', '苗', '凤', '花', '方', '俞', '任', '袁', '柳', '酆', '鲍', '史', '唐', '费', '廉', '岑', '薛',
-            '雷', '黄', '倪', '汤', '滕', '殷', '罗', '毕', '郝', '邬', '安');
+        static $first_name_table = array('赵', '孙', '李', '周', '郑', '王', '陈', '杨', '朱', '许','何', '张','严', '魏', '谢', '邹', '苏', '范', '彭', '马', '雷', '黄', '罗', '安');
         static $last_name_table = array('伟', '刚', '勇', '毅', '俊', '峰', '强', '军', '平', '保', '东', '文', '辉', '力', '明', '永', '健', '世', '广', '志',
             '义', '兴', '良', '海', '山', '仁', '波', '宁', '贵', '福', '生', '龙', '元', '全', '国', '胜', '学', '祥', '才', '发', '武', '新', '利', '清',
             '飞', '彬', '富', '顺', '信', '子', '杰', '涛', '昌', '成', '康', '星', '光', '天', '达', '安', '岩', '中', '茂', '进', '林', '有', '坚', '和',
@@ -85,5 +82,46 @@ class MockBase
             $last_name .= $last_name_table[array_rand($last_name_table)];
         }
         return $first_name . $last_name;
+    }
+
+    /**
+     * 随机生成日期（从去年今日 到 明年今日 之间随机）
+     */
+    public static function dateTypeMock()
+    {
+        $sec_beg = strtotime('-1 year');
+        $sec_end = strtotime('+1 year');
+        $sec = mt_rand($sec_beg, $sec_end);
+        return date('Y-m-d', $sec);
+    }
+
+    /**
+     * 随机生成日期 - 时间（从去年今日 到 明年今日 之间随机）
+     */
+    public static function dateTimeTypeMock()
+    {
+        $sec_beg = strtotime('-1 year');
+        $sec_end = strtotime('+1 year');
+        $sec = mt_rand($sec_beg, $sec_end);
+        return date('Y-m-d H:i:s', $sec);
+    }
+    
+    /**
+     * 随机浮点数
+     * @param float $min
+     * @param float $max
+     * @param int $precision 小数点后位数
+     * @return float
+     */
+    public static function floatRangeMock($min, $max, $precision = 2)
+    {
+        $min = (int)$min;
+        $max = (int)$max;
+        if ($max <= $min) {
+            $max = $min + 1;
+        }
+        $rand = mt_rand();
+        $rand_max = mt_getrandmax();
+        return round($min + $rand / $rand_max * ($max - $min), $precision);
     }
 }

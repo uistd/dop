@@ -61,5 +61,5 @@ class MockRule
     /**
      * @var string 内置的类型
      */
-    public $type;
+    public $build_in_type;
 }

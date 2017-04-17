@@ -6,6 +6,7 @@ use ffan\dop\DOPException;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
+use ffan\dop\MapItem;
 use ffan\dop\plugin\Plugin;
 use ffan\php\utils\Str as FFanStr;
 
@@ -18,7 +19,7 @@ class MockPlugin extends Plugin
     /**
      * @var string
      */
-    protected $name = 'mock';
+    protected static $name = 'mock';
 
     /**
      * @var string 属性前缀
@@ -70,7 +71,10 @@ class MockPlugin extends Plugin
         //指定类型
         $mock_type = $this->attributeName('type');
         if (!$find_flag && $node->hasAttribute($mock_type)) {
-            $mock_rule->type = $this->read($node, '');
+            $mock_rule->build_in_type = FFanStr::camelName($this->read($node, 'type'), false);
+            if (!self::isBuildInType($mock_rule->build_in_type)) {
+                throw new DOPException($this->manager->fixErrorMsg('Unknown build in mock type:'. $mock_rule->build_in_type));
+            }
             $find_flag = true;
         }
         //固定值
@@ -81,7 +85,7 @@ class MockPlugin extends Plugin
             $find_flag = true;
         }
         if ($find_flag) {
-            $item->addPluginData($this->name, $mock_rule);
+            $item->addPluginData(self::$name, $mock_rule);
         }
     }
 
@@ -116,23 +120,43 @@ class MockPlugin extends Plugin
      * 是否支持 目前支持 int, string, float, double,
      * list[int], list[string], list[float], list[double], list[struct]类型
      * @param Item $item
+     * @param int $depth 递归深度
      * @return bool
      */
-    public static function isSupport($item)
+    public static function isSupport($item, $depth = 0)
     {
         $type = $item->getType();
         if (ItemType::ARR === $type) {
             /** @var ListItem $item */
             $sub_item = $item->getItem();
-            //list Struct 也是可以mock的
-            if (ItemType::STRUCT === $sub_item->getType()) {
-                return true;
-            }
-            return self::isSupport($sub_item);
+            return self::isSupport($sub_item, $depth + 1);
         }
-        return ItemType::DOUBLE === $type &&
-            ItemType::FLOAT === $type &&
-            ItemType::STRING === $type &&
-            ItemType::INT === $type;
+        if (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $value_item = $item->getValueItem();
+            return self::isSupport($value_item, $depth + 1);
+        }
+        //最后一项, 如果是list 或者 map里边是 struct， 可以mock
+        return ItemType::DOUBLE === $type ||
+            ItemType::FLOAT === $type ||
+            ItemType::STRING === $type ||
+            ItemType::INT === $type ||
+            ($depth > 0 && ItemType::STRUCT === $type);
+    }
+
+    /**
+     * 是否是内置的类型
+     * @param string $type_name
+     * @return bool
+     */
+    private static function isBuildInType($type_name)
+    {
+        return in_array($type_name, array(
+            'mobile',
+            'chineseName',
+            'email',
+            'date',
+            'dateTime'
+        ));
     }
 }

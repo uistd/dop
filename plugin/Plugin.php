@@ -28,7 +28,7 @@ abstract class Plugin
     /**
      * @var string 插件名
      */
-    protected $name;
+    protected static $name;
 
     /**
      * @var null|array 插件配置
@@ -73,12 +73,12 @@ abstract class Plugin
      * @return string
      * @throws DOPException
      */
-    protected function getName()
+    public static function getName()
     {
-        if (null === $this->name) {
+        if (null === self::$name) {
             throw new DOPException('Property name required!');
         }
-        return $this->name;
+        return self::$name;
     }
 
     /**
@@ -195,6 +195,14 @@ abstract class Plugin
     }
 
     /**
+     * 常用代码生成
+     */
+    public function generateCommon()
+    {
+        
+    }
+
+    /**
      * 是否支持某种语言
      * @param string $code_type
      * @return bool
@@ -205,7 +213,7 @@ abstract class Plugin
             return $this->code_support[$code_type];
         }
         $class_name = $this->codeClassName($code_type);
-        $file = __DIR__ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . $class_name . '.php';
+        $file = __DIR__ . DIRECTORY_SEPARATOR . self::$name . DIRECTORY_SEPARATOR . $class_name . '.php';
         $is_support = false;
         if (is_file($file)) {
             $full_class = $this->codeClassName($code_type, true);
@@ -232,9 +240,9 @@ abstract class Plugin
      */
     private function codeClassName($code_type, $ns = false)
     {
-        $class_name = ucfirst($code_type) . ucfirst($this->name) . 'Code';
+        $class_name = ucfirst($code_type) . ucfirst(self::$name) . 'Code';
         if ($ns) {
-            $ns_str = 'ffan\\dop\\plugin\\'. $this->name;
+            $ns_str = 'ffan\\dop\\plugin\\'. self::$name;
             $class_name = $ns_str .'\\'. $class_name;
         }
         return $class_name;
