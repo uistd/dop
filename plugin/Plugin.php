@@ -189,17 +189,23 @@ abstract class Plugin
         $code_type = $build_opt->getCodeType();
         if ($this->codeTypeSupport($code_type)) {
             $class_name = $this->codeClassName($code_type, true);
-            $args = array($build_opt, $code_buf, $struct);
+            $args = array($this, $build_opt, $code_buf, $struct);
             call_user_func_array(array($class_name, 'pluginCode'), $args);
         }
     }
 
     /**
      * 常用代码生成
+     * @param BuildOption $build_opt
      */
-    public function generateCommon()
+    public function generateCommon(BuildOption $build_opt)
     {
-        
+        $code_type = $build_opt->getCodeType();
+        if ($this->codeTypeSupport($code_type)) {
+            $class_name = $this->codeClassName($code_type, true);
+            $args = array($this, $build_opt);
+            call_user_func_array(array($class_name, 'commonCode'), $args);
+        }
     }
 
     /**
@@ -246,5 +252,14 @@ abstract class Plugin
             $class_name = $ns_str .'\\'. $class_name;
         }
         return $class_name;
+    }
+
+    /**
+     * 获取protocolManager对象
+     * @return ProtocolManager
+     */
+    public function getManager()
+    {
+        return $this->manager;
     }
 }

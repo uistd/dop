@@ -276,7 +276,7 @@ class ProtocolManager
         }
         //从缓存中将struct补全
         if ($build_opt->allow_cache) {
-            $this->loadStructFromCache();
+            $this->loadStructFromCache($build_list, $file_list);
         }
         try {
             /** @var Struct $struct */
@@ -306,8 +306,10 @@ class ProtocolManager
 
     /**
      * 从缓存中加载 struct
+     * @param array $build_list 本次解析过的协议文件
+     * @param array $file_list 所有的协议文件
      */
-    private function loadStructFromCache()
+    private function loadStructFromCache($build_list, $file_list)
     {
         $cache_struct = $this->getCache('struct_list');
         if (!$cache_struct) {
@@ -318,7 +320,19 @@ class ProtocolManager
          * @var Struct $tmp_struct
          */
         foreach ($cache_struct as $name => $tmp_struct) {
+            //已经有了
             if ($this->hasStruct($name)) {
+                continue;
+            }
+            $file = $tmp_struct->getFile();
+            //如果struct所在的文件，本次编译了，表示 这个struct已经不存在了
+            if (isset($build_list[$file])) {
+                $this->buildLog($tmp_struct->getClassName() .' missing');
+                continue;
+            }
+            //找不到文件
+            if (!isset($file_list[$file])) {
+                $this->buildLog($tmp_struct->getClassName() .' missing');
                 continue;
             }
             $this->struct_list[$name] = $tmp_struct;
