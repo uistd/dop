@@ -2,8 +2,6 @@
 
 namespace ffan\dop;
 
-use ffan\dop\pack\js\JsGenerator;
-use ffan\dop\pack\php\Generator;
 use ffan\dop\plugin\mock\MockPlugin;
 use ffan\dop\plugin\validator\ValidatorPlugin;
 use ffan\php\utils\Str as FFanStr;
@@ -75,9 +73,14 @@ class ProtocolManager
     private $plugin_list;
 
     /**
-     * @var int 编译模板
+     * @var array 本次编译的文件
      */
-    private $build_tpl_type;
+    private $build_file_list;
+
+    /**
+     * @var array 每个文件的struct
+     */
+    private $file_struct_list = [];
 
     /**
      * 初始化
@@ -113,6 +116,11 @@ class ProtocolManager
             throw new DOPException($this->fixErrorMsg('struct:' . $full_name . ' conflict'));
         }
         $this->struct_list[$full_name] = $struct;
+        $file = $struct->getFile();
+        if (!isset($this->file_struct_list[$file])) {
+            $this->file_struct_list[$file] = array();
+        }
+        $this->file_struct_list[$file][] = $struct;
     }
 
     /**
@@ -225,21 +233,6 @@ class ProtocolManager
     }
 
     /**
-     * 获取所有的文件列表
-     * @return array
-     */
-    public function getAllFileList()
-    {
-        if (null !== $this->all_file_list) {
-            return $this->all_file_list;
-        }
-        $file_list = array();
-        $this->getBuildFileList($this->base_path, $file_list);
-        $this->all_file_list = $file_list;
-        return $file_list;
-    }
-
-    /**
      * 待编译的所有文件
      * @param BuildOption $build_opt 生成参数
      * @param int $build_type 生成代码类型
@@ -249,7 +242,6 @@ class ProtocolManager
     {
         $build_opt->fix($build_type);
         $build_path = $build_opt->build_path;
-        $this->build_tpl_type = $build_type;
         $file_list = $this->getAllFileList();
         $this->build_message = '';
         //初始化缓存
@@ -260,25 +252,17 @@ class ProtocolManager
         } else {
             $build_list = $file_list;
         }
+        $this->build_file_list = $build_list;
         $result = true;
-        if (empty($build_list)) {
-            $this->buildLog('没有需要编译的文件');
-        } else {
-            try {
-                foreach ($build_list as $xml_file => $v) {
-                    $this->parseFile($xml_file);
-                }
-            } catch (DOPException $exception) {
-                $msg = $exception->getMessage();
-                $this->buildLogError($msg);
-                return false;
-            }
-        }
-        //从缓存中将struct补全
-        if ($build_opt->allow_cache) {
-            $this->loadStructFromCache($build_list, $file_list);
-        }
         try {
+            //解析文件
+            foreach ($build_list as $xml_file => $v) {
+                $this->parseFile($xml_file);
+            }
+            //从缓存中将struct补全
+            if ($build_opt->allow_cache) {
+                $this->loadStructFromCache($build_list, $file_list);
+            }
             /** @var Struct $struct */
             foreach ($this->struct_list as $struct) {
                 $file = $struct->getFile();
@@ -287,12 +271,13 @@ class ProtocolManager
                     $struct->setCacheFlag(true);
                 }
             }
-            $this->generateFile($build_opt, $build_type);
+            $generator = new DOPGenerator($this, $build_opt);
+            $generator->generate();
             $this->buildLog('done!');
         } catch (DOPException $exception) {
             $msg = $exception->getMessage();
             $this->buildLogError($msg);
-            $result = false;
+            return false;
         }
         //保存缓存文件
         if ($result && $build_opt->allow_cache) {
@@ -335,7 +320,7 @@ class ProtocolManager
                 $this->buildLog($tmp_struct->getClassName() .' missing');
                 continue;
             }
-            $this->struct_list[$name] = $tmp_struct;
+            $this->addStruct($tmp_struct);
         }
     }
 
@@ -446,40 +431,14 @@ class ProtocolManager
         return $this->build_message;
     }
 
-    /**
-     * 生成最终的文件
-     * @param BuildOption $build_opt 生成参数
-     * @param int $build_tpl 编译模板
-     * @throws DOPException
-     */
-    private function generateFile($build_opt, $build_tpl)
-    {
-        switch ($build_tpl) {
-            case BuildOption::BUILD_CODE_PHP:
-                $build_obj = new Generator($this, $build_opt);
-                break;
-            case BuildOption::BUILD_CODE_JS:
-                $build_obj = new JsGenerator($this, $build_opt);
-                break;
-            default:
-                //尝试使用自定义类
-                $class_name = $this->getConfig('generator_class');
-                $build_obj = new $class_name($this);
-                if (!$build_obj instanceof DOPGenerator) {
-                    throw new DOPException('无法使用自定义生成类：' . $class_name);
-                }
-                throw new DOPException('不支持的编译模板:' . $build_tpl);
-                break;
-        }
-        $build_obj->generate();
-    }
+
 
     /**
      * 获取所有需要编译的文件列表
      * @param string $dir 目录名
      * @param array $file_list 存结果的数组
      */
-    private function getBuildFileList($dir, &$file_list)
+    private function getNeedBuildFile($dir, &$file_list)
     {
         $dir_handle = opendir($dir);
         if (false === $dir_handle) {
@@ -496,7 +455,7 @@ class ProtocolManager
                     $this->buildLogError($file_list . ' 目录名:' . $file . '不能用作命名空间');
                     continue;
                 }
-                $this->getBuildFileList($file_path, $file_list);
+                $this->getNeedBuildFile($file_path, $file_list);
             } else {
                 if ('.xml' !== substr(strtolower($file), -4)) {
                     $this->buildLogError($file_list . '非XML文件');
@@ -522,25 +481,7 @@ class ProtocolManager
     {
         return isset($this->struct_list[$fullName]);
     }
-
-    /**
-     * 把已经解析过的xml文件加入已经解析列表
-     * @param string $file_name
-     */
-    public function pushXmlFile($file_name)
-    {
-        $this->xml_list[$file_name] = true;
-    }
-
-    /**
-     * 获取所有的struct
-     * @return array[Struct]
-     */
-    public function getAll()
-    {
-        return $this->struct_list;
-    }
-
+    
     /**
      * 设置当前的文档信息
      * @param string $doc_info
@@ -629,11 +570,47 @@ class ProtocolManager
     }
 
     /**
-     * 获取当前编译的模板类型
-     * @return string
+     * 获取所有的struct
+     * @return array[Struct]
      */
-    public function getBuildTplType()
+    public function getAllStruct()
     {
-        return $this->build_tpl_type;
+        return $this->struct_list;
+    }
+    
+    /**
+     * 获取某个文件里的所有struct
+     * @param string $file_name
+     * @return array
+     */
+    public function getStructByFile($file_name)
+    {
+        if (!isset($this->file_struct_list[$file_name])) {
+            return array();
+        }
+        return $this->file_struct_list[$file_name];
+    }
+
+    /**
+     * 获取所有的文件列表
+     * @return array
+     */
+    public function getAllFileList()
+    {
+        if (null !== $this->all_file_list) {
+            return $this->all_file_list;
+        }
+        $file_list = array();
+        $this->getNeedBuildFile($this->base_path, $file_list);
+        $this->all_file_list = $file_list;
+        return $file_list;
+    }
+    
+    /**
+     * 获取所有的文件列表
+     */
+    public function getBuildFileList()
+    {
+        return $this->build_file_list;
     }
 }

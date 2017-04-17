@@ -6,6 +6,7 @@ use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
 use ffan\dop\DOPGenerator;
+use ffan\dop\GenerateInterface;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
@@ -19,7 +20,7 @@ use ffan\php\tpl\Tpl as FFanTpl;
  * Class PhpGenerator
  * @package ffan\dop
  */
-class Generator extends DOPGenerator
+class Generator implements GenerateInterface
 {
     /**
      * @var string 模板文件
@@ -141,7 +142,7 @@ class Generator extends DOPGenerator
      */
     protected function generateFile($namespace, $class_list)
     {
-        $base_path = $this->buildBasePath();
+        $base_path = $this-$this->build_base_path;
         $build_path = FFanUtils::joinPath($base_path, $namespace);
         FFanUtils::pathWriteCheck($build_path);
         /**
@@ -151,7 +152,7 @@ class Generator extends DOPGenerator
         foreach ($class_list as $class_name => $struct) {
             //如果是来自缓存，不用再次生成
             if ($struct->isCached()) {
-                $this->protocol_manager->buildLogNotice('Ignore the cache class '. $struct->getClassName());
+                $this->manager->buildLogNotice('Ignore the cache class '. $struct->getClassName());
                 continue;
             }
             $result = $this->make($struct);
@@ -160,20 +161,20 @@ class Generator extends DOPGenerator
             if (!$re) {
                 throw new DOPException('Can not put contents to file:' . $file_name);
             }
-            $this->protocol_manager->buildLog('Generate file:' . $file_name);
+            $this->manager->buildLog('Generate file:' . $file_name);
         }
     }
 
     /**
      * 通用文件生成
      */
-    protected function generateCommon()
+    protected function generateFinish()
     {
         //如果是手动require文件，那就不生成dop.php文件
         if ($this->build_opt->php_require_file) {
             return;
         }
-        $all_files = $this->protocol_manager->getAllFileList();
+        $all_files = $this->manager->getAllFileList();
         $prefix = $this->build_opt->namespace_prefix;
         $autoload_set = array();
         foreach ($all_files as $file => $m) {
@@ -290,15 +291,34 @@ class Generator extends DOPGenerator
     }
 
     /**
-     * 生成解包方法
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
+     * 生成文件开始
+     * @param DOPGenerator $generator
+     * @return void
      */
-    private function buildUnpackMethod($code_buf, $struct)
+    public function generateBegin(DOPGenerator $generator)
     {
-        //json
-        if ($this->build_opt->pack_type & BuildOption::PACK_TYPE_JSON) {
-            JsonPack::buildUnpackMethod($struct, $code_buf);
-        }
+        // TODO: Implement generateBegin() method.
+    }
+
+    /**
+     * 按类名生成代码
+     * @param DOPGenerator $generator
+     * @param Struct $struct
+     * @return string
+     */
+    public function generateByClass(DOPGenerator $generator, $struct)
+    {
+        // TODO: Implement generateByClass() method.
+    }
+
+    /**
+     * 按协议文件生成代码
+     * @param DOPGenerator $generator
+     * @param string $xml_file
+     * @return string
+     */
+    public function generateByXml(DOPGenerator $generator, $xml_file)
+    {
+        // TODO: Implement generateByXml() method.
     }
 }

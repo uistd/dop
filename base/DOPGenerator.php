@@ -2,6 +2,7 @@
 
 namespace ffan\dop;
 
+use ffan\dop\pack\php\Generator;
 use ffan\dop\plugin\Plugin;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Config as FFanConfig;
@@ -10,12 +11,12 @@ use ffan\php\utils\Config as FFanConfig;
  * Class DOPGenerator 生成文件
  * @package ffan\dop
  */
-abstract class DOPGenerator
+class DOPGenerator
 {
     /**
      * @var ProtocolManager
      */
-    protected $protocol_manager;
+    protected $manager;
 
     /**
      * @var int 文件单位
@@ -27,6 +28,8 @@ abstract class DOPGenerator
      */
     protected $build_opt;
 
+    protected $build_base_path;
+
     /**
      * Generator constructor.
      * @param ProtocolManager $protocol_manager
@@ -34,8 +37,9 @@ abstract class DOPGenerator
      */
     public function __construct(ProtocolManager $protocol_manager, BuildOption $build_opt)
     {
-        $this->protocol_manager = $protocol_manager;
+        $this->manager = $protocol_manager;
         $this->build_opt = $build_opt;
+        $this->build_base_path = FFanUtils::fixWithRuntimePath($this->build_opt->build_path);
     }
 
     /**
@@ -46,7 +50,7 @@ abstract class DOPGenerator
      */
     public function pluginCode($build_opt, $code_buf, $struct)
     {
-        $plugin_list = $this->protocol_manager->getPluginList();
+        $plugin_list = $this->manager->getPluginList();
         if (null === $plugin_list) {
             return;
         }
@@ -78,41 +82,39 @@ abstract class DOPGenerator
      */
     public function generate()
     {
-        $all_list = $this->protocol_manager->getAll();
-        if (empty($all_list)) {
-            return;
-        }
-        $protocol_list = array();
-        //整理一下，按namespace分组
+        $generator = $this->getGenerator();
+        $generator->generateBegin($this);
+        $use_cache = $this->build_opt->allow_cache;
         /** @var Struct $struct */
-        foreach ($all_list as $struct) {
-            $namespace = $struct->getNamespace();
-            if (!isset($protocol_list[$namespace])) {
-                $protocol_list[$namespace] = array();
+        foreach ($this->manager->getAllStruct() as $struct) {
+            if ($use_cache && $struct->isCached()) {
+                continue;
             }
-            $protocol_list[$namespace][$struct->getClassName()] = $struct;
+            $generator->generateByClass($this, $struct);
         }
-        foreach ($protocol_list as $namespace => $class_list) {
-            $this->generateFile($namespace, $class_list);
+        $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
+        foreach ($file_list as $file) {
+            $generator->generateByXml($this, $file);
         }
-        $this->generateCommon();
+        $generator->generateFinish($this);
     }
 
     /**
-     * 生成一些common文件
+     * 获取代码生成对象
+     * @return GenerateInterface
+     * @throws DOPException
      */
-    protected function generateCommon()
+    private function getGenerator()
     {
-
-    }
-
-    /**
-     * 获取编译的基础目录
-     * @return string
-     */
-    protected function buildBasePath()
-    {
-        return FFanUtils::fixWithRuntimePath($this->build_opt->build_path);
+        $code_type = $this->build_opt->getCodeType();
+        switch ($code_type) {
+            case BuildOption::BUILD_CODE_PHP:
+                $tmp_object = new Generator();
+                break;
+            default:
+                throw new DOPException('Unknown code_type:'. $code_type);
+        }
+        return $tmp_object;
     }
 
     /**
@@ -194,20 +196,4 @@ abstract class DOPGenerator
         }
         return $result;
     }
-
-    /**
-     * 生成文件名
-     * @param string $build_path
-     * @param Struct $struct
-     * @return string
-     */
-    abstract protected function buildFileName($build_path, Struct $struct);
-
-    /**
-     * 生成文件
-     * @param string $namespace 命令空间
-     * @param array [Struct] $class_list
-     * @throws DOPException
-     */
-    abstract protected function generateFile($namespace, $class_list);
 }

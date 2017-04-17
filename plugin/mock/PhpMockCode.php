@@ -38,42 +38,6 @@ class PhpMockCode implements PluginCode
      */
     public static function pluginCode(Plugin $plugin, BuildOption $build_opt, CodeBuf $code_buf, Struct $struct)
     {
-        $mock_buf = self::$code_buf;
-        if (null === $mock_buf) {
-            $mock_buf = self::$code_buf = new CodeBuf();
-            $mock_buf->push('<?php');
-            $mock_buf->emptyLine();
-            $ns = Generator::phpNameSpace($build_opt, '');
-            $mock_buf->push('namespace ' . $ns . ';');
-            $mock_buf->emptyLine();
-            $mock_buf->push('class DopMock');
-            $mock_buf->push('{');
-            $mock_buf->indentIncrease();
-        }
-        $mock_buf->emptyLine();
-        $class_name = $struct->getClassName();
-        $mock_buf->push('/**');
-        $mock_buf->push(' * 生成 ' . $class_name . ' mock数据');
-        $mock_buf->push(' */');
-        $mock_buf->push('public function mock' . $class_name . '()');
-        $mock_buf->push('{');
-        $mock_buf->indentIncrease();
-        $mock_buf->push('use ' . Generator::phpNameSpace($build_opt, $class_name) . ';');
-        $mock_buf->push('$data = new ' . $class_name . '();');
-        $all_item = $struct->getAllExtendItem();
-        /**
-         * @var string $name
-         * @var Item $item
-         */
-        foreach ($all_item as $name => $item) {
-            /** @var MockRule $mock_rule */
-            $mock_rule = $item->getPluginData('mock');
-            if (null === $mock_rule) {
-                continue;
-            }
-            self::mockItem($mock_buf, '$this->' . $name, $mock_rule, $item);
-        }
-        $mock_buf->indentDecrease()->push('}');
     }
 
     /**
@@ -134,7 +98,7 @@ class PhpMockCode implements PluginCode
                 self::mockItem($mock_buf, '$' . $value_var_name, $value_mock_rule, $value_item, $depth + 1);
                 $mock_buf->push('$' . $result_var_name . '[' . $key_var_name . '] = $' . $value_var_name);
                 $mock_buf->indentDecrease()->push('}');
-                $mock_buf->push($mock_item .' = $'. $result_var_name .';');
+                $mock_buf->push($mock_item . ' = $' . $result_var_name . ';');
                 break;
         }
     }
@@ -178,14 +142,50 @@ class PhpMockCode implements PluginCode
                 break;
             //固定值mock
             case MockRule::MOCK_TYPE:
-                $build_func = $mock_rule->build_in_type .'TypeMock';
-                $mock_buf->push($mock_item . ' = self::'. $build_func .'();');
+                $build_func = $mock_rule->build_in_type . 'TypeMock';
+                $mock_buf->push($mock_item . ' = self::' . $build_func . '();');
                 break;
             default:
                 throw new DOPException('Unknown mock type . ', $mock_rule->mock_type);
         }
     }
 
+    /**
+     * 生成一个mock函数
+     * @param BuildOption $build_opt
+     * @param Struct $struct
+     * @return string
+     */
+    private static function mockFuncCode($build_opt, $struct)
+    {
+        $mock_buf = new CodeBuf();
+        $mock_buf->emptyLine();
+        $class_name = $struct->getClassName();
+        $mock_buf->push('/**');
+        $mock_buf->push(' * 生成 ' . $class_name . ' mock数据');
+        $mock_buf->push(' */');
+        $mock_buf->push('public function mock' . $class_name . '()');
+        $mock_buf->push('{');
+        $mock_buf->indentIncrease();
+        $mock_buf->push('use ' . Generator::phpNameSpace($build_opt, $class_name) . ';');
+        $mock_buf->push('$data = new ' . $class_name . '();');
+        $all_item = $struct->getAllExtendItem();
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item as $name => $item) {
+            /** @var MockRule $mock_rule */
+            $mock_rule = $item->getPluginData('mock');
+            if (null === $mock_rule) {
+                continue;
+            }
+            self::mockItem($mock_buf, '$this->' . $name, $mock_rule, $item);
+        }
+        $mock_buf->indentDecrease()->push('}');
+        return $mock_buf->dump();
+    }
+    
     /**
      * 通用代码生成
      * @param Plugin $plugin

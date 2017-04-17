@@ -7,7 +7,7 @@ require_once 'config.php';
 
 $manager = new ProtocolManager(__DIR__ . '/protocol', 'build');
 $manager->parseFile('demo/role.xml');
-$all_protocol = $manager->getAll();
+$all_protocol = $manager->getAllStruct();
 
 /** @var Struct $struct */
 foreach ($all_protocol as $struct) {
