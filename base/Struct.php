@@ -64,11 +64,6 @@ class Struct
     private $file;
 
     /**
-     * @var bool 是否需要编译
-     */
-    private $need_build = true;
-
-    /**
      * @var int 被引用的类型
      */
     private $refer_type = 0;
@@ -78,6 +73,11 @@ class Struct
      */
     private $all_extend_item;
 
+    /**
+     * @var bool 是否是从缓存加载的
+     */
+    private $load_from_cache = false;
+    
     /**
      * Struct constructor.
      * @param string $namespace 命名空间
@@ -102,6 +102,24 @@ class Struct
     }
 
     /**
+     * 是不是从缓存加载的
+     * @return bool
+     */
+    public function isCached()
+    {
+        return $this->load_from_cache;
+    }
+
+    /**
+     * 标记是否从缓存加载标志
+     * @param bool $flag
+     */
+    public function setCacheFlag($flag = true)
+    {
+        $this->load_from_cache = (bool)$flag;
+    }
+
+    /**
      * 增加一种被引用的类型
      * @param int $type 类型
      */
@@ -121,30 +139,12 @@ class Struct
     }
 
     /**
-     * 设置是否需要编译的标志
-     * @param bool $flag
-     */
-    public function setNeedBuild($flag)
-    {
-        $this->need_build = (bool)$flag;
-    }
-
-    /**
      * 获取所在的文件
      * @return string
      */
     public function getFile()
     {
         return $this->file;
-    }
-
-    /**
-     * 是否需要编译
-     * @return bool
-     */
-    public function needBuild()
-    {
-        return $this->need_build;
     }
 
     /**

@@ -149,7 +149,9 @@ class Generator extends DOPGenerator
          * @var Struct $struct
          */
         foreach ($class_list as $class_name => $struct) {
-            if (!$struct->needBuild()) {
+            //如果是来自缓存，不用再次生成
+            if ($struct->isCached()) {
+                $this->protocol_manager->buildLogNotice('Ignore the cache class '. $struct->getClassName());
                 continue;
             }
             $result = $this->make($struct);

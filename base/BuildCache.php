@@ -38,7 +38,7 @@ class BuildCache
     /**
      * @var string 验证缓存是否可用的key
      */
-    private $private_key;
+    private $sign_key;
 
     /**
      * @var string 代码生成目录
@@ -48,14 +48,14 @@ class BuildCache
     /**
      * BuildCache constructor.
      * @param ProtocolManager $manager
-     * @param array $config
+     * @param string $sign_key 数据检验码
      * @param string $build_path
      */
-    public function __construct(ProtocolManager $manager, $config, $build_path)
+    public function __construct(ProtocolManager $manager, $sign_key, $build_path)
     {
         $this->manager = $manager;
         //直接使用配置作key，配置发生变化的时候，缓存失效
-        $this->private_key = md5(serialize($config));
+        $this->sign_key = $sign_key;
         $this->build_path = $build_path;
     }
 
