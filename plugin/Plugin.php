@@ -210,8 +210,8 @@ abstract class Plugin
     {
         $class_name = ucfirst($code_type) . ucfirst(self::$name) . 'Code';
         if ($ns) {
-            $ns_str = 'ffan\\dop\\plugin\\'. self::$name;
-            $class_name = $ns_str .'\\'. $class_name;
+            $ns_str = 'ffan\\dop\\plugin\\' . self::$name;
+            $class_name = $ns_str . '\\' . $class_name;
         }
         return $class_name;
     }

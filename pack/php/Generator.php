@@ -4,9 +4,8 @@ namespace ffan\dop\pack\php;
 
 use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
+use ffan\dop\CodeGeneratorBase;
 use ffan\dop\DOPException;
-use ffan\dop\DOPGenerator;
-use ffan\dop\GenerateInterface;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
@@ -19,7 +18,7 @@ use ffan\php\tpl\Tpl as FFanTpl;
  * Class PhpGenerator
  * @package ffan\dop
  */
-class Generator implements GenerateInterface
+class Generator extends CodeGeneratorBase
 {
     /**
      * @var string 模板文件
@@ -69,7 +68,7 @@ class Generator implements GenerateInterface
     }
 
     /**
-     * PHP命名空间                                                                                                                                                                  
+     * PHP命名空间
      * @param BuildOption $build_opt
      * @param string $ns
      * @return string
@@ -138,27 +137,27 @@ class Generator implements GenerateInterface
      * @param string $namespace 命令空间
      * @param array [Struct] $class_list
      * @throws DOPException
-    
+
     protected function generateFile($namespace, $class_list)
-    {
-        $base_path = $this-$this->build_base_path;
-        $build_path = FFanUtils::joinPath($base_path, $namespace);
-        FFanUtils::pathWriteCheck($build_path);
-        foreach ($class_list as $class_name => $struct) {
-            //如果是来自缓存，不用再次生成
-            if ($struct->isCached()) {
-                $this->manager->buildLogNotice('Ignore the cache class '. $struct->getClassName());
-                continue;
-            }
-            $result = $this->make($struct);
-            $file_name = $this->buildFileName($build_path, $struct);
-            $re = file_put_contents($file_name, $result);
-            if (!$re) {
-                throw new DOPException('Can not put contents to file:' . $file_name);
-            }
-            $this->manager->buildLog('Generate file:' . $file_name);
-        }
-    } */
+     * {
+     * $base_path = $this-$this->build_base_path;
+     * $build_path = FFanUtils::joinPath($base_path, $namespace);
+     * FFanUtils::pathWriteCheck($build_path);
+     * foreach ($class_list as $class_name => $struct) {
+     * //如果是来自缓存，不用再次生成
+     * if ($struct->isCached()) {
+     * $this->manager->buildLogNotice('Ignore the cache class '. $struct->getClassName());
+     * continue;
+     * }
+     * $result = $this->make($struct);
+     * $file_name = $this->buildFileName($build_path, $struct);
+     * $re = file_put_contents($file_name, $result);
+     * if (!$re) {
+     * throw new DOPException('Can not put contents to file:' . $file_name);
+     * }
+     * $this->manager->buildLog('Generate file:' . $file_name);
+     * }
+     * } */
 
     /**
      * 生成打包方法
@@ -182,28 +181,18 @@ class Generator implements GenerateInterface
      */
     private function buildUnpackMethod($code_buf, $struct, $pack_type)
     {
-        
-    }
 
-    /**
-     * 生成文件开始
-     * @param DOPGenerator $generator
-     * @return string|null
-     */
-    public function generateBegin(DOPGenerator $generator)
-    {
-        return null;
     }
 
     /**
      * 按类名生成代码
-     * @param DOPGenerator $generator
      * @param Struct $struct
-     * @return string|null
+     * @return CodeBuf|null
      */
-    public function generateByClass(DOPGenerator $generator, $struct)
+    public function generateByClass($struct)
     {
-        $build_opt = $generator->getBuildOption();
+        $generator = $this->generator;
+        $build_opt = $this->build_opt;
         $php_class = new CodeBuf();
         $name_space = $struct->getNamespace();
         $php_class->push('<?php');
@@ -276,34 +265,26 @@ class Generator implements GenerateInterface
             $this->buildUnpackMethod($php_class, $struct, $build_opt->pack_type);
         }
         //其它插件相关代码
-        //$this->pluginCode($build_opt, $php_class, $struct);
+        $plugin_code = $generator->getClassPluginCode($main_class_name);
+        if (!empty($main_class_name)) {
+
+        }
         $php_class->indentDecrease();
         $php_class->push('}');
-        return $php_class->dump();
-    }
-
-    /**
-     * 按协议文件生成代码
-     * @param DOPGenerator $generator
-     * @param string $xml_file
-     * @return string|null
-     */
-    public function generateByXml(DOPGenerator $generator, $xml_file)
-    {
         return null;
     }
 
     /**
      * 生成文件结束
-     * @param DOPGenerator $generator
-     * @return string|null
+     * @return CodeBuf|null
      */
-    public function generateFinish(DOPGenerator $generator)
+    public function generateFinish()
     {
-        $build_opt = $generator->getBuildOption();
+        $build_opt = $this->build_opt;
+        $generator = $this->generator;
         //如果是手动require文件，那就不生成dop.php文件
         if ($build_opt->php_require_file) {
-            return;
+            return null;
         }
         $manager = $generator->getManager();
         $all_files = $manager->getAllFileList();
@@ -320,7 +301,7 @@ class Generator implements GenerateInterface
         ));
         $build_path = $generator->getBuildBasePath();
         $file = $build_path . 'dop.php';
-        file_put_contents($file, '<?php'. PHP_EOL .$file_content);
+        file_put_contents($file, '<?php' . PHP_EOL . $file_content);
         return null;
     }
 }

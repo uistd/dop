@@ -234,65 +234,89 @@ class DOPGenerator
     /**
      * 获取插件代码 - 开始阶段
      * @param string $plugin_name
-     * @return array|string
+     * @return string
      */
-    public function getBeginPluginCode($plugin_name = '*')
+    public function getBeginPluginCode($plugin_name)
     {
         $code_arr = $this->plugin_code_result[self::PLUGIN_CODE_BEGIN];
-        if ('*' === $plugin_name) {
-            return $code_arr;
-        } else {
-            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-        }
+        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
     }
 
     /**
      * 获取一个类的插件代码
      * @param string $class_name
      * @param string $plugin_name
-     * @return array|string
+     * @return string
      */
-    public function getClassPluginCode($class_name, $plugin_name = '*')
+    public function getClassPluginCode($class_name, $plugin_name)
     {
         $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_CLASS];
-        $code_arr = isset($tmp_arr[$class_name]) ? $tmp_arr[$class_name] : array(); 
-        if ('*' === $plugin_name) {
-            return $code_arr;
-        } else {
-            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-        }
+        $code_arr = isset($tmp_arr[$class_name]) ? $tmp_arr[$class_name] : array();
+        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
     }
 
     /**
      * 获取一个xml文件的插件代码
      * @param string $file_name
      * @param string $plugin_name
-     * @return array|string
+     * @return string
      */
-    public function getXmlPluginCode($file_name, $plugin_name = '*')
+    public function getXmlPluginCode($file_name, $plugin_name)
     {
         $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_XML];
         $code_arr = isset($tmp_arr[$file_name]) ? $tmp_arr[$file_name] : array();
-        if ('*' === $plugin_name) {
-            return $code_arr;
-        } else {
-            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-        }
+        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
     }
 
     /**
      * 获取插件代码 - 结束阶段
      * @param string $plugin_name
-     * @return array|string
+     * @return string
      */
-    public function getFinishPluginCode($plugin_name = '*')
+    public function getFinishPluginCode($plugin_name)
     {
         $code_arr = $this->plugin_code_result[self::PLUGIN_CODE_FINISH];
-        if ('*' === $plugin_name) {
-            return $code_arr;
-        } else {
-            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-        }
+        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
+    }
+
+    /**
+     * 获取所有插件代码 - 开始阶段
+     * @return array
+     */
+    public function getBeginPluginCodeAll()
+    {
+        return $this->plugin_code_result[self::PLUGIN_CODE_BEGIN];
+    }
+
+    /**
+     * 获取所有插件代码 - 结束阶段
+     * @return array
+     */
+    public function getFinishPluginCodeAll()
+    {
+        return $this->plugin_code_result[self::PLUGIN_CODE_FINISH];
+    }
+
+    /**
+     * 获取一个类 所有的插件代码
+     * @param string $class_name
+     * @return array
+     */
+    public function getClassPluginCodeAll($class_name)
+    {
+        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_CLASS];
+        return isset($tmp_arr[$class_name]) ? $tmp_arr[$class_name] : array();
+    }
+
+    /**
+     * 获取一个xml文件的插件代码
+     * @param string $file_name
+     * @return array
+     */
+    public function getXmlPluginCodeAll($file_name)
+    {
+        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_XML];
+        return isset($tmp_arr[$file_name]) ? $tmp_arr[$file_name] : array();
     }
 
     /**

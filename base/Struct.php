@@ -77,7 +77,7 @@ class Struct
      * @var bool 是否是从缓存加载的
      */
     private $load_from_cache = false;
-    
+
     /**
      * Struct constructor.
      * @param string $namespace 命名空间

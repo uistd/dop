@@ -16,7 +16,7 @@ class ProtocolManager
      * 缓存文件名
      */
     const CACHE_FILE_NAME = 'build';
-    
+
     /**
      * @var array 所有的struct列表
      */
@@ -312,12 +312,12 @@ class ProtocolManager
             $file = $tmp_struct->getFile();
             //如果struct所在的文件，本次编译了，表示 这个struct已经不存在了
             if (isset($build_list[$file])) {
-                $this->buildLog($tmp_struct->getClassName() .' missing');
+                $this->buildLog($tmp_struct->getClassName() . ' missing');
                 continue;
             }
             //找不到文件
             if (!isset($file_list[$file])) {
-                $this->buildLog($tmp_struct->getClassName() .' missing');
+                $this->buildLog($tmp_struct->getClassName() . ' missing');
                 continue;
             }
             $this->addStruct($tmp_struct);
@@ -387,7 +387,7 @@ class ProtocolManager
      */
     public function setCache($key, $value)
     {
-        $this->cache_data[$key]  = $value;
+        $this->cache_data[$key] = $value;
     }
 
     /**
@@ -430,7 +430,6 @@ class ProtocolManager
     {
         return $this->build_message;
     }
-
 
 
     /**
@@ -481,7 +480,7 @@ class ProtocolManager
     {
         return isset($this->struct_list[$fullName]);
     }
-    
+
     /**
      * 设置当前的文档信息
      * @param string $doc_info
@@ -577,7 +576,7 @@ class ProtocolManager
     {
         return $this->struct_list;
     }
-    
+
     /**
      * 获取某个文件里的所有struct
      * @param string $file_name
@@ -605,7 +604,7 @@ class ProtocolManager
         $this->all_file_list = $file_list;
         return $file_list;
     }
-    
+
     /**
      * 获取所有的文件列表
      */

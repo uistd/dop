@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 /**
@@ -8,32 +9,34 @@ namespace ffan\dop;
 interface GenerateInterface
 {
     /**
-     * 生成文件开始
+     * GenerateInterface constructor.
      * @param DOPGenerator $generator
+     */
+    public function __construct(DOPGenerator $generator);
+
+    /**
+     * 生成文件开始
      * @return CodeBuf|null
      */
-    public function generateBegin(DOPGenerator $generator);
+    public function generateBegin();
 
     /**
      * 生成文件结束
-     * @param DOPGenerator $generator
      * @return CodeBuf|null
      */
-    public function generateFinish(DOPGenerator $generator);
+    public function generateFinish();
 
     /**
      * 按类名生成代码
-     * @param DOPGenerator $generator
      * @param Struct $struct
      * @return CodeBuf|null
      */
-    public function generateByClass(DOPGenerator $generator, $struct);
+    public function generateByClass($struct);
 
     /**
      * 按协议文件生成代码
-     * @param DOPGenerator $generator
      * @param string $xml_file
      * @return CodeBuf|null
      */
-    public function generateByXml(DOPGenerator $generator, $xml_file);
+    public function generateByXml($xml_file);
 }

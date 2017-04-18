@@ -73,7 +73,7 @@ class MockPlugin extends Plugin
         if (!$find_flag && $node->hasAttribute($mock_type)) {
             $mock_rule->build_in_type = FFanStr::camelName($this->read($node, 'type'), false);
             if (!self::isBuildInType($mock_rule->build_in_type)) {
-                throw new DOPException($this->manager->fixErrorMsg('Unknown build in mock type:'. $mock_rule->build_in_type));
+                throw new DOPException($this->manager->fixErrorMsg('Unknown build in mock type:' . $mock_rule->build_in_type));
             }
             $find_flag = true;
         }
