@@ -6,6 +6,7 @@ use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
 use ffan\dop\DOPGenerator;
+use ffan\dop\GenerateInterface;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
@@ -20,7 +21,7 @@ use ffan\dop\StructItem;
  * Class PhpMockCode
  * @package ffan\dop\plugin\mock
  */
-class PhpMockCode implements PluginCode
+class PhpMockCode implements GenerateInterface
 {
     /**
      * 因为Mock是一个单独的文件，所以不用传入的code_buf
@@ -185,15 +186,46 @@ class PhpMockCode implements PluginCode
         $mock_buf->indentDecrease()->push('}');
         return $mock_buf->dump();
     }
-    
+
     /**
-     * 通用代码生成
-     * @param Plugin $plugin
-     * @param BuildOption $build_opt
-     * @return void
+     * 生成文件开始
+     * @param DOPGenerator $generator
+     * @return string|null
      */
-    public static function commonCode(Plugin $plugin, BuildOption $build_opt)
+    public function generateBegin(DOPGenerator $generator)
     {
-        // TODO: Implement commonCode() method.
+        // TODO: Implement generateBegin() method.
+    }
+
+    /**
+     * 生成文件结束
+     * @param DOPGenerator $generator
+     * @return string|null
+     */
+    public function generateFinish(DOPGenerator $generator)
+    {
+        // TODO: Implement generateFinish() method.
+    }
+
+    /**
+     * 按类名生成代码
+     * @param DOPGenerator $generator
+     * @param Struct $struct
+     * @return string|null
+     */
+    public function generateByClass(DOPGenerator $generator, $struct)
+    {
+        // TODO: Implement generateByClass() method.
+    }
+
+    /**
+     * 按协议文件生成代码
+     * @param DOPGenerator $generator
+     * @param string $xml_file
+     * @return string|null
+     */
+    public function generateByXml(DOPGenerator $generator, $xml_file)
+    {
+        // TODO: Implement generateByXml() method.
     }
 }

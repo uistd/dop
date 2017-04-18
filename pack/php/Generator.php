@@ -12,7 +12,6 @@ use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
-use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\tpl\Tpl as FFanTpl;
 
@@ -139,16 +138,12 @@ class Generator implements GenerateInterface
      * @param string $namespace 命令空间
      * @param array [Struct] $class_list
      * @throws DOPException
-     */
+    
     protected function generateFile($namespace, $class_list)
     {
         $base_path = $this-$this->build_base_path;
         $build_path = FFanUtils::joinPath($base_path, $namespace);
         FFanUtils::pathWriteCheck($build_path);
-        /**
-         * @var string $class_name
-         * @var Struct $struct
-         */
         foreach ($class_list as $class_name => $struct) {
             //如果是来自缓存，不用再次生成
             if ($struct->isCached()) {
@@ -163,52 +158,62 @@ class Generator implements GenerateInterface
             }
             $this->manager->buildLog('Generate file:' . $file_name);
         }
-    }
+    } */
 
     /**
-     * 通用文件生成
-     */
-    protected function generateFinish()
-    {
-        //如果是手动require文件，那就不生成dop.php文件
-        if ($this->build_opt->php_require_file) {
-            return;
-        }
-        $all_files = $this->manager->getAllFileList();
-        $prefix = $this->build_opt->namespace_prefix;
-        $autoload_set = array();
-        foreach ($all_files as $file => $m) {
-            //除去.xml，其它 就是路径信息
-            $path = substr($file, 0, -4);
-            $ns = $prefix . '\\' . str_replace('/', '\\', $path);
-            $autoload_set[$ns] = $path;
-        }
-        $this->initTpl();
-        $file_content = FFanTpl::get('php/dop.tpl', array(
-            'namespace_set' => $autoload_set
-        ));
-        $build_path = $this->buildBasePath();
-        $file = $build_path . 'dop.php';
-        file_put_contents($file, '<?php'. PHP_EOL .$file_content);
-    }
-
-    /**
-     * 生成PHP代码文件
+     * 生成打包方法
+     * @param CodeBuf $code_buf
      * @param Struct $struct
-     * @return string
+     * @param int $pack_type 数据打包方式
      */
-    private function make($struct)
+    private function buildPackMethod($code_buf, $struct, $pack_type)
     {
+        //json
+        if ($pack_type & BuildOption::PACK_TYPE_JSON) {
+            JsonPack::buildPackMethod($struct, $code_buf);
+        }
+    }
+
+    /**
+     * 生成解包方法
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
+     * @param int $pack_type 数据打包方式
+     */
+    private function buildUnpackMethod($code_buf, $struct, $pack_type)
+    {
+        
+    }
+
+    /**
+     * 生成文件开始
+     * @param DOPGenerator $generator
+     * @return string|null
+     */
+    public function generateBegin(DOPGenerator $generator)
+    {
+        return null;
+    }
+
+    /**
+     * 按类名生成代码
+     * @param DOPGenerator $generator
+     * @param Struct $struct
+     * @return string|null
+     */
+    public function generateByClass(DOPGenerator $generator, $struct)
+    {
+        $build_opt = $generator->getBuildOption();
         $php_class = new CodeBuf();
         $name_space = $struct->getNamespace();
         $php_class->push('<?php');
         $main_class_name = $struct->getClassName();
         $parent_struct = $struct->getParent();
         $php_class->emptyLine();
-        $ns = self::phpNameSpace($this->build_opt, $name_space);
+        $ns = self::phpNameSpace($build_opt, $name_space);
         $php_class->push('namespace ' . $ns . ';');
         // 如果手动require
-        if ($this->build_opt->php_require_file) {
+        if ($build_opt->php_require_file) {
             //所有依赖的对象
             $import_class = $struct->getImportStruct();
             foreach ($import_class as $class_name) {
@@ -218,13 +223,13 @@ class Generator implements GenerateInterface
 
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
-            if ($this->build_opt->php_require_file) {
+            if ($build_opt->php_require_file) {
                 $php_class->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
             }
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
                 $php_class->emptyLine();
-                $use_name_space = self::phpNameSpace($this->build_opt, $parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
+                $use_name_space = self::phpNameSpace($build_opt, $parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
                 $php_class->push('use ' . $use_name_space . ';');
             }
         }
@@ -263,62 +268,59 @@ class Generator implements GenerateInterface
         }
         $struct_type = $struct->getType();
         //如果需要生成 encode 方法
-        if ($this->isBuildPackMethod($struct_type)) {
-            $this->buildPackMethod($php_class, $struct);
+        if ($generator->isBuildPackMethod($struct_type)) {
+            $this->buildPackMethod($php_class, $struct, $build_opt->pack_type);
         }
         //如果需要生成 decode 方法
-        if ($this->isBuildUnpackMethod($struct_type)) {
-            $this->buildUnpackMethod($php_class, $struct);
+        if ($generator->isBuildUnpackMethod($struct_type)) {
+            $this->buildUnpackMethod($php_class, $struct, $build_opt->pack_type);
         }
         //其它插件相关代码
-        $this->pluginCode($this->build_opt, $php_class, $struct);
+        //$this->pluginCode($build_opt, $php_class, $struct);
         $php_class->indentDecrease();
         $php_class->push('}');
         return $php_class->dump();
     }
 
     /**
-     * 生成打包方法
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     */
-    private function buildPackMethod($code_buf, $struct)
-    {
-        //json
-        if ($this->build_opt->pack_type & BuildOption::PACK_TYPE_JSON) {
-            JsonPack::buildPackMethod($struct, $code_buf);
-        }
-    }
-
-    /**
-     * 生成文件开始
-     * @param DOPGenerator $generator
-     * @return void
-     */
-    public function generateBegin(DOPGenerator $generator)
-    {
-        // TODO: Implement generateBegin() method.
-    }
-
-    /**
-     * 按类名生成代码
-     * @param DOPGenerator $generator
-     * @param Struct $struct
-     * @return string
-     */
-    public function generateByClass(DOPGenerator $generator, $struct)
-    {
-        // TODO: Implement generateByClass() method.
-    }
-
-    /**
      * 按协议文件生成代码
      * @param DOPGenerator $generator
      * @param string $xml_file
-     * @return string
+     * @return string|null
      */
     public function generateByXml(DOPGenerator $generator, $xml_file)
     {
-        // TODO: Implement generateByXml() method.
+        return null;
+    }
+
+    /**
+     * 生成文件结束
+     * @param DOPGenerator $generator
+     * @return string|null
+     */
+    public function generateFinish(DOPGenerator $generator)
+    {
+        $build_opt = $generator->getBuildOption();
+        //如果是手动require文件，那就不生成dop.php文件
+        if ($build_opt->php_require_file) {
+            return;
+        }
+        $manager = $generator->getManager();
+        $all_files = $manager->getAllFileList();
+        $prefix = $build_opt->namespace_prefix;
+        $autoload_set = array();
+        foreach ($all_files as $file => $m) {
+            //除去.xml，其它 就是路径信息
+            $path = substr($file, 0, -4);
+            $ns = $prefix . '\\' . str_replace('/', '\\', $path);
+            $autoload_set[$ns] = $path;
+        }
+        $file_content = FFanTpl::get('php/dop.tpl', array(
+            'namespace_set' => $autoload_set
+        ));
+        $build_path = $generator->getBuildBasePath();
+        $file = $build_path . 'dop.php';
+        file_put_contents($file, '<?php'. PHP_EOL .$file_content);
+        return null;
     }
 }

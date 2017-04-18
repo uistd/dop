@@ -4,6 +4,7 @@ namespace ffan\dop\plugin;
 
 use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
+use ffan\dop\GenerateInterface;
 use ffan\dop\Item;
 use ffan\dop\ProtocolManager;
 use ffan\dop\Struct;
@@ -44,11 +45,6 @@ abstract class Plugin
      * @var string 模板文件
      */
     protected $tpl_name;
-
-    /**
-     * @var array 语言支持缓存
-     */
-    private $code_support = [];
 
     /**
      * PluginInterface constructor.
@@ -179,48 +175,15 @@ abstract class Plugin
     }
 
     /**
-     * 生成代码
-     * @param BuildOption $build_opt
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     */
-    public function generateCode(BuildOption $build_opt, CodeBuf $code_buf, Struct $struct)
-    {
-        $code_type = $build_opt->getCodeType();
-        if ($this->codeTypeSupport($code_type)) {
-            $class_name = $this->codeClassName($code_type, true);
-            $args = array($this, $build_opt, $code_buf, $struct);
-            call_user_func_array(array($class_name, 'pluginCode'), $args);
-        }
-    }
-
-    /**
-     * 常用代码生成
-     * @param BuildOption $build_opt
-     */
-    public function generateCommon(BuildOption $build_opt)
-    {
-        $code_type = $build_opt->getCodeType();
-        if ($this->codeTypeSupport($code_type)) {
-            $class_name = $this->codeClassName($code_type, true);
-            $args = array($this, $build_opt);
-            call_user_func_array(array($class_name, 'commonCode'), $args);
-        }
-    }
-
-    /**
-     * 是否支持某种语言
+     * 获取某种语言的代码生成实例
      * @param string $code_type
-     * @return bool
+     * @return GenerateInterface
      */
-    private function codeTypeSupport($code_type)
+    public function getGenerator($code_type)
     {
-        if (isset($this->code_support[$code_type])) {
-            return $this->code_support[$code_type];
-        }
         $class_name = $this->codeClassName($code_type);
         $file = __DIR__ . DIRECTORY_SEPARATOR . self::$name . DIRECTORY_SEPARATOR . $class_name . '.php';
-        $is_support = false;
+        $generator = null;
         if (is_file($file)) {
             $full_class = $this->codeClassName($code_type, true);
             /** @noinspection PhpIncludeInspection */
@@ -228,14 +191,13 @@ abstract class Plugin
             //类是否存在
             if (class_exists($full_class)) {
                 $implements = class_implements($full_class);
-                //类是否 实现接口 PluginCode
-                if (isset($implements['ffan\\dop\\plugin\\PluginCode'])) {
-                    $is_support = true;
+                //类是否 实现接口 GenerateInterface
+                if (isset($implements['ffan\\dop\\\GenerateInterface'])) {
+                    $generator = new $full_class();
                 }
             }
         }
-        $this->code_support[$code_type] = $is_support;
-        return $is_support;
+        return $generator;
     }
 
     /**

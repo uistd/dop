@@ -14,6 +14,13 @@ use ffan\php\utils\Config as FFanConfig;
 class DOPGenerator
 {
     /**
+     * 插件代码结果类型
+     */
+    const PLUGIN_CODE_BEGIN = 0;
+    const PLUGIN_CODE_FINISH = 1;
+    const PLUGIN_CODE_BY_CLASS = 2;
+    const PLUGIN_CODE_BY_XML = 3;
+    /**
      * @var ProtocolManager
      */
     protected $manager;
@@ -28,7 +35,20 @@ class DOPGenerator
      */
     protected $build_opt;
 
+    /**
+     * @var string 生成代码基础路径
+     */
     protected $build_base_path;
+
+    /**
+     * @var array 插件代码结果缓存
+     */
+    private $plugin_code_result;
+
+    /**
+     * @var array 插件的代码生成器
+     */
+    private $plugin_generator;
 
     /**
      * Generator constructor.
@@ -40,30 +60,65 @@ class DOPGenerator
         $this->manager = $protocol_manager;
         $this->build_opt = $build_opt;
         $this->build_base_path = FFanUtils::fixWithRuntimePath($this->build_opt->build_path);
+        $this->initTpl();
     }
 
     /**
-     * 插件代码入口
-     * @param BuildOption $build_opt
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
+     * 获取代码生成参数
+     * @return BuildOption
      */
-    public function pluginCode($build_opt, $code_buf, $struct)
+    public function getBuildOption()
     {
+        return $this->build_opt;
+    }
+
+    /**
+     * 获取代码生成的基础路径
+     * @return string
+     */
+    public function getBuildBasePath()
+    {
+        return $this->build_base_path;
+    }
+
+    /**
+     * 获取协议管理器
+     * @return ProtocolManager
+     */
+    public function getManager()
+    {
+        return $this->manager;
+    }
+
+    /**
+     * 获取插件代码生成器
+     * @return array
+     */
+    private function getPluginGenerator()
+    {
+        if (NULL !== $this->plugin_generator) {
+            return $this->plugin_generator;
+        }
+        $result = array();
+        $code_type = $this->build_opt->getCodeType();
         $plugin_list = $this->manager->getPluginList();
-        if (null === $plugin_list) {
-            return;
-        }
-        /**
-         * @var string $name
-         * @var Plugin $plugin
-         */
-        foreach ($plugin_list as $name => $plugin) {
-            if (!$this->build_opt->usePlugin($name)) {
-                continue;
+        if (null !== $plugin_list) {
+            /**
+             * @var string $name
+             * @var Plugin $plugin
+             */
+            foreach ($plugin_list as $name => $plugin) {
+                if (!$this->build_opt->usePlugin($name)) {
+                    continue;
+                }
+                $generator = $plugin->getGenerator($code_type);
+                if (null !== $generator) {
+                    $result[$name] = $generator;
+                }
             }
-            $plugin->generateCode($build_opt, $code_buf, $struct);
         }
+        $this->plugin_generator = $result;
+        return $result;
     }
 
     /**
@@ -82,6 +137,14 @@ class DOPGenerator
      */
     public function generate()
     {
+        //插件代码生成的结果 保存在临时变量里
+        $this->plugin_code_result = array(
+            self::PLUGIN_CODE_BEGIN => [],
+            self::PLUGIN_CODE_FINISH => [],
+            self::PLUGIN_CODE_BY_CLASS => [],
+            self::PLUGIN_CODE_BY_XML => []
+        );
+        $this->pluginCodeBegin();
         $generator = $this->getGenerator();
         $generator->generateBegin($this);
         $use_cache = $this->build_opt->allow_cache;
@@ -90,13 +153,146 @@ class DOPGenerator
             if ($use_cache && $struct->isCached()) {
                 continue;
             }
+            $this->pluginCodeByClass($struct);
             $generator->generateByClass($this, $struct);
         }
         $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
         foreach ($file_list as $file) {
+            $this->pluginCodeByXml($file);
             $generator->generateByXml($this, $file);
         }
+        $this->pluginCodeFinish();
         $generator->generateFinish($this);
+    }
+
+    /**
+     * 生成插件代码 开始
+     */
+    private function pluginCodeBegin()
+    {
+        $plugin_generator = $this->getPluginGenerator();
+        /**
+         * @var string $name
+         * @var GenerateInterface $generator
+         */
+        foreach ($plugin_generator as $name => $generator) {
+            $this->plugin_code_result[self::PLUGIN_CODE_BEGIN][$name] = $generator->generateBegin($this);
+        }
+    }
+
+    /**
+     * 生成插件代码 结束
+     */
+    private function pluginCodeFinish()
+    {
+        $plugin_generator = $this->getPluginGenerator();
+        /**
+         * @var string $name
+         * @var GenerateInterface $generator
+         */
+        foreach ($plugin_generator as $name => $generator) {
+            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$name] = $generator->generateFinish($this);
+        }
+    }
+
+    /**
+     * 生成插件代码 => 按类名
+     * @param Struct $struct
+     */
+    private function pluginCodeByClass($struct)
+    {
+        $plugin_generator = $this->getPluginGenerator();
+        if (empty($plugin_generator)) {
+            return;
+        }
+        $struct_name = $struct->getClassName();
+        /**
+         * @var string $name
+         * @var GenerateInterface $generator
+         */
+        foreach ($plugin_generator as $name => $generator) {
+            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$struct_name][$name] = $generator->generateByClass($this, $struct);
+        }
+    }
+
+    /**
+     * 生成插件代码 => 按xml文件名
+     * @param string $file_name
+     */
+    private function pluginCodeByXml($file_name)
+    {
+        $plugin_generator = $this->getPluginGenerator();
+        /**
+         * @var string $name
+         * @var GenerateInterface $generator
+         */
+        foreach ($plugin_generator as $name => $generator) {
+            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$file_name][$name] = $generator->generateByXml($this, $file_name);
+        }
+    }
+
+    /**
+     * 获取插件代码 - 开始阶段
+     * @param string $plugin_name
+     * @return array|string
+     */
+    public function getBeginPluginCode($plugin_name = '*')
+    {
+        $code_arr = $this->plugin_code_result[self::PLUGIN_CODE_BEGIN];
+        if ('*' === $plugin_name) {
+            return $code_arr;
+        } else {
+            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
+        }
+    }
+
+    /**
+     * 获取一个类的插件代码
+     * @param string $class_name
+     * @param string $plugin_name
+     * @return array|string
+     */
+    public function getClassPluginCode($class_name, $plugin_name = '*')
+    {
+        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_CLASS];
+        $code_arr = isset($tmp_arr[$class_name]) ? $tmp_arr[$class_name] : array(); 
+        if ('*' === $plugin_name) {
+            return $code_arr;
+        } else {
+            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
+        }
+    }
+
+    /**
+     * 获取一个xml文件的插件代码
+     * @param string $file_name
+     * @param string $plugin_name
+     * @return array|string
+     */
+    public function getXmlPluginCode($file_name, $plugin_name = '*')
+    {
+        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_XML];
+        $code_arr = isset($tmp_arr[$file_name]) ? $tmp_arr[$file_name] : array();
+        if ('*' === $plugin_name) {
+            return $code_arr;
+        } else {
+            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
+        }
+    }
+
+    /**
+     * 获取插件代码 - 结束阶段
+     * @param string $plugin_name
+     * @return array|string
+     */
+    public function getFinishPluginCode($plugin_name = '*')
+    {
+        $code_arr = $this->plugin_code_result[self::PLUGIN_CODE_FINISH];
+        if ('*' === $plugin_name) {
+            return $code_arr;
+        } else {
+            return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
+        }
     }
 
     /**
@@ -112,7 +308,7 @@ class DOPGenerator
                 $tmp_object = new Generator();
                 break;
             default:
-                throw new DOPException('Unknown code_type:'. $code_type);
+                throw new DOPException('Unknown code_type:' . $code_type);
         }
         return $tmp_object;
     }
@@ -137,7 +333,7 @@ class DOPGenerator
      * @param int $type
      * @return bool
      */
-    protected function isBuildPackMethod($type)
+    public function isBuildPackMethod($type)
     {
         $result = false;
         switch ($type) {
@@ -170,7 +366,7 @@ class DOPGenerator
      * @param int $type
      * @return bool
      */
-    protected function isBuildUnpackMethod($type)
+    public function isBuildUnpackMethod($type)
     {
         $result = false;
         switch ($type) {
