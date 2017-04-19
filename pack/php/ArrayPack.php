@@ -9,7 +9,7 @@ use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\MapItem;
-use ffan\dop\PackInterface;
+use ffan\dop\PackMethodBase;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
 
@@ -17,7 +17,7 @@ use ffan\dop\StructItem;
  * Class ArrayPack 数组打包解包
  * @package ffan\dop\php
  */
-class ArrayPack implements PackInterface
+class ArrayPack implements PackMethodBase
 {
 
     /**
