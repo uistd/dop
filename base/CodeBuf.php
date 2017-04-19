@@ -60,16 +60,24 @@ class CodeBuf
 
     /**
      * CodeBuf constructor.
-     * @param int $buf_type 代码类型
      * @param bool $blank_indent 是否使用空格替代缩进
      */
-    public function __construct($buf_type = self::BUF_TYPE_CODE, $blank_indent = true)
+    public function __construct($blank_indent = true)
     {
         if ($blank_indent) {
             $this->indent_space = '    ';
         } else {
             $this->indent_space = "\t";
         }
+    }
+
+    /**
+     * 设置代码类型
+     * @param int $type
+     */
+    public function setBufType($type)
+    {
+        $this->buf_type = (int)$type;
     }
 
     /**
@@ -268,5 +276,6 @@ class CodeBuf
     {
         $this->str_buffer = [];
         $this->tmp_line_str = '';
+        $this->indent = 0;
     }
 }
