@@ -327,21 +327,21 @@ class DOPGenerator
     {
         $code_type = $this->build_opt->getCodeType();
         $class_name = 'Coder';
-        $file = basename(__DIR__) . 'pack/'. $code_type .'/'. $class_name .'.php';
+        $file = dirname(__DIR__) . '/pack/'. $code_type .'/'. $class_name .'.php';
         if (!is_file($file)) {
-            throw new DOPException('Unknown code type:'. $code_type);
+            throw new DOPException('Can not find coder file:'. $file);
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = '\\ffan\\dop\\pack\\'. $code_type. '\\'. $class_name;
+        $full_class = '\ffan\dop\pack\\'. $code_type. '\\'. $class_name;
         if (!class_exists($full_class)) {
             throw new DOPException('Unknown class name '. $full_class);
         }
         $parents = class_parents($full_class);
-        if (!isset($parents['ffan\\dop\\\CoderBase'])) {
+        if (!isset($parents['ffan\dop\CoderBase'])) {
             throw new DOPException('Class '. $full_class .' must be implements of CoderBase');
         }
-        return new $full_class($this);
+        return new $full_class($this, $code_type);
     }
 
     /**
@@ -357,5 +357,27 @@ class DOPGenerator
             'tpl_dir' => 'pack/tpl'
         ));
         $is_init = true;
+    }
+
+    /**
+     * 生成文件
+     * @param string $file_name
+     * @param string $contents
+     * @throws DOPException
+     */
+    public function makeFile($file_name, $contents)
+    {
+        static $path_check = array();
+        $file_name = FFanUtils::joinFilePath($this->build_base_path, $file_name);
+        $dir = dirname($file_name);
+        if (!isset($path_check[$dir])) {
+            FFanUtils::pathWriteCheck($dir);
+            $path_check[$dir] = true;
+        }
+        $re = file_put_contents($file_name, $contents);
+        if (false === $re) {
+            throw new DOPException('Can not write file '. $file_name);
+        }
+        $this->manager->buildLog('Build file '. $file_name .' success');
     }
 }

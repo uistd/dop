@@ -29,15 +29,13 @@ abstract class CoderBase implements CoderInterface
     /**
      * CoderBase constructor.
      * @param DOPGenerator $generator
-     * @throws DOPException
+     * @param string $name
      */
-    public function __construct(DOPGenerator $generator)
+    public function __construct(DOPGenerator $generator, $name)
     {
         $this->generator = $generator;
         $this->build_opt = $generator->getBuildOption();
-        if (null === $this->code_name) {
-            throw new DOPException('Unknown code_name');
-        }
+        $this->code_name = $name;
     }
 
     /**

@@ -204,6 +204,7 @@ class Coder extends CoderBase
         $this->packMethodCode($php_class, $struct);
         $php_class->indentDecrease();
         $php_class->push('}');
+        $this->generator->makeFile();
         return null;
     }
 
