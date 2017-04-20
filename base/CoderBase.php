@@ -3,10 +3,10 @@
 namespace ffan\dop;
 
 /**
- * Class LanCodeBase 各语言基类
+ * Class CoderBase 各语言基类
  * @package ffan\dop
  */
-abstract class CodeGeneratorBase implements GenerateInterface
+abstract class CoderBase implements CoderInterface
 {
     /**
      * @var DOPGenerator
@@ -27,7 +27,7 @@ abstract class CodeGeneratorBase implements GenerateInterface
     private $pack_instance_arr;
 
     /**
-     * CodeGeneratorBase constructor.
+     * CoderBase constructor.
      * @param DOPGenerator $generator
      * @throws DOPException
      */
@@ -44,7 +44,7 @@ abstract class CodeGeneratorBase implements GenerateInterface
      * 生成文件开始
      * @return CodeBuf|null
      */
-    public function generateBegin()
+    public function codeBegin()
     {
         return null;
     }
@@ -53,7 +53,7 @@ abstract class CodeGeneratorBase implements GenerateInterface
      * 生成文件结束
      * @return CodeBuf|null
      */
-    public function generateFinish()
+    public function codeFinish()
     {
         return null;
     }
@@ -63,7 +63,7 @@ abstract class CodeGeneratorBase implements GenerateInterface
      * @param Struct $struct
      * @return CodeBuf|null
      */
-    public function generateByClass($struct)
+    public function codeByClass($struct)
     {
         return null;
     }
@@ -73,7 +73,7 @@ abstract class CodeGeneratorBase implements GenerateInterface
      * @param string $xml_file
      * @return CodeBuf|null
      */
-    public function generateByXml($xml_file)
+    public function codeByXml($xml_file)
     {
         return null;
     }
@@ -108,6 +108,23 @@ abstract class CodeGeneratorBase implements GenerateInterface
         //json方式
         if ($pack_type & BuildOption::PACK_TYPE_JSON) {
             $json_pack = $this->getPackInstance('json');
+            if (null !== $json_pack) {
+                $this->writePackCode($struct, $code_buf, $json_pack);
+            }
+        }
+        //msgpack
+        if ($pack_type & BuildOption::PACK_TYPE_MSGPACK) {
+            $msg_pack = $this->getPackInstance('msgPack');
+            if (null !== $msg_pack) {
+                $this->writePackCode($struct, $code_buf, $msg_pack);
+            }
+        }
+        //binary
+        if ($pack_type & BuildOption::PACK_TYPE_BINARY) {
+            $bin_pack = $this->getPackInstance('binary');
+            if (null !== $bin_pack) {
+                $this->writePackCode($struct, $code_buf, $bin_pack);
+            }
         }
     }
 
@@ -115,19 +132,46 @@ abstract class CodeGeneratorBase implements GenerateInterface
      * 写入pack代码
      * @param Struct $struct
      * @param CodeBuf $code_buf
-     * @param PackMethodBase $packer
+     * @param PackInterface $packer
+     * @param array $require_arr 用于防止循环依赖
+     * @throws DOPException
      */
-    public function writePackCode($struct, CodeBuf $code_buf, PackMethodBase $packer)
+    private function writePackCode($struct, CodeBuf $code_buf, PackInterface $packer, array &$require_arr = [])
     {
+        //将依赖的packer写入
+        $require = $packer->getRequirePacker();
+        if (is_array($require)) {
+            foreach ($require as $name) {
+                if (isset($require_arr[$name])) {
+                    throw new DOPException('Cycle require detect');
+                }
+                $require_arr[$name] = true;
+                $req_pack = $this->getPackInstance($name);
+                if ($require_arr) {
+                    $this->writePackCode($struct, $code_buf, $req_pack, $require_arr);
+                }
+            }
+        }
         if ($this->isBuildPackMethod($this->build_opt->build_side)) {
-            $packer->buildPackMethod($struct, $code_buf);
+            //防止两次生成相同方法
+            $unique_flag = get_class($packer) .'::pack';
+            if ($code_buf->addUniqueFlag($unique_flag)) {
+                $packer->buildPackMethod($struct, $code_buf);
+            }
+        }
+        if ($this->isBuildUnpackMethod($this->build_opt->build_side)) {
+            //防止两次生成相同方法
+            $unique_flag = get_class($packer) .'::unpack';
+            if ($code_buf->addUniqueFlag($unique_flag)) {
+                $packer->buildUnpackMethod($struct, $code_buf);
+            }
         }
     }
 
     /**
      * 获取
      * @param string $pack_type
-     * @return PackMethodBase
+     * @return PackInterface
      * @throws DOPException
      */
     public function getPackInstance($pack_type)

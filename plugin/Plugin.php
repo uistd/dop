@@ -2,13 +2,10 @@
 
 namespace ffan\dop\plugin;
 
-use ffan\dop\CodeBuf;
 use ffan\dop\DOPException;
-use ffan\dop\GenerateInterface;
+use ffan\dop\CoderInterface;
 use ffan\dop\Item;
 use ffan\dop\ProtocolManager;
-use ffan\dop\Struct;
-use ffan\dop\BuildOption;
 
 /**
  * Class Plugin
@@ -177,27 +174,27 @@ abstract class Plugin
     /**
      * 获取某种语言的代码生成实例
      * @param string $code_type
-     * @return GenerateInterface
+     * @return CoderInterface
      */
-    public function getGenerator($code_type)
+    public function getPluginCoder($code_type)
     {
         $class_name = $this->codeClassName($code_type);
         $file = __DIR__ . DIRECTORY_SEPARATOR . self::$name . DIRECTORY_SEPARATOR . $class_name . '.php';
-        $generator = null;
+        $coder = null;
         if (is_file($file)) {
             $full_class = $this->codeClassName($code_type, true);
             /** @noinspection PhpIncludeInspection */
             require_once $file;
             //类是否存在
             if (class_exists($full_class)) {
-                $implements = class_implements($full_class);
+                $parents = class_parents($full_class);
                 //类是否 实现接口 GenerateInterface
-                if (isset($implements['ffan\\dop\\\GenerateInterface'])) {
-                    $generator = new $full_class();
+                if (isset($parents['ffan\\dop\\\GenerateInterface'])) {
+                    $coder = new $full_class();
                 }
             }
         }
-        return $generator;
+        return $coder;
     }
 
     /**

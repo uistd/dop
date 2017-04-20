@@ -2,7 +2,6 @@
 
 namespace ffan\dop;
 
-use ffan\dop\pack\php\Generator;
 use ffan\dop\plugin\Plugin;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Config as FFanConfig;
@@ -94,7 +93,7 @@ class DOPGenerator
      * 获取插件代码生成器
      * @return array
      */
-    private function getPluginGenerator()
+    private function getPluginCoder()
     {
         if (NULL !== $this->plugin_generator) {
             return $this->plugin_generator;
@@ -111,7 +110,7 @@ class DOPGenerator
                 if (!$this->build_opt->usePlugin($name)) {
                     continue;
                 }
-                $generator = $plugin->getGenerator($code_type);
+                $generator = $plugin->getPluginCoder($code_type);
                 if (null !== $generator) {
                     $result[$name] = $generator;
                 }
@@ -145,8 +144,8 @@ class DOPGenerator
             self::PLUGIN_CODE_BY_XML => []
         );
         $this->pluginCodeBegin();
-        $generator = $this->getGenerator();
-        $generator->generateBegin($this);
+        $coder = $this->getCoder();
+        $coder->codeBegin();
         $use_cache = $this->build_opt->allow_cache;
         /** @var Struct $struct */
         foreach ($this->manager->getAllStruct() as $struct) {
@@ -154,15 +153,15 @@ class DOPGenerator
                 continue;
             }
             $this->pluginCodeByClass($struct);
-            $generator->generateByClass($this, $struct);
+            $coder->codeByClass($struct);
         }
         $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
         foreach ($file_list as $file) {
             $this->pluginCodeByXml($file);
-            $generator->generateByXml($this, $file);
+            $coder->codeByXml($file);
         }
         $this->pluginCodeFinish();
-        $generator->generateFinish($this);
+        $coder->codeFinish();
     }
 
     /**
@@ -170,13 +169,13 @@ class DOPGenerator
      */
     private function pluginCodeBegin()
     {
-        $plugin_generator = $this->getPluginGenerator();
+        $plugin_generator = $this->getPluginCoder();
         /**
          * @var string $name
-         * @var GenerateInterface $generator
+         * @var CoderInterface $coder
          */
-        foreach ($plugin_generator as $name => $generator) {
-            $this->plugin_code_result[self::PLUGIN_CODE_BEGIN][$name] = $generator->generateBegin($this);
+        foreach ($plugin_generator as $name => $coder) {
+            $this->plugin_code_result[self::PLUGIN_CODE_BEGIN][$name] = $coder->codeBegin();
         }
     }
 
@@ -185,13 +184,13 @@ class DOPGenerator
      */
     private function pluginCodeFinish()
     {
-        $plugin_generator = $this->getPluginGenerator();
+        $plugin_generator = $this->getPluginCoder();
         /**
          * @var string $name
-         * @var GenerateInterface $generator
+         * @var CoderInterface $coder
          */
-        foreach ($plugin_generator as $name => $generator) {
-            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$name] = $generator->generateFinish($this);
+        foreach ($plugin_generator as $name => $coder) {
+            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$name] = $coder->codeFinish();
         }
     }
 
@@ -201,17 +200,17 @@ class DOPGenerator
      */
     private function pluginCodeByClass($struct)
     {
-        $plugin_generator = $this->getPluginGenerator();
+        $plugin_generator = $this->getPluginCoder();
         if (empty($plugin_generator)) {
             return;
         }
         $struct_name = $struct->getClassName();
         /**
          * @var string $name
-         * @var GenerateInterface $generator
+         * @var CoderInterface $coder
          */
-        foreach ($plugin_generator as $name => $generator) {
-            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$struct_name][$name] = $generator->generateByClass($this, $struct);
+        foreach ($plugin_generator as $name => $coder) {
+            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$struct_name][$name] = $coder->codeByClass($struct);
         }
     }
 
@@ -221,13 +220,13 @@ class DOPGenerator
      */
     private function pluginCodeByXml($file_name)
     {
-        $plugin_generator = $this->getPluginGenerator();
+        $plugin_generator = $this->getPluginCoder();
         /**
          * @var string $name
-         * @var GenerateInterface $generator
+         * @var CoderInterface $coder
          */
-        foreach ($plugin_generator as $name => $generator) {
-            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$file_name][$name] = $generator->generateByXml($this, $file_name);
+        foreach ($plugin_generator as $name => $coder) {
+            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$file_name][$name] = $coder->codeByXml($file_name);
         }
     }
 
@@ -321,20 +320,28 @@ class DOPGenerator
 
     /**
      * 获取代码生成对象
-     * @return GenerateInterface
+     * @return CoderBase
      * @throws DOPException
      */
-    private function getGenerator()
+    private function getCoder()
     {
         $code_type = $this->build_opt->getCodeType();
-        switch ($code_type) {
-            case BuildOption::BUILD_CODE_PHP:
-                $tmp_object = new Generator();
-                break;
-            default:
-                throw new DOPException('Unknown code_type:' . $code_type);
+        $class_name = 'Coder';
+        $file = basename(__DIR__) . 'pack/'. $code_type .'/'. $class_name .'.php';
+        if (!is_file($file)) {
+            throw new DOPException('Unknown code type:'. $code_type);
         }
-        return $tmp_object;
+        /** @noinspection PhpIncludeInspection */
+        require_once $file;
+        $full_class = '\\ffan\\dop\\pack\\'. $code_type. '\\'. $class_name;
+        if (!class_exists($full_class)) {
+            throw new DOPException('Unknown class name '. $full_class);
+        }
+        $parents = class_parents($full_class);
+        if (!isset($parents['ffan\\dop\\\CoderBase'])) {
+            throw new DOPException('Class '. $full_class .' must be implements of CoderBase');
+        }
+        return new $full_class($this);
     }
 
     /**

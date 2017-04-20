@@ -3,40 +3,34 @@
 namespace ffan\dop;
 
 /**
- * Interface GenerateInterface 代码生成接口
+ * Interface CoderInterface 代码生成接口
  * @package ffan\dop
  */
-interface GenerateInterface
+interface CoderInterface
 {
-    /**
-     * GenerateInterface constructor.
-     * @param DOPGenerator $generator
-     */
-    public function __construct(DOPGenerator $generator);
-
     /**
      * 生成文件开始
      * @return CodeBuf|null
      */
-    public function generateBegin();
+    public function codeBegin();
 
     /**
      * 生成文件结束
      * @return CodeBuf|null
      */
-    public function generateFinish();
+    public function codeFinish();
 
     /**
      * 按类名生成代码
      * @param Struct $struct
      * @return CodeBuf|null
      */
-    public function generateByClass($struct);
+    public function codeByClass($struct);
 
     /**
      * 按协议文件生成代码
      * @param string $xml_file
      * @return CodeBuf|null
      */
-    public function generateByXml($xml_file);
+    public function codeByXml($xml_file);
 }

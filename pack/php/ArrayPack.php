@@ -3,13 +3,14 @@
 namespace ffan\dop\pack\php;
 
 use ffan\dop\CodeBuf;
+use ffan\dop\CoderBase;
 use ffan\dop\DOPException;
 use ffan\dop\DOPGenerator;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\MapItem;
-use ffan\dop\PackMethodBase;
+use ffan\dop\PackInterface;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
 
@@ -17,27 +18,22 @@ use ffan\dop\StructItem;
  * Class ArrayPack 数组打包解包
  * @package ffan\dop\php
  */
-class ArrayPack implements PackMethodBase
+class ArrayPack implements PackInterface
 {
-
     /**
      * 数据序列化
      * @param Struct $struct 结构体
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    public static function buildPackMethod($struct, $code_buf)
+    public function buildPackMethod($struct, $code_buf)
     {
-        $method_name = 'arrayPack';
-        if (!$code_buf->addMethod($method_name)) {
-            return;
-        }
         $code_buf->emptyLine();
         $code_buf->push('/**');
         $code_buf->push(' * 转成数组');
         $code_buf->push(' * @return array');
         $code_buf->push(' */');
-        $code_buf->push('public function ' . $method_name . '()');
+        $code_buf->push('public function arrayPack()');
         $code_buf->push('{');
         $code_buf->indentIncrease();
         $code_buf->push('$result = array();');
@@ -59,18 +55,14 @@ class ArrayPack implements PackMethodBase
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    public static function buildUnpackMethod($struct, $code_buf)
+    public function buildUnpackMethod($struct, $code_buf)
     {
-        $method_name = 'arrayUnpack';
-        if (!$code_buf->addMethod($method_name)) {
-            return;
-        }
         $code_buf->emptyLine();
         $code_buf->push('/**');
         $code_buf->push(' * 对象初始化');
         $code_buf->push(' * @param array $data');
         $code_buf->push(' */');
-        $code_buf->push('public function ' . $method_name . '($data)');
+        $code_buf->push('public function arrayUnpack($data)');
         $code_buf->push('{');
         $code_buf->indentIncrease();
         $all_item = $struct->getAllExtendItem();
@@ -301,5 +293,14 @@ class ArrayPack implements PackMethodBase
             $code_buf->indentDecrease();
             $code_buf->push('}');
         }
+    }
+
+    /**
+     * 获取依赖的packer
+     * @return null|array
+     */
+    public function getRequirePacker()
+    {
+        return null;
     }
 }

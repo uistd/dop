@@ -59,6 +59,11 @@ class CodeBuf
     private $buf_type = self::BUF_TYPE_CODE;
 
     /**
+     * @var array 唯一标志列表，用于限制同一个类不能有同名方法等
+     */
+    private $unique_flag_arr;
+
+    /**
      * CodeBuf constructor.
      * @param bool $blank_indent 是否使用空格替代缩进
      */
@@ -277,5 +282,19 @@ class CodeBuf
         $this->str_buffer = [];
         $this->tmp_line_str = '';
         $this->indent = 0;
+    }
+
+    /**
+     * 加入唯一标志
+     * @param string $flag
+     * @return bool
+     */
+    public function addUniqueFlag($flag)
+    {
+        if (isset($this->unique_flag_arr[$flag])) {
+            return false;
+        }
+        $this->unique_flag_arr[$flag] = true;
+        return true;
     }
 }

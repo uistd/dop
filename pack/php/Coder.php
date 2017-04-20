@@ -4,8 +4,7 @@ namespace ffan\dop\pack\php;
 
 use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
-use ffan\dop\CodeGeneratorBase;
-use ffan\dop\DOPException;
+use ffan\dop\CoderBase;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
@@ -15,10 +14,10 @@ use ffan\php\utils\Str as FFanStr;
 use ffan\php\tpl\Tpl as FFanTpl;
 
 /**
- * Class PhpGenerator
+ * Class Coder
  * @package ffan\dop
  */
-class Generator extends CodeGeneratorBase
+class Coder extends CoderBase
 {
     /**
      * @var string 模板文件
@@ -133,65 +132,12 @@ class Generator extends CodeGeneratorBase
     }
 
     /**
-     * 生成文件
-     * @param string $namespace 命令空间
-     * @param array [Struct] $class_list
-     * @throws DOPException
-
-    protected function generateFile($namespace, $class_list)
-     * {
-     * $base_path = $this-$this->build_base_path;
-     * $build_path = FFanUtils::joinPath($base_path, $namespace);
-     * FFanUtils::pathWriteCheck($build_path);
-     * foreach ($class_list as $class_name => $struct) {
-     * //如果是来自缓存，不用再次生成
-     * if ($struct->isCached()) {
-     * $this->manager->buildLogNotice('Ignore the cache class '. $struct->getClassName());
-     * continue;
-     * }
-     * $result = $this->make($struct);
-     * $file_name = $this->buildFileName($build_path, $struct);
-     * $re = file_put_contents($file_name, $result);
-     * if (!$re) {
-     * throw new DOPException('Can not put contents to file:' . $file_name);
-     * }
-     * $this->manager->buildLog('Generate file:' . $file_name);
-     * }
-     * } */
-
-    /**
-     * 生成打包方法
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     * @param int $pack_type 数据打包方式
-     */
-    private function buildPackMethod($code_buf, $struct, $pack_type)
-    {
-        //json
-        if ($pack_type & BuildOption::PACK_TYPE_JSON) {
-            JsonPack::buildPackMethod($struct, $code_buf);
-        }
-    }
-
-    /**
-     * 生成解包方法
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     * @param int $pack_type 数据打包方式
-     */
-    private function buildUnpackMethod($code_buf, $struct, $pack_type)
-    {
-
-    }
-
-    /**
      * 按类名生成代码
      * @param Struct $struct
      * @return CodeBuf|null
      */
-    public function generateByClass($struct)
+    public function codeByClass($struct)
     {
-        $generator = $this->generator;
         $build_opt = $this->build_opt;
         $php_class = new CodeBuf();
         $name_space = $struct->getNamespace();
@@ -255,20 +201,7 @@ class Generator extends CodeGeneratorBase
             }
             $php_class->lineTmp(';')->lineFin()->emptyLine();
         }
-        $struct_type = $struct->getType();
-        //如果需要生成 encode 方法
-        if ($generator->isBuildPackMethod($struct_type)) {
-            $this->buildPackMethod($php_class, $struct, $build_opt->pack_type);
-        }
-        //如果需要生成 decode 方法
-        if ($generator->isBuildUnpackMethod($struct_type)) {
-            $this->buildUnpackMethod($php_class, $struct, $build_opt->pack_type);
-        }
-        //其它插件相关代码
-        $plugin_code = $generator->getClassPluginCode($main_class_name);
-        if (!empty($main_class_name)) {
-
-        }
+        $this->packMethodCode($php_class, $struct);
         $php_class->indentDecrease();
         $php_class->push('}');
         return null;
@@ -278,7 +211,7 @@ class Generator extends CodeGeneratorBase
      * 生成文件结束
      * @return CodeBuf|null
      */
-    public function generateFinish()
+    public function codeFinish()
     {
         $build_opt = $this->build_opt;
         $generator = $this->generator;
