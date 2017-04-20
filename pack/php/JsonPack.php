@@ -3,15 +3,14 @@
 namespace ffan\dop\pack\php;
 
 use ffan\dop\CodeBuf;
-use ffan\dop\CoderBase;
-use ffan\dop\PackInterface;
+use ffan\dop\PackerBase;
 use ffan\dop\Struct;
 
 /**
  * Class JsonPack
  * @package ffan\dop\php
  */
-class JsonPack implements PackInterface
+class JsonPack extends PackerBase
 {
     /**
      * 数据序列化

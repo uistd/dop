@@ -11,8 +11,8 @@ use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\MapItem;
 use ffan\dop\pack\php\Coder;
-use ffan\dop\plugin\Plugin;
-use ffan\dop\plugin\PluginCoder;
+use ffan\dop\Plugin;
+use ffan\dop\PluginCoder;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
 

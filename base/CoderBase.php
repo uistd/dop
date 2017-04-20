@@ -6,7 +6,7 @@ namespace ffan\dop;
  * Class CoderBase 各语言基类
  * @package ffan\dop
  */
-abstract class CoderBase implements CoderInterface
+abstract class CoderBase
 {
     /**
      * @var DOPGenerator
@@ -17,7 +17,7 @@ abstract class CoderBase implements CoderInterface
      * @var BuildOption
      */
     protected $build_opt;
-    
+
     /** @var string 当前语言名称 */
     protected $code_name;
 
@@ -40,59 +40,25 @@ abstract class CoderBase implements CoderInterface
 
     /**
      * 生成文件开始
-     * @return CodeBuf|null
      */
-    public function codeBegin()
+    public function codeCommon()
     {
-        return null;
-    }
-
-    /**
-     * 生成文件结束
-     * @return CodeBuf|null
-     */
-    public function codeFinish()
-    {
-        return null;
     }
 
     /**
      * 按类名生成代码
      * @param Struct $struct
-     * @return CodeBuf|null
      */
     public function codeByClass($struct)
     {
-        return null;
     }
 
     /**
      * 按协议文件生成代码
      * @param string $xml_file
-     * @return CodeBuf|null
      */
     public function codeByXml($xml_file)
     {
-        return null;
-    }
-
-    /**
-     * 合并插件生成的方法 到 类文件
-     * @param CodeBuf $code_buf
-     * @param string $class_name
-     */
-    protected function mergePluginFunction($code_buf, $class_name)
-    {
-        $code_arr = $this->generator->getClassPluginCodeAll($class_name);
-        /**
-         * @var string $plugin_name
-         * @var CodeBuf $plugin_code_buf
-         */
-        foreach ($code_arr as $plugin_name => $plugin_code_buf) {
-            if (CodeBuf::BUF_TYPE_FUNCTION === $plugin_code_buf->getBufType()) {
-                $code_buf->pushBuffer($plugin_code_buf);
-            }
-        }
     }
 
     /**
@@ -124,17 +90,31 @@ abstract class CoderBase implements CoderInterface
                 $this->writePackCode($struct, $code_buf, $bin_pack);
             }
         }
+        $plugin_coder = $this->generator->getPluginCoder();
+        if (empty($plugin_coder)) {
+            return;
+        }
+        /**
+         * @var string $name
+         * @var ffan\dop\plugin\PluginCoder $coder
+         */
+        foreach ($plugin_coder as $name => $coder) {
+            $buf = $coder->codeMethod($struct);
+            if (!$buf) {
+                $code_buf->pushBuffer($buf);
+            }
+        }
     }
 
     /**
      * 写入pack代码
      * @param Struct $struct
      * @param CodeBuf $code_buf
-     * @param PackInterface $packer
+     * @param PackerBase $packer
      * @param array $require_arr 用于防止循环依赖
      * @throws DOPException
      */
-    private function writePackCode($struct, CodeBuf $code_buf, PackInterface $packer, array &$require_arr = [])
+    private function writePackCode($struct, CodeBuf $code_buf, PackerBase $packer, array &$require_arr = [])
     {
         //将依赖的packer写入
         $require = $packer->getRequirePacker();
@@ -152,14 +132,14 @@ abstract class CoderBase implements CoderInterface
         }
         if ($this->isBuildPackMethod($this->build_opt->build_side)) {
             //防止两次生成相同方法
-            $unique_flag = get_class($packer) .'::pack';
+            $unique_flag = get_class($packer) . '::pack';
             if ($code_buf->addUniqueFlag($unique_flag)) {
                 $packer->buildPackMethod($struct, $code_buf);
             }
         }
         if ($this->isBuildUnpackMethod($this->build_opt->build_side)) {
             //防止两次生成相同方法
-            $unique_flag = get_class($packer) .'::unpack';
+            $unique_flag = get_class($packer) . '::unpack';
             if ($code_buf->addUniqueFlag($unique_flag)) {
                 $packer->buildUnpackMethod($struct, $code_buf);
             }
@@ -169,30 +149,30 @@ abstract class CoderBase implements CoderInterface
     /**
      * 获取
      * @param string $pack_type
-     * @return PackInterface
+     * @return PackerBase
      * @throws DOPException
      */
     public function getPackInstance($pack_type)
     {
-        if (!isset($this->pack_instance_arr[$pack_type])) {
+        if (isset($this->pack_instance_arr[$pack_type])) {
             return $this->pack_instance_arr[$pack_type];
         }
-        $class_name = ucfirst($pack_type) .'Pack';
-        $file = basename(__DIR__) .'pack/'.$this->code_name .'.php';
+        $class_name = ucfirst($pack_type) . 'Pack';
+        $file = dirname(__DIR__) . '/pack/' . $this->code_name . DIRECTORY_SEPARATOR . $class_name . '.php';
         //文件不存在
         if (!is_file($file)) {
-            throw new DOPException('Can not find file:'. $file);
+            throw new DOPException('Can not find file:' . $file);
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $ns = 'dop\\ffan\\pack\\'. $this->code_name .'\\';
+        $ns = 'dop\ffan\pack\\' . $this->code_name . '\\';
         $full_class_name = $ns . $class_name;
         if (!class_exists($full_class_name)) {
-            throw new DOPException('Can not load class '. $full_class_name);
+            throw new DOPException('Can not load class ' . $full_class_name);
         }
         $implements = class_implements($full_class_name);
         if (!isset($implements['ffan\\dop\\\PackInterface'])) {
-            throw new DOPException('Class '. $full_class_name .' must be implements of PackInterface');
+            throw new DOPException('Class ' . $full_class_name . ' must be implements of PackInterface');
         }
         $this->pack_instance_arr[$pack_type] = new $full_class_name();
         return $this->pack_instance_arr[$pack_type];

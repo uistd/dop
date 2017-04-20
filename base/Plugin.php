@@ -1,11 +1,6 @@
 <?php
 
-namespace ffan\dop\plugin;
-
-use ffan\dop\DOPException;
-use ffan\dop\CoderInterface;
-use ffan\dop\Item;
-use ffan\dop\ProtocolManager;
+namespace ffan\dop;
 
 /**
  * Class Plugin
@@ -174,7 +169,7 @@ abstract class Plugin
     /**
      * 获取某种语言的代码生成实例
      * @param string $code_type
-     * @return CoderInterface
+     * @return PluginCoder
      */
     public function getPluginCoder($code_type)
     {
@@ -188,8 +183,8 @@ abstract class Plugin
             //类是否存在
             if (class_exists($full_class)) {
                 $parents = class_parents($full_class);
-                //类是否 实现接口 GenerateInterface
-                if (isset($parents['ffan\\dop\\\GenerateInterface'])) {
+                //类是否 继续 PluginCoder
+                if (isset($parents['ffan\dop\PluginCoder'])) {
                     $coder = new $full_class();
                 }
             }
@@ -207,7 +202,7 @@ abstract class Plugin
     {
         $class_name = ucfirst($code_type) . ucfirst(self::$name) . 'Code';
         if ($ns) {
-            $ns_str = 'ffan\\dop\\plugin\\' . self::$name;
+            $ns_str = 'ffan\dop\plugin\\' . self::$name;
             $class_name = $ns_str . '\\' . $class_name;
         }
         return $class_name;

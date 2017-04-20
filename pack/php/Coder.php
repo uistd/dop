@@ -139,72 +139,72 @@ class Coder extends CoderBase
     public function codeByClass($struct)
     {
         $build_opt = $this->build_opt;
-        $php_class = new CodeBuf();
+        $class_buf = new CodeBuf();
         $name_space = $struct->getNamespace();
-        $php_class->push('<?php');
+        $class_buf->push('<?php');
         $main_class_name = $struct->getClassName();
         $parent_struct = $struct->getParent();
-        $php_class->emptyLine();
+        $class_buf->emptyLine();
         $ns = self::phpNameSpace($build_opt, $name_space);
-        $php_class->push('namespace ' . $ns . ';');
+        $class_buf->push('namespace ' . $ns . ';');
         // 如果手动require
         if ($build_opt->php_require_file) {
             //所有依赖的对象
             $import_class = $struct->getImportStruct();
             foreach ($import_class as $class_name) {
-                $php_class->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
+                $class_buf->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
             }
         }
 
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
             if ($build_opt->php_require_file) {
-                $php_class->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
+                $class_buf->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
             }
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
-                $php_class->emptyLine();
+                $class_buf->emptyLine();
                 $use_name_space = self::phpNameSpace($build_opt, $parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
-                $php_class->push('use ' . $use_name_space . ';');
+                $class_buf->push('use ' . $use_name_space . ';');
             }
         }
-        $php_class->emptyLine();
-        $php_class->push('/**');
+        $class_buf->emptyLine();
+        $class_buf->push('/**');
         $node_str = $struct->getNote();
-        $php_class->lineTmp(' * ' . $main_class_name);
+        $class_buf->lineTmp(' * ' . $main_class_name);
         if (!empty($node_str)) {
-            $php_class->lineTmp(' ' . $node_str);
+            $class_buf->lineTmp(' ' . $node_str);
         }
-        $php_class->lineFin();
-        $php_class->push(' */');
-        $php_class->lineTmp('class ' . $main_class_name);
+        $class_buf->lineFin();
+        $class_buf->push(' */');
+        $class_buf->lineTmp('class ' . $main_class_name);
         if ($struct->hasExtend()) {
-            $php_class->lineTmp(' extends ' . $parent_struct->getClassName());
+            $class_buf->lineTmp(' extends ' . $parent_struct->getClassName());
         }
-        $php_class->lineFin();
-        $php_class->push('{');
+        $class_buf->lineFin();
+        $class_buf->push('{');
         //缩进
-        $php_class->indentIncrease();
+        $class_buf->indentIncrease();
         $item_list = $struct->getAllExtendItem();
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($item_list as $name => $item) {
-            $php_class->push('/**');
+            $class_buf->push('/**');
             $item_type = self::varType($item);
-            $php_class->push(' * @var ' . $item_type . ' ' . $item->getNote());
-            $php_class->push(' */');
-            $php_class->lineTmp('public $' . $name);
+            $class_buf->push(' * @var ' . $item_type . ' ' . $item->getNote());
+            $class_buf->push(' */');
+            $class_buf->lineTmp('public $' . $name);
             if ($item->hasDefault()) {
-                $php_class->lineTmp(' = ' . $item->getDefault());
+                $class_buf->lineTmp(' = ' . $item->getDefault());
             }
-            $php_class->lineTmp(';')->lineFin()->emptyLine();
+            $class_buf->lineTmp(';')->lineFin()->emptyLine();
         }
-        $this->packMethodCode($php_class, $struct);
-        $php_class->indentDecrease();
-        $php_class->push('}');
-        $this->generator->makeFile();
+        $this->packMethodCode($class_buf, $struct);
+        $class_buf->indentDecrease();
+        $class_buf->push('}');
+        $this->generator->makeFile($name_space .'/'. $main_class_name .'.php', $class_buf->dump());
         return null;
     }
 

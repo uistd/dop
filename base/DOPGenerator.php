@@ -3,6 +3,7 @@
 namespace ffan\dop;
 
 use ffan\dop\plugin\Plugin;
+use ffan\dop\plugin\PluginCoder;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Config as FFanConfig;
 
@@ -93,7 +94,7 @@ class DOPGenerator
      * 获取插件代码生成器
      * @return array
      */
-    private function getPluginCoder()
+    public function getPluginCoder()
     {
         if (NULL !== $this->plugin_generator) {
             return $this->plugin_generator;
@@ -143,16 +144,15 @@ class DOPGenerator
             self::PLUGIN_CODE_BY_CLASS => [],
             self::PLUGIN_CODE_BY_XML => []
         );
-        $this->pluginCodeBegin();
+        $this->pluginCodeCommon();
         $coder = $this->getCoder();
-        $coder->codeBegin();
+        $coder->codeCommon();
         $use_cache = $this->build_opt->allow_cache;
         /** @var Struct $struct */
         foreach ($this->manager->getAllStruct() as $struct) {
             if ($use_cache && $struct->isCached()) {
                 continue;
             }
-            $this->pluginCodeByClass($struct);
             $coder->codeByClass($struct);
         }
         $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
@@ -160,57 +160,20 @@ class DOPGenerator
             $this->pluginCodeByXml($file);
             $coder->codeByXml($file);
         }
-        $this->pluginCodeFinish();
-        $coder->codeFinish();
     }
 
     /**
      * 生成插件代码 开始
      */
-    private function pluginCodeBegin()
+    private function pluginCodeCommon()
     {
         $plugin_generator = $this->getPluginCoder();
         /**
          * @var string $name
-         * @var CoderInterface $coder
+         * @var PluginCoder $coder
          */
         foreach ($plugin_generator as $name => $coder) {
-            $this->plugin_code_result[self::PLUGIN_CODE_BEGIN][$name] = $coder->codeBegin();
-        }
-    }
-
-    /**
-     * 生成插件代码 结束
-     */
-    private function pluginCodeFinish()
-    {
-        $plugin_generator = $this->getPluginCoder();
-        /**
-         * @var string $name
-         * @var CoderInterface $coder
-         */
-        foreach ($plugin_generator as $name => $coder) {
-            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$name] = $coder->codeFinish();
-        }
-    }
-
-    /**
-     * 生成插件代码 => 按类名
-     * @param Struct $struct
-     */
-    private function pluginCodeByClass($struct)
-    {
-        $plugin_generator = $this->getPluginCoder();
-        if (empty($plugin_generator)) {
-            return;
-        }
-        $struct_name = $struct->getClassName();
-        /**
-         * @var string $name
-         * @var CoderInterface $coder
-         */
-        foreach ($plugin_generator as $name => $coder) {
-            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$struct_name][$name] = $coder->codeByClass($struct);
+            $coder->codeCommon();
         }
     }
 
@@ -223,99 +186,11 @@ class DOPGenerator
         $plugin_generator = $this->getPluginCoder();
         /**
          * @var string $name
-         * @var CoderInterface $coder
+         * @var PluginCoder $coder
          */
         foreach ($plugin_generator as $name => $coder) {
-            $this->plugin_code_result[self::PLUGIN_CODE_FINISH][$file_name][$name] = $coder->codeByXml($file_name);
+            $coder->codeAsFile($file_name);
         }
-    }
-
-    /**
-     * 获取插件代码 - 开始阶段
-     * @param string $plugin_name
-     * @return string
-     */
-    public function getBeginPluginCode($plugin_name)
-    {
-        $code_arr = $this->plugin_code_result[self::PLUGIN_CODE_BEGIN];
-        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-    }
-
-    /**
-     * 获取一个类的插件代码
-     * @param string $class_name
-     * @param string $plugin_name
-     * @return string
-     */
-    public function getClassPluginCode($class_name, $plugin_name)
-    {
-        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_CLASS];
-        $code_arr = isset($tmp_arr[$class_name]) ? $tmp_arr[$class_name] : array();
-        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-    }
-
-    /**
-     * 获取一个xml文件的插件代码
-     * @param string $file_name
-     * @param string $plugin_name
-     * @return string
-     */
-    public function getXmlPluginCode($file_name, $plugin_name)
-    {
-        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_XML];
-        $code_arr = isset($tmp_arr[$file_name]) ? $tmp_arr[$file_name] : array();
-        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-    }
-
-    /**
-     * 获取插件代码 - 结束阶段
-     * @param string $plugin_name
-     * @return string
-     */
-    public function getFinishPluginCode($plugin_name)
-    {
-        $code_arr = $this->plugin_code_result[self::PLUGIN_CODE_FINISH];
-        return isset($code_arr[$plugin_name]) ? $code_arr[$plugin_name] : '';
-    }
-
-    /**
-     * 获取所有插件代码 - 开始阶段
-     * @return array
-     */
-    public function getBeginPluginCodeAll()
-    {
-        return $this->plugin_code_result[self::PLUGIN_CODE_BEGIN];
-    }
-
-    /**
-     * 获取所有插件代码 - 结束阶段
-     * @return array
-     */
-    public function getFinishPluginCodeAll()
-    {
-        return $this->plugin_code_result[self::PLUGIN_CODE_FINISH];
-    }
-
-    /**
-     * 获取一个类 所有的插件代码
-     * @param string $class_name
-     * @return array
-     */
-    public function getClassPluginCodeAll($class_name)
-    {
-        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_CLASS];
-        return isset($tmp_arr[$class_name]) ? $tmp_arr[$class_name] : array();
-    }
-
-    /**
-     * 获取一个xml文件的插件代码
-     * @param string $file_name
-     * @return array
-     */
-    public function getXmlPluginCodeAll($file_name)
-    {
-        $tmp_arr = $this->plugin_code_result[self::PLUGIN_CODE_BY_XML];
-        return isset($tmp_arr[$file_name]) ? $tmp_arr[$file_name] : array();
     }
 
     /**
@@ -368,15 +243,15 @@ class DOPGenerator
     public function makeFile($file_name, $contents)
     {
         static $path_check = array();
-        $file_name = FFanUtils::joinFilePath($this->build_base_path, $file_name);
-        $dir = dirname($file_name);
+        $full_file_name = FFanUtils::joinFilePath($this->build_base_path, $file_name);
+        $dir = dirname($full_file_name);
         if (!isset($path_check[$dir])) {
             FFanUtils::pathWriteCheck($dir);
             $path_check[$dir] = true;
         }
-        $re = file_put_contents($file_name, $contents);
+        $re = file_put_contents($full_file_name, $contents);
         if (false === $re) {
-            throw new DOPException('Can not write file '. $file_name);
+            throw new DOPException('Can not write file '. $full_file_name);
         }
         $this->manager->buildLog('Build file '. $file_name .' success');
     }

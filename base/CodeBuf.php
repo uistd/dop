@@ -9,26 +9,6 @@ namespace ffan\dop;
 class CodeBuf
 {
     /**
-     * 代码片断
-     */
-    const BUF_TYPE_CODE = 1;
-
-    /**
-     * 方法 代码
-     */
-    const BUF_TYPE_FUNCTION = 2;
-
-    /**
-     * CLASS 代码
-     */
-    const BUF_TYPE_CLASS = 3;
-
-    /**
-     * 整个 文件代码
-     */
-    const BUF_TYPE_FILE = 4;
-
-    /**
      * @var int 缩进级别
      */
     private $indent = 0;
@@ -54,11 +34,6 @@ class CodeBuf
     private $sub_buffer_list;
 
     /**
-     * @var int 存放的代码类型
-     */
-    private $buf_type = self::BUF_TYPE_CODE;
-
-    /**
      * @var array 唯一标志列表，用于限制同一个类不能有同名方法等
      */
     private $unique_flag_arr;
@@ -74,24 +49,6 @@ class CodeBuf
         } else {
             $this->indent_space = "\t";
         }
-    }
-
-    /**
-     * 设置代码类型
-     * @param int $type
-     */
-    public function setBufType($type)
-    {
-        $this->buf_type = (int)$type;
-    }
-
-    /**
-     * 设置代码类型
-     * @return int
-     */
-    public function getBufType()
-    {
-        return $this->buf_type;
     }
 
     /**

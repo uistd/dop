@@ -1,17 +1,11 @@
 <?php
-namespace ffan\dop\plugin;
-
-use ffan\dop\BuildOption;
-use ffan\dop\CodeBuf;
-use ffan\dop\CoderInterface;
-use ffan\dop\DOPGenerator;
-use ffan\dop\Struct;
+namespace ffan\dop;
 
 /**
  * Class PluginCoder
  * @package ffan\dop\plugin
  */
-abstract class PluginCoder implements CoderInterface
+abstract class PluginCoder
 {
     /**
      * @var DOPGenerator
@@ -41,40 +35,29 @@ abstract class PluginCoder implements CoderInterface
     }
 
     /**
-     * 生成文件开始
-     * @return CodeBuf|null
+     * 生成通用代码
      */
-    public function codeBegin()
+    public function codeCommon()
     {
-        return null;
+        
     }
 
     /**
-     * 生成文件结束
-     * @return CodeBuf|null
-     */
-    public function codeFinish()
-    {
-        return null;
-    }
-
-    /**
-     * 按类名生成代码
+     * 插件代码是一个方法
      * @param Struct $struct
-     * @return CodeBuf|null
+     * @return null|CodeBuf
      */
-    public function codeByClass($struct)
+    public function codeMethod($struct)
     {
         return null;
     }
 
     /**
-     * 按协议文件生成代码
-     * @param string $xml_file
-     * @return CodeBuf|null
+     * 插件代码是一个文件
+     * @param string $file_name
      */
-    public function codeByXml($xml_file)
+    public function codeAsFile($file_name)
     {
-        return null;
+        
     }
 }

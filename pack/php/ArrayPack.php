@@ -3,14 +3,13 @@
 namespace ffan\dop\pack\php;
 
 use ffan\dop\CodeBuf;
-use ffan\dop\CoderBase;
 use ffan\dop\DOPException;
 use ffan\dop\DOPGenerator;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\MapItem;
-use ffan\dop\PackInterface;
+use ffan\dop\PackerBase;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
 
@@ -18,7 +17,7 @@ use ffan\dop\StructItem;
  * Class ArrayPack 数组打包解包
  * @package ffan\dop\php
  */
-class ArrayPack implements PackInterface
+class ArrayPack extends PackerBase
 {
     /**
      * 数据序列化

@@ -5,7 +5,7 @@ namespace ffan\dop\plugin\validator;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
-use ffan\dop\plugin\Plugin;
+use ffan\dop\Plugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -46,7 +46,7 @@ class ValidatorPlugin extends Plugin
         } elseif (ItemType::FLOAT === $type) {
             $this->readFloatSet($node, $valid_rule);
         }
-        $item->addPluginData($this->name, $valid_rule);
+        $item->addPluginData(self::$name, $valid_rule);
     }
 
     /**

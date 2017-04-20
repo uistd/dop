@@ -7,7 +7,7 @@ use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\MapItem;
-use ffan\dop\plugin\Plugin;
+use ffan\dop\Plugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**
