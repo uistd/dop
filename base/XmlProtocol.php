@@ -2,7 +2,6 @@
 
 namespace ffan\dop;
 
-use ffan\dop\plugin\Plugin;
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 

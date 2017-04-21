@@ -193,7 +193,12 @@ class Coder extends CoderBase
         foreach ($item_list as $name => $item) {
             $class_buf->push('/**');
             $item_type = self::varType($item);
-            $class_buf->push(' * @var ' . $item_type . ' ' . $item->getNote());
+            $class_buf->lineTmp(' * @var ' . $item_type);
+            $tmp_node = $item->getNote();
+            if (!empty($tmp_node)) {
+                $class_buf->lineTmp(' ' . $tmp_node);
+            }
+            $class_buf->lineFin();
             $class_buf->push(' */');
             $class_buf->lineTmp('public $' . $name);
             if ($item->hasDefault()) {
@@ -203,8 +208,8 @@ class Coder extends CoderBase
         }
         $this->packMethodCode($class_buf, $struct);
         $class_buf->indentDecrease();
-        $class_buf->push('}');
-        $this->generator->makeFile($name_space .'/'. $main_class_name .'.php', $class_buf->dump());
+        $class_buf->push('}')->emptyLine();
+        $this->generator->makeFile($name_space . '/' . $main_class_name . '.php', $class_buf->dump());
         return null;
     }
 

@@ -179,4 +179,13 @@ class PhpMockCode extends PluginCoder
         $mock_buf->indentDecrease()->push('}');
         return $mock_buf->dump();
     }
+
+    /**
+     * 每一个xml文件的协议生成到同一个class里
+     * @param string $file_name
+     */
+    public function codeAsFile($file_name)
+    {
+        
+    }
 }

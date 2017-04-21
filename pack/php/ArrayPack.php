@@ -42,7 +42,7 @@ class ArrayPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            self::packItemValue($code_buf, '$this->' . $name, "result['" . $name . "']", $item, 0);
+            self::packItemValue($code_buf, 'this->' . $name, "result['" . $name . "']", $item, 0);
         }
         $code_buf->push('return $result;');
         $code_buf->indentDecrease()->push('}');
@@ -70,7 +70,7 @@ class ArrayPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            self::unpackItemValue($code_buf, '$this->' . $name, 'data', $item, 0, $name);
+            self::unpackItemValue($code_buf, 'this->' . $name, 'data', $item, 0, $name);
         }
         $code_buf->indentDecrease()->push('}');
     }
@@ -138,7 +138,7 @@ class ArrayPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 if (0 === $depth) {
-                    $code_buf->push('if ($' . $var_name . ') instanceof ' . $item->getStructName() . ') {');
+                    $code_buf->push('if ($' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
                     $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
                     $code_buf->push('} else {');
                     $code_buf->pushIndent('$' . $result_var . ' = array();');
@@ -292,14 +292,5 @@ class ArrayPack extends PackerBase
             $code_buf->indentDecrease();
             $code_buf->push('}');
         }
-    }
-
-    /**
-     * 获取依赖的packer
-     * @return null|array
-     */
-    public function getRequirePacker()
-    {
-        return null;
     }
 }

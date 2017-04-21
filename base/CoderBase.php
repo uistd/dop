@@ -96,7 +96,7 @@ abstract class CoderBase
         }
         /**
          * @var string $name
-         * @var ffan\dop\plugin\PluginCoder $coder
+         * @var PluginCoder $coder
          */
         foreach ($plugin_coder as $name => $coder) {
             $buf = $coder->codeMethod($struct);
@@ -121,7 +121,7 @@ abstract class CoderBase
         if (is_array($require)) {
             foreach ($require as $name) {
                 if (isset($require_arr[$name])) {
-                    throw new DOPException('Cycle require detect');
+                    throw new DOPException('Cycle require detect. '. $name);
                 }
                 $require_arr[$name] = true;
                 $req_pack = $this->getPackInstance($name);
@@ -130,14 +130,15 @@ abstract class CoderBase
                 }
             }
         }
-        if ($this->isBuildPackMethod($this->build_opt->build_side)) {
+        $struct_type = $struct->getType();
+        if ($this->isBuildPackMethod($struct_type)) {
             //防止两次生成相同方法
             $unique_flag = get_class($packer) . '::pack';
             if ($code_buf->addUniqueFlag($unique_flag)) {
                 $packer->buildPackMethod($struct, $code_buf);
             }
         }
-        if ($this->isBuildUnpackMethod($this->build_opt->build_side)) {
+        if ($this->isBuildUnpackMethod($struct_type)) {
             //防止两次生成相同方法
             $unique_flag = get_class($packer) . '::unpack';
             if ($code_buf->addUniqueFlag($unique_flag)) {
@@ -165,14 +166,14 @@ abstract class CoderBase
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $ns = 'dop\ffan\pack\\' . $this->code_name . '\\';
+        $ns = 'ffan\dop\pack\\' . $this->code_name . '\\';
         $full_class_name = $ns . $class_name;
         if (!class_exists($full_class_name)) {
             throw new DOPException('Can not load class ' . $full_class_name);
         }
-        $implements = class_implements($full_class_name);
-        if (!isset($implements['ffan\\dop\\\PackInterface'])) {
-            throw new DOPException('Class ' . $full_class_name . ' must be implements of PackInterface');
+        $parents = class_parents($full_class_name);
+        if (!isset($parents['ffan\dop\PackerBase'])) {
+            throw new DOPException('Class ' . $full_class_name . ' must extend of PackerBase');
         }
         $this->pack_instance_arr[$pack_type] = new $full_class_name();
         return $this->pack_instance_arr[$pack_type];

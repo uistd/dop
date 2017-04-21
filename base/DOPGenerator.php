@@ -2,8 +2,6 @@
 
 namespace ffan\dop;
 
-use ffan\dop\plugin\Plugin;
-use ffan\dop\plugin\PluginCoder;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Config as FFanConfig;
 
@@ -111,9 +109,9 @@ class DOPGenerator
                 if (!$this->build_opt->usePlugin($name)) {
                     continue;
                 }
-                $generator = $plugin->getPluginCoder($code_type);
-                if (null !== $generator) {
-                    $result[$name] = $generator;
+                $coder = $plugin->getPluginCoder($code_type);
+                if (null !== $coder) {
+                    $result[$name] = $coder;
                 }
             }
         }
@@ -202,19 +200,19 @@ class DOPGenerator
     {
         $code_type = $this->build_opt->getCodeType();
         $class_name = 'Coder';
-        $file = dirname(__DIR__) . '/pack/'. $code_type .'/'. $class_name .'.php';
+        $file = dirname(__DIR__) . '/pack/' . $code_type . '/' . $class_name . '.php';
         if (!is_file($file)) {
-            throw new DOPException('Can not find coder file:'. $file);
+            throw new DOPException('Can not find coder file:' . $file);
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = '\ffan\dop\pack\\'. $code_type. '\\'. $class_name;
+        $full_class = '\ffan\dop\pack\\' . $code_type . '\\' . $class_name;
         if (!class_exists($full_class)) {
-            throw new DOPException('Unknown class name '. $full_class);
+            throw new DOPException('Unknown class name ' . $full_class);
         }
         $parents = class_parents($full_class);
         if (!isset($parents['ffan\dop\CoderBase'])) {
-            throw new DOPException('Class '. $full_class .' must be implements of CoderBase');
+            throw new DOPException('Class ' . $full_class . ' must be implements of CoderBase');
         }
         return new $full_class($this, $code_type);
     }
@@ -251,8 +249,8 @@ class DOPGenerator
         }
         $re = file_put_contents($full_file_name, $contents);
         if (false === $re) {
-            throw new DOPException('Can not write file '. $full_file_name);
+            throw new DOPException('Can not write file ' . $full_file_name);
         }
-        $this->manager->buildLog('Build file '. $file_name .' success');
+        $this->manager->buildLog('Build file ' . $file_name . ' success');
     }
 }
