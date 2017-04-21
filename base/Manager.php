@@ -7,7 +7,7 @@ use ffan\dop\build\BuildOption;
 use ffan\dop\plugin\mock\MockPlugin;
 use ffan\dop\plugin\validator\ValidatorPlugin;
 use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\XmlProtocol;
+use ffan\dop\protocol\Protocol;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -168,7 +168,7 @@ class Manager
     /**
      * 加载指定的xml
      * @param string $xml_file 文件相对于base_path的路径
-     * @return XmlProtocol
+     * @return Protocol
      * @throws Exception
      */
     private function loadXmlProtocol($xml_file)
@@ -177,7 +177,7 @@ class Manager
             return $this->xml_list[$xml_file];
         }
         $this->buildLog('Load ' . $xml_file);
-        $protocol_obj = new XmlProtocol($this, $xml_file);
+        $protocol_obj = new Protocol($this, $xml_file);
         $this->xml_list[$xml_file] = $protocol_obj;
         return $protocol_obj;
     }

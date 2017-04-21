@@ -8,10 +8,10 @@ use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
- * Class XmlProtocol
+ * Class Protocol
  * @package ffan
  */
-class XmlProtocol
+class Protocol
 {
     /**
      * 请求节点
