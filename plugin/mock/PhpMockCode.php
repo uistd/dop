@@ -11,7 +11,6 @@ use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\MapItem;
 use ffan\dop\pack\php\Coder;
-use ffan\dop\Plugin;
 use ffan\dop\PluginCoder;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
@@ -23,18 +22,6 @@ use ffan\dop\StructItem;
 class PhpMockCode extends PluginCoder
 {
     /**
-     * PHP 相关插件代码
-     * @param Plugin $plugin
-     * @param BuildOption $build_opt
-     * @param CodeBuf $code_buf
-     * @param Struct $struct
-     * @return void
-     */
-    public function pluginCode(Plugin $plugin, BuildOption $build_opt, CodeBuf $code_buf, Struct $struct)
-    {
-    }
-
-    /**
      * 生成mock单项的代码
      * @param CodeBuf $mock_buf
      * @param string $mock_item
@@ -42,9 +29,9 @@ class PhpMockCode extends PluginCoder
      * @param Item $item
      * @param int $depth
      */
-    private static function mockItem($mock_buf, $mock_item, $mock_rule, $item, $depth = 0)
+    private function mockItem($mock_buf, $mock_item, $mock_rule, $item, $depth = 0)
     {
-        $plugin_name = MockPlugin::getName();
+        $plugin_name = $this->plugin->getName();
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::INT:
@@ -179,13 +166,5 @@ class PhpMockCode extends PluginCoder
         $mock_buf->indentDecrease()->push('}');
         return $mock_buf->dump();
     }
-
-    /**
-     * 每一个xml文件的协议生成到同一个class里
-     * @param string $file_name
-     */
-    public function codeAsFile($file_name)
-    {
-        
-    }
+    
 }

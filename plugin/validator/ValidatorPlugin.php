@@ -22,7 +22,7 @@ class ValidatorPlugin extends Plugin
     /**
      * @var string
      */
-    protected static $name = 'validator';
+    protected $name = 'validator';
 
     /**
      * 初始化
@@ -129,8 +129,7 @@ class ValidatorPlugin extends Plugin
             $from_arr = FFanStr::split(strtolower($from));
             foreach ($from_arr as $each_item) {
                 if (!isset($set_arr[$each_item])) {
-                    $msg = $this->manager->fixErrorMsg('无法识别的 v-from 设置:' . $each_item);
-                    $this->manager->buildLogError($msg);
+                    $this->manager->buildLogError('无法识别的 v-from 设置:' . $each_item);
                 }
                 $from_set |= $set_arr[$each_item];
             }

@@ -19,7 +19,7 @@ class MockPlugin extends Plugin
     /**
      * @var string
      */
-    protected static $name = 'mock';
+    protected $name = 'mock';
 
     /**
      * @var string 属性前缀
@@ -58,8 +58,7 @@ class MockPlugin extends Plugin
         if (!$find_flag && $node->hasAttribute($attr_enum)) {
             $enum_set = FFanStr::split($this->read($node, 'enum'), '|');
             if (empty($enum_set)) {
-                $msg = $this->manager->fixErrorMsg($attr_enum . ' 属性填写出错');
-                throw new DOPException($msg);
+                throw new DOPException($attr_enum . ' 属性填写出错');
             }
             foreach ($enum_set as $i => $each_value) {
                 $enum_set[$i] = self::fixValue($item_type, $each_value);
@@ -73,7 +72,7 @@ class MockPlugin extends Plugin
         if (!$find_flag && $node->hasAttribute($mock_type)) {
             $mock_rule->build_in_type = FFanStr::camelName($this->read($node, 'type'), false);
             if (!self::isBuildInType($mock_rule->build_in_type)) {
-                throw new DOPException($this->manager->fixErrorMsg('Unknown build in mock type:' . $mock_rule->build_in_type));
+                throw new DOPException('Unknown build in mock type:' . $mock_rule->build_in_type);
             }
             $find_flag = true;
         }
@@ -85,7 +84,7 @@ class MockPlugin extends Plugin
             $find_flag = true;
         }
         if ($find_flag) {
-            $item->addPluginData(self::$name, $mock_rule);
+            $item->addPluginData($this->name, $mock_rule);
         }
     }
 

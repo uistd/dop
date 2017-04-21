@@ -21,7 +21,7 @@ abstract class Plugin
     /**
      * @var string 插件名
      */
-    protected static $name;
+    protected $name;
 
     /**
      * @var null|array 插件配置
@@ -61,12 +61,12 @@ abstract class Plugin
      * @return string
      * @throws DOPException
      */
-    public static function getName()
+    public function getName()
     {
-        if (null === self::$name) {
+        if (null === $this->name) {
             throw new DOPException('Property name required!');
         }
-        return self::$name;
+        return $this->name;
     }
 
     /**
@@ -97,8 +97,7 @@ abstract class Plugin
                 $max = (float)$max;
             }
             if ($max < $min) {
-                $msg = $this->manager->fixErrorMsg('v-length:' . $set_str . ' 无效');
-                $this->manager->buildLogError($msg);
+                $this->manager->buildLogError('v-length:' . $set_str . ' 无效');
                 $max = $min = null;
             }
         }
@@ -174,7 +173,7 @@ abstract class Plugin
     public function getPluginCoder($code_type)
     {
         $class_name = $this->codeClassName($code_type);
-        $file = __DIR__ . DIRECTORY_SEPARATOR . self::$name . DIRECTORY_SEPARATOR . $class_name . '.php';
+        $file = __DIR__ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . $class_name . '.php';
         $coder = null;
         if (is_file($file)) {
             $full_class = $this->codeClassName($code_type, true);
@@ -200,9 +199,9 @@ abstract class Plugin
      */
     private function codeClassName($code_type, $ns = false)
     {
-        $class_name = ucfirst($code_type) . ucfirst(self::$name) . 'Code';
+        $class_name = ucfirst($code_type) . ucfirst($this->name) . 'Code';
         if ($ns) {
-            $ns_str = 'ffan\dop\plugin\\' . self::$name;
+            $ns_str = 'ffan\dop\plugin\\' . $this->name;
             $class_name = $ns_str . '\\' . $class_name;
         }
         return $class_name;

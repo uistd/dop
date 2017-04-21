@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop;
 
 /**
@@ -11,7 +12,7 @@ abstract class PluginCoder
      * @var DOPGenerator
      */
     protected $generator;
-    
+
     /**
      * @var BuildOption
      */
@@ -36,28 +37,39 @@ abstract class PluginCoder
 
     /**
      * 生成通用代码
+     * @param FileBuf $file_buf
      */
-    public function codeCommon()
+    public function buildCommonCode(FileBuf $file_buf)
     {
-        
+
     }
 
     /**
-     * 插件代码是一个方法
+     * 生成struct的代码
      * @param Struct $struct
-     * @return null|CodeBuf
+     * @param FileBuf $file_buf
      */
-    public function codeMethod($struct)
+    public function buildStructCode($struct, FileBuf $file_buf)
     {
-        return null;
+        
     }
 
     /**
-     * 插件代码是一个文件
-     * @param string $file_name
+     * 按命名空间生成代码
+     * @param string $name_space
+     * @param FileBuf $fileBuf
      */
-    public function codeAsFile($file_name)
+    public function buildNsCode($name_space, FileBuf $fileBuf)
     {
-        
+
+    }
+
+    /**
+     * 获取插件名称
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->plugin->getName();
     }
 }

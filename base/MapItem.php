@@ -33,7 +33,7 @@ class MapItem extends Item
         $type = $key_item->getType();
         //目前只支持int 和 string类型的key
         if ($type !== ItemType::INT && $type !== ItemType::STRING) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Map的key只能是int or string类型'));
+            throw new DOPException('Map的key只能是int or string类型');
         }
         $this->key_item = $key_item;
     }
@@ -72,6 +72,6 @@ class MapItem extends Item
      */
     public function setDefault($value)
     {
-        throw new DOPException($this->protocol_manager->fixErrorMsg('`default` is disabled in map type'));
+        throw new DOPException('`default` is disabled in map type');
     }
 }

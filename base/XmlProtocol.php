@@ -95,6 +95,7 @@ class XmlProtocol
             throw new \InvalidArgumentException('Invalid file:' . $full_name);
         }
         $this->file_name = $full_name;
+        DOPException::setAppendMsg('Parse xml '. $full_name);
         $this->xml_handle = new \DOMDocument();
         $this->xml_handle->load($full_name);
         $dir_name = dirname($file_name);
@@ -155,8 +156,7 @@ class XmlProtocol
             $struct = $node_list->item($i);
             $this->setLineNumber($struct->getLineNo());
             if (!$struct->hasAttribute('name')) {
-                $msg = $this->protocol_manager->fixErrorMsg('Struct must have name attribute');
-                throw new DOPException($msg);
+                throw new DOPException('Struct must have name attribute');
             }
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
@@ -185,8 +185,7 @@ class XmlProtocol
             $action = $action_list->item($i);
             $this->setLineNumber($action->getLineNo());
             if (!$action->hasAttribute('name')) {
-                $msg = $this->protocol_manager->fixErrorMsg('Action must have name attribute');
-                throw new DOPException($msg);
+                throw new DOPException('Action must have name attribute');
             }
             $name = FFanStr::camelName(trim($action->getAttribute('name')));
             $this->parseAction($name, $action);
@@ -214,22 +213,22 @@ class XmlProtocol
             $node_name = strtolower($node->nodeName);
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
-                    throw new DOPException($this->protocol_manager->fixErrorMsg('Only one request node allowed'));
+                    throw new DOPException('Only one request node allowed');
                 }
                 $type = Struct::TYPE_REQUEST;
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
-                    throw new DOPException($this->protocol_manager->fixErrorMsg('Only one response node allowed'));
+                    throw new DOPException('Only one response node allowed');
                 }
                 $type = Struct::TYPE_RESPONSE;
             } else {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown node:' . $node_name));
+                throw new DOPException('Unknown node:' . $node_name);
             }
             $node_name = ucfirst($node_name);
             if ($action->hasAttribute('method')) {
                 $method = trim($action->getAttribute('method'));
                 if (!in_array(strtoupper($method), self::$http_method_list)) {
-                    $err_msg = $this->protocol_manager->fixErrorMsg($method . ' is not support http method type');
+                    $err_msg = $method . ' is not support http method type';
                     throw new DOPException($err_msg);
                 }
                 $node_name = ucfirst($method) . $node_name;
@@ -263,13 +262,13 @@ class XmlProtocol
             $this->setLineNumber($node->getLineNo());
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('Attribute `name` required!'));
+                throw new DOPException('Attribute `name` required!');
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
             $item = $this->makeItemObject($class_name . ucfirst($item_name), $node);
             if (isset($item_arr[$item_name])) {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('Item name:' . $item_name . ' 已经存在'));
+                throw new DOPException('Item name:' . $item_name . ' 已经存在');
             }
             $item_arr[$item_name] = $item;
         }
@@ -283,9 +282,9 @@ class XmlProtocol
             $struct_name = $this->getFullName($struct_name);
             $extend_struct = $this->protocol_manager->loadRequireStruct($struct_name, $this->xml_file_name);
             if (null === $extend_struct) {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('无法找到Struct ' . $struct_name));
+                throw new DOPException('无法找到Struct ' . $struct_name);
             } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('struct:' . $struct_name . ' is not public!'));
+                throw new DOPException('struct:' . $struct_name . ' is not public!');
             }
         }
         if (!empty($item_arr)) {
@@ -304,7 +303,7 @@ class XmlProtocol
         } elseif ($extend_struct) {
             $struct_obj = $extend_struct;
         } else {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Empty struct'));
+            throw new DOPException('Empty struct');
         }
         return $struct_obj;
     }
@@ -320,7 +319,7 @@ class XmlProtocol
     {
         $type = ItemType::getType($dom_node->nodeName);
         if (null === $type) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Unknown type `' . $dom_node->nodeName . '`'));
+            throw new DOPException('Unknown type `' . $dom_node->nodeName . '`');
         }
         switch ($type) {
             case ItemType::STRING:
@@ -406,12 +405,12 @@ class XmlProtocol
                 continue;
             }
             if (null !== $type_node) {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('List只能有一个节点'));
+                throw new DOPException('List只能有一个节点');
             }
             $type_node = $tmp_node;
         }
         if (null === $type_node) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('List下必须包括一个指定list类型的节点'));
+            throw new DOPException('List下必须包括一个指定list类型的节点');
         }
         //$name .= 'List';
         return $this->makeItemObject($name, $type_node);
@@ -445,12 +444,12 @@ class XmlProtocol
                 $value_item = $this->makeItemObject($name, $value_node);
                 $item_obj->setValueItem($value_item);
             } else {
-                throw new DOPException($this->protocol_manager->fixErrorMsg('Map下只能有两个节点'));
+                throw new DOPException('Map下只能有两个节点');
             }
             $key_node = $tmp_node;
         }
         if (null === $key_node || null === $value_node) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Map下必须包含两个节点'));
+            throw new DOPException('Map下必须包含两个节点');
         }
     }
 
@@ -467,7 +466,7 @@ class XmlProtocol
             $name = $prefix . $name;
         }
         if (isset($this->name_stack[$name])) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Name:' . $name . ' 已经存在'));
+            throw new DOPException('Name:' . $name . ' 已经存在');
         }
         $this->name_stack[$name] = true;
         $this->checkName($name);
@@ -495,11 +494,11 @@ class XmlProtocol
     private function getFullName($struct_name)
     {
         if (empty($struct_name)) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('struct name error'));
+            throw new DOPException('struct name error');
         }
         //名称不合法
-        if (!preg_match('/^\/?[a-zA-Z_][a-zA-Z_a\d]*(\/[a-zA-Z_][a-zA-Z_\d]*)*$/', $struct_name)) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('Invalid struct name:' . $struct_name));
+        if (!preg_match('/^\/?[a-zA-Z_][a-zA-Z_\d]*(\/[a-zA-Z_][a-zA-Z_\d]*)*$/', $struct_name)) {
+            throw new DOPException('Invalid struct name:' . $struct_name);
         }
         $class_name = FFanStr::camelName(basename($struct_name));
         $dir_name = dirname($struct_name);
@@ -536,6 +535,6 @@ class XmlProtocol
     private function setLineNumber($line_number)
     {
         $position_info = 'File:' . $this->file_name . ' Line:' . $line_number;
-        $this->protocol_manager->setCurrentProtocolDocInfo($position_info);
+        DOPException::setAppendMsg($position_info);
     }
 }

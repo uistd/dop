@@ -5,13 +5,14 @@ namespace ffan\dop\pack\php;
 use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
 use ffan\dop\CoderBase;
+use ffan\dop\FileBuf;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
 use ffan\dop\Struct;
 use ffan\dop\StructItem;
 use ffan\php\utils\Str as FFanStr;
-use ffan\php\tpl\Tpl as FFanTpl;
+
 
 /**
  * Class Coder
@@ -132,14 +133,15 @@ class Coder extends CoderBase
     }
 
     /**
-     * 按类名生成代码
+     * 按Struct生成代码
      * @param Struct $struct
-     * @return CodeBuf|null
+     * @param FileBuf $file_buf
+     * @return void
      */
-    public function codeByClass($struct)
+    public function buildStructCode($struct, FileBuf $file_buf)
     {
         $build_opt = $this->build_opt;
-        $class_buf = new CodeBuf();
+        $class_buf = $file_buf->main_buf;
         $name_space = $struct->getNamespace();
         $class_buf->push('<?php');
         $main_class_name = $struct->getClassName();
@@ -147,25 +149,15 @@ class Coder extends CoderBase
         $class_buf->emptyLine();
         $ns = self::phpNameSpace($build_opt, $name_space);
         $class_buf->push('namespace ' . $ns . ';');
-        // 如果手动require
-        if ($build_opt->php_require_file) {
-            //所有依赖的对象
-            $import_class = $struct->getImportStruct();
-            foreach ($import_class as $class_name) {
-                $class_buf->push('require_once \'' . self::requirePath($class_name, $name_space) . '\';');
-            }
-        }
-
+        $use_buf = new CodeBuf();
+        $file_buf->addBuf(FileBuf::IMPORT_BUF, $use_buf);
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
-            if ($build_opt->php_require_file) {
-                $class_buf->push('require_once \'' . self::requirePath($parent_struct->getFullName(), $name_space) . '\';');
-            }
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
-                $class_buf->emptyLine();
+                $use_buf->emptyLine();
                 $use_name_space = self::phpNameSpace($build_opt, $parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
-                $class_buf->push('use ' . $use_name_space . ';');
+                $use_buf->push('use ' . $use_name_space . ';');
             }
         }
         $class_buf->emptyLine();
@@ -186,37 +178,40 @@ class Coder extends CoderBase
         //缩进
         $class_buf->indentIncrease();
         $item_list = $struct->getAllExtendItem();
+        $property_buf = new CodeBuf();
+        $file_buf->addBuf(FileBuf::PROPERTY_BUF, $property_buf);
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($item_list as $name => $item) {
-            $class_buf->push('/**');
+            $property_buf->push('/**');
             $item_type = self::varType($item);
-            $class_buf->lineTmp(' * @var ' . $item_type);
+            $property_buf->lineTmp(' * @var ' . $item_type);
             $tmp_node = $item->getNote();
             if (!empty($tmp_node)) {
-                $class_buf->lineTmp(' ' . $tmp_node);
+                $property_buf->lineTmp(' ' . $tmp_node);
             }
-            $class_buf->lineFin();
-            $class_buf->push(' */');
-            $class_buf->lineTmp('public $' . $name);
+            $property_buf->lineFin();
+            $property_buf->push(' */');
+            $property_buf->lineTmp('public $' . $name);
             if ($item->hasDefault()) {
-                $class_buf->lineTmp(' = ' . $item->getDefault());
+                $property_buf->lineTmp(' = ' . $item->getDefault());
             }
-            $class_buf->lineTmp(';')->lineFin()->emptyLine();
+            $property_buf->lineTmp(';')->lineFin()->emptyLine();
         }
-        $this->packMethodCode($class_buf, $struct);
+        $method_buf = new CodeBuf();
+        $file_buf->addBuf(FileBuf::METHOD_BUF, $method_buf);
+        $this->packMethodCode($file_buf, $struct);
         $class_buf->indentDecrease();
         $class_buf->push('}')->emptyLine();
-        $this->generator->makeFile($name_space . '/' . $main_class_name . '.php', $class_buf->dump());
-        return null;
+        $file_buf->setFileName($main_class_name .'.php');
     }
 
     /**
      * 生成文件结束
      * @return CodeBuf|null
-     */
+     
     public function codeFinish()
     {
         $build_opt = $this->build_opt;
@@ -242,5 +237,5 @@ class Coder extends CoderBase
         $file = $build_path . 'dop.php';
         file_put_contents($file, '<?php' . PHP_EOL . $file_content);
         return null;
-    }
+    }*/
 }

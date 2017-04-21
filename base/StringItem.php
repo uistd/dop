@@ -21,7 +21,7 @@ class StringItem extends Item
     public function setDefault($value)
     {
         if (!is_string($value)) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg('default value error'));
+            throw new DOPException('default value error');
         }
         $this->default = '"' . self::fixLine($value) . '"';
     }

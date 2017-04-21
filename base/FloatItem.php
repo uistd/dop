@@ -21,7 +21,7 @@ class FloatItem extends Item
     public function setDefault($value)
     {
         if (!preg_match('/^(-?\d+)(\.\d+)?$/', $value)) {
-            throw new DOPException($this->protocol_manager->fixErrorMsg($value . ' 不能作为 float 默认值'));
+            throw new DOPException($value . ' 不能作为 float 默认值');
         }
         $this->default = $value;
     }

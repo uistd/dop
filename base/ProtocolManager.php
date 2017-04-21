@@ -33,11 +33,6 @@ class ProtocolManager
     private $all_file_list;
 
     /**
-     * @var string 当前正在使用的文件和行号
-     */
-    private $protocol_doc_info = '';
-
-    /**
      * @var string 协议基础路径
      */
     private $base_path;
@@ -113,7 +108,7 @@ class ProtocolManager
         $class_name = $struct->getClassName();
         $full_name = $namespace . '/' . $class_name;
         if (isset($this->struct_list[$full_name])) {
-            throw new DOPException($this->fixErrorMsg('struct:' . $full_name . ' conflict'));
+            throw new DOPException('struct:' . $full_name . ' conflict');
         }
         $this->struct_list[$full_name] = $struct;
         $file = $struct->getFile();
@@ -138,7 +133,7 @@ class ProtocolManager
         //类名
         $struct_name = basename($class_name);
         if (empty($struct_name)) {
-            throw new DOPException($this->fixErrorMsg('Can not loadStruct ' . $class_name));
+            throw new DOPException('Can not loadStruct ' . $class_name);
         }
         $xml_file = dirname($class_name) . '.xml';
         if ('/' === $xml_file[0]) {
@@ -271,6 +266,7 @@ class ProtocolManager
                     $struct->setCacheFlag(true);
                 }
             }
+            DOPException::setAppendMsg('Build files');
             $generator = new DOPGenerator($this, $build_opt);
             $generator->generate();
             $this->buildLog('done!');
@@ -479,36 +475,6 @@ class ProtocolManager
     public function hasStruct($fullName)
     {
         return isset($this->struct_list[$fullName]);
-    }
-
-    /**
-     * 设置当前的文档信息
-     * @param string $doc_info
-     */
-    public function setCurrentProtocolDocInfo($doc_info)
-    {
-        if (!is_string($doc_info)) {
-            throw new \InvalidArgumentException('Invalid doc_info');
-        }
-        $this->protocol_doc_info = $doc_info;
-    }
-
-    /**
-     * 获取当前文档信息
-     */
-    public function getCurrentProtocolDocInfo()
-    {
-        return $this->protocol_doc_info;
-    }
-
-    /**
-     * 补全报错信息
-     * @param string $msg
-     * @return string
-     */
-    public function fixErrorMsg($msg)
-    {
-        return $msg . ' at ' . $this->protocol_doc_info;
     }
 
     /**

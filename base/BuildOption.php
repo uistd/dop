@@ -66,11 +66,6 @@ class BuildOption
     public $allow_cache = true;
 
     /**
-     * @var bool 是否手动require file
-     */
-    public $php_require_file = false;
-
-    /**
      * @var int 数据打包类型，默认是JSON
      */
     public $pack_type = self::PACK_TYPE_JSON;

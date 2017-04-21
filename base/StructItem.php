@@ -58,6 +58,6 @@ class StructItem extends Item
      */
     public function setDefault($value)
     {
-        throw new DOPException($this->protocol_manager->fixErrorMsg('`default` is disabled in struct type'));
+        throw new DOPException('`default` is disabled in struct type');
     }
 }

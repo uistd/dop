@@ -42,6 +42,6 @@ class ListItem extends Item
      */
     public function setDefault($value)
     {
-        throw new DOPException($this->protocol_manager->fixErrorMsg('`default` is disabled in list type'));
+        throw new DOPException('`default` is disabled in list type');
     }
 }

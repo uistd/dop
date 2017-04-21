@@ -21,6 +21,6 @@ class BinaryItem extends Item
      */
     public function setDefault($value)
     {
-        throw new DOPException($this->protocol_manager->fixErrorMsg('Binary 不支持二进制'));
+        throw new DOPException('Binary 不支持二进制');
     }
 }

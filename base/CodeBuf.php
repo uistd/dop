@@ -81,9 +81,13 @@ class CodeBuf
      * 如果是引用，该buffer的变更将继续生效
      * 如果不是引用，直接将该buffer当前的值导出
      * @return $this
+     * @throws DOPException
      */
     public function pushBuffer(CodeBuf $buffer, $is_refer = false)
     {
+        if ($buffer === $this){
+            throw new DOPException('Can not push self to self');
+        }
         //如果是引用，要记录当前的缩进、当前的代码位置，输出的时候根据这两个属性将buffer里的内容输出到正确的位置
         if ($is_refer) {
             //位置
@@ -226,8 +230,13 @@ class CodeBuf
             $tmp_indent = $arr[0];
             /** @var CodeBuf $tmp_buffer */
             $tmp_buffer = $arr[1];
-            //将该位置替换成应该有的字符串
-            $this->str_buffer[$index] = $tmp_buffer->dump($tmp_indent);
+            //如果是空的，不能占一行
+            if ($tmp_buffer->isEmpty()) {
+                unset($this->str_buffer[$index]);
+            } else {
+                //将该位置替换成应该有的字符串
+                $this->str_buffer[$index] = $tmp_buffer->dump($tmp_indent);
+            }
         }
     }
 
@@ -253,5 +262,14 @@ class CodeBuf
         }
         $this->unique_flag_arr[$flag] = true;
         return true;
+    }
+
+    /**
+     * 是否是空的buf
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return empty($this->str_buffer);
     }
 }

@@ -39,69 +39,61 @@ abstract class CoderBase
     }
 
     /**
-     * 生成文件开始
+     * 生成通用的文件
+     * @param FileBuf $file_buf
+     * @return void
      */
-    public function codeCommon()
+    public function buildCommonCode(FileBuf $file_buf)
     {
     }
 
     /**
-     * 按类名生成代码
+     * 按Struct生成代码
      * @param Struct $struct
+     * @param FileBuf $file_buf
+     * @return void
      */
-    public function codeByClass($struct)
+    public function buildStructCode($struct, FileBuf $file_buf)
     {
     }
 
     /**
-     * 按协议文件生成代码
-     * @param string $xml_file
+     * 按协议命名空间生成代码
+     * @param string $name_space
+     * @param FileBuf $file_buf
+     * @return void
      */
-    public function codeByXml($xml_file)
+    public function buildNsCode($name_space, FileBuf $file_buf)
     {
     }
 
     /**
      * 生成 数据打包， 解包方法
-     * @param CodeBuf $code_buf
+     * @param FileBuf $file_buf
      * @param Struct $struct
      */
-    protected function packMethodCode($code_buf, $struct)
+    protected function packMethodCode($file_buf, $struct)
     {
         $pack_type = $this->build_opt->pack_type;
         //json方式
         if ($pack_type & BuildOption::PACK_TYPE_JSON) {
             $json_pack = $this->getPackInstance('json');
             if (null !== $json_pack) {
-                $this->writePackCode($struct, $code_buf, $json_pack);
+                $this->writePackCode($struct, $file_buf, $json_pack);
             }
         }
         //msgpack
         if ($pack_type & BuildOption::PACK_TYPE_MSGPACK) {
             $msg_pack = $this->getPackInstance('msgPack');
             if (null !== $msg_pack) {
-                $this->writePackCode($struct, $code_buf, $msg_pack);
+                $this->writePackCode($struct, $file_buf, $msg_pack);
             }
         }
         //binary
         if ($pack_type & BuildOption::PACK_TYPE_BINARY) {
             $bin_pack = $this->getPackInstance('binary');
             if (null !== $bin_pack) {
-                $this->writePackCode($struct, $code_buf, $bin_pack);
-            }
-        }
-        $plugin_coder = $this->generator->getPluginCoder();
-        if (empty($plugin_coder)) {
-            return;
-        }
-        /**
-         * @var string $name
-         * @var PluginCoder $coder
-         */
-        foreach ($plugin_coder as $name => $coder) {
-            $buf = $coder->codeMethod($struct);
-            if (!$buf) {
-                $code_buf->pushBuffer($buf);
+                $this->writePackCode($struct, $file_buf, $bin_pack);
             }
         }
     }
@@ -109,13 +101,17 @@ abstract class CoderBase
     /**
      * 写入pack代码
      * @param Struct $struct
-     * @param CodeBuf $code_buf
+     * @param FileBuf $file_buf
      * @param PackerBase $packer
      * @param array $require_arr 用于防止循环依赖
      * @throws DOPException
      */
-    private function writePackCode($struct, CodeBuf $code_buf, PackerBase $packer, array &$require_arr = [])
+    private function writePackCode($struct, FileBuf $file_buf, PackerBase $packer, array &$require_arr = [])
     {
+        $code_buf = $file_buf->getBuf(FileBuf::METHOD_BUF);
+        if (null === $code_buf) {
+            return;
+        }
         //将依赖的packer写入
         $require = $packer->getRequirePacker();
         if (is_array($require)) {
@@ -126,7 +122,7 @@ abstract class CoderBase
                 $require_arr[$name] = true;
                 $req_pack = $this->getPackInstance($name);
                 if ($require_arr) {
-                    $this->writePackCode($struct, $code_buf, $req_pack, $require_arr);
+                    $this->writePackCode($struct, $file_buf, $req_pack, $require_arr);
                 }
             }
         }
