@@ -3,7 +3,7 @@
 namespace ffan\dop\build;
 
 use ffan\dop\Builder;
-use ffan\dop\Plugin;
+use ffan\dop\protocol\Plugin;
 use ffan\dop\protocol\Struct;
 
 /**
@@ -15,7 +15,7 @@ abstract class PluginCoder
     /**
      * @var Builder
      */
-    protected $generator;
+    protected $builder;
 
     /**
      * @var BuildOption
@@ -29,13 +29,13 @@ abstract class PluginCoder
 
     /**
      * GenerateInterface constructor.
-     * @param Builder $generator
+     * @param Builder $builder
      * @param Plugin $plugin
      */
-    public function __construct(Builder $generator, Plugin $plugin)
+    public function __construct(Builder $builder, Plugin $plugin)
     {
-        $this->generator = $generator;
-        $this->build_opt = $generator->getBuildOption();
+        $this->builder = $builder;
+        $this->build_opt = $builder->getBuildOption();
         $this->plugin = $plugin;
     }
 

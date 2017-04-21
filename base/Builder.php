@@ -67,7 +67,7 @@ class Builder
     /**
      * 生成文件
      */
-    public function generate()
+    public function build()
     {
         $coder = $this->getCoder();
         if (null === $coder) {
@@ -110,7 +110,7 @@ class Builder
     private function buildStructFile($coder)
     {
         $use_cache = $this->build_opt->allow_cache;
-        $plugin_generator = $this->getPluginCoder();
+        $plugin_builder = $this->getPluginCoder();
         /** @var Struct $struct */
         foreach ($this->manager->getAllStruct() as $struct) {
             if ($use_cache && $struct->isCached()) {
@@ -126,7 +126,7 @@ class Builder
              * @var string $name
              * @var PluginCoder $plugin_coder
              */
-            foreach ($plugin_generator as $name => $plugin_coder) {
+            foreach ($plugin_builder as $name => $plugin_coder) {
                 $plugin_append_msg = $append_msg . ' plugin ' . $plugin_coder->getName();
                 Exception::setAppendMsg($plugin_append_msg);
                 $plugin_coder->buildStructCode($struct, $file_buf);
@@ -143,7 +143,7 @@ class Builder
     {
         $use_cache = $this->build_opt->allow_cache;
         $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
-        $plugin_generator = $this->getPluginCoder();
+        $plugin_builder = $this->getPluginCoder();
         foreach ($file_list as $file) {
             $append_msg = 'Build name space ' . $file;
             Exception::setAppendMsg($append_msg);
@@ -154,7 +154,7 @@ class Builder
              * @var string $name
              * @var PluginCoder $plugin_coder
              */
-            foreach ($plugin_generator as $name => $plugin_coder) {
+            foreach ($plugin_builder as $name => $plugin_coder) {
                 $plugin_append_msg = $append_msg . ' plugin ' . $plugin_coder->getName();
                 Exception::setAppendMsg($plugin_append_msg);
                 $plugin_coder->buildNsCode($ns, $file_buf);

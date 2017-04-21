@@ -3,11 +3,11 @@
 namespace ffan\dop\plugin\mock;
 
 use ffan\dop\Exception;
-use ffan\dop\Item;
-use ffan\dop\ItemType;
-use ffan\dop\ListItem;
-use ffan\dop\MapItem;
-use ffan\dop\Plugin;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\ItemType;
+use ffan\dop\protocol\ListItem;
+use ffan\dop\protocol\MapItem;
+use ffan\dop\protocol\Plugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**

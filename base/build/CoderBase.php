@@ -15,7 +15,7 @@ abstract class CoderBase
     /**
      * @var Builder
      */
-    protected $generator;
+    protected $buil;
 
     /**
      * @var BuildOption
@@ -32,13 +32,13 @@ abstract class CoderBase
 
     /**
      * CoderBase constructor.
-     * @param Builder $generator
+     * @param Builder $builder
      * @param string $name
      */
-    public function __construct(Builder $generator, $name)
+    public function __construct(Builder $builder, $name)
     {
-        $this->generator = $generator;
-        $this->build_opt = $generator->getBuildOption();
+        $this->buil = $builder;
+        $this->build_opt = $builder->getBuildOption();
         $this->code_name = $name;
     }
 

@@ -271,8 +271,8 @@ class Manager
                 }
             }
             Exception::setAppendMsg('Build files');
-            $generator = new Builder($this, $build_opt);
-            $generator->generate();
+            $builder = new Builder($this, $build_opt);
+            $builder->build();
             $this->buildLog('done!');
         } catch (Exception $exception) {
             $msg = $exception->getMessage();
