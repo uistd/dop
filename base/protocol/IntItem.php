@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class IntItem int类型元素
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class IntItem extends Item
 {
@@ -76,12 +78,12 @@ class IntItem extends Item
     /**
      * 设置默认值
      * @param string $value
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
         if (!is_numeric($value)) {
-            throw new DOPException('默认值只能是int类型');
+            throw new Exception('默认值只能是int类型');
         }
         $this->default = $value;
     }

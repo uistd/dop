@@ -11,7 +11,7 @@ $build_config = array(
         'mock' => null
     )
 );
-$manager = new ProtocolManager(__DIR__ . '/protocol', $build_config);
+$manager = new Manager(__DIR__ . '/protocol', $build_config);
 $build_opt = new BuildOption();
 $build_opt->allow_cache = false;
 $build_opt->build_path = __DIR__ . '/runtime/build';

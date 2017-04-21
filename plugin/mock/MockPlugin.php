@@ -2,7 +2,7 @@
 
 namespace ffan\dop\plugin\mock;
 
-use ffan\dop\DOPException;
+use ffan\dop\Exception;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
@@ -30,7 +30,7 @@ class MockPlugin extends Plugin
      * 初始化
      * @param \DOMElement $node
      * @param Item $item
-     * @throws DOPException
+     * @throws Exception
      */
     public function init(\DOMElement $node, Item $item)
     {
@@ -58,7 +58,7 @@ class MockPlugin extends Plugin
         if (!$find_flag && $node->hasAttribute($attr_enum)) {
             $enum_set = FFanStr::split($this->read($node, 'enum'), '|');
             if (empty($enum_set)) {
-                throw new DOPException($attr_enum . ' 属性填写出错');
+                throw new Exception($attr_enum . ' 属性填写出错');
             }
             foreach ($enum_set as $i => $each_value) {
                 $enum_set[$i] = self::fixValue($item_type, $each_value);
@@ -72,7 +72,7 @@ class MockPlugin extends Plugin
         if (!$find_flag && $node->hasAttribute($mock_type)) {
             $mock_rule->build_in_type = FFanStr::camelName($this->read($node, 'type'), false);
             if (!self::isBuildInType($mock_rule->build_in_type)) {
-                throw new DOPException('Unknown build in mock type:' . $mock_rule->build_in_type);
+                throw new Exception('Unknown build in mock type:' . $mock_rule->build_in_type);
             }
             $find_flag = true;
         }

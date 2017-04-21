@@ -205,37 +205,37 @@ class Coder extends CoderBase
         $this->packMethodCode($file_buf, $struct);
         $class_buf->indentDecrease();
         $class_buf->push('}')->emptyLine();
-        $file_buf->setFileName($main_class_name .'.php');
+        $file_buf->setFileName($main_class_name . '.php');
     }
 
     /**
      * 生成文件结束
      * @return CodeBuf|null
-     
+
     public function codeFinish()
-    {
-        $build_opt = $this->build_opt;
-        $generator = $this->generator;
-        //如果是手动require文件，那就不生成dop.php文件
-        if ($build_opt->php_require_file) {
-            return null;
-        }
-        $manager = $generator->getManager();
-        $all_files = $manager->getAllFileList();
-        $prefix = $build_opt->namespace_prefix;
-        $autoload_set = array();
-        foreach ($all_files as $file => $m) {
-            //除去.xml，其它 就是路径信息
-            $path = substr($file, 0, -4);
-            $ns = $prefix . '\\' . str_replace('/', '\\', $path);
-            $autoload_set[$ns] = $path;
-        }
-        $file_content = FFanTpl::get('php/dop.tpl', array(
-            'namespace_set' => $autoload_set
-        ));
-        $build_path = $generator->getBuildBasePath();
-        $file = $build_path . 'dop.php';
-        file_put_contents($file, '<?php' . PHP_EOL . $file_content);
-        return null;
-    }*/
+     * {
+     * $build_opt = $this->build_opt;
+     * $generator = $this->generator;
+     * //如果是手动require文件，那就不生成dop.php文件
+     * if ($build_opt->php_require_file) {
+     * return null;
+     * }
+     * $manager = $generator->getManager();
+     * $all_files = $manager->getAllFileList();
+     * $prefix = $build_opt->namespace_prefix;
+     * $autoload_set = array();
+     * foreach ($all_files as $file => $m) {
+     * //除去.xml，其它 就是路径信息
+     * $path = substr($file, 0, -4);
+     * $ns = $prefix . '\\' . str_replace('/', '\\', $path);
+     * $autoload_set[$ns] = $path;
+     * }
+     * $file_content = FFanTpl::get('php/dop.tpl', array(
+     * 'namespace_set' => $autoload_set
+     * ));
+     * $build_path = $generator->getBuildBasePath();
+     * $file = $build_path . 'dop.php';
+     * file_put_contents($file, '<?php' . PHP_EOL . $file_content);
+     * return null;
+     * }*/
 }

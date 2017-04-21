@@ -1,12 +1,13 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
 
+use ffan\dop\Manager;
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class BuildCache 编译缓存
- * @package ffan\dop
+ * @package ffan\dop\build
  */
 class BuildCache
 {
@@ -21,7 +22,7 @@ class BuildCache
     const DATA_KEY = 'data';
 
     /**
-     * @var ProtocolManager
+     * @var Manager
      */
     private $manager;
 
@@ -47,11 +48,11 @@ class BuildCache
 
     /**
      * BuildCache constructor.
-     * @param ProtocolManager $manager
+     * @param Manager $manager
      * @param string $sign_key 数据检验码
      * @param string $build_path
      */
-    public function __construct(ProtocolManager $manager, $sign_key, $build_path)
+    public function __construct(Manager $manager, $sign_key, $build_path)
     {
         $this->manager = $manager;
         //直接使用配置作key，配置发生变化的时候，缓存失效

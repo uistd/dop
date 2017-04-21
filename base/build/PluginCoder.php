@@ -1,15 +1,19 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
+
+use ffan\dop\Builder;
+use ffan\dop\Plugin;
+use ffan\dop\protocol\Struct;
 
 /**
  * Class PluginCoder
- * @package ffan\dop\plugin
+ * @package ffan\dop\build
  */
 abstract class PluginCoder
 {
     /**
-     * @var DOPGenerator
+     * @var Builder
      */
     protected $generator;
 
@@ -25,10 +29,10 @@ abstract class PluginCoder
 
     /**
      * GenerateInterface constructor.
-     * @param DOPGenerator $generator
+     * @param Builder $generator
      * @param Plugin $plugin
      */
-    public function __construct(DOPGenerator $generator, Plugin $plugin)
+    public function __construct(Builder $generator, Plugin $plugin)
     {
         $this->generator = $generator;
         $this->build_opt = $generator->getBuildOption();
@@ -51,7 +55,7 @@ abstract class PluginCoder
      */
     public function buildStructCode($struct, FileBuf $file_buf)
     {
-        
+
     }
 
     /**

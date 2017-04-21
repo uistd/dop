@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class Struct
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class Struct
 {
@@ -174,13 +176,13 @@ class Struct
     /**
      * 设置继承
      * @param Struct $parent_struct
-     * @throws DOPException
+     * @throws Exception
      */
     public function extend(Struct $parent_struct)
     {
         //如果已经继承了
         if (null !== $this->parent) {
-            throw new DOPException('Struct:' . $this->namespace . $this->className . ' 不支持多重继承');
+            throw new Exception('Struct:' . $this->namespace . $this->className . ' 不支持多重继承');
         }
         $this->parent = $parent_struct;
     }

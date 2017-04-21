@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class ItemBinary
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class BinaryItem extends Item
 {
@@ -17,10 +19,10 @@ class BinaryItem extends Item
      * 设置默认值
      * @param string $value
      * @return void
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
-        throw new DOPException('Binary 不支持二进制');
+        throw new Exception('Binary 不支持二进制');
     }
 }

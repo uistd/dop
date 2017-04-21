@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class ItemType 变量类型
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class ItemType
 {
@@ -130,12 +132,12 @@ class ItemType
      * 获取类型
      * @param int $type
      * @return string
-     * @throws DOPException
+     * @throws Exception
      */
     public static function getTypeName($type)
     {
         if (!isset(self::$type_str_set[$type])) {
-            throw new DOPException('Type:' . $type . ' is not support!');
+            throw new Exception('Type:' . $type . ' is not support!');
         }
         return self::$type_str_set[$type];
     }

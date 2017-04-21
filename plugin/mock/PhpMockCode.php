@@ -4,8 +4,8 @@ namespace ffan\dop\plugin\mock;
 
 use ffan\dop\BuildOption;
 use ffan\dop\CodeBuf;
-use ffan\dop\DOPException;
-use ffan\dop\DOPGenerator;
+use ffan\dop\Exception;
+use ffan\dop\Builder;
 use ffan\dop\Item;
 use ffan\dop\ItemType;
 use ffan\dop\ListItem;
@@ -44,9 +44,9 @@ class PhpMockCode extends PluginCoder
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $sub_mock_rule = $sub_item->getPluginData($plugin_name);
-                $for_var_name = DOPGenerator::tmpVarName($depth, 'i');
-                $len_var_name = DOPGenerator::tmpVarName($depth, 'len');
-                $result_var_name = DOPGenerator::tmpVarName($depth, 'mock_arr');
+                $for_var_name = Builder::tmpVarName($depth, 'i');
+                $len_var_name = Builder::tmpVarName($depth, 'len');
+                $result_var_name = Builder::tmpVarName($depth, 'mock_arr');
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, $item_type);
                 $mock_buf->push('$' . $result_var_name . ' = array();');
                 $mock_buf->push('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
@@ -66,11 +66,11 @@ class PhpMockCode extends PluginCoder
                 $value_item = $item->getValueItem();
                 $key_mock_rule = $key_item->getPluginData($plugin_name);
                 $value_mock_rule = $value_item->getPluginData($plugin_name);
-                $for_var_name = DOPGenerator::tmpVarName($depth, 'i');
-                $len_var_name = DOPGenerator::tmpVarName($depth, 'len');
-                $key_var_name = DOPGenerator::tmpVarName($depth, 'tmp_key');
-                $value_var_name = DOPGenerator::tmpVarName($depth, 'tmp_value');
-                $result_var_name = DOPGenerator::tmpVarName($depth, 'mock_arr');
+                $for_var_name = Builder::tmpVarName($depth, 'i');
+                $len_var_name = Builder::tmpVarName($depth, 'len');
+                $key_var_name = Builder::tmpVarName($depth, 'tmp_key');
+                $value_var_name = Builder::tmpVarName($depth, 'tmp_value');
+                $result_var_name = Builder::tmpVarName($depth, 'mock_arr');
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, $item_type);
                 $mock_buf->push('$' . $result_var_name . ' = array();');
                 $mock_buf->push('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
@@ -90,7 +90,7 @@ class PhpMockCode extends PluginCoder
      * @param string $mock_item
      * @param MockRule $mock_rule
      * @param int $item_type
-     * @throws DOPException
+     * @throws Exception
      */
     private static function mockValue($mock_buf, $mock_item, $mock_rule, $item_type)
     {
@@ -127,7 +127,7 @@ class PhpMockCode extends PluginCoder
                 $mock_buf->push($mock_item . ' = self::' . $build_func . '();');
                 break;
             default:
-                throw new DOPException('Unknown mock type . ', $mock_rule->mock_type);
+                throw new Exception('Unknown mock type . ', $mock_rule->mock_type);
         }
     }
 
@@ -166,5 +166,5 @@ class PhpMockCode extends PluginCoder
         $mock_buf->indentDecrease()->push('}');
         return $mock_buf->dump();
     }
-    
+
 }

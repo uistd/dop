@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class ListItem
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class ListItem extends Item
 {
@@ -38,10 +40,10 @@ class ListItem extends Item
     /**
      * 设置默认值
      * @param string $value
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
-        throw new DOPException('`default` is disabled in list type');
+        throw new Exception('`default` is disabled in list type');
     }
 }

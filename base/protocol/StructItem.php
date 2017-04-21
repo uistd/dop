@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class ItemStruct 结构体
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class StructItem extends Item
 {
@@ -54,10 +56,10 @@ class StructItem extends Item
     /**
      * 设置默认值
      * @param string $value
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
-        throw new DOPException('`default` is disabled in struct type');
+        throw new Exception('`default` is disabled in struct type');
     }
 }

@@ -1,10 +1,13 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
+use ffan\dop\Manager;
 
 /**
  * Class Item 协议的每一项
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 abstract class Item
 {
@@ -24,7 +27,7 @@ abstract class Item
     protected $note = '';
 
     /**
-     * @var ProtocolManager
+     * @var Manager
      */
     protected $protocol_manager;
 
@@ -41,9 +44,9 @@ abstract class Item
     /**
      * Item constructor.
      * @param string $name 名称
-     * @param ProtocolManager $manger
+     * @param Manager $manger
      */
-    public function __construct($name, ProtocolManager $manger)
+    public function __construct($name, Manager $manger)
     {
         $this->name = $name;
         $this->protocol_manager = $manger;
@@ -60,7 +63,7 @@ abstract class Item
     /**
      * 设置注释
      * @param string $note
-     * @throws DOPException
+     * @throws Exception
      */
     public function setNote($note)
     {
@@ -81,12 +84,12 @@ abstract class Item
      * 获取属性的魔术方法
      * @param string $name
      * @return mixed
-     * @throws DOPException
+     * @throws Exception
      */
     public function __get($name)
     {
         if (!property_exists($this, $name)) {
-            throw new DOPException('No property ' . $name);
+            throw new Exception('No property ' . $name);
         }
         return $this->$name;
     }

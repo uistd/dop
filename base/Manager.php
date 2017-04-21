@@ -2,15 +2,19 @@
 
 namespace ffan\dop;
 
+use ffan\dop\build\BuildCache;
+use ffan\dop\build\BuildOption;
 use ffan\dop\plugin\mock\MockPlugin;
 use ffan\dop\plugin\validator\ValidatorPlugin;
+use ffan\dop\protocol\Struct;
+use ffan\dop\protocol\XmlProtocol;
 use ffan\php\utils\Str as FFanStr;
 
 /**
- * Class ProtocolManager
+ * Class Manager
  * @package ffan\dop
  */
-class ProtocolManager
+class Manager
 {
     /**
      * 缓存文件名
@@ -82,15 +86,15 @@ class ProtocolManager
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
      * @param array $config 其它配置项
-     * @throws DOPException
+     * @throws Exception
      */
     public function __construct($base_path, array $config = array())
     {
         if (!is_dir($base_path)) {
-            throw new DOPException('Protocol path:' . $base_path . ' not exist!');
+            throw new Exception('Protocol path:' . $base_path . ' not exist!');
         }
         if (!is_readable($base_path)) {
-            throw new DOPException('Protocol path:' . $base_path . ' is not readable');
+            throw new Exception('Protocol path:' . $base_path . ' is not readable');
         }
         $this->base_path = $base_path;
         $this->config = $config;
@@ -100,7 +104,7 @@ class ProtocolManager
     /**
      * 添加一个Struct对象
      * @param Struct $struct
-     * @throws DOPException
+     * @throws Exception
      */
     public function addStruct(Struct $struct)
     {
@@ -108,7 +112,7 @@ class ProtocolManager
         $class_name = $struct->getClassName();
         $full_name = $namespace . '/' . $class_name;
         if (isset($this->struct_list[$full_name])) {
-            throw new DOPException('struct:' . $full_name . ' conflict');
+            throw new Exception('struct:' . $full_name . ' conflict');
         }
         $this->struct_list[$full_name] = $struct;
         $file = $struct->getFile();
@@ -123,7 +127,7 @@ class ProtocolManager
      * @param string $class_name 依赖的class
      * @param string $current_xml 当前正在解析的xml文件
      * @return Struct|null
-     * @throws DOPException
+     * @throws Exception
      */
     public function loadRequireStruct($class_name, $current_xml)
     {
@@ -133,7 +137,7 @@ class ProtocolManager
         //类名
         $struct_name = basename($class_name);
         if (empty($struct_name)) {
-            throw new DOPException('Can not loadStruct ' . $class_name);
+            throw new Exception('Can not loadStruct ' . $class_name);
         }
         $xml_file = dirname($class_name) . '.xml';
         if ('/' === $xml_file[0]) {
@@ -165,7 +169,7 @@ class ProtocolManager
      * 加载指定的xml
      * @param string $xml_file 文件相对于base_path的路径
      * @return XmlProtocol
-     * @throws DOPException
+     * @throws Exception
      */
     private function loadXmlProtocol($xml_file)
     {
@@ -266,11 +270,11 @@ class ProtocolManager
                     $struct->setCacheFlag(true);
                 }
             }
-            DOPException::setAppendMsg('Build files');
-            $generator = new DOPGenerator($this, $build_opt);
+            Exception::setAppendMsg('Build files');
+            $generator = new Builder($this, $build_opt);
             $generator->generate();
             $this->buildLog('done!');
-        } catch (DOPException $exception) {
+        } catch (Exception $exception) {
             $msg = $exception->getMessage();
             $this->buildLogError($msg);
             return false;
@@ -502,7 +506,7 @@ class ProtocolManager
 
     /**
      * 初始化插件
-     * @throws DOPException
+     * @throws Exception
      */
     private function initPlugin()
     {
@@ -519,7 +523,7 @@ class ProtocolManager
                     $plugin = new MockPlugin($this);
                     break;
                 default:
-                    throw new DOPException('Plugin ' . $name . ' not recognized!');
+                    throw new Exception('Plugin ' . $name . ' not recognized!');
             }
             $this->plugin_list[$name] = $plugin;
         }

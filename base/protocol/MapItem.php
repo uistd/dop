@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class MapItem
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class MapItem extends Item
 {
@@ -26,14 +28,14 @@ class MapItem extends Item
     /**
      * 设置键类型
      * @param Item $key_item
-     * @throws DOPException
+     * @throws Exception
      */
     public function setKeyItem(Item $key_item)
     {
         $type = $key_item->getType();
         //目前只支持int 和 string类型的key
         if ($type !== ItemType::INT && $type !== ItemType::STRING) {
-            throw new DOPException('Map的key只能是int or string类型');
+            throw new Exception('Map的key只能是int or string类型');
         }
         $this->key_item = $key_item;
     }
@@ -68,10 +70,10 @@ class MapItem extends Item
     /**
      * 设置默认值
      * @param string $value
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
-        throw new DOPException('`default` is disabled in map type');
+        throw new Exception('`default` is disabled in map type');
     }
 }

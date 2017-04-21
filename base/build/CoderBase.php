@@ -1,15 +1,19 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
+
+use ffan\dop\Exception;
+use ffan\dop\Builder;
+use ffan\dop\protocol\Struct;
 
 /**
  * Class CoderBase 各语言基类
- * @package ffan\dop
+ * @package ffan\dop\build
  */
 abstract class CoderBase
 {
     /**
-     * @var DOPGenerator
+     * @var Builder
      */
     protected $generator;
 
@@ -28,10 +32,10 @@ abstract class CoderBase
 
     /**
      * CoderBase constructor.
-     * @param DOPGenerator $generator
+     * @param Builder $generator
      * @param string $name
      */
-    public function __construct(DOPGenerator $generator, $name)
+    public function __construct(Builder $generator, $name)
     {
         $this->generator = $generator;
         $this->build_opt = $generator->getBuildOption();
@@ -104,7 +108,7 @@ abstract class CoderBase
      * @param FileBuf $file_buf
      * @param PackerBase $packer
      * @param array $require_arr 用于防止循环依赖
-     * @throws DOPException
+     * @throws Exception
      */
     private function writePackCode($struct, FileBuf $file_buf, PackerBase $packer, array &$require_arr = [])
     {
@@ -117,7 +121,7 @@ abstract class CoderBase
         if (is_array($require)) {
             foreach ($require as $name) {
                 if (isset($require_arr[$name])) {
-                    throw new DOPException('Cycle require detect. '. $name);
+                    throw new Exception('Cycle require detect. ' . $name);
                 }
                 $require_arr[$name] = true;
                 $req_pack = $this->getPackInstance($name);
@@ -147,7 +151,7 @@ abstract class CoderBase
      * 获取
      * @param string $pack_type
      * @return PackerBase
-     * @throws DOPException
+     * @throws Exception
      */
     public function getPackInstance($pack_type)
     {
@@ -158,18 +162,18 @@ abstract class CoderBase
         $file = dirname(__DIR__) . '/pack/' . $this->code_name . DIRECTORY_SEPARATOR . $class_name . '.php';
         //文件不存在
         if (!is_file($file)) {
-            throw new DOPException('Can not find file:' . $file);
+            throw new Exception('Can not find file:' . $file);
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
         $ns = 'ffan\dop\pack\\' . $this->code_name . '\\';
         $full_class_name = $ns . $class_name;
         if (!class_exists($full_class_name)) {
-            throw new DOPException('Can not load class ' . $full_class_name);
+            throw new Exception('Can not load class ' . $full_class_name);
         }
         $parents = class_parents($full_class_name);
         if (!isset($parents['ffan\dop\PackerBase'])) {
-            throw new DOPException('Class ' . $full_class_name . ' must extend of PackerBase');
+            throw new Exception('Class ' . $full_class_name . ' must extend of PackerBase');
         }
         $this->pack_instance_arr[$pack_type] = new $full_class_name();
         return $this->pack_instance_arr[$pack_type];

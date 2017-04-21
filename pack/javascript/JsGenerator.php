@@ -2,15 +2,15 @@
 
 namespace ffan\dop\pack\js;
 
-use ffan\dop\DOPException;
-use ffan\dop\DOPGenerator;
+use ffan\dop\Exception;
+use ffan\dop\Builder;
 use ffan\dop\Struct;
 
 /**
  * Class JsGenerator
  * @package ffan\dop
  */
-class JsGenerator extends DOPGenerator
+class JsGenerator extends Builder
 {
     /**
      * 生成文件名
@@ -28,7 +28,7 @@ class JsGenerator extends DOPGenerator
      * 生成文件
      * @param string $namespace 命令空间
      * @param array [Struct] $class_list
-     * @throws DOPException
+     * @throws Exception
      */
     protected function generateFile($namespace, $class_list)
     {

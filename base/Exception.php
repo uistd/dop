@@ -1,13 +1,14 @@
 <?php
 
 namespace ffan\dop;
+
 use Throwable;
 
 /**
- * Class DOPException
+ * Class Exception
  * @package ffan\dop
  */
-class DOPException extends \Exception
+class Exception extends \Exception
 {
     /**
      * @var string 附加消息
@@ -32,7 +33,7 @@ class DOPException extends \Exception
     public function __construct($message = "", $code = 0, Throwable $previous = null)
     {
         if (!empty(self::$append_msg)) {
-            $message .= self::$append_msg .', '. $message;
+            $message .= self::$append_msg . ', ' . $message;
         }
         parent::__construct($message, $code, $previous);
     }

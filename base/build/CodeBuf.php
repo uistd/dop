@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
+
+use ffan\dop\Exception;
 
 /**
  * Class CodeBuf
- * @package ffan\dop
+ * @package ffan\dop\build
  */
 class CodeBuf
 {
@@ -81,12 +83,12 @@ class CodeBuf
      * 如果是引用，该buffer的变更将继续生效
      * 如果不是引用，直接将该buffer当前的值导出
      * @return $this
-     * @throws DOPException
+     * @throws Exception
      */
     public function pushBuffer(CodeBuf $buffer, $is_refer = false)
     {
-        if ($buffer === $this){
-            throw new DOPException('Can not push self to self');
+        if ($buffer === $this) {
+            throw new Exception('Can not push self to self');
         }
         //如果是引用，要记录当前的缩进、当前的代码位置，输出的时候根据这两个属性将buffer里的内容输出到正确的位置
         if ($is_refer) {

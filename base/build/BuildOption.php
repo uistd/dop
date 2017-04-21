@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
 
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class BuildOption 生成文件参数
- * @package ffan\dop
+ * @package ffan\dop\build
  */
 class BuildOption
 {

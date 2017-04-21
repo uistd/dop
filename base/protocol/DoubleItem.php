@@ -1,27 +1,29 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
- * Class ItemFloat
- * @package ffan\dop
+ * Class DoubleItem
+ * @package ffan\dop\protocol
  */
-class FloatItem extends Item
+class DoubleItem extends Item
 {
     /**
      * @var int 类型
      */
-    protected $type = ItemType::FLOAT;
+    protected $type = ItemType::DOUBLE;
 
     /**
      * 设置默认值
      * @param string $value
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
         if (!preg_match('/^(-?\d+)(\.\d+)?$/', $value)) {
-            throw new DOPException($value . ' 不能作为 float 默认值');
+            throw new Exception($value . ' 不能作为 double 默认值');
         }
         $this->default = $value;
     }

@@ -1,10 +1,14 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\build\PluginCoder;
+use ffan\dop\Exception;
+use ffan\dop\Manager;
 
 /**
  * Class Plugin
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 abstract class Plugin
 {
@@ -14,7 +18,7 @@ abstract class Plugin
     protected $attribute_name_prefix;
 
     /**
-     * @var ProtocolManager;
+     * @var Manager;
      */
     protected $manager;
 
@@ -40,10 +44,10 @@ abstract class Plugin
 
     /**
      * PluginInterface constructor.
-     * @param ProtocolManager $manager
+     * @param Manager $manager
      * @param array $config
      */
-    public function __construct(ProtocolManager $manager, $config = null)
+    public function __construct(Manager $manager, $config = null)
     {
         $this->manager = $manager;
         $this->config = $config;
@@ -59,12 +63,12 @@ abstract class Plugin
     /**
      * 获取插件名称
      * @return string
-     * @throws DOPException
+     * @throws Exception
      */
     public function getName()
     {
         if (null === $this->name) {
-            throw new DOPException('Property name required!');
+            throw new Exception('Property name required!');
         }
         return $this->name;
     }
@@ -209,7 +213,7 @@ abstract class Plugin
 
     /**
      * 获取protocolManager对象
-     * @return ProtocolManager
+     * @return Manager
      */
     public function getManager()
     {

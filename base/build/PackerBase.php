@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
+
+use ffan\dop\protocol\Struct;
 
 /**
  * Class PackerBase 序列化和反序列化代码生成接口
- * @package ffan\dop
+ * @package ffan\dop\build
  */
 abstract class PackerBase
 {

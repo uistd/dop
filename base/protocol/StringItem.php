@@ -1,10 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
+
+use ffan\dop\Exception;
 
 /**
  * Class StringItem
- * @package ffan\dop
+ * @package ffan\dop\protocol
  */
 class StringItem extends Item
 {
@@ -16,12 +18,12 @@ class StringItem extends Item
     /**
      * 设置默认值
      * @param string $value
-     * @throws DOPException
+     * @throws Exception
      */
     public function setDefault($value)
     {
         if (!is_string($value)) {
-            throw new DOPException('default value error');
+            throw new Exception('default value error');
         }
         $this->default = '"' . self::fixLine($value) . '"';
     }

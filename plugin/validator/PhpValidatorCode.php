@@ -1,4 +1,5 @@
 <?php
+
 namespace ffan\dop\plugin\validator;
 
 use ffan\dop\CodeBuf;
@@ -19,10 +20,10 @@ class PhpValidatorCode extends PluginCoder
      */
     public function buildStructCode($struct, FileBuf $file_buf)
     {
-       $code_buf = new CodeBuf();
-       $code_buf->emptyLine();
-       $code_buf->push('/**');
-       $code_buf->push(' * 验证数据是否正确');
-       $code_buf->push(' */');
+        $code_buf = new CodeBuf();
+        $code_buf->emptyLine();
+        $code_buf->push('/**');
+        $code_buf->push(' * 验证数据是否正确');
+        $code_buf->push(' */');
     }
 }

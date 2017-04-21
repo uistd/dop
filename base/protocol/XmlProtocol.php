@@ -1,7 +1,9 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\protocol;
 
+use ffan\dop\Exception;
+use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 
@@ -62,7 +64,7 @@ class XmlProtocol
     private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
 
     /**
-     * @var ProtocolManager
+     * @var Manager
      */
     private $protocol_manager;
 
@@ -83,10 +85,10 @@ class XmlProtocol
 
     /**
      * ProtocolXml constructor.
-     * @param ProtocolManager $manager
+     * @param Manager $manager
      * @param string $file_name 协议文件
      */
-    public function __construct(ProtocolManager $manager, $file_name)
+    public function __construct(Manager $manager, $file_name)
     {
         $base_path = $manager->getBasePath();
         $this->xml_file_name = $file_name;
@@ -95,7 +97,7 @@ class XmlProtocol
             throw new \InvalidArgumentException('Invalid file:' . $full_name);
         }
         $this->file_name = $full_name;
-        DOPException::setAppendMsg('Parse xml '. $full_name);
+        Exception::setAppendMsg('Parse xml ' . $full_name);
         $this->xml_handle = new \DOMDocument();
         $this->xml_handle->load($full_name);
         $dir_name = dirname($file_name);
@@ -156,7 +158,7 @@ class XmlProtocol
             $struct = $node_list->item($i);
             $this->setLineNumber($struct->getLineNo());
             if (!$struct->hasAttribute('name')) {
-                throw new DOPException('Struct must have name attribute');
+                throw new Exception('Struct must have name attribute');
             }
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
@@ -185,7 +187,7 @@ class XmlProtocol
             $action = $action_list->item($i);
             $this->setLineNumber($action->getLineNo());
             if (!$action->hasAttribute('name')) {
-                throw new DOPException('Action must have name attribute');
+                throw new Exception('Action must have name attribute');
             }
             $name = FFanStr::camelName(trim($action->getAttribute('name')));
             $this->parseAction($name, $action);
@@ -196,7 +198,7 @@ class XmlProtocol
      * 解析request
      * @param $action_name
      * @param \DOMElement $action
-     * @throws DOPException
+     * @throws Exception
      */
     private function parseAction($action_name, \DOMElement $action)
     {
@@ -213,23 +215,23 @@ class XmlProtocol
             $node_name = strtolower($node->nodeName);
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
-                    throw new DOPException('Only one request node allowed');
+                    throw new Exception('Only one request node allowed');
                 }
                 $type = Struct::TYPE_REQUEST;
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
-                    throw new DOPException('Only one response node allowed');
+                    throw new Exception('Only one response node allowed');
                 }
                 $type = Struct::TYPE_RESPONSE;
             } else {
-                throw new DOPException('Unknown node:' . $node_name);
+                throw new Exception('Unknown node:' . $node_name);
             }
             $node_name = ucfirst($node_name);
             if ($action->hasAttribute('method')) {
                 $method = trim($action->getAttribute('method'));
                 if (!in_array(strtoupper($method), self::$http_method_list)) {
                     $err_msg = $method . ' is not support http method type';
-                    throw new DOPException($err_msg);
+                    throw new Exception($err_msg);
                 }
                 $node_name = ucfirst($method) . $node_name;
             }
@@ -248,7 +250,7 @@ class XmlProtocol
      * @param int $type 类型
      * @param bool $allow_extend 是否允许extend其它struct
      * @return Struct
-     * @throws DOPException
+     * @throws Exception
      */
     private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
     {
@@ -262,13 +264,13 @@ class XmlProtocol
             $this->setLineNumber($node->getLineNo());
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
-                throw new DOPException('Attribute `name` required!');
+                throw new Exception('Attribute `name` required!');
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
             $item = $this->makeItemObject($class_name . ucfirst($item_name), $node);
             if (isset($item_arr[$item_name])) {
-                throw new DOPException('Item name:' . $item_name . ' 已经存在');
+                throw new Exception('Item name:' . $item_name . ' 已经存在');
             }
             $item_arr[$item_name] = $item;
         }
@@ -276,15 +278,15 @@ class XmlProtocol
         //继承关系
         if ($struct->hasAttribute('extend')) {
             if (!$allow_extend) {
-                throw new DOPException('Extend只允许在<action>标签内使用');
+                throw new Exception('Extend只允许在<action>标签内使用');
             }
             $struct_name = trim($struct->getAttribute('extend'));
             $struct_name = $this->getFullName($struct_name);
             $extend_struct = $this->protocol_manager->loadRequireStruct($struct_name, $this->xml_file_name);
             if (null === $extend_struct) {
-                throw new DOPException('无法找到Struct ' . $struct_name);
+                throw new Exception('无法找到Struct ' . $struct_name);
             } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {
-                throw new DOPException('struct:' . $struct_name . ' is not public!');
+                throw new Exception('struct:' . $struct_name . ' is not public!');
             }
         }
         if (!empty($item_arr)) {
@@ -303,7 +305,7 @@ class XmlProtocol
         } elseif ($extend_struct) {
             $struct_obj = $extend_struct;
         } else {
-            throw new DOPException('Empty struct');
+            throw new Exception('Empty struct');
         }
         return $struct_obj;
     }
@@ -313,13 +315,13 @@ class XmlProtocol
      * @param string $name
      * @param \DOMNode $dom_node 节点
      * @return Item
-     * @throws DOPException
+     * @throws Exception
      */
     private function makeItemObject($name, $dom_node)
     {
         $type = ItemType::getType($dom_node->nodeName);
         if (null === $type) {
-            throw new DOPException('Unknown type `' . $dom_node->nodeName . '`');
+            throw new Exception('Unknown type `' . $dom_node->nodeName . '`');
         }
         switch ($type) {
             case ItemType::STRING:
@@ -392,7 +394,7 @@ class XmlProtocol
      * @param string $name
      * @param \DOMNode $item 节点
      * @return Item
-     * @throws DOPException
+     * @throws Exception
      */
     private function parseList($name, \DOMNode $item)
     {
@@ -405,12 +407,12 @@ class XmlProtocol
                 continue;
             }
             if (null !== $type_node) {
-                throw new DOPException('List只能有一个节点');
+                throw new Exception('List只能有一个节点');
             }
             $type_node = $tmp_node;
         }
         if (null === $type_node) {
-            throw new DOPException('List下必须包括一个指定list类型的节点');
+            throw new Exception('List下必须包括一个指定list类型的节点');
         }
         //$name .= 'List';
         return $this->makeItemObject($name, $type_node);
@@ -421,7 +423,7 @@ class XmlProtocol
      * @param string $name
      * @param \DOMNode $item 节点
      * @param MapItem $item_obj
-     * @throws DOPException
+     * @throws Exception
      */
     private function parseMap($name, \DOMNode $item, MapItem $item_obj)
     {
@@ -444,12 +446,12 @@ class XmlProtocol
                 $value_item = $this->makeItemObject($name, $value_node);
                 $item_obj->setValueItem($value_item);
             } else {
-                throw new DOPException('Map下只能有两个节点');
+                throw new Exception('Map下只能有两个节点');
             }
             $key_node = $tmp_node;
         }
         if (null === $key_node || null === $value_node) {
-            throw new DOPException('Map下必须包含两个节点');
+            throw new Exception('Map下必须包含两个节点');
         }
     }
 
@@ -458,7 +460,7 @@ class XmlProtocol
      * @param string $name 类名
      * @param string $prefix 前缀
      * @return string
-     * @throws DOPException
+     * @throws Exception
      */
     private function joinName($name, $prefix = '')
     {
@@ -466,7 +468,7 @@ class XmlProtocol
             $name = $prefix . $name;
         }
         if (isset($this->name_stack[$name])) {
-            throw new DOPException('Name:' . $name . ' 已经存在');
+            throw new Exception('Name:' . $name . ' 已经存在');
         }
         $this->name_stack[$name] = true;
         $this->checkName($name);
@@ -476,12 +478,12 @@ class XmlProtocol
     /**
      * 检查name是否可以做类名
      * @param string $name
-     * @throws DOPException
+     * @throws Exception
      */
     private function checkName($name)
     {
         if (empty($name) || 0 === preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name) > 0) {
-            throw new DOPException('Name:' . $name . ' is invalid');
+            throw new Exception('Name:' . $name . ' is invalid');
         }
     }
 
@@ -489,16 +491,16 @@ class XmlProtocol
      * 获取类名全路径
      * @param string $struct_name
      * @return string
-     * @throws DOPException
+     * @throws Exception
      */
     private function getFullName($struct_name)
     {
         if (empty($struct_name)) {
-            throw new DOPException('struct name error');
+            throw new Exception('struct name error');
         }
         //名称不合法
         if (!preg_match('/^\/?[a-zA-Z_][a-zA-Z_\d]*(\/[a-zA-Z_][a-zA-Z_\d]*)*$/', $struct_name)) {
-            throw new DOPException('Invalid struct name:' . $struct_name);
+            throw new Exception('Invalid struct name:' . $struct_name);
         }
         $class_name = FFanStr::camelName(basename($struct_name));
         $dir_name = dirname($struct_name);
@@ -518,7 +520,7 @@ class XmlProtocol
      * @param string $name
      * @param \DOMNode $item 节点
      * @return Struct
-     * @throws DOPException
+     * @throws Exception
      */
     private function parsePrivateStruct($name, \DOMNode $item)
     {
@@ -535,6 +537,6 @@ class XmlProtocol
     private function setLineNumber($line_number)
     {
         $position_info = 'File:' . $this->file_name . ' Line:' . $line_number;
-        DOPException::setAppendMsg($position_info);
+        Exception::setAppendMsg($position_info);
     }
 }

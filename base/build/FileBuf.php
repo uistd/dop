@@ -1,9 +1,12 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
+
+use ffan\dop\Exception;
+
 /**
  * Class FileBuf 一个文件的代码
- * @package ffan\dop
+ * @package ffan\dop\build
  */
 class FileBuf
 {
@@ -34,7 +37,7 @@ class FileBuf
      * @var string 文件相对路径
      */
     private $relate_path = '';
-    
+
     /**
      * GroupCodeBuf constructor.
      */
@@ -84,12 +87,12 @@ class FileBuf
      * @param $name
      * @param CodeBuf $buf
      * @param bool $push_to_main 是否将这个buf加入到main buf 中
-     * @throws DOPException
+     * @throws Exception
      */
     public function addBuf($name, CodeBuf $buf, $push_to_main = true)
     {
         if (isset($this->buf_arr[$name])) {
-            throw new DOPException('Add buf name "' . $name . '" conflict, file:' . $this->file_name);
+            throw new Exception('Add buf name "' . $name . '" conflict, file:' . $this->file_name);
         }
         $this->buf_arr[$name] = $buf;
         if ($push_to_main) {
