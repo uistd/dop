@@ -11,6 +11,12 @@ use ffan\dop\Exception;
 class CodeBuf
 {
     /**
+     * 子buf类型
+     */
+    const SUB_BUF_TYPE_CODE = 1;
+    const SUB_BUF_TYPE_STR =2;
+    
+    /**
      * @var int 缩进级别
      */
     private $indent = 0;
@@ -18,7 +24,7 @@ class CodeBuf
     /**
      * @var array 内容缓存
      */
-    private $str_buffer = [];
+    private $line_buffer = [];
 
     /**
      * @var string 缩进
@@ -72,43 +78,51 @@ class CodeBuf
     public function push($str)
     {
         $line_str = $this->indentSpace() . $str;
-        $this->str_buffer[] = $line_str;
+        $this->line_buffer[] = $line_str;
         return $this;
     }
 
     /**
      * 直接写入一个Buffer，输出的时候，会先将buffer的内容输出
-     * @param CodeBuf $buffer
-     * @param bool $is_refer 是否是引用
-     * 如果是引用，该buffer的变更将继续生效
-     * 如果不是引用，直接将该buffer当前的值导出
+     * @param CodeBuf $code_buf
      * @return $this
      * @throws Exception
      */
-    public function pushBuffer(CodeBuf $buffer, $is_refer = false)
+    public function pushCodeBuf(CodeBuf $code_buf)
     {
-        if ($buffer === $this) {
+        if ($code_buf === $this) {
             throw new Exception('Can not push self to self');
         }
-        //如果是引用，要记录当前的缩进、当前的代码位置，输出的时候根据这两个属性将buffer里的内容输出到正确的位置
-        if ($is_refer) {
-            //位置
-            $index = count($this->str_buffer);
-            //当前缩进
-            $current_indent = $this->indent;
-            $sub_buffer_arr = array(
-                $current_indent, $buffer
-            );
-            $this->sub_buffer_list[$index] = $sub_buffer_arr;
-            //将该位置用空字符串占用
-            $this->str_buffer[] = '';
-        } else {
-            //将传入buffer的所有内容都合并到当前的buffer，从此不再有任何关系
-            $line_arr = $buffer->getLineArr();
-            foreach ($line_arr as $each_line) {
-                $this->push($each_line);
-            }
-        }
+        //位置
+        $index = count($this->line_buffer);
+        //当前缩进
+        $current_indent = $this->indent;
+        $sub_buffer_arr = array(
+            $current_indent, $code_buf, self::SUB_BUF_TYPE_CODE
+        );
+        $this->sub_buffer_list[$index] = $sub_buffer_arr;
+        //将该位置用空字符串占用
+        $this->line_buffer[] = '';
+        return $this;
+    }
+
+    /**
+     * 插入一行，这一行的内容是str buf，在dump的时候会先 dump出该str的内容
+     * @param StrBuf $str_buf
+     * @return $this
+     */
+    public function pushStrBuf(StrBuf $str_buf)
+    {
+        //位置
+        $index = count($this->line_buffer);
+        //当前缩进
+        $current_indent = $this->indent;
+        $sub_buffer_arr = array(
+            $current_indent, $str_buf, self::SUB_BUF_TYPE_STR
+        );
+        $this->sub_buffer_list[$index] = $sub_buffer_arr;
+        //将该位置用空字符串占用
+        $this->line_buffer[] = '';
         return $this;
     }
 
@@ -118,7 +132,7 @@ class CodeBuf
      */
     public function emptyLine()
     {
-        $this->str_buffer[] = '';
+        $this->line_buffer[] = '';
         return $this;
     }
 
@@ -194,7 +208,7 @@ class CodeBuf
         if ($force_indent > 0) {
             $this->indent = $force_indent;
             $prefix_str = $this->indentSpace();
-            foreach ($this->str_buffer as &$each_str) {
+            foreach ($this->line_buffer as &$each_str) {
                 $each_str = $prefix_str . $each_str;
             }
         }
@@ -208,7 +222,7 @@ class CodeBuf
     public function dump($force_indent = 0)
     {
         $this->beforeOutPut($force_indent);
-        $result = join(PHP_EOL, $this->str_buffer);
+        $result = join(PHP_EOL, $this->line_buffer);
         $this->clean();
         return $result;
     }
@@ -220,7 +234,7 @@ class CodeBuf
     public function getLineArr()
     {
         $this->beforeOutPut(0);
-        return $this->str_buffer;
+        return $this->line_buffer;
     }
 
     /**
@@ -232,12 +246,14 @@ class CodeBuf
             $tmp_indent = $arr[0];
             /** @var CodeBuf $tmp_buffer */
             $tmp_buffer = $arr[1];
+            //@tobe continue
+            $sub_type = $arr[2];
             //如果是空的，不能占一行
             if ($tmp_buffer->isEmpty()) {
-                unset($this->str_buffer[$index]);
+                unset($this->line_buffer[$index]);
             } else {
                 //将该位置替换成应该有的字符串
-                $this->str_buffer[$index] = $tmp_buffer->dump($tmp_indent);
+                $this->line_buffer[$index] = $tmp_buffer->dump($tmp_indent);
             }
         }
     }
@@ -247,7 +263,7 @@ class CodeBuf
      */
     public function clean()
     {
-        $this->str_buffer = [];
+        $this->line_buffer = [];
         $this->tmp_line_str = '';
         $this->indent = 0;
     }
@@ -272,6 +288,6 @@ class CodeBuf
      */
     public function isEmpty()
     {
-        return empty($this->str_buffer);
+        return empty($this->line_buffer);
     }
 }

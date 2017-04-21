@@ -15,7 +15,7 @@ abstract class CoderBase
     /**
      * @var Builder
      */
-    protected $buil;
+    protected $build;
 
     /**
      * @var BuildOption
@@ -37,7 +37,7 @@ abstract class CoderBase
      */
     public function __construct(Builder $builder, $name)
     {
-        $this->buil = $builder;
+        $this->build = $builder;
         $this->build_opt = $builder->getBuildOption();
         $this->code_name = $name;
     }

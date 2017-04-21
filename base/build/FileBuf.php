@@ -96,7 +96,7 @@ class FileBuf
         }
         $this->buf_arr[$name] = $buf;
         if ($push_to_main) {
-            $this->main_buf->pushBuffer($buf, true);
+            $this->main_buf->pushCodeBuf($buf);
         }
     }
 

@@ -582,4 +582,20 @@ class Manager
     {
         return $this->build_file_list;
     }
+
+    /**
+     * 注册一个插件
+     */
+    public function registerPlugin()
+    {
+        
+    }
+
+    /**
+     * 注册一个代码生成器
+     */
+    public function registerCoder()
+    {
+        
+    }
 }
