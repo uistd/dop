@@ -18,4 +18,18 @@ interface BufInterface
      * @return bool
      */
     public function isEmpty();
+
+    /**
+     * 插入子buf
+     * @param BufInterface $sub_buf
+     * @return $this
+     */
+    public function insertBuf(BufInterface $sub_buf);
+
+    /**
+     * 设置缩进
+     * @param int $indent
+     * @return void
+     */
+    public function setIndent($indent);
 }

@@ -8,7 +8,7 @@ use ffan\dop\Exception;
  * Class CodeBuf
  * @package ffan\dop\build
  */
-class CodeBuf
+class CodeBuf implements BufInterface
 {
     /**
      * 子buf类型
@@ -27,14 +27,9 @@ class CodeBuf
     private $line_buffer = [];
 
     /**
-     * @var string 缩进
+     * @var string 缩进字符串， 默认是4个空格
      */
-    private $indent_space;
-
-    /**
-     * @var string 临时一行代码
-     */
-    private $tmp_line_str;
+    private static $indent_space = '    ';
 
     /**
      * @var array 子buffer 数据
@@ -42,21 +37,23 @@ class CodeBuf
     private $sub_buffer_list;
 
     /**
-     * @var array 唯一标志列表，用于限制同一个类不能有同名方法等
+     * @var int 全局缩进
      */
-    private $unique_flag_arr;
+    private $global_indent;
 
     /**
-     * CodeBuf constructor.
-     * @param bool $blank_indent 是否使用空格替代缩进
+     * 设置全局缩进
+     * @param $global_indent
      */
-    public function __construct($blank_indent = true)
+    public function setIndent($global_indent)
     {
-        if ($blank_indent) {
-            $this->indent_space = '    ';
-        } else {
-            $this->indent_space = "\t";
+        if (!is_int($global_indent)) {
+            throw new \InvalidArgumentException('Global indent must be int');
         }
+        if ($global_indent < 0) {
+            $global_indent = 0;
+        }
+        $this->global_indent = $global_indent;
     }
 
     /**
@@ -66,7 +63,7 @@ class CodeBuf
      */
     public function pushIndent($str)
     {
-        $str = $this->indent_space . $str;
+        $str = self::indentSpace(1) . $str;
         return $this->push($str);
     }
 
@@ -77,50 +74,26 @@ class CodeBuf
      */
     public function push($str)
     {
-        $line_str = $this->indentSpace() . $str;
+        $line_str = self::indentSpace($this->indent) . $str;
         $this->line_buffer[] = $line_str;
         return $this;
     }
 
     /**
-     * 直接写入一个Buffer，输出的时候，会先将buffer的内容输出
-     * @param CodeBuf $code_buf
+     * 插入子buf
+     * @param BufInterface $sub_buf
      * @return $this
      * @throws Exception
      */
-    public function pushCodeBuf(CodeBuf $code_buf)
+    public function insertBuf(BufInterface $sub_buf)
     {
-        if ($code_buf === $this) {
+        if ($sub_buf === $this) {
             throw new Exception('Can not push self to self');
         }
         //位置
         $index = count($this->line_buffer);
-        //当前缩进
-        $current_indent = $this->indent;
-        $sub_buffer_arr = array(
-            $current_indent, $code_buf, self::SUB_BUF_TYPE_CODE
-        );
-        $this->sub_buffer_list[$index] = $sub_buffer_arr;
-        //将该位置用空字符串占用
-        $this->line_buffer[] = '';
-        return $this;
-    }
-
-    /**
-     * 插入一行，这一行的内容是str buf，在dump的时候会先 dump出该str的内容
-     * @param StrBuf $str_buf
-     * @return $this
-     */
-    public function pushStrBuf(StrBuf $str_buf)
-    {
-        //位置
-        $index = count($this->line_buffer);
-        //当前缩进
-        $current_indent = $this->indent;
-        $sub_buffer_arr = array(
-            $current_indent, $str_buf, self::SUB_BUF_TYPE_STR
-        );
-        $this->sub_buffer_list[$index] = $sub_buffer_arr;
+        $sub_buf->setIndent($this->indent + $this->global_indent);
+        $this->sub_buffer_list[$index] = $sub_buf;
         //将该位置用空字符串占用
         $this->line_buffer[] = '';
         return $this;
@@ -133,28 +106,6 @@ class CodeBuf
     public function emptyLine()
     {
         $this->line_buffer[] = '';
-        return $this;
-    }
-
-    /**
-     * 结束一行
-     * @return $this
-     */
-    public function lineFin()
-    {
-        $this->push($this->tmp_line_str);
-        $this->tmp_line_str = '';
-        return $this;
-    }
-
-    /**
-     * 生成一行临时代码
-     * @param string $str
-     * @return $this
-     */
-    public function lineTmp($str)
-    {
-        $this->tmp_line_str .= $str;
         return $this;
     }
 
@@ -182,59 +133,48 @@ class CodeBuf
 
     /**
      * 生成缩进
+     * @param int $indent 缩进次数
      * @return string
      */
-    private function indentSpace()
+    public static function indentSpace($indent)
     {
-        static $indent, $result;
-        if ($this->indent === $indent) {
-            return $result;
+        static $cache_arr = [];
+        if (isset($cache_arr[$indent])) {
+            return $cache_arr[$indent];
         }
-        $indent = $this->indent;
-        $result = str_repeat($this->indent_space, $this->indent);
+        $result = str_repeat(self::$indent_space, $indent);
+        $cache_arr[$indent] = $result;
         return $result;
     }
 
     /**
-     * 输出前准备
-     * @param int $force_indent 每一行强制增加缩进
+     * 设置缩进字符
+     * @param string $indent_str
      */
-    private function beforeOutPut($force_indent)
+    public static function setIndentSpace($indent_str)
+    {
+        self::$indent_space = $indent_str;
+    }
+
+    /**
+     * 输出内容
+     * @return string
+     */
+    public function dump()
     {
         if (!empty($this->sub_buffer_list)) {
             $this->mergeSubBuffer();
         }
         //每一行强制缩进
-        if ($force_indent > 0) {
-            $this->indent = $force_indent;
-            $prefix_str = $this->indentSpace();
+        if ($this->global_indent > 0) {
+            $prefix_str = self::indentSpace($this->global_indent);
             foreach ($this->line_buffer as &$each_str) {
                 $each_str = $prefix_str . $each_str;
             }
         }
-    }
-
-    /**
-     * 输出内容
-     * @param int $force_indent 每一行强制增加缩进
-     * @return string
-     */
-    public function dump($force_indent = 0)
-    {
-        $this->beforeOutPut($force_indent);
         $result = join(PHP_EOL, $this->line_buffer);
         $this->clean();
         return $result;
-    }
-
-    /**
-     * 获取所有的行
-     * return array
-     */
-    public function getLineArr()
-    {
-        $this->beforeOutPut(0);
-        return $this->line_buffer;
     }
 
     /**
@@ -242,18 +182,13 @@ class CodeBuf
      */
     private function mergeSubBuffer()
     {
-        foreach ($this->sub_buffer_list as $index => $arr) {
-            $tmp_indent = $arr[0];
-            /** @var CodeBuf $tmp_buffer */
-            $tmp_buffer = $arr[1];
-            //@tobe continue
-            $sub_type = $arr[2];
+        foreach ($this->sub_buffer_list as $index => $sub_buffer) {
             //如果是空的，不能占一行
-            if ($tmp_buffer->isEmpty()) {
+            if ($sub_buffer->isEmpty()) {
                 unset($this->line_buffer[$index]);
             } else {
                 //将该位置替换成应该有的字符串
-                $this->line_buffer[$index] = $tmp_buffer->dump($tmp_indent);
+                $this->line_buffer[$index] = $sub_buffer->dump();
             }
         }
     }
@@ -264,22 +199,7 @@ class CodeBuf
     public function clean()
     {
         $this->line_buffer = [];
-        $this->tmp_line_str = '';
-        $this->indent = 0;
-    }
-
-    /**
-     * 加入唯一标志
-     * @param string $flag
-     * @return bool
-     */
-    public function addUniqueFlag($flag)
-    {
-        if (isset($this->unique_flag_arr[$flag])) {
-            return false;
-        }
-        $this->unique_flag_arr[$flag] = true;
-        return true;
+        $this->indent = $this->global_indent = 0;
     }
 
     /**

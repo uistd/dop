@@ -8,7 +8,7 @@ use ffan\dop\Exception;
  * Class FileBuf 一个文件的代码
  * @package ffan\dop\build
  */
-class FileBuf
+class FileBuf implements BufInterface
 {
     /**
      * 一些内置的常用buf
@@ -26,50 +26,27 @@ class FileBuf
     /**
      * @var CodeBuf 主buf
      */
-    public $main_buf;
+    private $main_buf;
 
     /**
-     * @var string 文件名
+     * @var string 文件名，包含相对于代码生成目录的相对路径
      */
     private $file_name;
 
     /**
-     * @var string 文件相对路径
+     * @var string 备注信息
      */
-    private $relate_path = '';
+    private $remark;
 
     /**
      * GroupCodeBuf constructor.
+     * @param string $file_name 文件名
+     * @param string $remark
      */
-    public function __construct()
+    public function __construct($file_name, $remark = '')
     {
         $this->main_buf = new CodeBuf();
-    }
-
-    /**
-     * 设置文件相对路径
-     * @param string $path
-     */
-    public function setRelatePath($path)
-    {
-        $this->relate_path = $path;
-    }
-
-    /**
-     * 获取文件相对路径
-     * @return string
-     */
-    public function getRelatePath()
-    {
-        return $this->relate_path;
-    }
-
-    /**
-     * 设置文件名
-     * @param string $file_name
-     */
-    public function setFileName($file_name)
-    {
+        $this->remark = $remark;
         $this->file_name = $file_name;
     }
 
@@ -80,6 +57,15 @@ class FileBuf
     public function getFileName()
     {
         return $this->file_name;
+    }
+
+    /**
+     * 获取文件的备注信息
+     * @return string
+     */
+    public function getRemark()
+    {
+        return $this->remark;
     }
 
     /**
@@ -96,7 +82,7 @@ class FileBuf
         }
         $this->buf_arr[$name] = $buf;
         if ($push_to_main) {
-            $this->main_buf->pushCodeBuf($buf);
+            $this->main_buf->insertBuf($buf);
         }
     }
 
@@ -115,11 +101,50 @@ class FileBuf
     }
 
     /**
+     * 获取main code buf
+     * @return CodeBuf
+     */
+    public function getMainBuf()
+    {
+        return $this->main_buf;
+    }
+    
+    /**
      * 获取文件的内容
      * @return string
      */
-    public function getContent()
+    public function dump()
     {
         return $this->main_buf->dump();
+    }
+
+    /**
+     * 是否为空
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return $this->main_buf->isEmpty();
+    }
+
+    /**
+     * 插入子buf
+     * @param BufInterface $sub_buf
+     * @return $this
+     */
+    public function insertBuf(BufInterface $sub_buf)
+    {
+        $this->main_buf->insertBuf($sub_buf);
+        return $this;
+    }
+
+    /**
+     * 设置缩进
+     * @param int $indent
+     * @return void
+     */
+    public function setIndent($indent)
+    {
+        $this->main_buf->setIndent($indent);
     }
 }

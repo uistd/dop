@@ -40,6 +40,16 @@ class Builder
      * @var array 主代码生成器
      */
     private $coder_arr;
+    
+    /**
+     * @var array 文件列表
+     */
+    private $file_list = [];
+
+    /**
+     * @var array 目录检查缓存
+     */
+    private $patch_check_cache;
 
     /**
      * Generator constructor.
@@ -77,6 +87,25 @@ class Builder
         $this->buildCommonFile($coder);
         $this->buildStructFile($coder);
         $this->buildNsFile($coder);
+        $this->pluginBuild();
+        $this->save();
+    }
+
+    /**
+     * 生成插件内容
+     */
+    private function pluginBuild()
+    {
+        $plugin_coder_arr = $this->getPluginCoder();
+        /**
+         * @var string $name
+         * @var PluginCoder $plugin_coder
+         */
+        foreach ($plugin_coder_arr as $name => $plugin_coder) {
+            $plugin_append_msg = 'Build plugin code: ' . $plugin_coder->getName();
+            Exception::setAppendMsg($plugin_append_msg);
+            $plugin_coder->buildCode($this);
+        }
     }
 
     /**
@@ -86,21 +115,8 @@ class Builder
     private function buildCommonFile($coder)
     {
         $append_msg = 'Build common file';
-        //DOPException::setAppendMsg($append_msg);
-        $file_buf = new FileBuf();
-        $coder->buildCommonCode($file_buf);
-        $plugin_coder_arr = $this->getPluginCoder();
-        /**
-         * @var string $name
-         * @var PluginCoder $plugin_coder
-         */
-        foreach ($plugin_coder_arr as $name => $plugin_coder) {
-            $plugin_append_msg = $append_msg . ' plugin ' . $plugin_coder->getName();
-            Exception::setAppendMsg($plugin_append_msg);
-            $plugin_coder->buildCommonCode($file_buf);
-            break;
-        }
-        $this->saveFile($file_buf);
+        Exception::setAppendMsg($append_msg);
+        $coder->buildCommonCode();
     }
 
     /**
@@ -110,7 +126,6 @@ class Builder
     private function buildStructFile($coder)
     {
         $use_cache = $this->build_opt->allow_cache;
-        $plugin_builder = $this->getPluginCoder();
         /** @var Struct $struct */
         foreach ($this->manager->getAllStruct() as $struct) {
             if ($use_cache && $struct->isCached()) {
@@ -118,20 +133,7 @@ class Builder
             }
             $append_msg = 'Build struct ' . $struct->getFile() . ' ' . $struct->getClassName();
             Exception::setAppendMsg($append_msg);
-            $file_buf = new FileBuf();
-            //暂时设置一个文件路径，可以修改
-            $file_buf->setRelatePath($struct->getNamespace());
-            $coder->buildStructCode($struct, $file_buf);
-            /**
-             * @var string $name
-             * @var PluginCoder $plugin_coder
-             */
-            foreach ($plugin_builder as $name => $plugin_coder) {
-                $plugin_append_msg = $append_msg . ' plugin ' . $plugin_coder->getName();
-                Exception::setAppendMsg($plugin_append_msg);
-                $plugin_coder->buildStructCode($struct, $file_buf);
-            }
-            $this->saveFile($file_buf);
+            $coder->buildStructCode($struct);
         }
     }
 
@@ -143,23 +145,11 @@ class Builder
     {
         $use_cache = $this->build_opt->allow_cache;
         $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
-        $plugin_builder = $this->getPluginCoder();
         foreach ($file_list as $file) {
             $append_msg = 'Build name space ' . $file;
             Exception::setAppendMsg($append_msg);
-            $file_buf = new FileBuf();
             $ns = basename($file, '.xml');
-            $coder->buildNsCode($ns, $file_buf);
-            /**
-             * @var string $name
-             * @var PluginCoder $plugin_coder
-             */
-            foreach ($plugin_builder as $name => $plugin_coder) {
-                $plugin_append_msg = $append_msg . ' plugin ' . $plugin_coder->getName();
-                Exception::setAppendMsg($plugin_append_msg);
-                $plugin_coder->buildNsCode($ns, $file_buf);
-            }
-            $this->saveFile($file_buf);
+            $coder->buildNsCode($ns);
         }
     }
 
@@ -186,7 +176,7 @@ class Builder
             throw new Exception('Unknown class name ' . $full_class);
         }
         $parents = class_parents($full_class);
-        if (!isset($parents['ffan\dop\CoderBase'])) {
+        if (!isset($parents['ffan\dop\build\CoderBase'])) {
             throw new Exception('Class ' . $full_class . ' must be implements of CoderBase');
         }
         $this->coder_arr[$code_type] = new $full_class($this, $code_type);
@@ -225,39 +215,92 @@ class Builder
     }
 
     /**
-     * 保存文件
+     * 添加文件
+     * @param FileBuf $file
+     * @throws Exception
+     */
+    public function addFile(FileBuf $file)
+    {
+        $file_name = $file->getFileName();
+        $tmp_name = self::cleanName($file_name);
+        if (isset($this->file_list[$tmp_name])) {
+            throw new Exception('Build result file name '. $file_name .' conflict.');
+        }
+        $this->file_list[$tmp_name] = $file;
+    }
+
+    /**
+     * 获取文件
+     * @param string $file_name
+     * @return FileBuf|null
+     */
+    public function getFile($file_name)
+    {
+        $tmp_name = self::cleanName($file_name);
+        if (!isset($this->file_list[$tmp_name])) {
+            return null;
+        }
+        return $this->file_list[$tmp_name];
+    }
+
+    /**
+     * 处理一个文件名，当作数组的唯一key
+     * @param string $file_name
+     * @return string
+     */
+    private static function cleanName($file_name)
+    {
+        //转换成小写，去掉首尾的 空格 和 / 号
+        return trim(strtolower($file_name), ' /');
+    }
+
+    /**
+     * 保存每个文件
+     */
+    public function save()
+    {
+        /**
+         * @var FileBuf $file_buf
+         */
+        foreach ($this->file_list as $file_buf) {
+            $this->writeFile($file_buf);
+        }
+    }
+
+    /**
+     * 写文件
      * @param FileBuf $file_buf
      * @throws Exception
      */
-    public function saveFile(FileBuf $file_buf)
+    private function writeFile($file_buf)
     {
-        static $path_check = array();
-        if ($file_buf->main_buf->isEmpty()) {
-            return;
-        }
-        $content = $file_buf->getContent();
-        if (empty($content)) {
+        if ($file_buf->isEmpty()) {
             return;
         }
         $file_name = $file_buf->getFileName();
-        if (empty($file_name)) {
-            $this->manager->buildLogError('Can not save file, no file_name');
-        }
-        $file_path = $this->build_base_path;
-        $relate_path = $file_buf->getRelatePath();
-        if (!empty($relate_path)) {
-            $file_path = FFanUtils::joinPath($this->build_base_path, $relate_path);
-        }
-        if (!isset($path_check[$file_path])) {
-            FFanUtils::pathWriteCheck($file_path);
-            $path_check[$file_path] = true;
-        }
+        $file_path = dirname($file_name);
+        $this->pathCheck($file_path);
         $full_file_name = FFanUtils::joinFilePath($file_path, $file_name);
+        $content = $file_buf->dump();
         $re = file_put_contents($full_file_name, $content);
         if (false === $re) {
             throw new Exception('Can not write file ' . $full_file_name);
         }
         $this->manager->buildLog('Build file ' . $file_name . ' success');
+    }
+
+    /**
+     * 目录检查
+     * @param string $path
+     */
+    private function pathCheck($path)
+    {
+        if (isset($this->patch_check_cache[$path])) {
+            return;
+        }
+        $file_path = FFanUtils::joinPath($this->build_base_path, $path);
+        FFanUtils::pathWriteCheck($file_path);
+        $this->patch_check_cache[$path] = true;
     }
 
     /**

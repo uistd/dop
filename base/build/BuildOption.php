@@ -2,6 +2,7 @@
 
 namespace ffan\dop\build;
 
+use ffan\dop\Exception;
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
@@ -66,9 +67,9 @@ class BuildOption
     public $allow_cache = true;
 
     /**
-     * @var int 数据打包类型，默认是JSON
+     * @var array 数据打包解包类
      */
-    public $pack_type = self::PACK_TYPE_JSON;
+    public $packer_arr = array();
 
     /**
      * @var string 使用的插件, plugin1, plugin2
@@ -115,6 +116,27 @@ class BuildOption
         }
         $plugin_name .= ',';
         return false !== strpos($this->use_plugin, $plugin_name);
+    }
+
+    /**
+     * 添加一种加密解密方法
+     * @param string $packer_name
+     * @throws Exception
+     */
+    public function addPacker($packer_name)
+    {
+        if (!preg_match('/^[a-zA-Z][a-zA-Z_\d]*$/', $packer_name)) {
+            throw new Exception('Packer name:' . $packer_name . ' is invalid');
+        }
+        $this->packer_arr[$packer_name] = true;
+    }
+
+    /**
+     * 获取pack
+     */
+    public function getPacker()
+    {
+        return array_keys($this->packer_arr);
     }
 
     /**

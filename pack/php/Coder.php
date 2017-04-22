@@ -2,21 +2,21 @@
 
 namespace ffan\dop\pack\php;
 
-use ffan\dop\BuildOption;
-use ffan\dop\CodeBuf;
-use ffan\dop\CoderBase;
-use ffan\dop\FileBuf;
-use ffan\dop\Item;
-use ffan\dop\ItemType;
-use ffan\dop\ListItem;
-use ffan\dop\Struct;
-use ffan\dop\StructItem;
+use ffan\dop\build\BuildOption;
+use ffan\dop\build\CodeBuf;
+use ffan\dop\build\CoderBase;
+use ffan\dop\build\FileBuf;
+use ffan\dop\build\StrBuf;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\ItemType;
+use ffan\dop\protocol\ListItem;
+use ffan\dop\protocol\Struct;
+use ffan\dop\protocol\StructItem;
 use ffan\php\utils\Str as FFanStr;
-
 
 /**
  * Class Coder
- * @package ffan\dop
+ * @package ffan\dop\pack\php
  */
 class Coder extends CoderBase
 {
@@ -135,16 +135,17 @@ class Coder extends CoderBase
     /**
      * 按Struct生成代码
      * @param Struct $struct
-     * @param FileBuf $file_buf
      * @return void
      */
-    public function buildStructCode($struct, FileBuf $file_buf)
+    public function buildStructCode($struct)
     {
-        $build_opt = $this->build_opt;
-        $class_buf = $file_buf->main_buf;
-        $name_space = $struct->getNamespace();
-        $class_buf->push('<?php');
         $main_class_name = $struct->getClassName();
+        $name_space = $struct->getNamespace();
+        $build_opt = $this->build_opt;
+        $file_buf = new FileBuf($name_space .'/'. $main_class_name . '.php');
+        $this->builder->addFile($file_buf);
+        $class_buf = $file_buf->getMainBuf();
+        $class_buf->push('<?php');
         $parent_struct = $struct->getParent();
         $class_buf->emptyLine();
         $ns = self::phpNameSpace($build_opt, $name_space);
@@ -163,17 +164,19 @@ class Coder extends CoderBase
         $class_buf->emptyLine();
         $class_buf->push('/**');
         $node_str = $struct->getNote();
-        $class_buf->lineTmp(' * ' . $main_class_name);
+        $class_desc_buf = new StrBuf();
+        $class_buf->insertBuf($class_desc_buf);
+        $class_desc_buf->push(' * '. $main_class_name);
         if (!empty($node_str)) {
-            $class_buf->lineTmp(' ' . $node_str);
+            $class_desc_buf->push(' ' . $node_str);
         }
-        $class_buf->lineFin();
         $class_buf->push(' */');
-        $class_buf->lineTmp('class ' . $main_class_name);
+        $class_name_buf = new StrBuf();
+        $class_buf->insertBuf($class_name_buf);
+        $class_name_buf->push('class '. $main_class_name);
         if ($struct->hasExtend()) {
-            $class_buf->lineTmp(' extends ' . $parent_struct->getClassName());
+            $class_name_buf->push(' extends ' . $parent_struct->getClassName());
         }
-        $class_buf->lineFin();
         $class_buf->push('{');
         //缩进
         $class_buf->indentIncrease();
@@ -187,25 +190,28 @@ class Coder extends CoderBase
         foreach ($item_list as $name => $item) {
             $property_buf->push('/**');
             $item_type = self::varType($item);
-            $property_buf->lineTmp(' * @var ' . $item_type);
+            $property_desc_buf = new StrBuf();
+            $property_buf->insertBuf($property_desc_buf);
+            $property_buf->push(' * @var ' . $item_type);
             $tmp_node = $item->getNote();
             if (!empty($tmp_node)) {
-                $property_buf->lineTmp(' ' . $tmp_node);
+                $property_desc_buf->push(' ' . $tmp_node);
             }
-            $property_buf->lineFin();
             $property_buf->push(' */');
-            $property_buf->lineTmp('public $' . $name);
+            $property_line_buf = new StrBuf();
+            $property_buf->insertBuf($property_line_buf);
+            $property_line_buf->push('public $' . $name);
             if ($item->hasDefault()) {
-                $property_buf->lineTmp(' = ' . $item->getDefault());
+                $property_line_buf->push(' = ' . $item->getDefault());
             }
-            $property_buf->lineTmp(';')->lineFin()->emptyLine();
+            $property_line_buf->push(';');
+            $property_buf->emptyLine();
         }
         $method_buf = new CodeBuf();
         $file_buf->addBuf(FileBuf::METHOD_BUF, $method_buf);
         $this->packMethodCode($file_buf, $struct);
         $class_buf->indentDecrease();
         $class_buf->push('}')->emptyLine();
-        $file_buf->setFileName($main_class_name . '.php');
     }
 
     /**

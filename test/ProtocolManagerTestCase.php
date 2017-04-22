@@ -2,6 +2,8 @@
 
 namespace ffan\dop;
 
+use ffan\dop\build\BuildOption;
+
 require_once '../vendor/autoload.php';
 require_once 'config.php';
 $build_config = array(

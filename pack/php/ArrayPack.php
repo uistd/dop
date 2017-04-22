@@ -1,21 +1,20 @@
 <?php
 
 namespace ffan\dop\pack\php;
-
-use ffan\dop\CodeBuf;
-use ffan\dop\Exception;
+use ffan\dop\build\CodeBuf;
+use ffan\dop\build\PackerBase;
 use ffan\dop\Builder;
-use ffan\dop\Item;
-use ffan\dop\ItemType;
-use ffan\dop\ListItem;
-use ffan\dop\MapItem;
-use ffan\dop\PackerBase;
-use ffan\dop\Struct;
-use ffan\dop\StructItem;
+use ffan\dop\Exception;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\ItemType;
+use ffan\dop\protocol\ListItem;
+use ffan\dop\protocol\MapItem;
+use ffan\dop\protocol\Struct;
+use ffan\dop\protocol\StructItem;
 
 /**
- * Class ArrayPack 数组打包解包
- * @package ffan\dop\php
+ * Class ArrayPack
+ * @package ffan\dop\pack\php
  */
 class ArrayPack extends PackerBase
 {

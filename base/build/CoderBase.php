@@ -15,7 +15,7 @@ abstract class CoderBase
     /**
      * @var Builder
      */
-    protected $build;
+    protected $builder;
 
     /**
      * @var BuildOption
@@ -37,37 +37,34 @@ abstract class CoderBase
      */
     public function __construct(Builder $builder, $name)
     {
-        $this->build = $builder;
+        $this->builder = $builder;
         $this->build_opt = $builder->getBuildOption();
         $this->code_name = $name;
     }
 
     /**
      * 生成通用的文件
-     * @param FileBuf $file_buf
      * @return void
      */
-    public function buildCommonCode(FileBuf $file_buf)
+    public function buildCommonCode()
     {
     }
 
     /**
      * 按Struct生成代码
      * @param Struct $struct
-     * @param FileBuf $file_buf
      * @return void
      */
-    public function buildStructCode($struct, FileBuf $file_buf)
+    public function buildStructCode($struct)
     {
     }
 
     /**
      * 按协议命名空间生成代码
      * @param string $name_space
-     * @param FileBuf $file_buf
      * @return void
      */
-    public function buildNsCode($name_space, FileBuf $file_buf)
+    public function buildNsCode($name_space)
     {
     }
 
@@ -78,26 +75,40 @@ abstract class CoderBase
      */
     protected function packMethodCode($file_buf, $struct)
     {
-        $pack_type = $this->build_opt->pack_type;
-        //json方式
-        if ($pack_type & BuildOption::PACK_TYPE_JSON) {
-            $json_pack = $this->getPackInstance('json');
-            if (null !== $json_pack) {
-                $this->writePackCode($struct, $file_buf, $json_pack);
-            }
+        $packer_list = $this->build_opt->getPacker();
+        $packer_object_arr = array();
+        $this->getAllPackerObject($packer_list, $packer_object_arr);
+        /**
+         * @var string $name
+         * @var PackerBase $packer
+         */
+        foreach ($packer_object_arr as $name => $packer) {
+            Exception::setAppendMsg('Build packer '. $name);
+            $this->writePackCode($struct, $file_buf, $packer);
         }
-        //msgpack
-        if ($pack_type & BuildOption::PACK_TYPE_MSGPACK) {
-            $msg_pack = $this->getPackInstance('msgPack');
-            if (null !== $msg_pack) {
-                $this->writePackCode($struct, $file_buf, $msg_pack);
+    }
+
+    /**
+     * 获取所有的packer，包括依赖的
+     * @param array $packer_arr
+     * @param array $packer_object_arr
+     */
+    private function getAllPackerObject($packer_arr, &$packer_object_arr)
+    {
+        foreach ($packer_arr as $packer_name) {
+            if (isset($packer_object_arr[$packer_name])) {
+                continue;
             }
-        }
-        //binary
-        if ($pack_type & BuildOption::PACK_TYPE_BINARY) {
-            $bin_pack = $this->getPackInstance('binary');
-            if (null !== $bin_pack) {
-                $this->writePackCode($struct, $file_buf, $bin_pack);
+            $packer_object = $this->getPackInstance($packer_name);
+            if (null === $packer_object) {
+                $this->builder->getManager()->buildLogError('Can not found packer of '. $packer_name);
+                continue;
+            }
+            $packer_object_arr[$packer_name] = $packer_object;
+            //依赖的其它packer
+            $require_packer = $packer_object->getRequirePacker();
+            if (!empty($require_packer)) {
+                $this->getAllPackerObject($require_packer, $packer_object_arr);
             }
         }
     }
@@ -107,43 +118,20 @@ abstract class CoderBase
      * @param Struct $struct
      * @param FileBuf $file_buf
      * @param PackerBase $packer
-     * @param array $require_arr 用于防止循环依赖
      * @throws Exception
      */
-    private function writePackCode($struct, FileBuf $file_buf, PackerBase $packer, array &$require_arr = [])
+    private function writePackCode($struct, FileBuf $file_buf, PackerBase $packer)
     {
         $code_buf = $file_buf->getBuf(FileBuf::METHOD_BUF);
         if (null === $code_buf) {
             return;
         }
-        //将依赖的packer写入
-        $require = $packer->getRequirePacker();
-        if (is_array($require)) {
-            foreach ($require as $name) {
-                if (isset($require_arr[$name])) {
-                    throw new Exception('Cycle require detect. ' . $name);
-                }
-                $require_arr[$name] = true;
-                $req_pack = $this->getPackInstance($name);
-                if ($require_arr) {
-                    $this->writePackCode($struct, $file_buf, $req_pack, $require_arr);
-                }
-            }
-        }
         $struct_type = $struct->getType();
         if ($this->isBuildPackMethod($struct_type)) {
-            //防止两次生成相同方法
-            $unique_flag = get_class($packer) . '::pack';
-            if ($code_buf->addUniqueFlag($unique_flag)) {
-                $packer->buildPackMethod($struct, $code_buf);
-            }
+            $packer->buildPackMethod($struct, $code_buf);
         }
         if ($this->isBuildUnpackMethod($struct_type)) {
-            //防止两次生成相同方法
-            $unique_flag = get_class($packer) . '::unpack';
-            if ($code_buf->addUniqueFlag($unique_flag)) {
-                $packer->buildUnpackMethod($struct, $code_buf);
-            }
+            $packer->buildUnpackMethod($struct, $code_buf);
         }
     }
 
