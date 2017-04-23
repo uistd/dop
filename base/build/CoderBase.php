@@ -154,7 +154,7 @@ abstract class CoderBase
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $ns = 'ffan\dop\pack\\' . $this->code_name . '\\';
+        $ns = 'ffan\dop\coder\\' . $this->code_name . '\\';
         $full_class_name = $ns . $class_name;
         if (!class_exists($full_class_name)) {
             throw new Exception('Can not load class ' . $full_class_name);

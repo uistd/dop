@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\pack\js;
+namespace ffan\dop\coder\js;
 use ffan\dop\Builder;
 
 /**

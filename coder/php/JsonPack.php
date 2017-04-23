@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\pack\php;
+namespace ffan\dop\coder\php;
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\protocol\Struct;

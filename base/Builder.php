@@ -279,8 +279,8 @@ class Builder
         }
         $file_name = $file_buf->getFileName();
         $file_path = dirname($file_name);
-        $this->pathCheck($file_path);
-        $full_file_name = FFanUtils::joinFilePath($file_path, $file_name);
+        $this->checkPatch($file_path);
+        $full_file_name = FFanUtils::joinFilePath($this->build_base_path, $file_name);
         $content = $file_buf->dump();
         $re = file_put_contents($full_file_name, $content);
         if (false === $re) {
@@ -293,7 +293,7 @@ class Builder
      * 目录检查
      * @param string $path
      */
-    private function pathCheck($path)
+    private function checkPatch($path)
     {
         if (isset($this->patch_check_cache[$path])) {
             return;

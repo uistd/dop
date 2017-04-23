@@ -4,8 +4,6 @@ namespace ffan\dop;
 
 use ffan\dop\build\BuildCache;
 use ffan\dop\build\BuildOption;
-use ffan\dop\plugin\mock\MockPlugin;
-use ffan\dop\plugin\validator\ValidatorPlugin;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\Protocol;
 use ffan\php\utils\Str as FFanStr;
@@ -98,6 +96,7 @@ class Manager
         }
         $this->base_path = $base_path;
         $this->config = $config;
+        $this->initCoder();
         $this->initPlugin();
     }
 
@@ -510,23 +509,46 @@ class Manager
      */
     private function initPlugin()
     {
-        $plugin_list = $this->getConfig('plugin');
-        if (!is_array($plugin_list)) {
-            return;
+        $base_dir = dirname(__DIR__) . '/plugin';
+        $folder_list = $this->getAllSubFolder($base_dir);
+        foreach ($folder_list as $name) {
+            $this->registerPlugin($name, $base_dir);
         }
-        foreach ($plugin_list as $name => $plugin_conf) {
-            switch ($name) {
-                case 'validator':
-                    $plugin = new ValidatorPlugin($this);
-                    break;
-                case 'mock':
-                    $plugin = new MockPlugin($this);
-                    break;
-                default:
-                    throw new Exception('Plugin ' . $name . ' not recognized!');
+    }
+
+    /**
+     * 初始化代码生器对象
+     */
+    private function initCoder()
+    {
+        $base_dir = dirname(__DIR__) . '/coder';
+        $folder_list = $this->getAllSubFolder($base_dir);
+        foreach ($folder_list as $name) {
+            $this->registerCoder($name, $base_dir);
+        }
+    }
+
+    /**
+     * 获取所有的子文件夹
+     * @param string $dir_name 目录名称
+     * @return array
+     */
+    private function getAllSubFolder($dir_name)
+    {
+        $dir_handle = readdir($dir_name);
+        $result = array();
+        $len = strlen($dir_name);
+        if (DIRECTORY_SEPARATOR !== $dir_name[$len - 1]){
+            $dir_name .= DIRECTORY_SEPARATOR;
+        }
+        while (false != ($file = readdir($dir_handle))) {
+            $tmp_name = $dir_name . $file;
+            if (!is_dir($tmp_name) || '.' === $file{0}) {
+                continue;
             }
-            $this->plugin_list[$name] = $plugin;
+            $result[] = $file;
         }
+        return $result;
     }
 
     /**
@@ -585,17 +607,21 @@ class Manager
 
     /**
      * 注册一个插件
+     * @param string $name 插件名称
+     * @param string $base_path 插件基础路径
      */
-    public function registerPlugin()
+    public function registerPlugin($name, $base_path)
     {
-        
+
     }
 
     /**
      * 注册一个代码生成器
+     * @param string $name 代码生成器名称
+     * @param string $base_path 基础目录
      */
-    public function registerCoder()
+    public function registerCoder($name, $base_path)
     {
-        
+
     }
 }
