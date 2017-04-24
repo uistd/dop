@@ -82,6 +82,15 @@ class BuildOption
     private $code_type;
 
     /**
+     * BuildOption constructor.
+     * @param array $build_option
+     */
+    public function __construct($build_option = array())
+    {
+        
+    }
+
+    /**
      * 数据修正
      * @param string $code_type
      */

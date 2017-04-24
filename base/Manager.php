@@ -4,9 +4,12 @@ namespace ffan\dop;
 
 use ffan\dop\build\BuildCache;
 use ffan\dop\build\BuildOption;
+use ffan\dop\build\CoderBase;
+use ffan\dop\build\PluginBase;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\Protocol;
 use ffan\php\utils\Str as FFanStr;
+use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class Manager
@@ -65,6 +68,11 @@ class Manager
     private $cache_data;
 
     /**
+     * @var array 代码生成器
+     */
+    private $coder_list;
+
+    /**
      * @var array 插件
      */
     private $plugin_list;
@@ -80,13 +88,22 @@ class Manager
     private $file_struct_list = [];
 
     /**
+     * @var string 自定代码生成器、插件 的路径
+     */
+    private $extension_path;
+
+    /**
+     * @var array 生成代码配置参数
+     */
+    private $build_config;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
-     * @param array $config 其它配置项
      * @throws Exception
      */
-    public function __construct($base_path, array $config = array())
+    public function __construct($base_path)
     {
         if (!is_dir($base_path)) {
             throw new Exception('Protocol path:' . $base_path . ' not exist!');
@@ -95,9 +112,57 @@ class Manager
             throw new Exception('Protocol path:' . $base_path . ' is not readable');
         }
         $this->base_path = $base_path;
-        $this->config = $config;
+        $this->build_config = $this->initBuildOption();
         $this->initCoder();
         $this->initPlugin();
+    }
+
+    /**
+     * 获取生成代码的参数
+     * @return array
+     */
+    private function initBuildOption()
+    {
+        $ini_file = $this->base_path .'build.ini';
+        if (!is_file($ini_file)) {
+            return array();
+        }
+        $ini_config = parse_ini_file($ini_file, true);
+        //公共配置
+        if (!empty($ini_config['public'])) {
+            
+        }
+        //自定义代码生成器
+        if (!empty($ini_config['coder'])) {
+            
+        }
+        //自定义插件
+        if (!empty($ini_config['plugin'])) {
+            
+        }
+        //自定义数据打包器
+        if (!empty($ini_config['packer'])) {
+
+        }
+        //找出section配置
+        $section_config = array();
+        foreach ($ini_config as $name => $value) {
+            if (0 !== strpos($name, 'build:')) {
+                continue;
+            } 
+            $section_config[str_replace('build:', '', $name)] = $value;
+        }
+        //如果有公共配置，合并
+        if (!empty($public_config)) {
+            if (isset($public_config['extension_dir'])) {
+                $this->extension_path = $public_config['extension_dir'];
+            } 
+            //合并public配置 和每个section配置
+            foreach ($section_config as $name => $value) {
+                $section_config[$name] = $value + $public_config;
+            }
+        }
+        return $section_config;
     }
 
     /**
@@ -490,20 +555,6 @@ class Manager
     }
 
     /**
-     * 获取配置
-     * @param string $key
-     * @param null $default 如果不存在这个值的默认值
-     * @return null
-     */
-    public function getConfig($key, $default = null)
-    {
-        if (!isset($this->config[$key])) {
-            return $default;
-        }
-        return $this->config[$key];
-    }
-
-    /**
      * 初始化插件
      * @throws Exception
      */
@@ -538,7 +589,7 @@ class Manager
         $dir_handle = readdir($dir_name);
         $result = array();
         $len = strlen($dir_name);
-        if (DIRECTORY_SEPARATOR !== $dir_name[$len - 1]){
+        if (DIRECTORY_SEPARATOR !== $dir_name[$len - 1]) {
             $dir_name .= DIRECTORY_SEPARATOR;
         }
         while (false != ($file = readdir($dir_handle))) {
@@ -606,22 +657,124 @@ class Manager
     }
 
     /**
-     * 注册一个插件
-     * @param string $name 插件名称
-     * @param string $base_path 插件基础路径
-     */
-    public function registerPlugin($name, $base_path)
-    {
-
-    }
-
-    /**
      * 注册一个代码生成器
      * @param string $name 代码生成器名称
      * @param string $base_path 基础目录
+     * @throws Exception
      */
     public function registerCoder($name, $base_path)
     {
+        if (isset($this->coder_list[$name])) {
+            throw new Exception('Coder ' . $name . ' has exist!');
+        }
+        $this->coder_list[$name] = $this->fixRelatePath($base_path);
+    }
 
+    /**
+     * 注册一个插件
+     * @param string $name 插件名称
+     * @param string $base_path 插件基础路径
+     * @throws Exception
+     */
+    public function registerPlugin($name, $base_path)
+    {
+        if (isset($this->plugin_list[$name])) {
+            throw new Exception('Coder ' . $name . ' has exist!');
+        }
+        $this->plugin_list[$name] = $this->fixRelatePath($base_path);
+    }
+
+    /**
+     * 获取一个插件的主目录
+     * @param string $plugin_name
+     * @return string
+     * @throws Exception
+     */
+    public function getPluginMainPath($plugin_name)
+    {
+        if (!isset($this->plugin_list[$plugin_name])) {
+            throw new Exception('Plugin ' . $plugin_name . ' not found');
+        }
+        return $this->plugin_list[$plugin_name];
+    }
+
+    /**
+     * 获致代码生成器实例
+     * @param string $coder_name
+     * @return CoderBase
+     * @throws Exception
+     */
+    public function getCoder($coder_name)
+    {
+        static $coder_instance_arr = [];
+        if (isset($coder_instance_arr[$coder_name])) {
+            return $coder_instance_arr[$coder_name];
+        }
+        if (!isset($this->coder_list[$coder_name])) {
+            throw new Exception('Coder ' . $coder_name . ' not found!');
+        }
+        $base_path = $this->coder_list[$coder_name];
+        $class_name = 'Coder';
+        $file = $base_path . '/' . $class_name . '.php';
+        if (!is_file($file)) {
+            throw new Exception('Can not find coder file:' . $file);
+        }
+        /** @noinspection PhpIncludeInspection */
+        require_once $file;
+        $full_class = '\ffan\dop\coder\\' . $coder_name . '\\' . $class_name;
+        if (!class_exists($full_class)) {
+            throw new Exception('Unknown class name ' . $full_class);
+        }
+        $parents = class_parents($full_class);
+        if (!isset($parents['ffan\dop\build\CoderBase'])) {
+            throw new Exception('Coder ' . $coder_name . ' must be implements of CoderBase');
+        }
+        $coder_instance_arr[$coder_name] = new $full_class($this, $coder_name);
+        return $coder_instance_arr[$coder_name];
+    }
+
+    /**
+     * 获取插件实例
+     * @param string $plugin_name 插件名称
+     * @return PluginBase
+     * @throws Exception
+     */
+    public function getPlugin($plugin_name)
+    {
+        static $plugin_instance = [];
+        if (isset($plugin_instance[$plugin_name])) {
+            return $plugin_instance[$plugin_name];
+        }
+        $plugin_dir = $plugin_instance[$plugin_name];
+        $class_name = FFanStr::camelName($plugin_name) . 'Plugin';
+        $file = FFanUtils::joinFilePath($plugin_dir, $class_name . '.php');
+        if (!is_file($file)) {
+            throw new Exception('Plugin class file: '. $file .' not found!');
+        }
+        /** @noinspection PhpIncludeInspection */
+        require_once $file;
+        $full_class = 'ffan\dop\build\\'. $plugin_name. '\\'. $class_name;
+        if (!class_exists($full_class)) {
+            throw new Exception('Class "' . $full_class .'" not found in file:'. $file);
+        }
+        $parents = class_parents($full_class);
+        if (!isset($parents['ffan\dop\build\PluginBase'])) {
+            throw new Exception('Plugin '.$full_class.' must be implements of PluginBase');
+        }
+        $plugin_instance[$plugin_name] = new $full_class($this);
+        return $plugin_instance[$plugin_name];
+    }
+
+    /**
+     * 修正相对路径
+     * @param string $path
+     * @return string
+     */
+    private function fixRelatePath($path)
+    {
+        if (DIRECTORY_SEPARATOR === $path[0]) {
+            return $path;
+        }
+        return FFanUtils::joinPath($this->extension_path, $path);
     }
 }

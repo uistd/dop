@@ -16,7 +16,7 @@ use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class Coder
- * @package ffan\dop\pack\php
+ * @package ffan\dop\coder\php
  */
 class Coder extends CoderBase
 {

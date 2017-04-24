@@ -14,7 +14,7 @@ use ffan\dop\protocol\StructItem;
 
 /**
  * Class ArrayPack
- * @package ffan\dop\pack\php
+ * @package ffan\dop\coder\php
  */
 class ArrayPack extends PackerBase
 {

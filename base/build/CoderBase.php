@@ -29,6 +29,11 @@ abstract class CoderBase
      * @var array 生成打包， 解角代码的对象
      */
     private $pack_instance_arr;
+    
+    /**
+     * @var array 注册的打包器
+     */
+    private $reg_packer;
 
     /**
      * CoderBase constructor.
@@ -230,5 +235,19 @@ abstract class CoderBase
                 throw new \InvalidArgumentException('Unknown type');
         }
         return $result;
+    }
+    
+    /**
+     * 注册自定义数据打包器
+     * @param string $name
+     * @param string $class_file
+     */
+    public function registerPacker($name, $class_file)
+    {
+        if (!isset($this->reg_packer[$name])) {
+            $this->builder->getManager()->buildLogError('Packer '. $name .' conflict');
+            return;
+        }
+        $this->reg_packer[$name] = $class_file;
     }
 }

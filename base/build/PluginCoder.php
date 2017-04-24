@@ -22,14 +22,14 @@ abstract class PluginCoder
     protected $build_opt;
 
     /**
-     * @var Plugin
+     * @var PluginBase
      */
     protected $plugin;
 
     /**
      * GenerateInterface constructor.
      * @param Builder $builder
-     * @param Plugin $plugin
+     * @param PluginBase $plugin
      */
     public function __construct(Builder $builder, Plugin $plugin)
     {

@@ -1,16 +1,16 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace ffan\dop\build;
 
-use ffan\dop\build\PluginCoder;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
+use ffan\dop\protocol\Item;
 
 /**
- * Class Plugin
- * @package ffan\dop\protocol
+ * Class PluginBase 插件基类
+ * @package ffan\dop\build
  */
-abstract class Plugin
+abstract class PluginBase
 {
     /**
      * @var string 插件相关属性名的前缀
@@ -43,6 +43,16 @@ abstract class Plugin
     protected $tpl_name;
 
     /**
+     * @var array 插件处理
+     */
+    private $handler_list = array();
+
+    /**
+     * @var string 所在路径
+     */
+    private $base_path;
+
+    /**
      * PluginInterface constructor.
      * @param Manager $manager
      * @param array $config
@@ -50,7 +60,12 @@ abstract class Plugin
     public function __construct(Manager $manager, $config = null)
     {
         $this->manager = $manager;
-        $this->config = $config;
+         $this->config = $config;
+         if (empty($this->name)) {
+             throw new \InvalidArgumentException('Plugin name can not be empty');
+         }
+        $this->base_path = $manager->getPluginMainPath($this->name);
+        $this->initHandler();
     }
 
     /**
@@ -60,6 +75,24 @@ abstract class Plugin
      */
     abstract public function init(\DOMElement $node, Item $item);
 
+    /**
+     * 初始化处理器
+     */
+    private function initHandler()
+    {
+        $dir_name = $this->base_path .DIRECTORY_SEPARATOR . 'handler/';
+        $dir_handle = readdir($dir_name);
+        while (false != ($file = readdir($dir_handle))) {
+            $tmp_name = $dir_name . $file;
+            if ('.' === $file{0} || !is_file($tmp_name) || '.php' !== substr($file, -4)) {
+                continue;
+            }
+        }
+        $name = basename($file, '.php');
+        $class_file = $dir_name . $file;
+        $this->registerHandler($name, $class_file);
+    }
+    
     /**
      * 获取插件名称
      * @return string
@@ -71,6 +104,20 @@ abstract class Plugin
             throw new Exception('Property name required!');
         }
         return $this->name;
+    }
+
+    /**
+     * 注册一个插件处理器
+     * @param string $coder_name 代码生成器名称
+     * @param string $class_file
+     * @throws Exception
+     */
+    public function registerHandler($coder_name, $class_file)
+    {
+        if (isset($this->handler_list[$coder_name])) {
+            throw new Exception('Plugin '. $this->name .' coder:'. $coder_name .' exist!');
+        }
+        $this->handler_list[$coder_name] = $class_file;
     }
 
     /**
