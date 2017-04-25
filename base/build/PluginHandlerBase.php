@@ -3,13 +3,12 @@
 namespace ffan\dop\build;
 
 use ffan\dop\Builder;
-use ffan\dop\protocol\Plugin;
 
 /**
  * Class PluginCoder
  * @package ffan\dop\build
  */
-abstract class PluginCoder
+abstract class PluginHandlerBase
 {
     /**
      * @var Builder
@@ -31,7 +30,7 @@ abstract class PluginCoder
      * @param Builder $builder
      * @param PluginBase $plugin
      */
-    public function __construct(Builder $builder, Plugin $plugin)
+    public function __construct(Builder $builder, PluginBase $plugin)
     {
         $this->builder = $builder;
         $this->build_opt = $builder->getBuildOption();

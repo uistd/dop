@@ -2,27 +2,22 @@
 
 namespace ffan\dop\plugin\validator;
 
+use ffan\dop\build\PluginBase;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\Plugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class ValidatorPlugin 数据有效性检验
  * @package ffan\dop
  */
-class ValidatorPlugin extends Plugin
+class Plugin extends PluginBase
 {
     /**
      * @var string 属性名前缀
      */
     protected $attribute_name_prefix = 'v';
-
-    /**
-     * @var string
-     */
-    protected $name = 'validator';
 
     /**
      * 初始化

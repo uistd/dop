@@ -5,8 +5,7 @@ namespace ffan\dop;
 use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
-use ffan\dop\build\PluginCoder;
-use ffan\dop\protocol\Plugin;
+use ffan\dop\build\PluginHandlerBase;
 use ffan\dop\protocol\Struct;
 use ffan\php\utils\Utils as FFanUtils;
 
@@ -34,7 +33,7 @@ class Builder
     /**
      * @var array 插件的代码生成器
      */
-    private $plugin_coder_arr;
+    private $plugin_handler_arr;
 
     /**
      * @var array 主代码生成器
@@ -96,10 +95,10 @@ class Builder
      */
     private function pluginBuild()
     {
-        $plugin_coder_arr = $this->getPluginCoder();
+        $plugin_coder_arr = $this->getPluginHandlers();
         /**
          * @var string $name
-         * @var PluginCoder $plugin_coder
+         * @var PluginHandlerBase $plugin_coder
          */
         foreach ($plugin_coder_arr as $name => $plugin_coder) {
             $plugin_append_msg = 'Build plugin code: ' . $plugin_coder->getName();
@@ -125,10 +124,10 @@ class Builder
      */
     private function buildStructFile($coder)
     {
-        $use_cache = $this->build_opt->allow_cache;
         /** @var Struct $struct */
         foreach ($this->manager->getAllStruct() as $struct) {
-            if ($use_cache && $struct->isCached()) {
+            //如果struct是从缓存加载的，这次就不用再生成代码了
+            if ($struct->loadFromCache()) {
                 continue;
             }
             $append_msg = 'Build struct ' . $struct->getFile() . ' ' . $struct->getClassName();
@@ -143,8 +142,7 @@ class Builder
      */
     private function buildNsFile($coder)
     {
-        $use_cache = $this->build_opt->allow_cache;
-        $file_list = $use_cache ? $this->manager->getBuildFileList() : $this->manager->getAllFileList();
+        $file_list = $this->manager->getBuildFileList();
         foreach ($file_list as $file) {
             $append_msg = 'Build name space ' . $file;
             Exception::setAppendMsg($append_msg);
@@ -160,7 +158,7 @@ class Builder
      */
     private function getCoder()
     {
-        $code_type = $this->build_opt->getCodeType();
+        $code_type = $this->build_opt->getCoderName();
         if (isset($this->coder_arr[$code_type])) {
             return $this->coder_arr[$code_type];
         }
@@ -187,30 +185,15 @@ class Builder
      * 获取插件代码生成器
      * @return array
      */
-    private function getPluginCoder()
+    private function getPluginHandlers()
     {
-        if (NULL !== $this->plugin_coder_arr) {
-            return $this->plugin_coder_arr;
+        if (NULL !== $this->plugin_handler_arr) {
+            return $this->plugin_handler_arr;
         }
         $result = array();
-        $code_type = $this->build_opt->getCodeType();
-        $plugin_list = $this->manager->getPluginList();
-        if (null !== $plugin_list) {
-            /**
-             * @var string $name
-             * @var Plugin $plugin
-             */
-            foreach ($plugin_list as $name => $plugin) {
-                if (!$this->build_opt->usePlugin($name)) {
-                    continue;
-                }
-                $coder = $plugin->getPluginCoder($code_type);
-                if (null !== $coder) {
-                    $result[$name] = $coder;
-                }
-            }
-        }
-        $this->plugin_coder_arr = $result;
+        //$code_type = $this->build_opt->getCoderName();
+        //$plugin_list = $this->manager->getPluginList();
+        $this->plugin_handler_arr = $result;
         return $result;
     }
 

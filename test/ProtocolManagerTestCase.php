@@ -15,7 +15,6 @@ $build_config = array(
 );
 $manager = new Manager(__DIR__ . '/protocol', $build_config);
 $build_opt = new BuildOption();
-$build_opt->allow_cache = false;
 $build_opt->addPacker('json');
 $build_opt->build_path = __DIR__ . '/runtime/build';
 $build_result = $manager->buildPhp($build_opt);

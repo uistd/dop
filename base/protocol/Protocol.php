@@ -2,6 +2,7 @@
 
 namespace ffan\dop\protocol;
 
+use ffan\dop\build\PluginBase;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
@@ -382,7 +383,7 @@ class Protocol
         }
         /**
          * @var string $name
-         * @var Plugin $plugin
+         * @var PluginBase $plugin
          */
         foreach ($plugin_list as $name => $plugin) {
             $plugin->init($dom_node, $item);

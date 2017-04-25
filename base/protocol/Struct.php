@@ -107,7 +107,7 @@ class Struct
      * 是不是从缓存加载的
      * @return bool
      */
-    public function isCached()
+    public function loadFromCache()
     {
         return $this->load_from_cache;
     }

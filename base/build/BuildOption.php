@@ -4,6 +4,7 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\php\utils\Utils as FFanUtils;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class BuildOption 生成文件参数
@@ -22,31 +23,6 @@ class BuildOption
     const SIDE_CLIENT = 2;
 
     /**
-     * 生成代码 php
-     */
-    const BUILD_CODE_PHP = 'php';
-
-    /**
-     * 生成代码 js
-     */
-    const BUILD_CODE_JS = 'js';
-
-    /**
-     * 使用json打包
-     */
-    const PACK_TYPE_JSON = 0x1;
-
-    /**
-     * 使用二进制打包
-     */
-    const PACK_TYPE_BINARY = 0x2;
-
-    /**
-     * 使用msgpack打包
-     */
-    const PACK_TYPE_MSGPACK = 0x4;
-
-    /**
      * @var string 生成文件目录
      */
     public $build_path;
@@ -59,57 +35,79 @@ class BuildOption
     /**
      * @var string 命名空间前缀
      */
-    public $namespace_prefix = 'ffan\\dop\\';
-
-    /**
-     * @var bool 是否使用缓存，默认会缓存编译的结果，避免每次都全量编译
-     */
-    public $allow_cache = true;
+    public $namespace_prefix;
 
     /**
      * @var array 数据打包解包类
      */
-    public $packer_arr = array();
+    private $packer_arr = array();
 
     /**
      * @var string 使用的插件, plugin1, plugin2
      */
-    public $use_plugin = 'all';
+    private $use_plugin = 'all';
 
     /**
      * @var string 语言类型
      */
-    private $code_type;
+    private $coder_name;
+
+    /**
+     * @var string
+     */
+    public $section_name;
 
     /**
      * BuildOption constructor.
-     * @param array $build_option
+     * @param string $section_name
+     * @param array $section_conf
+     * @param array $public_conf 公共配置
+     * @throws Exception
+     * @internal param Manager $manager
      */
-    public function __construct($build_option = array())
+    public function __construct($section_name, array $section_conf, $public_conf = array())
     {
-        
+        $this->section_name = $section_name;
+        //默认配置
+        static $default_config = array(
+            'build_path' => 'build',
+            'namespace' => 'ffan\dop',
+            'packer' => 'json'
+        );
+        //修正缺失的配置项
+        foreach ($default_config as $name => $value) {
+            if (!isset($section_conf[$name])) {
+                $section_conf[$name] = isset($public_conf[$name]) ? $public_conf[$name] : $value;
+            }
+        }
+        //如果没有设置coder 直接报错
+        if (!$section_conf['coder']) {
+            throw new Exception('`Coder` not found in build config:' . $section_name);
+        }
+        //命名空间检查
+        $ns = rtrim(trim($section_conf['namespace']), '\\/');
+        if (!FFanStr::isValidClassName($ns)) {
+            $ns = $default_config['namespace'];
+        }
+        $section_conf['namespace'] = $ns;
+        $this->init($section_conf);
     }
 
     /**
      * 数据修正
-     * @param string $code_type
+     * @param array $section_conf
      */
-    public function fix($code_type)
+    public function init($section_conf)
     {
-        //初始化代码生成目录
-        if (null === $this->build_path) {
-            $this->build_path = __DIR__ . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR;
-        }
-        $this->build_path = FFanUtils::joinPath($this->build_path, $code_type);
-        //命名空间前缀
-        if (!is_string($this->namespace_prefix)) {
-            $this->namespace_prefix = '';
-        } else {
-            //清除两边的空格 和 \ / 符号
-            $this->namespace_prefix = trim($this->namespace_prefix, '\\/ ');
-        }
+        //代码生成目录
+        $this->build_path = FFanUtils::fixWithRootPath($section_conf['build_path']);
+        $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
-        $this->code_type = $code_type;
+        $this->coder_name = $section_conf['coder'];
+        $packer = FFanStr::split($section_conf['packer'], ',');
+        foreach ($packer as $name) {
+            $this->addPacker($name);
+        }
     }
 
     /**
@@ -134,7 +132,7 @@ class BuildOption
      */
     public function addPacker($packer_name)
     {
-        if (!preg_match('/^[a-zA-Z][a-zA-Z_\d]*$/', $packer_name)) {
+        if (FFanStr::isValidVarName($packer_name)) {
             throw new Exception('Packer name:' . $packer_name . ' is invalid');
         }
         $this->packer_arr[$packer_name] = true;
@@ -149,11 +147,11 @@ class BuildOption
     }
 
     /**
-     * 获取代码类型
+     * 获取代码生成器名称
      * @return string
      */
-    public function getCodeType()
+    public function getCoderName()
     {
-        return $this->code_type;
+        return $this->coder_name;
     }
 }

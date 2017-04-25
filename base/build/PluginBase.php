@@ -28,11 +28,6 @@ abstract class PluginBase
     protected $name;
 
     /**
-     * @var null|array 插件配置
-     */
-    protected $config;
-
-    /**
      * @var bool 是否存在插件的模板
      */
     protected $has_tpl;
@@ -55,15 +50,12 @@ abstract class PluginBase
     /**
      * PluginInterface constructor.
      * @param Manager $manager
-     * @param array $config
+     * @param string $name
      */
-    public function __construct(Manager $manager, $config = null)
+    public function __construct(Manager $manager, $name)
     {
         $this->manager = $manager;
-         $this->config = $config;
-         if (empty($this->name)) {
-             throw new \InvalidArgumentException('Plugin name can not be empty');
-         }
+        $this->name = $name;
         $this->base_path = $manager->getPluginMainPath($this->name);
         $this->initHandler();
     }
@@ -203,23 +195,9 @@ abstract class PluginBase
     }
 
     /**
-     * 获取插件的配置
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
-     */
-    protected function getConfig($key, $default = null)
-    {
-        if (!isset($this->config[$key])) {
-            return $default;
-        }
-        return $this->config[$key];
-    }
-
-    /**
      * 获取某种语言的代码生成实例
      * @param string $code_type
-     * @return PluginCoder
+     * @return PluginHandlerBase
      */
     public function getPluginCoder($code_type)
     {

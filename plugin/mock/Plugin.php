@@ -2,25 +2,20 @@
 
 namespace ffan\dop\plugin\mock;
 
+use ffan\dop\build\PluginBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Plugin;
 use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class MockPlugin
  * @package ffan\dop
  */
-class MockPlugin extends Plugin
+class Plugin extends PluginBase
 {
-    /**
-     * @var string
-     */
-    protected $name = 'mock';
-
     /**
      * @var string 属性前缀
      */

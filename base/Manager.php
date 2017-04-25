@@ -88,14 +88,19 @@ class Manager
     private $file_struct_list = [];
 
     /**
-     * @var string 自定代码生成器、插件 的路径
+     * @var array 生成代码的配置项
      */
-    private $extension_path;
+    private $build_section;
 
     /**
-     * @var array 生成代码配置参数
+     * @var bool 是否解析过协议文件
      */
-    private $build_config;
+    private $init_protocol_flag = false;
+
+    /**
+     * @var string 缓存的文件名
+     */
+    private $cache_name;
 
     /**
      * 初始化
@@ -112,9 +117,9 @@ class Manager
             throw new Exception('Protocol path:' . $base_path . ' is not readable');
         }
         $this->base_path = $base_path;
-        $this->build_config = $this->initBuildOption();
         $this->initCoder();
         $this->initPlugin();
+        $this->initBuildOption();
     }
 
     /**
@@ -129,38 +134,32 @@ class Manager
         }
         $ini_config = parse_ini_file($ini_file, true);
         //公共配置
-        if (!empty($ini_config['public'])) {
-            
+        if (!empty($ini_config['public']) && is_array($ini_config['public'])) {
+            $this->config = $ini_config['public'];
         }
         //自定义代码生成器
-        if (!empty($ini_config['coder'])) {
-            
+        if (!empty($ini_config['coder']) && is_array($ini_config['coder'])) {
+            foreach ($ini_config['coder'] as $name => $path) {
+                $this->registerCoder($name, $path);
+            }
         }
         //自定义插件
-        if (!empty($ini_config['plugin'])) {
-            
-        }
-        //自定义数据打包器
-        if (!empty($ini_config['packer'])) {
-
+        if (!empty($ini_config['plugin']) && is_array($ini_config['plugin'])) {
+            foreach ($ini_config['plugin'] as $name => $path) {
+                $this->registerPlugin($name, $path);
+            }
         }
         //找出section配置
         $section_config = array();
         foreach ($ini_config as $name => $value) {
-            if (0 !== strpos($name, 'build:')) {
+            if (0 !== strpos($name, 'build')) {
                 continue;
-            } 
-            $section_config[str_replace('build:', '', $name)] = $value;
-        }
-        //如果有公共配置，合并
-        if (!empty($public_config)) {
-            if (isset($public_config['extension_dir'])) {
-                $this->extension_path = $public_config['extension_dir'];
-            } 
-            //合并public配置 和每个section配置
-            foreach ($section_config as $name => $value) {
-                $section_config[$name] = $value + $public_config;
             }
+            //使用main修正默认的build section
+            if ('build' === $name) {
+                $name = 'build:main';
+            }
+            $section_config[$name] = $value;
         }
         return $section_config;
     }
@@ -257,13 +256,84 @@ class Manager
     }
 
     /**
-     * 生成PHP代码
-     * @param BuildOption $build_opt 生成文件参数
-     * @return string
+     * 生成代码
+     * @param string $section 使用的配置section
+     * @return bool
      */
-    public function buildPhp(BuildOption $build_opt)
+    public function build($section = 'main')
     {
-        return $this->doBuild($build_opt, BuildOption::BUILD_CODE_PHP);
+        $name = 'build:'. $section;
+        if (!isset($this->build_section[$name])) {
+            $this->buildLogError('Build section '. $name .' not found!');
+            return false;
+        }
+        $section_config = $this->build_section[$name];
+        $build_opt = new BuildOption($section, $section_config, $this->config);
+        $this->build_message = '';
+        $result = true;
+        try {
+            if (!$this->init_protocol_flag) {
+                $this->initProtocol();
+            }
+            $builder = new Builder($this, $build_opt);
+            $builder->build();
+            $this->buildLog('done!');
+        } catch (Exception $exception) {
+            $msg = $exception->getMessage();
+            $this->buildLogError($msg);
+            return false;
+        }
+        return $result;
+    }
+
+    /**
+     * 是否缓存协议解析结果
+     * @return bool
+     */
+    private function isCacheProtocol()
+    {
+        return !empty($this->config['cache_protocol']);
+    }
+
+    /**
+     * 初始化协议文件
+     */
+    private function initProtocol()
+    {
+        $this->init_protocol_flag = true;
+        $file_list = $this->getAllFileList();
+        $use_flag = $this->isCacheProtocol(); 
+        if ($use_flag) {
+            $this->initCache();
+            $build_list = $this->filterCacheFile($file_list);
+        } else {
+            $build_list = $file_list;
+        }
+        $this->build_file_list = $build_list;
+        //解析文件
+        foreach ($build_list as $xml_file => $v) {
+            $this->parseFile($xml_file);
+        }
+        //从缓存中将struct补全
+        if ($use_flag) {
+            $this->loadStructFromCache($build_list, $file_list);
+        }
+        /** @var Struct $struct */
+        foreach ($this->struct_list as $struct) {
+            $file = $struct->getFile();
+            //如果是来自没有修改过的文件的，就标记为来自缓存
+            if (!isset($build_list[$file])) {
+                $struct->setCacheFlag(true);
+            }
+        }
+        //保存缓存文件
+        if ($use_flag) {
+            $this->setCache('require_map', $this->require_map);
+            $this->setCache('build_time', $file_list);
+            $this->setCache('struct_list', $this->struct_list);
+            $this->saveCache();
+        }
+        Exception::setAppendMsg('Build files');
     }
 
     /**
@@ -293,64 +363,6 @@ class Manager
     public function buildLogNotice($msg)
     {
         $this->buildLog($msg, 'notice');
-    }
-
-    /**
-     * 待编译的所有文件
-     * @param BuildOption $build_opt 生成参数
-     * @param int $build_type 生成代码类型
-     * @return bool
-     */
-    private function doBuild($build_opt, $build_type)
-    {
-        $build_opt->fix($build_type);
-        $build_path = $build_opt->build_path;
-        $file_list = $this->getAllFileList();
-        $this->build_message = '';
-        //初始化缓存
-        if ($build_opt->allow_cache) {
-            $sign_key = md5(serialize($this->config) . serialize($build_opt) . $this->base_path);
-            $this->initCache($build_path, $sign_key);
-            $build_list = $this->filterCacheFile($file_list);
-        } else {
-            $build_list = $file_list;
-        }
-        $this->build_file_list = $build_list;
-        $result = true;
-        try {
-            //解析文件
-            foreach ($build_list as $xml_file => $v) {
-                $this->parseFile($xml_file);
-            }
-            //从缓存中将struct补全
-            if ($build_opt->allow_cache) {
-                $this->loadStructFromCache($build_list, $file_list);
-            }
-            /** @var Struct $struct */
-            foreach ($this->struct_list as $struct) {
-                $file = $struct->getFile();
-                //如果是来自没有修改过的文件的，就标记为来自缓存
-                if (!isset($build_list[$file])) {
-                    $struct->setCacheFlag(true);
-                }
-            }
-            Exception::setAppendMsg('Build files');
-            $builder = new Builder($this, $build_opt);
-            $builder->build();
-            $this->buildLog('done!');
-        } catch (Exception $exception) {
-            $msg = $exception->getMessage();
-            $this->buildLogError($msg);
-            return false;
-        }
-        //保存缓存文件
-        if ($result && $build_opt->allow_cache) {
-            $this->setCache('require_map', $this->require_map);
-            $this->setCache('build_time', $file_list);
-            $this->setCache('struct_list', $this->struct_list);
-            $this->saveCache();
-        }
-        return $result;
     }
 
     /**
@@ -469,14 +481,16 @@ class Manager
 
     /**
      * 初始化缓存
-     * @param string $cache_path 缓存所在目录
-     * @param string $sign_key 校验码
      */
-    private function initCache($cache_path, $sign_key)
+    private function initCache()
     {
         if ($this->cache) {
             return;
         }
+        $ini_file = $this->base_path .'build.ini';
+        $sign_key = md5(serialize(file_get_contents($ini_file)) . $this->base_path);
+        $this->cache_name = 'build.'. substr(md5($this->base_path), -8);
+        $cache_path = FFanUtils::fixWithRuntimePath('dop ');
         $this->cache = new BuildCache($this, $sign_key, $cache_path);
         $cache_data = $this->cache->loadCache(self::CACHE_FILE_NAME);
         if (!is_array($cache_data)) {
@@ -604,11 +618,15 @@ class Manager
 
     /**
      * 获取插件列表
-     * @return array|null
+     * @return array
      */
     public function getPluginList()
     {
-        return $this->plugin_list;
+        $result = array();
+        foreach ($this->plugin_list as $name => $path) {
+            $result[$name] = $this->getPlugin($name);
+        }
+        return $result;
     }
 
     /**
@@ -667,7 +685,7 @@ class Manager
         if (isset($this->coder_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->coder_list[$name] = $this->fixRelatePath($base_path);
+        $this->coder_list[$name] = $base_path;
     }
 
     /**
@@ -681,7 +699,7 @@ class Manager
         if (isset($this->plugin_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->plugin_list[$name] = $this->fixRelatePath($base_path);
+        $this->plugin_list[$name] = $this->$base_path;
     }
 
     /**
@@ -746,7 +764,7 @@ class Manager
             return $plugin_instance[$plugin_name];
         }
         $plugin_dir = $plugin_instance[$plugin_name];
-        $class_name = FFanStr::camelName($plugin_name) . 'Plugin';
+        $class_name = 'Plugin';
         $file = FFanUtils::joinFilePath($plugin_dir, $class_name . '.php');
         if (!is_file($file)) {
             throw new Exception('Plugin class file: '. $file .' not found!');
@@ -761,20 +779,7 @@ class Manager
         if (!isset($parents['ffan\dop\build\PluginBase'])) {
             throw new Exception('Plugin '.$full_class.' must be implements of PluginBase');
         }
-        $plugin_instance[$plugin_name] = new $full_class($this);
+        $plugin_instance[$plugin_name] = new $full_class($this, $plugin_name);
         return $plugin_instance[$plugin_name];
-    }
-
-    /**
-     * 修正相对路径
-     * @param string $path
-     * @return string
-     */
-    private function fixRelatePath($path)
-    {
-        if (DIRECTORY_SEPARATOR === $path[0]) {
-            return $path;
-        }
-        return FFanUtils::joinPath($this->extension_path, $path);
     }
 }
