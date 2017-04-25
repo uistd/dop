@@ -600,12 +600,12 @@ class Manager
      */
     private function getAllSubFolder($dir_name)
     {
-        $dir_handle = readdir($dir_name);
         $result = array();
         $len = strlen($dir_name);
         if (DIRECTORY_SEPARATOR !== $dir_name[$len - 1]) {
             $dir_name .= DIRECTORY_SEPARATOR;
         }
+        $dir_handle = opendir($dir_name);
         while (false != ($file = readdir($dir_handle))) {
             $tmp_name = $dir_name . $file;
             if (!is_dir($tmp_name) || '.' === $file{0}) {
@@ -699,7 +699,7 @@ class Manager
         if (isset($this->plugin_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->plugin_list[$name] = $this->$base_path;
+        $this->plugin_list[$name] = $base_path;
     }
 
     /**
