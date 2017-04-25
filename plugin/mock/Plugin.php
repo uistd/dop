@@ -11,8 +11,8 @@ use ffan\dop\protocol\MapItem;
 use ffan\php\utils\Str as FFanStr;
 
 /**
- * Class MockPlugin
- * @package ffan\dop
+ * Class Plugin
+ * @package ffan\dop\plugin\mock
  */
 class Plugin extends PluginBase
 {

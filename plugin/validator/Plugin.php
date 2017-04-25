@@ -9,8 +9,8 @@ use ffan\dop\protocol\ListItem;
 use ffan\php\utils\Str as FFanStr;
 
 /**
- * Class ValidatorPlugin 数据有效性检验
- * @package ffan\dop
+ * Class Plugin 数据有效性检验
+ * @package ffan\dop\plugin\validator
  */
 class Plugin extends PluginBase
 {
