@@ -143,7 +143,7 @@ class Coder extends CoderBase
         $name_space = $struct->getNamespace();
         $build_opt = $this->build_opt;
         $file_buf = new FileBuf($name_space .'/'. $main_class_name . '.php');
-        $this->builder->addFile($file_buf);
+        $this->addFile($file_buf);
         $class_buf = $file_buf->getMainBuf();
         $class_buf->push('<?php');
         $parent_struct = $struct->getParent();

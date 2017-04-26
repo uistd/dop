@@ -132,7 +132,7 @@ class BuildOption
      */
     public function addPacker($packer_name)
     {
-        if (FFanStr::isValidVarName($packer_name)) {
+        if (!FFanStr::isValidVarName($packer_name)) {
             throw new Exception('Packer name:' . $packer_name . ' is invalid');
         }
         $this->packer_arr[$packer_name] = true;

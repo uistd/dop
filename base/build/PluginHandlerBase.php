@@ -2,8 +2,6 @@
 
 namespace ffan\dop\build;
 
-use ffan\dop\Builder;
-
 /**
  * Class PluginCoder
  * @package ffan\dop\build
@@ -11,14 +9,9 @@ use ffan\dop\Builder;
 abstract class PluginHandlerBase
 {
     /**
-     * @var Builder
+     * @var CoderBase
      */
-    protected $builder;
-
-    /**
-     * @var BuildOption
-     */
-    protected $build_opt;
+    protected $coder;
 
     /**
      * @var PluginBase
@@ -27,21 +20,20 @@ abstract class PluginHandlerBase
 
     /**
      * GenerateInterface constructor.
-     * @param Builder $builder
+     * @param CoderBase $coder
      * @param PluginBase $plugin
      */
-    public function __construct(Builder $builder, PluginBase $plugin)
+    public function __construct(CoderBase $coder, PluginBase $plugin)
     {
-        $this->builder = $builder;
-        $this->build_opt = $builder->getBuildOption();
+        $this->coder = $coder;
         $this->plugin = $plugin;
     }
 
     /**
      * 生成插件代码
-     * @param Builder $builder
+     * @param CoderBase $coder
      */
-    public function buildCode(Builder $builder)
+    public function buildCode(CoderBase $coder)
     {
 
     }

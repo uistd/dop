@@ -18,7 +18,7 @@ abstract class PackerBase
     {
         return null;
     }
-
+    
     /**
      * 数据序列化
      * @param Struct $struct 结构体

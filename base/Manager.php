@@ -1,7 +1,7 @@
 <?php
 
 namespace ffan\dop;
-
+require_once 'Common.php';
 use ffan\dop\build\BuildCache;
 use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;
@@ -101,7 +101,7 @@ class Manager
      * @var string 缓存的文件名
      */
     private $cache_name;
-
+    
     /**
      * 初始化
      * ProtocolManager constructor.
@@ -110,6 +110,7 @@ class Manager
      */
     public function __construct($base_path)
     {
+        $base_path = FFanUtils::fixWithRootPath($base_path);
         if (!is_dir($base_path)) {
             throw new Exception('Protocol path:' . $base_path . ' not exist!');
         }
@@ -119,7 +120,7 @@ class Manager
         $this->base_path = $base_path;
         $this->initCoder();
         $this->initPlugin();
-        $this->initBuildOption();
+        $this->build_section = $this->initBuildOption();
     }
 
     /**
@@ -128,7 +129,7 @@ class Manager
      */
     private function initBuildOption()
     {
-        $ini_file = $this->base_path .'build.ini';
+        $ini_file = $this->base_path . 'build.ini';
         if (!is_file($ini_file)) {
             return array();
         }
@@ -262,9 +263,9 @@ class Manager
      */
     public function build($section = 'main')
     {
-        $name = 'build:'. $section;
+        $name = 'build:' . $section;
         if (!isset($this->build_section[$name])) {
-            $this->buildLogError('Build section '. $name .' not found!');
+            $this->buildLogError('Build section ' . $name . ' not found!');
             return false;
         }
         $section_config = $this->build_section[$name];
@@ -275,8 +276,10 @@ class Manager
             if (!$this->init_protocol_flag) {
                 $this->initProtocol();
             }
-            $builder = new Builder($this, $build_opt);
-            $builder->build();
+            $coder_class = $this->getCoderClass($build_opt->getCoderName());
+            /** @var CoderBase $coder */
+            $coder = new $coder_class($this, $build_opt);
+            $coder->build();
             $this->buildLog('done!');
         } catch (Exception $exception) {
             $msg = $exception->getMessage();
@@ -302,7 +305,7 @@ class Manager
     {
         $this->init_protocol_flag = true;
         $file_list = $this->getAllFileList();
-        $use_flag = $this->isCacheProtocol(); 
+        $use_flag = $this->isCacheProtocol();
         if ($use_flag) {
             $this->initCache();
             $build_list = $this->filterCacheFile($file_list);
@@ -487,9 +490,9 @@ class Manager
         if ($this->cache) {
             return;
         }
-        $ini_file = $this->base_path .'build.ini';
+        $ini_file = $this->base_path . 'build.ini';
         $sign_key = md5(serialize(file_get_contents($ini_file)) . $this->base_path);
-        $this->cache_name = 'build.'. substr(md5($this->base_path), -8);
+        $this->cache_name = 'build.' . substr(md5($this->base_path), -8);
         $cache_path = FFanUtils::fixWithRuntimePath('dop ');
         $this->cache = new BuildCache($this, $sign_key, $cache_path);
         $cache_data = $this->cache->loadCache(self::CACHE_FILE_NAME);
@@ -535,7 +538,6 @@ class Manager
                 $this->getNeedBuildFile($file_path, $file_list);
             } else {
                 if ('.xml' !== substr(strtolower($file), -4)) {
-                    $this->buildLogError($file_list . '非XML文件');
                     continue;
                 }
                 $tmp_name = basename($file, '.xml');
@@ -574,10 +576,10 @@ class Manager
      */
     private function initPlugin()
     {
-        $base_dir = dirname(__DIR__) . '/plugin';
+        $base_dir = dirname(__DIR__) . '/plugin/';
         $folder_list = $this->getAllSubFolder($base_dir);
         foreach ($folder_list as $name) {
-            $this->registerPlugin($name, $base_dir);
+            $this->registerPlugin($name, $base_dir . $name);
         }
     }
 
@@ -586,10 +588,10 @@ class Manager
      */
     private function initCoder()
     {
-        $base_dir = dirname(__DIR__) . '/coder';
+        $base_dir = dirname(__DIR__) . '/coder/';
         $folder_list = $this->getAllSubFolder($base_dir);
         foreach ($folder_list as $name) {
-            $this->registerCoder($name, $base_dir);
+            $this->registerCoder($name, $base_dir . $name);
         }
     }
 
@@ -685,7 +687,7 @@ class Manager
         if (isset($this->coder_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->coder_list[$name] = $base_path;
+        $this->coder_list[$name] = FFanUtils::fixPath($base_path);
     }
 
     /**
@@ -699,7 +701,7 @@ class Manager
         if (isset($this->plugin_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->plugin_list[$name] = $base_path;
+        $this->plugin_list[$name] = FFanUtils::fixPath($base_path);
     }
 
     /**
@@ -717,12 +719,12 @@ class Manager
     }
 
     /**
-     * 获致代码生成器实例
+     * 获取代码生成器的类名
      * @param string $coder_name
-     * @return CoderBase
+     * @return string
      * @throws Exception
      */
-    public function getCoder($coder_name)
+    private function getCoderClass($coder_name)
     {
         static $coder_instance_arr = [];
         if (isset($coder_instance_arr[$coder_name])) {
@@ -747,8 +749,8 @@ class Manager
         if (!isset($parents['ffan\dop\build\CoderBase'])) {
             throw new Exception('Coder ' . $coder_name . ' must be implements of CoderBase');
         }
-        $coder_instance_arr[$coder_name] = new $full_class($this, $coder_name);
-        return $coder_instance_arr[$coder_name];
+        $coder_instance_arr[$coder_name] = $full_class;
+        return $full_class;
     }
 
     /**
@@ -763,23 +765,37 @@ class Manager
         if (isset($plugin_instance[$plugin_name])) {
             return $plugin_instance[$plugin_name];
         }
-        $plugin_dir = $plugin_instance[$plugin_name];
+        $plugin_dir = $this->plugin_list[$plugin_name];
         $class_name = 'Plugin';
         $file = FFanUtils::joinFilePath($plugin_dir, $class_name . '.php');
         if (!is_file($file)) {
-            throw new Exception('Plugin class file: '. $file .' not found!');
+            throw new Exception('Plugin class file: ' . $file . ' not found!');
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = 'ffan\dop\build\\'. $plugin_name. '\\'. $class_name;
+        $full_class = 'ffan\dop\plugin\\' . $plugin_name . '\\' . $class_name;
         if (!class_exists($full_class)) {
-            throw new Exception('Class "' . $full_class .'" not found in file:'. $file);
+            throw new Exception('Class "' . $full_class . '" not found in file:' . $file);
         }
         $parents = class_parents($full_class);
         if (!isset($parents['ffan\dop\build\PluginBase'])) {
-            throw new Exception('Plugin '.$full_class.' must be implements of PluginBase');
+            throw new Exception('Plugin ' . $full_class . ' must be implements of PluginBase');
         }
         $plugin_instance[$plugin_name] = new $full_class($this, $plugin_name);
         return $plugin_instance[$plugin_name];
+    }
+
+    /**
+     * 获取一个coder的基础目录
+     * @param string $coder_name
+     * @return string
+     * @throws Exception
+     */
+    public function getCoderPath($coder_name)
+    {
+        if (!isset($this->coder_list[$coder_name])) {
+            throw new Exception('Coder "'. $coder_name .'" is unregistered!');
+        }
+        return $this->coder_list[$coder_name];
     }
 }

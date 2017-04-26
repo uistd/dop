@@ -73,7 +73,7 @@ abstract class PluginBase
     private function initHandler()
     {
         $dir_name = $this->base_path .DIRECTORY_SEPARATOR . 'handler/';
-        $dir_handle = readdir($dir_name);
+        $dir_handle = opendir($dir_name);
         while (false != ($file = readdir($dir_handle))) {
             $tmp_name = $dir_name . $file;
             if ('.' === $file{0} || !is_file($tmp_name) || '.php' !== substr($file, -4)) {
