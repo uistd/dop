@@ -1,14 +1,14 @@
 <?php
 
 namespace ffan\dop\plugin\validator;
-use ffan\dop\build\PluginHandlerBase;
+use ffan\dop\build\PluginCoderBase;
 
 
 /**
  * Class PhpValidatorCode
  * @package ffan\dop\plugin\validator
  */
-class PhpValidatorCode extends PluginHandlerBase
+class PhpValidatorCoder extends PluginCoderBase
 {
     
 }

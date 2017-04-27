@@ -5,12 +5,13 @@ namespace ffan\dop\build;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Item;
+use ffan\php\utils\ConfigBase;
 
 /**
  * Class PluginBase 插件基类
  * @package ffan\dop\build
  */
-abstract class PluginBase
+abstract class PluginBase extends ConfigBase
 {
     /**
      * @var string 插件相关属性名的前缀
@@ -57,7 +58,10 @@ abstract class PluginBase
         $this->manager = $manager;
         $this->name = $name;
         $this->base_path = $manager->getPluginMainPath($this->name);
-        $this->initHandler();
+        $conf_arr = $manager->getPluginConfig($name);
+        if (!empty($conf_arr)) {
+            $this->initConfig($conf_arr);
+        }
     }
 
     /**
@@ -67,24 +71,6 @@ abstract class PluginBase
      */
     abstract public function init(\DOMElement $node, Item $item);
 
-    /**
-     * 初始化处理器
-     */
-    private function initHandler()
-    {
-        $dir_name = $this->base_path .DIRECTORY_SEPARATOR . 'handler/';
-        $dir_handle = opendir($dir_name);
-        while (false != ($file = readdir($dir_handle))) {
-            $tmp_name = $dir_name . $file;
-            if ('.' === $file{0} || !is_file($tmp_name) || '.php' !== substr($file, -4)) {
-                continue;
-            }
-        }
-        $name = basename($file, '.php');
-        $class_file = $dir_name . $file;
-        $this->registerHandler($name, $class_file);
-    }
-    
     /**
      * 获取插件名称
      * @return string
@@ -107,7 +93,7 @@ abstract class PluginBase
     public function registerHandler($coder_name, $class_file)
     {
         if (isset($this->handler_list[$coder_name])) {
-            throw new Exception('Plugin '. $this->name .' coder:'. $coder_name .' exist!');
+            throw new Exception('Plugin ' . $this->name . ' coder:' . $coder_name . ' exist!');
         }
         $this->handler_list[$coder_name] = $class_file;
     }
@@ -196,24 +182,30 @@ abstract class PluginBase
 
     /**
      * 获取某种语言的代码生成实例
-     * @param string $code_type
-     * @return PluginHandlerBase
+     * @param string $coder_name
+     * @return PluginCoderBase
      */
-    public function getPluginCoder($code_type)
+    public function getPluginCoder($coder_name)
     {
-        $class_name = $this->codeClassName($code_type);
-        $file = __DIR__ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . $class_name . '.php';
+        $class_name = $this->codeClassName($coder_name);
+        //如果有注册插件 处理器
+        if (isset($this->handler_list[$coder_name])) {
+            $file = $this->handler_list[$coder_name];
+        } else {
+            $base_dir = $this->manager->getPluginMainPath($this->name);
+            $file = $base_dir . 'coder/' . $class_name . '.php';
+        }
         $coder = null;
         if (is_file($file)) {
-            $full_class = $this->codeClassName($code_type, true);
+            $full_class = $this->codeClassName($coder_name, true);
             /** @noinspection PhpIncludeInspection */
             require_once $file;
             //类是否存在
             if (class_exists($full_class)) {
                 $parents = class_parents($full_class);
-                //类是否 继续 PluginCoder
-                if (isset($parents['ffan\dop\PluginCoder'])) {
-                    $coder = new $full_class();
+                //类是否 继续 PluginCoderBase
+                if (isset($parents['ffan\dop\build\PluginCoderBase'])) {
+                    $coder = new $full_class($this);
                 }
             }
         }
@@ -222,13 +214,13 @@ abstract class PluginBase
 
     /**
      * 生成代码的类名
-     * @param string $code_type
+     * @param string $coder_name 生成器名称
      * @param bool $ns 是否带全名空间
      * @return string
      */
-    private function codeClassName($code_type, $ns = false)
+    private function codeClassName($coder_name, $ns = false)
     {
-        $class_name = ucfirst($code_type) . ucfirst($this->name) . 'Code';
+        $class_name = ucfirst($coder_name) . ucfirst($this->name) . 'Coder';
         if ($ns) {
             $ns_str = 'ffan\dop\plugin\\' . $this->name;
             $class_name = $ns_str . '\\' . $class_name;

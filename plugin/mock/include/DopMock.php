@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop\plugin\mock;
+namespace ffan\dop\mock;
 
 /**
- * Class MockBase 基础类
- * @package ffan\dop\plugin\mock
+ * Class DopMock
+ * @package ffan\dop\mock
  */
-class MockBase
+class DopMock
 {
     /**
      * 随机生成字符串

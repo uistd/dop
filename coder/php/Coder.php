@@ -2,7 +2,6 @@
 
 namespace ffan\dop\coder\php;
 
-use ffan\dop\build\BuildOption;
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
@@ -68,22 +67,6 @@ class Coder extends CoderBase
     }
 
     /**
-     * PHP命名空间
-     * @param BuildOption $build_opt
-     * @param string $ns
-     * @return string
-     */
-    public static function phpNameSpace($build_opt, $ns)
-    {
-        $prefix = $build_opt->namespace_prefix;
-        if (is_string($prefix)) {
-            $ns = $prefix . $ns;
-        }
-        $ns = str_replace('/', '\\', $ns);
-        return $ns;
-    }
-
-    /**
      * 变量类型
      * @param Item $item
      * @return string
@@ -137,27 +120,26 @@ class Coder extends CoderBase
      * @param Struct $struct
      * @return void
      */
-    public function buildStructCode($struct)
+    public function codeByStruct($struct)
     {
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
-        $build_opt = $this->build_opt;
-        $file_buf = new FileBuf($name_space .'/'. $main_class_name . '.php');
-        $this->addFile($file_buf);
-        $class_buf = $file_buf->getMainBuf();
+        $folder = $this->getFolder();
+        $dop_file = $folder->touch($name_space, $main_class_name .'.php');
+        $class_buf = $dop_file->getMainBuf();
         $class_buf->push('<?php');
         $parent_struct = $struct->getParent();
         $class_buf->emptyLine();
-        $ns = self::phpNameSpace($build_opt, $name_space);
+        $ns = $this->joinNameSpace($name_space);
         $class_buf->push('namespace ' . $ns . ';');
         $use_buf = new CodeBuf();
-        $file_buf->addBuf(FileBuf::IMPORT_BUF, $use_buf);
+        $dop_file->addBuf(FileBuf::IMPORT_BUF, $use_buf);
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
                 $use_buf->emptyLine();
-                $use_name_space = self::phpNameSpace($build_opt, $parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
+                $use_name_space = $this->joinNameSpace($parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
                 $use_buf->push('use ' . $use_name_space . ';');
             }
         }
@@ -182,7 +164,7 @@ class Coder extends CoderBase
         $class_buf->indentIncrease();
         $item_list = $struct->getAllExtendItem();
         $property_buf = new CodeBuf();
-        $file_buf->addBuf(FileBuf::PROPERTY_BUF, $property_buf);
+        $dop_file->addBuf(FileBuf::PROPERTY_BUF, $property_buf);
         /**
          * @var string $name
          * @var Item $item
@@ -208,8 +190,8 @@ class Coder extends CoderBase
             $property_buf->emptyLine();
         }
         $method_buf = new CodeBuf();
-        $file_buf->addBuf(FileBuf::METHOD_BUF, $method_buf);
-        $this->packMethodCode($file_buf, $struct);
+        $dop_file->addBuf(FileBuf::METHOD_BUF, $method_buf);
+        $this->packMethodCode($dop_file, $struct);
         $class_buf->indentDecrease();
         $class_buf->push('}')->emptyLine();
     }
@@ -244,4 +226,15 @@ class Coder extends CoderBase
      * file_put_contents($file, '<?php' . PHP_EOL . $file_content);
      * return null;
      * }*/
+
+    /**
+     * 连接命名空间
+     * @param string $ns
+     * @param string $separator
+     * @return string
+     */
+    public function joinNameSpace($ns, $separator = '\\')
+    {
+        return parent::joinNameSpace($ns, $separator);
+    }
 }

@@ -5,7 +5,7 @@ namespace ffan\dop\build;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Struct;
-use ffan\php\utils\Utils as FFanUtils;
+
 
 /**
  * Class CoderBase 生成器基类
@@ -35,17 +35,7 @@ abstract class CoderBase
      * @var array 注册的打包器
      */
     private $reg_packer;
-
-    /**
-     * @var array 文件列表
-     */
-    private $file_list = [];
-
-    /**
-     * @var array 目录检查缓存
-     */
-    private $patch_check_cache;
-
+    
     /**
      * @var string 生成代码的基础目录
      */
@@ -71,57 +61,96 @@ abstract class CoderBase
     {
         Exception::setAppendMsg('Build common file');
         $this->buildCommonCode();
-        $this->buildStructFile();
-        $this->buildNsFile();
+        $this->buildByStruct();
+        $this->buildByXmlFile();
         $this->pluginBuild();
-        $this->save();
+    }
+
+    /**
+     * 返回生成目录
+     * @return Folder
+     */
+    public function getFolder()
+    {
+        return $this->manager->getFolder($this->build_opt->build_path);
     }
 
     /**
      * 生成struct文件
      */
-    private function buildStructFile()
+    private function buildByStruct()
     {
+        $all_struct = $this->manager->getAllStruct();
         /** @var Struct $struct */
-        foreach ($this->manager->getAllStruct() as $struct) {
+        foreach ( $all_struct as $struct) {
             //如果struct是从缓存加载的，这次就不用再生成代码了
             if ($struct->loadFromCache()) {
                 continue;
             }
             $append_msg = 'Build struct ' . $struct->getFile() . ' ' . $struct->getClassName();
             Exception::setAppendMsg($append_msg);
-            $this->buildStructCode($struct);
+            $this->codeByStruct($struct);
         }
     }
 
     /**
-     * 按命名空间生成文件
+     * 按XML协议文件生成文件
      */
-    private function buildNsFile()
+    private function buildByXmlFile()
     {
         $file_list = $this->manager->getBuildFileList();
-        foreach ($file_list as $file) {
+        foreach ($file_list as $file => $t) {
             $append_msg = 'Build name space ' . $file;
             Exception::setAppendMsg($append_msg);
-            $ns = basename($file, '.xml');
-            $this->buildNsCode($ns);
+            $file_name = basename($file, '.xml');
+            $this->codeByXml($file_name, $this->manager->getStructByFile($file_name));
         }
     }
 
+    /**
+     * 按struct迭代
+     * @param callable $callback
+     */
+    public function StructIterator(callable $callback)
+    {
+        $all_struct = $this->manager->getAllStruct();
+        /** @var Struct $struct */
+        foreach ( $all_struct as $struct) {
+            if ($struct->loadFromCache()) {
+                continue;
+            }
+            call_user_func($callback, $struct);
+        }
+    }
+
+    /**
+     * 按XML文件迭代
+     * @param callable $call_back
+     */
+    public function XmlIterator(callable $call_back)
+    {
+        $file_list = $this->manager->getBuildFileList();
+        foreach ($file_list as $file => $t) {
+            $file_name = basename($file, '.xml');
+            $struct_list = $this->manager->getStructByFile($file_name);
+            call_user_func_array($call_back, array($file_name, $struct_list));
+        }
+    }
+    
     /**
      * 生成插件内容
      */
     private function pluginBuild()
     {
-        $plugin_coder_arr = $this->getPluginHandlers();
+        $plugin_coder_arr = $this->getPluginCoder();
         /**
          * @var string $name
-         * @var PluginHandlerBase $plugin_coder
+         * @var PluginCoderBase $plugin_coder
          */
         foreach ($plugin_coder_arr as $name => $plugin_coder) {
-            $plugin_append_msg = 'Build plugin code: ' . $plugin_coder->getName();
+            $plugin_append_msg = 'Build plugin code: ' . $name;
             Exception::setAppendMsg($plugin_append_msg);
-            $plugin_coder->buildCode($this);
+            $plugin_coder->buildCode();
         }
     }
 
@@ -129,11 +158,21 @@ abstract class CoderBase
      * 获取插件代码生成器
      * @return array
      */
-    private function getPluginHandlers()
+    private function getPluginCoder()
     {
         $result = array();
-        //$code_type = $this->build_opt->getCoderName();
-        //$plugin_list = $this->manager->getPluginList();
+        $plugin_list = $this->manager->getPluginList();
+        /**
+         * @var string $name
+         * @var PluginBase $plugin
+         */
+        foreach ($plugin_list as $name => $plugin) {
+            $plugin_coder = $plugin->getPluginCoder($this->coder_name);
+            if (null === $plugin_coder) {
+                continue;
+            }
+            $result[$name] = $plugin_coder;
+        }
         return $result;
     }
 
@@ -150,16 +189,17 @@ abstract class CoderBase
      * @param Struct $struct
      * @return void
      */
-    public function buildStructCode($struct)
+    public function codeByStruct($struct)
     {
     }
 
     /**
-     * 按协议命名空间生成代码
-     * @param string $name_space
+     * 按XML文件生成代码
+     * @param string $namespace
+     * @param array $ns_struct 该命名空间下所有的struct
      * @return void
      */
-    public function buildNsCode($name_space)
+    public function codeByXml($namespace, $ns_struct)
     {
     }
 
@@ -342,93 +382,25 @@ abstract class CoderBase
         $this->reg_packer[$name] = $class_file;
     }
 
-
     /**
-     * 添加文件
-     * @param FileBuf $file
-     * @throws Exception
-     */
-    public function addFile(FileBuf $file)
-    {
-        $file_name = $file->getFileName();
-        $tmp_name = self::cleanName($file_name);
-        if (isset($this->file_list[$tmp_name])) {
-            throw new Exception('Build result file name ' . $file_name . ' conflict.');
-        }
-        $this->file_list[$tmp_name] = $file;
-    }
-
-    /**
-     * 获取文件
-     * @param string $file_name
-     * @return FileBuf|null
-     */
-    public function getFile($file_name)
-    {
-        $tmp_name = self::cleanName($file_name);
-        if (!isset($this->file_list[$tmp_name])) {
-            return null;
-        }
-        return $this->file_list[$tmp_name];
-    }
-
-    /**
-     * 处理一个文件名，当作数组的唯一key
-     * @param string $file_name
+     * 连接命名空间
+     * @param string $ns
+     * @param string $separator
      * @return string
      */
-    private static function cleanName($file_name)
+    public function joinNameSpace($ns, $separator = '/')
     {
-        //转换成小写，去掉首尾的 空格 和 / 号
-        return trim(strtolower($file_name), ' /');
-    }
-
-    /**
-     * 保存每个文件
-     */
-    public function save()
-    {
-        /**
-         * @var FileBuf $file_buf
-         */
-        foreach ($this->file_list as $file_buf) {
-            $this->writeFile($file_buf);
+        $result = $this->build_opt->namespace_prefix;
+        $len = strlen($result);
+        if ($separator !== $result[$len - 1]) {
+            $result .= $separator;
         }
-    }
-
-    /**
-     * 写文件
-     * @param FileBuf $file_buf
-     * @throws Exception
-     */
-    private function writeFile($file_buf)
-    {
-        if ($file_buf->isEmpty()) {
-            return;
+        if (!empty($ns)) {
+            if ($separator === $ns[0]) {
+                $ns = substr($ns, 1);
+            }
+            $result .= $ns;
         }
-        $file_name = $file_buf->getFileName();
-        $file_path = dirname($file_name);
-        $this->checkPatch($file_path);
-        $full_file_name = FFanUtils::joinFilePath($this->build_base_path, $file_name);
-        $content = $file_buf->dump();
-        $re = file_put_contents($full_file_name, $content);
-        if (false === $re) {
-            throw new Exception('Can not write file ' . $full_file_name);
-        }
-        $this->manager->buildLog('Build file ' . $file_name . ' success');
-    }
-
-    /**
-     * 目录检查
-     * @param string $path
-     */
-    private function checkPatch($path)
-    {
-        if (isset($this->patch_check_cache[$path])) {
-            return;
-        }
-        $file_path = FFanUtils::joinPath($this->build_base_path, $path);
-        FFanUtils::pathWriteCheck($file_path);
-        $this->patch_check_cache[$path] = true;
+        return $result;
     }
 }

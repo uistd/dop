@@ -5,6 +5,7 @@ require_once 'Common.php';
 use ffan\dop\build\BuildCache;
 use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;
+use ffan\dop\build\Folder;
 use ffan\dop\build\PluginBase;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\Protocol;
@@ -17,11 +18,6 @@ use ffan\php\utils\Utils as FFanUtils;
  */
 class Manager
 {
-    /**
-     * 缓存文件名
-     */
-    const CACHE_FILE_NAME = 'build';
-
     /**
      * @var array 所有的struct列表
      */
@@ -78,6 +74,11 @@ class Manager
     private $plugin_list;
 
     /**
+     * @var array 插件的配置
+     */
+    private $plugin_config;
+
+    /**
      * @var array 本次编译的文件
      */
     private $build_file_list;
@@ -101,7 +102,17 @@ class Manager
      * @var string 缓存的文件名
      */
     private $cache_name;
-    
+
+    /**
+     * @var CoderBase 当前Coder
+     */
+    private $current_coder;
+
+    /**
+     * @var array 虚拟目录对象
+     */
+    private $folder_list;
+
     /**
      * 初始化
      * ProtocolManager constructor.
@@ -120,18 +131,17 @@ class Manager
         $this->base_path = $base_path;
         $this->initCoder();
         $this->initPlugin();
-        $this->build_section = $this->initBuildOption();
+        $this->initBuildOption();
     }
 
     /**
      * 获取生成代码的参数
-     * @return array
      */
     private function initBuildOption()
     {
         $ini_file = $this->base_path . 'build.ini';
         if (!is_file($ini_file)) {
-            return array();
+            return;
         }
         $ini_config = parse_ini_file($ini_file, true);
         //公共配置
@@ -150,19 +160,21 @@ class Manager
                 $this->registerPlugin($name, $path);
             }
         }
-        //找出section配置
-        $section_config = array();
         foreach ($ini_config as $name => $value) {
-            if (0 !== strpos($name, 'build')) {
-                continue;
+            //代码生成配置
+            if (0 === strpos($name, 'build')) {
+                //使用main修正默认的build section
+                if ('build' === $name) {
+                    $name = 'build:main';
+                }
+                $this->build_section[$name] = $value;
             }
-            //使用main修正默认的build section
-            if ('build' === $name) {
-                $name = 'build:main';
+            //插件配置
+            elseif (0 === strpos($name, 'plugin:')) {
+                $plugin_name = substr($name, strlen('plugin:'));
+                $this->plugin_config[$plugin_name] = $value;
             }
-            $section_config[$name] = $value;
         }
-        return $section_config;
     }
 
     /**
@@ -278,15 +290,35 @@ class Manager
             }
             $coder_class = $this->getCoderClass($build_opt->getCoderName());
             /** @var CoderBase $coder */
-            $coder = new $coder_class($this, $build_opt);
+            $this->current_coder = $coder = new $coder_class($this, $build_opt);
             $coder->build();
+            $this->saveFiles();
             $this->buildLog('done!');
         } catch (Exception $exception) {
             $msg = $exception->getMessage();
             $this->buildLogError($msg);
             return false;
         }
+        $this->current_coder = null;
         return $result;
+    }
+
+    /**
+     * 保存生成的所有文件
+     */
+    private function saveFiles()
+    {
+        if (empty($this->folder_list)) {
+            return;
+        }
+        /**
+         * @var string $path
+         * @var Folder $folder
+         */
+        foreach ($this->folder_list as $path => $folder) {
+            $folder->save();
+        }
+        $this->folder_list = null;
     }
 
     /**
@@ -296,6 +328,15 @@ class Manager
     private function isCacheProtocol()
     {
         return !empty($this->config['cache_protocol']);
+    }
+
+    /**
+     * 获取当前的Coder
+     * @return CoderBase | null
+     */
+    public function getCurrentCoder()
+    {
+        return $this->current_coder;
     }
 
     /**
@@ -456,7 +497,7 @@ class Manager
         if (!$this->cache) {
             return;
         }
-        $this->cache->saveCache(self::CACHE_FILE_NAME, $this->cache_data);
+        $this->cache->saveCache($this->cache_name, $this->cache_data);
     }
 
     /**
@@ -495,7 +536,7 @@ class Manager
         $this->cache_name = 'build.' . substr(md5($this->base_path), -8);
         $cache_path = FFanUtils::fixWithRuntimePath('dop ');
         $this->cache = new BuildCache($this, $sign_key, $cache_path);
-        $cache_data = $this->cache->loadCache(self::CACHE_FILE_NAME);
+        $cache_data = $this->cache->loadCache($this->cache_name);
         if (!is_array($cache_data)) {
             $this->cache_data = array();
         } else {
@@ -719,6 +760,19 @@ class Manager
     }
 
     /**
+     * 获取插件配置
+     * @param $plugin_name
+     * @return null|array
+     */
+    public function getPluginConfig($plugin_name)
+    {
+        if (!isset($this->plugin_config[$plugin_name])) {
+            return null;
+        }
+        return $this->plugin_config[$plugin_name];
+    }
+
+    /**
      * 获取代码生成器的类名
      * @param string $coder_name
      * @return string
@@ -794,8 +848,24 @@ class Manager
     public function getCoderPath($coder_name)
     {
         if (!isset($this->coder_list[$coder_name])) {
-            throw new Exception('Coder "'. $coder_name .'" is unregistered!');
+            throw new Exception('Coder "' . $coder_name . '" is unregistered!');
         }
         return $this->coder_list[$coder_name];
+    }
+
+    /**
+     * 获取一个虚拟目录
+     * @param string $path
+     * @return Folder
+     */
+    public function getFolder($path)
+    {
+        $path = Folder::checkPathName($path);
+        $path = FFanUtils::fixWithRuntimePath($path);
+        if (!isset($this->folder_list[$path])) {
+            $dop_folder = new Folder($path, $this);
+            $this->folder_list[$path] = $dop_folder;
+        }
+        return $this->folder_list[$path];
     }
 }
