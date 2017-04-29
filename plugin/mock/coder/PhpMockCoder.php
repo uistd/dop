@@ -26,7 +26,7 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function buildCode()
     {
-        $this->coder->XmlIterator(array($this, 'mockCode'));
+        $this->coder->xmlFileIterator(array($this, 'mockCode'));
     }
 
     /**
@@ -37,26 +37,21 @@ class PhpMockCoder extends PluginCoderBase
     public function mockCode($file_name, $struct_list)
     {
         $class_name = FFanStr::camelName('mock_' . str_replace('/', '_', $file_name));
-        $dop_file = $this->coder->getFolder()->touch('dop_mock', $class_name);
-        $main_buf = $dop_file->getMainBuf();
+        $main_buf = $this->coder->getFolder()->touch('dop_mock', $class_name .'.php');
         $main_buf->push('<?php');
         $main_buf->emptyLine();
-        $main_buf->push('namespace '. $this->coder->joinNameSpace('/mock'));
-        $import_buf = new CodeBuf();
-        $dop_file->addBuf(FileBuf::IMPORT_BUF, $import_buf);
+        $main_buf->push('namespace '. $this->coder->joinNameSpace('mock') .';');
+        $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
-        $import_buf->push('use ffan\dop\mock\DopMock;');
         $main_buf->push('class '. $class_name . ' extends DopMock');
         $main_buf->push('{');
         $main_buf->indentIncrease();
-        $method_buf = new CodeBuf();
-        $dop_file->addBuf(FileBuf::METHOD_BUF, $method_buf);
+        $main_buf->touchBuf(FileBuf::METHOD_BUF);
         $main_buf->indentDecrease()->push('}');
         $main_buf->emptyLine();
-        
         /** @var Struct $struct */
         foreach ($struct_list as $struct) {
-            $this->buildStructCode($struct, $dop_file);
+            $this->buildStructCode($struct, $main_buf);
         }
     }
 
@@ -77,7 +72,8 @@ class PhpMockCoder extends PluginCoderBase
         $mock_buf->push('public function mock' . $class_name . '()');
         $mock_buf->push('{');
         $mock_buf->indentIncrease();
-        $import_buf->push('use ' . $this->coder->joinNameSpace($class_name) . ';');
+        $use_ns = $this->coder->joinNameSpace($struct->getNamespace());
+        $import_buf->push('use ' . $use_ns . '\\'. $class_name .';');
         $mock_buf->push('$data = new ' . $class_name . '();');
         $all_item = $struct->getAllExtendItem();
         /**
@@ -90,8 +86,10 @@ class PhpMockCoder extends PluginCoderBase
             if (null === $mock_rule) {
                 continue;
             }
-            $this->buildItemCode($mock_buf, '$this->' . $name, $mock_rule, $item);
+            Exception::setAppendMsg('Mock '. $class_name .'->'. $name);
+            $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }
+        $mock_buf->push('return $data;');
         $mock_buf->indentDecrease()->push('}');
     }
     
@@ -197,11 +195,12 @@ class PhpMockCoder extends PluginCoderBase
                 }
                 break;
             //固定值mock
-            case MockRule::MOCK_TYPE:
+            case MockRule::MOCK_BUILD_IN_TYPE:
                 $build_func = $mock_rule->build_in_type .'TypeMock';
                 $mock_buf->push($mock_item . ' = self::'. $build_func .'();');
                 break;
             default:
+                print_r($mock_rule);
                 throw new Exception('Unknown mock type . ', $mock_rule->mock_type);
         }
     }

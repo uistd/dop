@@ -46,6 +46,7 @@ class Plugin extends PluginBase
             }
             $mock_rule->range_min = $min;
             $mock_rule->range_max = $max;
+            $mock_rule->mock_type = MockRule::MOCK_RANGE;
             $find_flag = true;
         }
         //在指定的列表里随机
@@ -60,6 +61,7 @@ class Plugin extends PluginBase
             }
             $mock_rule->enum_set = $enum_set;
             $mock_rule->enum_size = count($enum_set);
+            $mock_rule->mock_type = MockRule::MOCK_ENUM;
             $find_flag = true;
         }
         //指定类型
@@ -69,6 +71,7 @@ class Plugin extends PluginBase
             if (!self::isBuildInType($mock_rule->build_in_type)) {
                 throw new Exception('Unknown build in mock type:' . $mock_rule->build_in_type);
             }
+            $mock_rule->mock_type = MockRule::MOCK_BUILD_IN_TYPE;
             $find_flag = true;
         }
         //固定值
@@ -77,6 +80,7 @@ class Plugin extends PluginBase
             $fixed_value = $this->read($node, '');
             $mock_rule->fixed_value = self::fixValue($item_type, $fixed_value);
             $find_flag = true;
+            $mock_rule->mock_type = MockRule::MOCK_FIXED;
         }
         if ($find_flag) {
             $item->addPluginData($this->name, $mock_rule);

@@ -34,7 +34,6 @@ class Folder
      */
     public function __construct($base_dir, Manager $manager)
     {
-        $base_dir = self::checkPathName($base_dir);
         $this->base_dir = FFanUtils::fixWithRootPath($base_dir);
         $this->manager = $manager;
     }
@@ -45,7 +44,7 @@ class Folder
      * @return string
      * @throws Exception
      */
-    public static function checkPathName($path)
+    public function checkPathName($path)
     {
         $path = trim($path, " ./\r\n\0\x0B\t");
         if ('' === $path) {
@@ -81,7 +80,7 @@ class Folder
      */
     public function touch($path, $file_name)
     {
-        $path = self::checkPathName($path);
+        $path = $this->checkPathName($path);
         $file_name = $this->checkFileName($file_name);
         if ($this->doFind($path, $file_name)) {
             throw new Exception('Path "' . $path . '" file "' . $file_name . '" exist');
@@ -99,7 +98,7 @@ class Folder
      */
     public function getFile($path, $file_name)
     {
-        $path = self::checkPathName($path);
+        $path = $this->checkPathName($path);
         $file_name = $this->checkFileName($file_name);
         return $this->doFind($path, $file_name);
     }
@@ -127,7 +126,7 @@ class Folder
                 $content = $file_buf->dump();
                 $re = file_put_contents($full_file_name, $content);
                 $log_file_name = $path .'/'. $file_name;
-                $this->manager->buildLog('Build file ' . $log_file_name . ($re ? 'success' : 'failed'));
+                $this->manager->buildLog('Build file ' . $log_file_name . ($re ? ' success' : ' failed'));
             }
         }
     }

@@ -30,6 +30,11 @@ class StrBuf implements BufInterface
     private $has_sub_buf = false;
 
     /**
+     * @var int 缩进
+     */
+    private $indent = 0;
+    
+    /**
      * StrBuf constructor.
      * @param string $join_str 连接字符串
      */
@@ -68,6 +73,9 @@ class StrBuf implements BufInterface
         }
         $result = join($this->join_str, $this->str_buffer);
         $this->str_buffer = null;
+        if ($this->indent > 0) {
+            $result = CodeBuf::indentSpace($this->indent) . $result;
+        }
         return $result;
     }
 
@@ -103,6 +111,6 @@ class StrBuf implements BufInterface
      */
     public function setIndent($indent)
     {
-        // TODO: Implement setIndent() method.
+        $this->indent = $indent;
     }
 }

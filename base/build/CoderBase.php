@@ -80,17 +80,7 @@ abstract class CoderBase
      */
     private function buildByStruct()
     {
-        $all_struct = $this->manager->getAllStruct();
-        /** @var Struct $struct */
-        foreach ( $all_struct as $struct) {
-            //如果struct是从缓存加载的，这次就不用再生成代码了
-            if ($struct->loadFromCache()) {
-                continue;
-            }
-            $append_msg = 'Build struct ' . $struct->getFile() . ' ' . $struct->getClassName();
-            Exception::setAppendMsg($append_msg);
-            $this->codeByStruct($struct);
-        }
+        $this->structIterator(array($this, 'codeByStruct'));
     }
 
     /**
@@ -98,20 +88,14 @@ abstract class CoderBase
      */
     private function buildByXmlFile()
     {
-        $file_list = $this->manager->getBuildFileList();
-        foreach ($file_list as $file => $t) {
-            $append_msg = 'Build name space ' . $file;
-            Exception::setAppendMsg($append_msg);
-            $file_name = basename($file, '.xml');
-            $this->codeByXml($file_name, $this->manager->getStructByFile($file_name));
-        }
+        $this->xmlFileIterator(array($this, 'codeByXml'));
     }
 
     /**
      * 按struct迭代
      * @param callable $callback
      */
-    public function StructIterator(callable $callback)
+    public function structIterator(callable $callback)
     {
         $all_struct = $this->manager->getAllStruct();
         /** @var Struct $struct */
@@ -127,12 +111,12 @@ abstract class CoderBase
      * 按XML文件迭代
      * @param callable $call_back
      */
-    public function XmlIterator(callable $call_back)
+    public function xmlFileIterator(callable $call_back)
     {
         $file_list = $this->manager->getBuildFileList();
         foreach ($file_list as $file => $t) {
-            $file_name = basename($file, '.xml');
-            $struct_list = $this->manager->getStructByFile($file_name);
+            $struct_list = $this->manager->getStructByFile($file);
+            $file_name = substr($file, 0, strlen('.xml') * -1);
             call_user_func_array($call_back, array($file_name, $struct_list));
         }
     }
@@ -195,11 +179,11 @@ abstract class CoderBase
 
     /**
      * 按XML文件生成代码
-     * @param string $namespace
+     * @param string $xml_file
      * @param array $ns_struct 该命名空间下所有的struct
      * @return void
      */
-    public function codeByXml($namespace, $ns_struct)
+    public function codeByXml($xml_file, $ns_struct)
     {
     }
 
@@ -402,5 +386,22 @@ abstract class CoderBase
             $result .= $ns;
         }
         return $result;
+    }
+
+    /**
+     * 在某个文件夹的某个文件里找某个code_buf
+     * @param string $path
+     * @param string $file
+     * @param string $buf_name
+     * @return CodeBuf|null
+     */
+    public function getBuf($path, $file, $buf_name)
+    {
+        $folder = $this->getFolder();
+        $dop_file = $folder->getFile($path, $file);
+        if (!$dop_file) {
+            return null;
+        }
+        return $dop_file->getBuf($buf_name);
     }
 }

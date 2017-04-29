@@ -860,7 +860,6 @@ class Manager
      */
     public function getFolder($path)
     {
-        $path = Folder::checkPathName($path);
         $path = FFanUtils::fixWithRuntimePath($path);
         if (!isset($this->folder_list[$path])) {
             $dop_folder = new Folder($path, $this);

@@ -2,7 +2,6 @@
 
 namespace ffan\dop\coder\php;
 
-use ffan\dop\build\CodeBuf;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\StrBuf;
@@ -125,15 +124,13 @@ class Coder extends CoderBase
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
         $folder = $this->getFolder();
-        $dop_file = $folder->touch($name_space, $main_class_name .'.php');
-        $class_buf = $dop_file->getMainBuf();
+        $class_buf = $folder->touch($name_space, $main_class_name . '.php');
         $class_buf->push('<?php');
         $parent_struct = $struct->getParent();
         $class_buf->emptyLine();
         $ns = $this->joinNameSpace($name_space);
         $class_buf->push('namespace ' . $ns . ';');
-        $use_buf = new CodeBuf();
-        $dop_file->addBuf(FileBuf::IMPORT_BUF, $use_buf);
+        $use_buf = $class_buf->touchBuf(FileBuf::IMPORT_BUF);
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
             //如果不是同一个全名空间
@@ -148,14 +145,14 @@ class Coder extends CoderBase
         $node_str = $struct->getNote();
         $class_desc_buf = new StrBuf();
         $class_buf->insertBuf($class_desc_buf);
-        $class_desc_buf->push(' * '. $main_class_name);
+        $class_desc_buf->push(' * ' . $main_class_name);
         if (!empty($node_str)) {
             $class_desc_buf->push(' ' . $node_str);
         }
         $class_buf->push(' */');
         $class_name_buf = new StrBuf();
         $class_buf->insertBuf($class_name_buf);
-        $class_name_buf->push('class '. $main_class_name);
+        $class_name_buf->push('class ' . $main_class_name);
         if ($struct->hasExtend()) {
             $class_name_buf->push(' extends ' . $parent_struct->getClassName());
         }
@@ -163,8 +160,7 @@ class Coder extends CoderBase
         //缩进
         $class_buf->indentIncrease();
         $item_list = $struct->getAllExtendItem();
-        $property_buf = new CodeBuf();
-        $dop_file->addBuf(FileBuf::PROPERTY_BUF, $property_buf);
+        $property_buf = $class_buf->touchBuf(FileBuf::PROPERTY_BUF);
         /**
          * @var string $name
          * @var Item $item
@@ -189,43 +185,72 @@ class Coder extends CoderBase
             $property_line_buf->push(';');
             $property_buf->emptyLine();
         }
-        $method_buf = new CodeBuf();
-        $dop_file->addBuf(FileBuf::METHOD_BUF, $method_buf);
-        $this->packMethodCode($dop_file, $struct);
+        $class_buf->touchBuf(FileBuf::METHOD_BUF);
+        $this->packMethodCode($class_buf, $struct);
         $class_buf->indentDecrease();
         $class_buf->push('}')->emptyLine();
     }
 
     /**
-     * 生成文件结束
-     * @return CodeBuf|null
+     * 通用文件
+     */
+    public function buildCommonCode()
+    {
+        $main_buf = $this->getFolder()->touch('', 'dop.php');
+        $main_buf->push('<?php');
+        $main_buf->push('define(\'DOP_PHP_PROTOCOL_BASE\', __DIR__ . DIRECTORY_SEPARATOR);');
+        $main_buf->push('/**');
+        $main_buf->push(' * autoload 方法');
+        $main_buf->push(' * @param string $full_name');
+        $main_buf->push(' */');
+        $main_buf->push('function dop_protocol_autoload($full_name)');
+        $main_buf->push('{')->indentIncrease();
+        $main_buf->push('$ns_pos = strrpos($full_name, "\\\\");');
+        $main_buf->push('$ns = substr($full_name, 0, $ns_pos);');
+        $main_buf->push('$namespace_set = array(')->indentIncrease();
+        //autoload的列表，后面填充
+        $main_buf->touchBuf('autoload');
+        $main_buf->indentDecrease();
+        $main_buf->push(');');
+        $main_buf->push('if (!isset($namespace_set[$ns])) {');
+        $main_buf->pushIndent('return;');
+        $main_buf->push('}');
+        $main_buf->push('$base_path = DOP_PHP_PROTOCOL_BASE . $namespace_set[$ns] . DIRECTORY_SEPARATOR;');
+        $main_buf->push('$class_name = substr($full_name, $ns_pos + 1);');
+        $main_buf->push('$file_name = $base_path . $class_name . ".php";');
+        $main_buf->push('if (!is_file($file_name)) {');
+        $main_buf->pushIndent('return;');
+        $main_buf->push('}');
+        $main_buf->push('/** @noinspection PhpIncludeInspection */');
+        $main_buf->push('require_once $file_name;');
+        $main_buf->indentDecrease()->push('}');
+        $main_buf->push('//注册加载处理函数');
+        $main_buf->push('spl_autoload_register(\'dop_protocol_autoload\');');
+    }
 
-    public function codeFinish()
-     * {
-     * $build_opt = $this->build_opt;
-     * $generator = $this->generator;
-     * //如果是手动require文件，那就不生成dop.php文件
-     * if ($build_opt->php_require_file) {
-     * return null;
-     * }
-     * $manager = $generator->getManager();
-     * $all_files = $manager->getAllFileList();
-     * $prefix = $build_opt->namespace_prefix;
-     * $autoload_set = array();
-     * foreach ($all_files as $file => $m) {
-     * //除去.xml，其它 就是路径信息
-     * $path = substr($file, 0, -4);
-     * $ns = $prefix . '\\' . str_replace('/', '\\', $path);
-     * $autoload_set[$ns] = $path;
-     * }
-     * $file_content = FFanTpl::get('php/dop.tpl', array(
-     * 'namespace_set' => $autoload_set
-     * ));
-     * $build_path = $generator->getBuildBasePath();
-     * $file = $build_path . 'dop.php';
-     * file_put_contents($file, '<?php' . PHP_EOL . $file_content);
-     * return null;
-     * }*/
+    /**
+     * 按xml文件生成代码
+     * @param string $xml_file
+     * @param array $ns_struct
+     */
+    public function codeByXml($xml_file, $ns_struct)
+    {
+        $autoload_buf = $this->getBuf('', 'dop.php', 'autoload');
+        if (!$autoload_buf) {
+            return;
+        }
+        $autoload_buf->push("'" . $this->pathToNs($xml_file) . "' => '" . $xml_file . "',");
+    }
+
+    /**
+     * 路径转全名空间
+     * @param string $path
+     * @return mixed
+     */
+    private function pathToNs($path)
+    {
+        return str_replace('/', '\\', $path);
+    }
 
     /**
      * 连接命名空间
@@ -235,6 +260,7 @@ class Coder extends CoderBase
      */
     public function joinNameSpace($ns, $separator = '\\')
     {
+        $ns = $this->pathToNs($ns);
         return parent::joinNameSpace($ns, $separator);
     }
 }

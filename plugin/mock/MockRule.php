@@ -26,7 +26,7 @@ class MockRule
     /**
      * 内置类型
      */
-    const MOCK_TYPE = 4;
+    const MOCK_BUILD_IN_TYPE = 4;
 
     /**
      * @var int 数据mock方式
