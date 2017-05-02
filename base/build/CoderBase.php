@@ -5,6 +5,7 @@ namespace ffan\dop\build;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Struct;
+use ffan\php\utils\Utils as FFanUtils;
 
 
 /**
@@ -403,5 +404,19 @@ abstract class CoderBase
             return null;
         }
         return $dop_file->getBuf($buf_name);
+    }
+
+    /**
+     * 加载一个模板，并将内容写入FileBuf
+     * @param FileBuf $file_buf
+     * @param string $tpl_name
+     * @param null $data
+     * @throws Exception
+     */
+    public function loadTpl(FileBuf $file_buf, $tpl_name, $data = null)
+    {
+        $path = $this->manager->getCoderPath($this->coder_name);
+        $tpl_file = FFanUtils::joinFilePath($path, $tpl_name);
+        new TplLoader($file_buf, $tpl_file, $data);
     }
 }

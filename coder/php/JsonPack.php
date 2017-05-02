@@ -20,21 +20,21 @@ class JsonPack extends PackerBase
     public function buildPackMethod($struct, $code_buf)
     {
         $code_buf->emptyLine();
-        $code_buf->push('/**');
-        $code_buf->push(' * 生成json串');
-        $code_buf->push(' * @return string');
-        $code_buf->push(' */');
-        $code_buf->push('public function jsonPack()');
-        $code_buf->push('{');
+        $code_buf->pushStr('/**');
+        $code_buf->pushStr(' * 生成json串');
+        $code_buf->pushStr(' * @return string');
+        $code_buf->pushStr(' */');
+        $code_buf->pushStr('public function jsonPack()');
+        $code_buf->pushStr('{');
         $code_buf->indentIncrease();
-        $code_buf->push('$data = $this->arrayPack();');
-        $code_buf->push('$result = json_encode($data, JSON_UNESCAPED_UNICODE);');
-        $code_buf->push('if (JSON_ERROR_NONE !== json_last_error()) {');
+        $code_buf->pushStr('$data = $this->arrayPack();');
+        $code_buf->pushStr('$result = json_encode($data, JSON_UNESCAPED_UNICODE);');
+        $code_buf->pushStr('if (JSON_ERROR_NONE !== json_last_error()) {');
         $code_buf->pushIndent('$result = \'\';');
-        $code_buf->push('}');
-        $code_buf->push('return $result;');
+        $code_buf->pushStr('}');
+        $code_buf->pushStr('return $result;');
         $code_buf->indentDecrease();
-        $code_buf->push('}');
+        $code_buf->pushStr('}');
     }
 
     /**
@@ -46,20 +46,20 @@ class JsonPack extends PackerBase
     public function buildUnpackMethod($struct, $code_buf)
     {
         $code_buf->emptyLine();
-        $code_buf->push('/**');
-        $code_buf->push(' * 对象初始化');
-        $code_buf->push(' * @param string $json_raw');
-        $code_buf->push(' */');
-        $code_buf->push('public function jsonUnpack($json_raw)');
-        $code_buf->push('{');
+        $code_buf->pushStr('/**');
+        $code_buf->pushStr(' * 对象初始化');
+        $code_buf->pushStr(' * @param string $json_raw');
+        $code_buf->pushStr(' */');
+        $code_buf->pushStr('public function jsonUnpack($json_raw)');
+        $code_buf->pushStr('{');
         $code_buf->indentIncrease();
-        $code_buf->push('$data = json_decode($json_raw, true);');
-        $code_buf->push('if (JSON_ERROR_NONE !== json_last_error()) {');
+        $code_buf->pushStr('$data = json_decode($json_raw, true);');
+        $code_buf->pushStr('if (JSON_ERROR_NONE !== json_last_error()) {');
         $code_buf->pushIndent('$data = array();');
-        $code_buf->push('}');
-        $code_buf->push('$this->arrayUnpack($data);');
+        $code_buf->pushStr('}');
+        $code_buf->pushStr('$this->arrayUnpack($data);');
         $code_buf->indentDecrease();
-        $code_buf->push('}');
+        $code_buf->pushStr('}');
     }
 
     /**

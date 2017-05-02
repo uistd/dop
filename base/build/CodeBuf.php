@@ -14,8 +14,8 @@ class CodeBuf implements BufInterface
      * 子buf类型
      */
     const SUB_BUF_TYPE_CODE = 1;
-    const SUB_BUF_TYPE_STR =2;
-    
+    const SUB_BUF_TYPE_STR = 2;
+
     /**
      * @var int 缩进级别
      */
@@ -64,7 +64,7 @@ class CodeBuf implements BufInterface
     public function pushIndent($str)
     {
         $str = self::indentSpace(1) . $str;
-        return $this->push($str);
+        return $this->pushStr($str);
     }
 
     /**
@@ -72,7 +72,7 @@ class CodeBuf implements BufInterface
      * @param string $str 代码
      * @return $this
      */
-    public function push($str)
+    public function pushStr($str)
     {
         $line_str = self::indentSpace($this->indent) . $str;
         $this->line_buffer[] = $line_str;
@@ -209,5 +209,31 @@ class CodeBuf implements BufInterface
     public function isEmpty()
     {
         return empty($this->line_buffer);
+    }
+
+    /**
+     * 转换成字符串
+     * @return string
+     */
+    public function toString()
+    {
+        return $this->dump();
+    }
+
+    /**
+     * 写入一段字符串 或者 Buf
+     * @param string $item
+     * @return $this
+     */
+    public function push($item)
+    {
+        if (is_string($item)) {
+            $this->pushStr($item);
+        } elseif (is_object($item) && $item instanceof BufInterface) {
+            $this->insertBuf($item);
+        } else {
+            $this->pushStr((string)$item);
+        }
+        return $this;
     }
 }

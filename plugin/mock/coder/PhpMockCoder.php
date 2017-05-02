@@ -29,7 +29,7 @@ class PhpMockCoder extends PluginCoderBase
     {
         $autoload_buf = $this->coder->getBuf('', Coder::MAIN_FILE, 'autoload');
         if ($autoload_buf) {
-            $autoload_buf->push("'" . $this->coder->joinNameSpace('plugin/mock') . "' => 'dop_mock,'");
+            $autoload_buf->pushStr("'" . $this->coder->joinNameSpace('plugin/mock') . "' => 'dop_mock',");
         }
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
     }
@@ -43,16 +43,16 @@ class PhpMockCoder extends PluginCoderBase
     {
         $class_name = FFanStr::camelName('mock_' . str_replace('/', '_', $file_name));
         $main_buf = $this->coder->getFolder()->touch('dop_mock', $class_name . '.php');
-        $main_buf->push('<?php');
+        $main_buf->pushStr('<?php');
         $main_buf->emptyLine();
-        $main_buf->push('namespace ' . $this->coder->joinNameSpace('mock') . ';');
+        $main_buf->pushStr('namespace ' . $this->coder->joinNameSpace('mock') . ';');
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
-        $main_buf->push('class ' . $class_name . ' extends DopMock');
-        $main_buf->push('{');
+        $main_buf->pushStr('class ' . $class_name . ' extends DopMock');
+        $main_buf->pushStr('{');
         $main_buf->indentIncrease();
         $main_buf->touchBuf(FileBuf::METHOD_BUF);
-        $main_buf->indentDecrease()->push('}');
+        $main_buf->indentDecrease()->pushStr('}');
         $main_buf->emptyLine();
         /** @var Struct $struct */
         foreach ($struct_list as $struct) {
@@ -71,15 +71,15 @@ class PhpMockCoder extends PluginCoderBase
         $mock_buf = $file->getBuf(FileBuf::METHOD_BUF);
         $mock_buf->emptyLine();
         $class_name = $struct->getClassName();
-        $mock_buf->push('/**');
-        $mock_buf->push(' * 生成 ' . $class_name . ' mock数据');
-        $mock_buf->push(' */');
-        $mock_buf->push('public function mock' . $class_name . '()');
-        $mock_buf->push('{');
+        $mock_buf->pushStr('/**');
+        $mock_buf->pushStr(' * 生成 ' . $class_name . ' mock数据');
+        $mock_buf->pushStr(' */');
+        $mock_buf->pushStr('public function mock' . $class_name . '()');
+        $mock_buf->pushStr('{');
         $mock_buf->indentIncrease();
         $use_ns = $this->coder->joinNameSpace($struct->getNamespace());
-        $import_buf->push('use ' . $use_ns . '\\' . $class_name . ';');
-        $mock_buf->push('$data = new ' . $class_name . '();');
+        $import_buf->pushStr('use ' . $use_ns . '\\' . $class_name . ';');
+        $mock_buf->pushStr('$data = new ' . $class_name . '();');
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
@@ -91,8 +91,8 @@ class PhpMockCoder extends PluginCoderBase
             Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }
-        $mock_buf->push('return $data;');
-        $mock_buf->indentDecrease()->push('}');
+        $mock_buf->pushStr('return $data;');
+        $mock_buf->indentDecrease()->pushStr('}');
     }
 
     /**
@@ -122,17 +122,17 @@ class PhpMockCoder extends PluginCoderBase
                 $len_var_name = tmp_var_name($depth, 'len');
                 $result_var_name = tmp_var_name($depth, 'mock_arr');
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
-                $mock_buf->push('$' . $result_var_name . ' = array();');
-                $mock_buf->push('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
+                $mock_buf->pushStr('$' . $result_var_name . ' = array();');
+                $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
                 $mock_buf->indentIncrease();
                 $this->buildItemCode($mock_buf, '$' . $result_var_name, $sub_mock_rule, $sub_item, $depth + 1);
-                $mock_buf->indentDecrease()->push('}');
-                $mock_buf->push($mock_item . ' = $' . $result_var_name . ';');
+                $mock_buf->indentDecrease()->pushStr('}');
+                $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $func_name = 'mock' . $item->getStructName();
-                $mock_buf->push($mock_item . ' = self::' . $func_name . '();');
+                $mock_buf->pushStr($mock_item . ' = self::' . $func_name . '();');
                 break;
             case ItemType::MAP:
                 /** @var MapItem $item */
@@ -146,14 +146,14 @@ class PhpMockCoder extends PluginCoderBase
                 $value_var_name = tmp_var_name($depth, 'tmp_value');
                 $result_var_name = tmp_var_name($depth, 'mock_arr');
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
-                $mock_buf->push('$' . $result_var_name . ' = array();');
-                $mock_buf->push('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
+                $mock_buf->pushStr('$' . $result_var_name . ' = array();');
+                $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
                 $mock_buf->indentIncrease();
                 $this->buildItemCode($mock_buf, '$' . $key_var_name, $key_mock_rule, $key_item, $depth + 1);
                 $this->buildItemCode($mock_buf, '$' . $value_var_name, $value_mock_rule, $value_item, $depth + 1);
-                $mock_buf->push('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $value_var_name .';');
-                $mock_buf->indentDecrease()->push('}');
-                $mock_buf->push($mock_item . ' = $' . $result_var_name . ';');
+                $mock_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $value_var_name .';');
+                $mock_buf->indentDecrease()->pushStr('}');
+                $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;
         }
     }
@@ -172,21 +172,21 @@ class PhpMockCoder extends PluginCoderBase
         if (null === $mock_rule) {
             switch ($item_type) {
                 case ItemType::INT:
-                    $mock_buf->push($mock_item . ' = mt_rand(0, 100);');
+                    $mock_buf->pushStr($mock_item . ' = mt_rand(0, 100);');
                     break;
                 case ItemType::STRING:
-                    $mock_buf->push($mock_item . ' = self::strRangeMock(5, 20);');
+                    $mock_buf->pushStr($mock_item . ' = self::strRangeMock(5, 20);');
                     break;
                 case ItemType::FLOAT:
                 case ItemType::DOUBLE:
-                    $mock_buf->push($mock_item . ' = self::floatRangeMock(0, 100);');
+                    $mock_buf->pushStr($mock_item . ' = self::floatRangeMock(0, 100);');
                     break;
             }
         } else {
             switch ($mock_rule->mock_type) {
                 //固定值
                 case MockRule::MOCK_FIXED:
-                    $mock_buf->push($mock_item . ' = ' . $mock_rule->fixed_value . ';');
+                    $mock_buf->pushStr($mock_item . ' = ' . $mock_rule->fixed_value . ';');
                     break;
                 //指定几个值随机
                 case MockRule::MOCK_ENUM:
@@ -194,26 +194,26 @@ class PhpMockCoder extends PluginCoderBase
                     $tmp_arr_index++;
                     $tmp_line = new StrBuf();
                     $mock_buf->insertBuf($tmp_line);
-                    $tmp_line->push($arr_name . ' = array(');
-                    $tmp_line->push(join(', ', $mock_rule->enum_set));
-                    $tmp_line->push(');');
-                    $mock_buf->push($mock_item . ' = ' . $arr_name . '[array_rand(' . $arr_name . ')];');
+                    $tmp_line->pushStr($arr_name . ' = array(');
+                    $tmp_line->pushStr(join(', ', $mock_rule->enum_set));
+                    $tmp_line->pushStr(');');
+                    $mock_buf->pushStr($mock_item . ' = ' . $arr_name . '[array_rand(' . $arr_name . ')];');
                     break;
                 //指定范围随机
                 case MockRule::MOCK_RANGE:
                     //ARR和MAP 表示是长度
                     if (ItemType::INT === $item_type || ItemType::ARR === $item_type || ItemType::MAP === $item_type) {
-                        $mock_buf->push($mock_item . ' = mt_rand(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
+                        $mock_buf->pushStr($mock_item . ' = mt_rand(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
                     } elseif (ItemType::FLOAT === $item_type || ItemType::DOUBLE === $item_type) {
-                        $mock_buf->push($mock_item . ' = self::floatRangeMock(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
+                        $mock_buf->pushStr($mock_item . ' = self::floatRangeMock(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
                     } elseif (ItemType::STRING === $item_type) {
-                        $mock_buf->push($mock_item . ' = self::strRangeMock(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
+                        $mock_buf->pushStr($mock_item . ' = self::strRangeMock(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
                     }
                     break;
                 //固定值mock
                 case MockRule::MOCK_BUILD_IN_TYPE:
                     $build_func = $mock_rule->build_in_type . 'TypeMock';
-                    $mock_buf->push($mock_item . ' = self::' . $build_func . '();');
+                    $mock_buf->pushStr($mock_item . ' = self::' . $build_func . '();');
                     break;
                 default:
                     throw new Exception('Unknown mock type . ', $mock_rule->mock_type);

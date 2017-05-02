@@ -47,7 +47,7 @@ class StrBuf implements BufInterface
      * 写入一个字符串
      * @param string $str
      */
-    public function push($str)
+    public function pushStr($str)
     {
         $this->str_buffer[] = $str;
     }
@@ -112,5 +112,31 @@ class StrBuf implements BufInterface
     public function setIndent($indent)
     {
         $this->indent = $indent;
+    }
+
+    /**
+     * 转换成字符串
+     * @return string
+     */
+    public function toString()
+    {
+        return $this->dump();
+    }
+    
+    /**
+     * 写入一段字符串 或者 Buf
+     * @param string $item
+     * @return $this
+     */
+    public function push($item)
+    {
+        if (is_string($item)) {
+            $this->pushStr($item);
+        } elseif (is_object($item) && $item instanceof BufInterface) {
+            $this->insertBuf($item);
+        } else {
+            $this->pushStr((string)$item);
+        }
+        return $this;
     }
 }

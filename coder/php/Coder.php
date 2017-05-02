@@ -5,6 +5,7 @@ namespace ffan\dop\coder\php;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\StrBuf;
+use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -118,77 +119,79 @@ class Coder extends CoderBase
      * 按Struct生成代码
      * @param Struct $struct
      * @return void
+     * @throws Exception
      */
     public function codeByStruct($struct)
     {
+        $parent_struct = $struct->getParent();
+        
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
+        $class_name_buf = new StrBuf();
+        $class_name_buf->pushStr($main_class_name);
+        if ($struct->hasExtend()) {
+            $class_name_buf->pushStr(' extends ' . $parent_struct->getClassName());
+        }
+        
+        $tpl_data = array(
+            'namespace' => $name_space,
+            'class_name' => $class_name_buf,
+            'struct_note' => ' '. $struct->getNote()
+        );
+        
         $folder = $this->getFolder();
-        $class_buf = $folder->touch($name_space, $main_class_name . '.php');
-        $class_buf->push('<?php');
-        $parent_struct = $struct->getParent();
-        $class_buf->emptyLine();
+        $class_file = $folder->touch($name_space, $main_class_name . '.php');
+        $this->loadTpl($class_file, 'tpl/class.tpl', $tpl_data);
+        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
+        $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
+        if (!$use_buf || !$property_buf ) {
+            throw new Exception('Tpl error, IMPORT_BUF or PROPERTY_BUF not found!');
+        }
+        $class_file->pushStr('<?php');
+        
+        $class_file->emptyLine();
         $ns = $this->joinNameSpace($name_space);
-        $class_buf->push('namespace ' . $ns . ';');
-        $use_buf = $class_buf->touchBuf(FileBuf::IMPORT_BUF);
+        $class_file->pushStr('namespace ' . $ns . ';');
+        $use_buf = $class_file->touchBuf(FileBuf::IMPORT_BUF);
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
                 $use_buf->emptyLine();
                 $use_name_space = $this->joinNameSpace($parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
-                $use_buf->push('use ' . $use_name_space . ';');
+                $use_buf->pushStr('use ' . $use_name_space . ';');
             }
         }
-        $class_buf->emptyLine();
-        $class_buf->push('/**');
-        $node_str = $struct->getNote();
-        $class_desc_buf = new StrBuf();
-        $class_buf->insertBuf($class_desc_buf);
-        $class_desc_buf->push(' * ' . $main_class_name);
-        if (!empty($node_str)) {
-            $class_desc_buf->push(' ' . $node_str);
-        }
-        $class_buf->push(' */');
-        $class_name_buf = new StrBuf();
-        $class_buf->insertBuf($class_name_buf);
-        $class_name_buf->push('class ' . $main_class_name);
-        if ($struct->hasExtend()) {
-            $class_name_buf->push(' extends ' . $parent_struct->getClassName());
-        }
-        $class_buf->push('{');
-        //缩进
-        $class_buf->indentIncrease();
         $item_list = $struct->getAllExtendItem();
-        $property_buf = $class_buf->touchBuf(FileBuf::PROPERTY_BUF);
+        
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($item_list as $name => $item) {
-            $property_buf->push('/**');
+            $property_buf->pushStr('/**');
             $item_type = self::varType($item);
             $property_desc_buf = new StrBuf();
             $property_buf->insertBuf($property_desc_buf);
-            $property_buf->push(' * @var ' . $item_type);
+            $property_buf->pushStr(' * @var ' . $item_type);
             $tmp_node = $item->getNote();
             if (!empty($tmp_node)) {
-                $property_desc_buf->push(' ' . $tmp_node);
+                $property_desc_buf->pushStr(' ' . $tmp_node);
             }
-            $property_buf->push(' */');
+            $property_buf->pushStr(' */');
             $property_line_buf = new StrBuf();
             $property_buf->insertBuf($property_line_buf);
-            $property_line_buf->push('public $' . $name);
+            $property_line_buf->pushStr('public $' . $name);
             if ($item->hasDefault()) {
-                $property_line_buf->push(' = ' . $item->getDefault());
+                $property_line_buf->pushStr(' = ' . $item->getDefault());
             }
-            $property_line_buf->push(';');
+            $property_line_buf->pushStr(';');
             $property_buf->emptyLine();
         }
-        $class_buf->touchBuf(FileBuf::METHOD_BUF);
-        $this->packMethodCode($class_buf, $struct);
-        $class_buf->indentDecrease();
-        $class_buf->push('}')->emptyLine();
+        
+        $this->packMethodCode($class_file, $struct);
+        $class_file->indentDecrease();
+        $class_file->pushStr('}')->emptyLine();
     }
 
     /**
@@ -197,35 +200,7 @@ class Coder extends CoderBase
     public function buildCommonCode()
     {
         $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
-        $main_buf->push('<?php');
-        $main_buf->push('define(\'DOP_PHP_PROTOCOL_BASE\', __DIR__ . DIRECTORY_SEPARATOR);');
-        $main_buf->push('/**');
-        $main_buf->push(' * autoload 方法');
-        $main_buf->push(' * @param string $full_name');
-        $main_buf->push(' */');
-        $main_buf->push('function dop_protocol_autoload($full_name)');
-        $main_buf->push('{')->indentIncrease();
-        $main_buf->push('$ns_pos = strrpos($full_name, "\\\\");');
-        $main_buf->push('$ns = substr($full_name, 0, $ns_pos);');
-        $main_buf->push('$namespace_set = array(')->indentIncrease();
-        //autoload的列表，后面填充
-        $main_buf->touchBuf('autoload');
-        $main_buf->indentDecrease();
-        $main_buf->push(');');
-        $main_buf->push('if (!isset($namespace_set[$ns])) {');
-        $main_buf->pushIndent('return;');
-        $main_buf->push('}');
-        $main_buf->push('$base_path = DOP_PHP_PROTOCOL_BASE . $namespace_set[$ns] . DIRECTORY_SEPARATOR;');
-        $main_buf->push('$class_name = substr($full_name, $ns_pos + 1);');
-        $main_buf->push('$file_name = $base_path . $class_name . ".php";');
-        $main_buf->push('if (!is_file($file_name)) {');
-        $main_buf->pushIndent('return;');
-        $main_buf->push('}');
-        $main_buf->push('/** @noinspection PhpIncludeInspection */');
-        $main_buf->push('require_once $file_name;');
-        $main_buf->indentDecrease()->push('}');
-        $main_buf->push('//注册加载处理函数');
-        $main_buf->push('spl_autoload_register(\'dop_protocol_autoload\');');
+        $this->loadTpl($main_buf, 'tpl/dop.tpl');
     }
 
     /**
@@ -239,7 +214,7 @@ class Coder extends CoderBase
         if (!$autoload_buf) {
             return;
         }
-        $autoload_buf->push("'" . $this->joinNameSpace($xml_file) . "' => '" . $xml_file . "',");
+        $autoload_buf->pushStr("'" . $this->joinNameSpace($xml_file) . "' => '" . $xml_file . "',");
     }
 
     /**

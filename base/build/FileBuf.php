@@ -92,4 +92,37 @@ class FileBuf extends CodeBuf
             return null;
         }
     }
+
+    /**
+     * 插入一个带key的子buf
+     * @param string $name
+     * @param BufInterface $buf
+     * @throws Exception
+     */
+    public function insertNameBuf($name, BufInterface $buf)
+    {
+        if (isset($this->buf_arr[$name])) {
+            throw new Exception('InsertNameBuf name "' . $name . '" conflict, file:' . $this->file_name);
+        }
+        $this->buf_arr[$name] = $buf;
+        $this->insertBuf($buf);
+    }
+
+    /**
+     * 加载一个模板
+     * @param string $tpl_name 模板名称，相对于 Coder的目录
+     * @param null|array $data 模板上的变量名 
+     */
+    public function loadTpl($tpl_name, $data = null)
+    {
+    }
+
+    /**
+     * 转换成字符串
+     * @return string
+     */
+    public function toString()
+    {
+        return $this->dump();
+    }
 }
