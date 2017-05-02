@@ -130,6 +130,7 @@ class TplLoader
             foreach ($result as $item) {
                 $str_buf->push($item);
             }
+            $this->result_buf->insertBuf($str_buf);
         }
         //只一个值
         else {
@@ -152,7 +153,7 @@ class TplLoader
         //变量直接替换
         if ('$' === $tag_content[0]) {
             $var_name = substr($tag_content, 1);
-            if (!isset($this->tpl_data[$var_name])) {
+            if (isset($this->tpl_data[$var_name])) {
                 return $this->tpl_data[$var_name];
             } else {
                 return $tag_content;

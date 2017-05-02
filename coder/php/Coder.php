@@ -132,9 +132,8 @@ class Coder extends CoderBase
         if ($struct->hasExtend()) {
             $class_name_buf->pushStr(' extends ' . $parent_struct->getClassName());
         }
-        
         $tpl_data = array(
-            'namespace' => $name_space,
+            'namespace' => $this->joinNameSpace($name_space),
             'class_name' => $class_name_buf,
             'struct_note' => ' '. $struct->getNote()
         );
@@ -147,12 +146,6 @@ class Coder extends CoderBase
         if (!$use_buf || !$property_buf ) {
             throw new Exception('Tpl error, IMPORT_BUF or PROPERTY_BUF not found!');
         }
-        $class_file->pushStr('<?php');
-        
-        $class_file->emptyLine();
-        $ns = $this->joinNameSpace($name_space);
-        $class_file->pushStr('namespace ' . $ns . ';');
-        $use_buf = $class_file->touchBuf(FileBuf::IMPORT_BUF);
         //如果有父类，加入父类
         if ($struct->hasExtend()) {
             //如果不是同一个全名空间
@@ -188,10 +181,7 @@ class Coder extends CoderBase
             $property_line_buf->pushStr(';');
             $property_buf->emptyLine();
         }
-        
         $this->packMethodCode($class_file, $struct);
-        $class_file->indentDecrease();
-        $class_file->pushStr('}')->emptyLine();
     }
 
     /**

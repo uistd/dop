@@ -1,6 +1,6 @@
 <?php
 
-namespace {{$namespace}}
+namespace {{$namespace}};
 {{IMPORT_CODE_BUF}}
 
 /**

@@ -116,13 +116,4 @@ class FileBuf extends CodeBuf
     public function loadTpl($tpl_name, $data = null)
     {
     }
-
-    /**
-     * 转换成字符串
-     * @return string
-     */
-    public function toString()
-    {
-        return $this->dump();
-    }
 }

@@ -37,7 +37,7 @@ interface BufInterface
      * 转换成字符串
      * @return string
      */
-    public function toString();
+    public function __toString();
 
     /**
      * 写入一段字符串 或者 Buf

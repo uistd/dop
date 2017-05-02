@@ -215,7 +215,7 @@ class CodeBuf implements BufInterface
      * 转换成字符串
      * @return string
      */
-    public function toString()
+    public function __toString()
     {
         return $this->dump();
     }
