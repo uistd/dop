@@ -92,7 +92,7 @@ class CodeBuf implements BufInterface
         }
         //位置
         $index = count($this->line_buffer);
-        $sub_buf->setIndent($this->indent + $this->global_indent);
+        $sub_buf->setIndent($this->indent);
         $this->sub_buffer_list[$index] = $sub_buf;
         //将该位置用空字符串占用
         $this->line_buffer[] = '';

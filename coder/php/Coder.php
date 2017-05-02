@@ -19,9 +19,9 @@ use ffan\php\utils\Str as FFanStr;
 class Coder extends CoderBase
 {
     /**
-     * @var string 模板文件
+     * 生成后的主文件
      */
-    protected $tpl = 'php/php.tpl';
+    const MAIN_FILE = 'dop.php';
 
     /**
      * require 路径判断
@@ -196,7 +196,7 @@ class Coder extends CoderBase
      */
     public function buildCommonCode()
     {
-        $main_buf = $this->getFolder()->touch('', 'dop.php');
+        $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
         $main_buf->push('<?php');
         $main_buf->push('define(\'DOP_PHP_PROTOCOL_BASE\', __DIR__ . DIRECTORY_SEPARATOR);');
         $main_buf->push('/**');
@@ -239,7 +239,7 @@ class Coder extends CoderBase
         if (!$autoload_buf) {
             return;
         }
-        $autoload_buf->push("'" . $this->pathToNs($xml_file) . "' => '" . $xml_file . "',");
+        $autoload_buf->push("'" . $this->joinNameSpace($xml_file) . "' => '" . $xml_file . "',");
     }
 
     /**

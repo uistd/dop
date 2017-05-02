@@ -47,7 +47,12 @@ abstract class PluginBase extends ConfigBase
      * @var string 所在路径
      */
     private $base_path;
-
+    
+    /**
+     * @var CoderBase
+     */
+    protected $coder;
+    
     /**
      * PluginInterface constructor.
      * @param Manager $manager
@@ -62,6 +67,7 @@ abstract class PluginBase extends ConfigBase
         if (!empty($conf_arr)) {
             $this->initConfig($conf_arr);
         }
+        $this->coder = $this->manager->getCurrentCoder();
     }
 
     /**

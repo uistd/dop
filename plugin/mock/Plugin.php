@@ -2,6 +2,7 @@
 
 namespace ffan\dop\plugin\mock;
 
+use ffan\dop\build\CoderBase;
 use ffan\dop\build\PluginBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
@@ -156,5 +157,18 @@ class Plugin extends PluginBase
             'date',
             'dateTime'
         ));
+    }
+
+    /**
+     * 获取命名空间
+     */
+    public function getNameSpace()
+    {
+        $ns = $this->getConfigString('namespace');
+        if (!empty($ns)) {
+            return $ns;
+        } else {
+            return $this->coder->joinNameSpace('plugin/mock');
+        }
     }
 }
