@@ -23,12 +23,20 @@ use ffan\php\utils\Str as FFanStr;
 class PhpMockCoder extends PluginCoderBase
 {
     /**
+     * 获取命名空间
+     */
+    private function mockNameSpace()
+    {
+        return $this->coder->joinNameSpace('plugin/mock');
+    }
+
+    /**
      * 生成插件 PHP 代码
      */
     public function buildCode()
     {
         $autoload_buf = $this->coder->getBuf('', Coder::MAIN_FILE, 'autoload');
-        $name_space = $this->coder->joinNameSpace('plugin/mock');
+        $name_space = $this->mockNameSpace();
         if ($autoload_buf) {
             $autoload_buf->pushStr("'" . $name_space . "' => 'dop_mock',");
         }
@@ -52,9 +60,10 @@ class PhpMockCoder extends PluginCoderBase
         $main_buf = $this->coder->getFolder()->touch('dop_mock', $class_name . '.php');
         $main_buf->pushStr('<?php');
         $main_buf->emptyLine();
-        $main_buf->pushStr('namespace ' . $this->coder->joinNameSpace('mock') . ';');
+        $main_buf->pushStr('namespace ' . $this->mockNameSpace() . ';');
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
+        $main_buf->emptyLine();
         $main_buf->pushStr('class ' . $class_name . ' extends DopMock');
         $main_buf->pushStr('{');
         $main_buf->indentIncrease();
@@ -80,8 +89,9 @@ class PhpMockCoder extends PluginCoderBase
         $class_name = $struct->getClassName();
         $mock_buf->pushStr('/**');
         $mock_buf->pushStr(' * 生成 ' . $class_name . ' mock数据');
+        $mock_buf->pushStr(' * @return ' . $class_name);
         $mock_buf->pushStr(' */');
-        $mock_buf->pushStr('public function mock' . $class_name . '()');
+        $mock_buf->pushStr('public static function mock' . $class_name . '()');
         $mock_buf->pushStr('{');
         $mock_buf->indentIncrease();
         $use_ns = $this->coder->joinNameSpace($struct->getNamespace());
@@ -158,7 +168,7 @@ class PhpMockCoder extends PluginCoderBase
                 $mock_buf->indentIncrease();
                 $this->buildItemCode($mock_buf, '$' . $key_var_name, $key_mock_rule, $key_item, $depth + 1);
                 $this->buildItemCode($mock_buf, '$' . $value_var_name, $value_mock_rule, $value_item, $depth + 1);
-                $mock_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $value_var_name .';');
+                $mock_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $value_var_name . ';');
                 $mock_buf->indentDecrease()->pushStr('}');
                 $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;
