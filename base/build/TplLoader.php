@@ -138,7 +138,7 @@ class TplLoader
                     break;
                 //变量
                 case self::TPL_OP_VAR:
-                    $tmp_line_result[] = isset($data[$tmp_parse_result]) ? $data[$tmp_parse_result] : '$' . $data[$tmp_parse_result];
+                    $tmp_line_result[] = isset($data[$tmp_parse_result]) ? $data[$tmp_parse_result] : ('$' . $tmp_parse_result);
                     break;
                 //code buf
                 case self::TPL_OP_CODE_BUF:
@@ -170,8 +170,7 @@ class TplLoader
             $code_buf = $line_result[0];
             $code_buf->setIndent($indent);
             $file_buf->insertNameBuf($code_buf->getName(), $code_buf);
-        }
-        //全部当成str buf
+        } //全部当成str buf
         else {
             $str_buf = new StrBuf();
             foreach ($line_result as $item) {

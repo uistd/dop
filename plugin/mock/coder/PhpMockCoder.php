@@ -28,10 +28,17 @@ class PhpMockCoder extends PluginCoderBase
     public function buildCode()
     {
         $autoload_buf = $this->coder->getBuf('', Coder::MAIN_FILE, 'autoload');
+        $name_space = $this->coder->joinNameSpace('plugin/mock');
         if ($autoload_buf) {
-            $autoload_buf->pushStr("'" . $this->coder->joinNameSpace('plugin/mock') . "' => 'dop_mock',");
+            $autoload_buf->pushStr("'" . $name_space . "' => 'dop_mock',");
         }
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
+        $folder = $this->plugin->getFolder();
+        $base_class_file = $folder->touch('dop_mock', 'DopMock.php');
+        $tpl_data = array(
+            'namespace' => $name_space
+        );
+        $this->plugin->loadTpl($base_class_file, 'tpl/DopMock.tpl', $tpl_data);
     }
 
     /**

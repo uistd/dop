@@ -52,7 +52,7 @@ abstract class PluginBase extends ConfigBase
     /**
      * @var CoderBase
      */
-    protected $coder;
+    private $coder;
     
     /**
      * PluginInterface constructor.
@@ -68,7 +68,6 @@ abstract class PluginBase extends ConfigBase
         if (!empty($conf_arr)) {
             $this->initConfig($conf_arr);
         }
-        $this->coder = $this->manager->getCurrentCoder();
     }
 
     /**
@@ -257,5 +256,32 @@ abstract class PluginBase extends ConfigBase
     public function getManager()
     {
         return $this->manager;
+    }
+
+    /**
+     * 获取当前的coder
+     * @return CoderBase
+     */
+    public function getCoder()
+    {
+        if (null === $this->coder) {
+            $this->coder = $this->manager->getCurrentCoder();
+        }
+        return $this->coder;
+    }
+
+    /**
+     * 获取代码生成目录，如果插件自己定义了代码生成目录，那就生成到自定义目录，否则生成到coder的目录
+     * @return Folder
+     */
+    public function getFolder()
+    {
+        $build_path = $this->getConfigString('build_path');
+        if (!$build_path) {
+            $build_path = FFanUtils::fixWithRootPath($build_path);
+            return $this->manager->getFolder($build_path);
+        } else {
+            return $this->getCoder()->getFolder();
+        }
     }
 }

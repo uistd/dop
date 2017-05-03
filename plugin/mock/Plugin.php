@@ -2,7 +2,6 @@
 
 namespace ffan\dop\plugin\mock;
 
-use ffan\dop\build\CoderBase;
 use ffan\dop\build\PluginBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
@@ -168,7 +167,7 @@ class Plugin extends PluginBase
         if (!empty($ns)) {
             return $ns;
         } else {
-            return $this->coder->joinNameSpace('plugin/mock');
+            return $this->getCoder()->joinNameSpace('plugin/mock');
         }
     }
 }
