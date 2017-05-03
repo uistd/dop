@@ -42,8 +42,22 @@ class CodeBuf implements BufInterface
     private $global_indent;
 
     /**
+     * @var string 名称
+     */
+    private $name;
+    
+    /**
+     * CodeBuf constructor.
+     * @param string $name buf name
+     */
+    public function __construct($name = null)
+    {
+        $this->name = $name;
+    }
+
+    /**
      * 设置全局缩进
-     * @param $global_indent
+     * @param int $global_indent
      */
     public function setIndent($global_indent)
     {
@@ -53,7 +67,7 @@ class CodeBuf implements BufInterface
         if ($global_indent < 0) {
             $global_indent = 0;
         }
-        $this->global_indent = $global_indent;
+        $this->global_indent += $global_indent;
     }
 
     /**
@@ -235,5 +249,23 @@ class CodeBuf implements BufInterface
             $this->pushStr((string)$item);
         }
         return $this;
+    }
+
+    /**
+     * 获取name
+     * @return string|null
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * 移除最后一项
+     * @return string|BufInterface
+     */
+    public function pop()
+    {
+        return array_pop($this->line_buffer);
     }
 }

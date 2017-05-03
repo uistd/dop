@@ -156,12 +156,17 @@ class Coder extends CoderBase
             }
         }
         $item_list = $struct->getAllExtendItem();
-        
+        $is_first_property = true;
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($item_list as $name => $item) {
+            if (!$is_first_property) {
+                $property_buf->emptyLine();
+            } else {
+                $is_first_property = false;
+            }
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
             $property_desc_buf = new StrBuf();
@@ -179,7 +184,6 @@ class Coder extends CoderBase
                 $property_line_buf->pushStr(' = ' . $item->getDefault());
             }
             $property_line_buf->pushStr(';');
-            $property_buf->emptyLine();
         }
         $this->packMethodCode($class_file, $struct);
     }

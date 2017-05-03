@@ -105,7 +105,7 @@ class PhpMockCoder extends PluginCoderBase
      */
     private function buildItemCode($mock_buf, $mock_item, $mock_rule, $item, $depth = 0)
     {
-        $plugin_name = $this->plugin->getName();
+        $plugin_name = $this->plugin->getPluginName();
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::INT:

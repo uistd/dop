@@ -8,6 +8,12 @@ namespace ffan\dop\build;
 interface BufInterface
 {
     /**
+     * BufInterface constructor.
+     * @param string $name
+     */
+    public function __construct($name = null);
+
+    /**
      * 导出数据
      * @return string
      */
@@ -45,4 +51,16 @@ interface BufInterface
      * @return $this
      */
     public function push($item);
+
+    /**
+     * 移除最后一项
+     * @return string|BufInterface
+     */
+    public function pop();
+    
+    /**
+     * 获取name
+     * @return string|null
+     */
+    public function getName();
 }

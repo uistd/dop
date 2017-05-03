@@ -34,14 +34,13 @@ class FileBuf extends CodeBuf
     private $remark;
 
     /**
-     * GroupCodeBuf constructor.
-     * @param string $file_name 文件名
-     * @param string $remark
+     * FileBuf constructor.
+     * @param null $name
      */
-    public function __construct($file_name, $remark = '')
+    public function __construct($name = null)
     {
-        $this->remark = $remark;
-        $this->file_name = $file_name;
+        parent::__construct($name);
+        $this->file_name = $name;
     }
 
     /**

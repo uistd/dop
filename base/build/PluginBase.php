@@ -6,6 +6,7 @@ use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Item;
 use ffan\php\utils\ConfigBase;
+use ffan\php\utils\Utils as FFanUtils;
 
 /**
  * Class PluginBase 插件基类
@@ -26,7 +27,7 @@ abstract class PluginBase extends ConfigBase
     /**
      * @var string 插件名
      */
-    protected $name;
+    protected $plugin_name;
 
     /**
      * @var bool 是否存在插件的模板
@@ -61,8 +62,8 @@ abstract class PluginBase extends ConfigBase
     public function __construct(Manager $manager, $name)
     {
         $this->manager = $manager;
-        $this->name = $name;
-        $this->base_path = $manager->getPluginMainPath($this->name);
+        $this->plugin_name = $name;
+        $this->base_path = $manager->getPluginMainPath($this->plugin_name);
         $conf_arr = $manager->getPluginConfig($name);
         if (!empty($conf_arr)) {
             $this->initConfig($conf_arr);
@@ -82,12 +83,12 @@ abstract class PluginBase extends ConfigBase
      * @return string
      * @throws Exception
      */
-    public function getName()
+    public function getPluginName()
     {
-        if (null === $this->name) {
+        if (null === $this->plugin_name) {
             throw new Exception('Property name required!');
         }
-        return $this->name;
+        return $this->plugin_name;
     }
 
     /**
@@ -99,7 +100,7 @@ abstract class PluginBase extends ConfigBase
     public function registerHandler($coder_name, $class_file)
     {
         if (isset($this->handler_list[$coder_name])) {
-            throw new Exception('Plugin ' . $this->name . ' coder:' . $coder_name . ' exist!');
+            throw new Exception('Plugin ' . $this->plugin_name . ' coder:' . $coder_name . ' exist!');
         }
         $this->handler_list[$coder_name] = $class_file;
     }
@@ -198,7 +199,7 @@ abstract class PluginBase extends ConfigBase
         if (isset($this->handler_list[$coder_name])) {
             $file = $this->handler_list[$coder_name];
         } else {
-            $base_dir = $this->manager->getPluginMainPath($this->name);
+            $base_dir = $this->manager->getPluginMainPath($this->plugin_name);
             $file = $base_dir . 'coder/' . $class_name . '.php';
         }
         $coder = null;
@@ -219,6 +220,21 @@ abstract class PluginBase extends ConfigBase
     }
 
     /**
+     * 加载一个模板，并将内容写入FileBuf
+     * @param FileBuf $file_buf
+     * @param string $tpl_name
+     * @param null $data
+     * @throws Exception
+     */
+    public function loadTpl(FileBuf $file_buf, $tpl_name, $data = null)
+    {
+        $path = $this->manager->getPluginMainPath($this->plugin_name);
+        $tpl_file = FFanUtils::joinFilePath($path, $tpl_name);
+        $tpl_loader = TplLoader::getInstance($tpl_file);
+        $tpl_loader->execute($file_buf, $data);
+    }
+
+    /**
      * 生成代码的类名
      * @param string $coder_name 生成器名称
      * @param bool $ns 是否带全名空间
@@ -226,9 +242,9 @@ abstract class PluginBase extends ConfigBase
      */
     private function codeClassName($coder_name, $ns = false)
     {
-        $class_name = ucfirst($coder_name) . ucfirst($this->name) . 'Coder';
+        $class_name = ucfirst($coder_name) . ucfirst($this->plugin_name) . 'Coder';
         if ($ns) {
-            $ns_str = 'ffan\dop\plugin\\' . $this->name;
+            $ns_str = 'ffan\dop\plugin\\' . $this->plugin_name;
             $class_name = $ns_str . '\\' . $class_name;
         }
         return $class_name;

@@ -33,14 +33,30 @@ class StrBuf implements BufInterface
      * @var int 缩进
      */
     private $indent = 0;
+
+    /**
+     * @var string 名称
+     */
+    private $name;
     
     /**
      * StrBuf constructor.
-     * @param string $join_str 连接字符串
+     * @param string $name buf name
      */
-    public function __construct($join_str = '')
+    public function __construct($name = null)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * 设置连接字符串
+     * @param string $join_str 连接字符串
+     * @return $this
+     */
+    public function setJoinStr($join_str)
     {
         $this->join_str = $join_str;
+        return $this;
     }
 
     /**
@@ -50,6 +66,15 @@ class StrBuf implements BufInterface
     public function pushStr($str)
     {
         $this->str_buffer[] = $str;
+    }
+
+    /**
+     * 移除最后一项
+     * @return string|BufInterface
+     */
+    public function pop()
+    {
+        return array_pop($this->str_buffer);
     }
 
     /**
@@ -138,5 +163,14 @@ class StrBuf implements BufInterface
             $this->pushStr((string)$item);
         }
         return $this;
+    }
+
+    /**
+     * 获取name
+     * @return string|null
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 }

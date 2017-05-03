@@ -41,7 +41,7 @@ class Plugin extends PluginBase
         } elseif (ItemType::FLOAT === $type) {
             $this->readFloatSet($node, $valid_rule);
         }
-        $item->addPluginData($this->name, $valid_rule);
+        $item->addPluginData($this->plugin_name, $valid_rule);
     }
 
     /**

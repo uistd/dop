@@ -417,6 +417,7 @@ abstract class CoderBase
     {
         $path = $this->manager->getCoderPath($this->coder_name);
         $tpl_file = FFanUtils::joinFilePath($path, $tpl_name);
-        new TplLoader($file_buf, $tpl_file, $data);
+        $tpl_loader = TplLoader::getInstance($tpl_file);
+        $tpl_loader->execute($file_buf, $data);
     }
 }

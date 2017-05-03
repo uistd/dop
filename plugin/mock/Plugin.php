@@ -84,7 +84,7 @@ class Plugin extends PluginBase
             $mock_rule->mock_type = MockRule::MOCK_FIXED;
         }
         if ($find_flag) {
-            $item->addPluginData($this->name, $mock_rule);
+            $item->addPluginData($this->plugin_name, $mock_rule);
         }
     }
 
