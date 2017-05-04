@@ -34,6 +34,11 @@ class FileBuf extends CodeBuf
     private $remark;
 
     /**
+     * @var array 变量列表
+     */
+    private $variable_arr;
+
+    /**
      * FileBuf constructor.
      * @param null $name
      */
@@ -108,9 +113,54 @@ class FileBuf extends CodeBuf
     }
 
     /**
+     * 设置一个变量，一个变量名可以对应多个buf
+     * @param string $name
+     * @param BufInterface $buf
+     * @throws Exception
+     */
+    public function addVariable($name, BufInterface $buf)
+    {
+        if (!isset($this->variable_arr[$name])) {
+            $this->variable_arr[$name] = array();
+        }
+        $this->variable_arr[$name][] = $buf;
+    }
+
+    /**
+     * 设置变量的值
+     * @param string $name
+     * @param string|BufInterface $value
+     */
+    public function setVariableValue($name, $value)
+    {
+        if (!isset($this->variable_arr[$name])) {
+            return;
+        }
+        /** @var BufInterface $each_buf */
+        foreach ($this->variable_arr[$name] as $each_buf) {
+            $each_buf->push($value);
+        }
+    }
+
+    /**
+     * 将内容写入一个指定的buf
+     * @param string $name
+     * @param string|BufInterface $content
+     * @return bool 写入成功 返回 true，如果 buf不存在，返回 false
+     */
+    public function pushToBuf($name, $content)
+    {
+        if (!isset($this->buf_arr[$name])) {
+            return false;
+        }
+        $this->buf_arr[$name]->push($content);
+        return true;
+    }
+
+    /**
      * 加载一个模板
      * @param string $tpl_name 模板名称，相对于 Coder的目录
-     * @param null|array $data 模板上的变量名 
+     * @param null|array $data 模板上的变量名
      */
     public function loadTpl($tpl_name, $data = null)
     {

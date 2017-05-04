@@ -5,8 +5,9 @@ namespace {{$namespace}};
 
 /**
  * {{$struct_note}}
+ * @package {{$namespace}}
  */
-class {{$class_name}}
+class {{str_buf::php_class}}
 {
     {{PROPERTY_CODE_BUF}}
     {{METHOD_CODE_BUF}}

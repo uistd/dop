@@ -3,6 +3,7 @@
 namespace ffan\dop\build;
 
 use ffan\dop\Exception;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class TplLoader 模板加载器
@@ -42,9 +43,19 @@ class TplLoader
     const TPL_OP_CODE_BUF = 5;
 
     /**
+     * 模板编译结果 STR_BUF
+     */
+    const TPL_OP_STR_BUF = 6;
+
+    /**
+     * 模板编译结果 前一项的参数
+     */
+    const TPL_OP_ARGS = 8;
+
+    /**
      * 模板编译结果 换行
      */
-    const TPL_OP_BR = 6;
+    const TPL_OP_BR = 7;
 
     /**
      * @var string 模板名称
@@ -70,6 +81,16 @@ class TplLoader
      * @var array 编译结果识别标志
      */
     private $result_code;
+
+    /**
+     * @var array 内置code buf 宏
+     */
+    private static $define_code_buf = array(
+        'PROPERTY_CODE_BUF' => FileBuf::PROPERTY_BUF,
+        'METHOD_CODE_BUF' => FileBuf::METHOD_BUF,
+        'HEADER_CODE_BUF' => FileBuf::HEADER_BUF,
+        'IMPORT_CODE_BUF' => FileBuf::IMPORT_BUF,
+    );
 
     /**
      * TplLoader constructor.
@@ -108,9 +129,9 @@ class TplLoader
      * @param string $msg
      * @return string
      */
-    private function logMsg($msg)
+    private function errorMsg($msg)
     {
-        return $msg . ' @ ' . $this->tpl_file . ' line ' . $this->line_number;
+        return $msg . ' File: ' . $this->tpl_file . ' Line: ' . $this->line_number;
     }
 
     /**
@@ -121,7 +142,9 @@ class TplLoader
     public function execute(FileBuf $file_buf, $data)
     {
         $tmp_line_result = array();
-        foreach ($this->result_code as $index => $code_type) {
+        $count = count($this->result_code);
+        for ($index = 0; $index < $count; ++$index) {
+            $code_type = $this->result_code[$index];
             $tmp_parse_result = $this->parse_result[$index];
             switch ($code_type) {
                 //普通的一行内容
@@ -138,17 +161,52 @@ class TplLoader
                     break;
                 //变量
                 case self::TPL_OP_VAR:
-                    $tmp_line_result[] = isset($data[$tmp_parse_result]) ? $data[$tmp_parse_result] : ('$' . $tmp_parse_result);
+                    //如果变量存在，替换变更
+                    if (isset($data[$tmp_parse_result]) ) {
+                        $tmp_line_result[] = $data[$tmp_parse_result];
+                    } //如果变量不存在，转换为str_buf
+                    else {
+                        $buf = new StrBuf($tmp_parse_result);
+                        $file_buf->addVariable($tmp_parse_result, $buf);
+                    }// ? $data[$tmp_parse_result] : ('$' . $tmp_parse_result);
                     break;
-                //code buf
+                //buf
                 case self::TPL_OP_CODE_BUF:
-                    $tmp_line_result[] = new CodeBuf($tmp_parse_result);
+                case self::TPL_OP_STR_BUF:
+                    if (self::TPL_OP_STR_BUF === $code_type) {
+                        $buf = new StrBuf($tmp_line_result);
+                        $file_buf->addVariable($tmp_parse_result, $buf);
+                    } else {
+                        $buf = new CodeBuf($tmp_parse_result);
+                    }
+                    $tmp_line_result[] = $buf;
+                    //如果下一个op code是参数，那就把下一步立即做掉
+                    if (self::TPL_OP_ARGS === $this->result_code[$index + 1]) {
+                        $this->bufArgSet($buf, $this->result_code[$index++]);
+                    }
                     break;
                 //带标签的行结束
                 case self::TPL_OP_BR:
                     $this->lineExecuteResult($tmp_line_result, $file_buf);
                     break;
             }
+        }
+    }
+
+    /**
+     * 参数设置
+     * @param BufInterface $buf
+     * @param array $buf_args
+     */
+    private function bufArgSet($buf, $buf_args)
+    {
+        //缩进参数
+        if (isset($buf_args['indent'])) {
+            $buf->setIndent((int)$buf_args['indent']);
+        }
+        //str buf 连接参数
+        if (isset($buf_args['join_str']) && $buf instanceof StrBuf) {
+            $buf->setJoinStr($buf_args['join_str']);
         }
     }
 
@@ -257,33 +315,51 @@ class TplLoader
         }
         //变量直接替换
         if ('$' === $tag_content[0]) {
-            $this->pushTplCode(self::TPL_OP_VAR, substr($tag_content, 1));
-        } //code buf
+            $var_name = substr($tag_content, 1);
+            if (!FFanStr::isValidVarName($var_name)) {
+                $err_msg = $this->errorMsg('Invalid name:'. $var_name);
+                throw new Exception($err_msg);
+            }
+            $this->pushTplCode(self::TPL_OP_VAR, $var_name);
+        } //内置宏
+        elseif (isset(self::$define_code_buf[$tag_content])) {
+            $this->pushTplCode(self::TPL_OP_CODE_BUF, self::$define_code_buf[$tag_content]);
+        } //其它buf
         else {
-            switch ($tag_content) {
-                case 'PROPERTY_CODE_BUF':
-                    $buf_name = FileBuf::PROPERTY_BUF;
+            $flag = '::';
+            $flag_pos = strpos($tag_content, $flag);
+            $err_msg = $this->errorMsg('Unknown tpl tag:' . self::LEFT_TAG . $tag_content . self::RIGHT_TAG);
+            if (false === $flag_pos) {
+                throw new Exception($err_msg);
+            }
+            $buf_type = strtolower(substr($tag_content, 0, $flag_pos));
+            $buf_arg_str = substr($tag_content, $flag_pos + strlen($flag));
+            $arg_pos = strpos($buf_arg_str, ' ');
+            $arg_arr = null;
+            if (false === $arg_pos) {
+                $buf_name = $buf_arg_str;
+            } else {
+                $buf_name = substr($buf_arg_str, 0, $arg_pos);
+                $arg_arr = FFanStr::dualSplit(substr($buf_arg_str, $arg_pos + 1), ' ', '=');
+            }
+            if (!FFanStr::isValidVarName($buf_name)) {
+                throw new Exception($err_msg);
+            }
+            switch ($buf_type) {
+                case 'buf':
+                case 'code_buf':
+                    $this->pushTplCode(self::TPL_OP_CODE_BUF, $buf_name);
                     break;
-                case 'METHOD_CODE_BUF':
-                    $buf_name = FileBuf::METHOD_BUF;
-                    break;
-                case 'HEADER_CODE_BUF':
-                    $buf_name = FileBuf::HEADER_BUF;
-                    break;
-                case 'IMPORT_CODE_BUF':
-                    $buf_name = FileBuf::IMPORT_BUF;
+                case 'str_buf':
+                    $this->pushTplCode(self::TPL_OP_STR_BUF, $buf_name);
                     break;
                 default:
-                    $flag = 'buf::';
-                    $pos = strpos($tag_content, $flag);
-                    if (0 !== $pos) {
-                        $msg = $this->logMsg('Unknown tpl tag:' . self::LEFT_TAG . $tag_content . self::RIGHT_TAG);
-                        throw new Exception($msg);
-                    }
-                    $buf_name = substr($tag_content, strlen($flag));
-                    break;
+                    throw new Exception($err_msg);
             }
-            $this->pushTplCode(self::TPL_OP_CODE_BUF, $buf_name);
+            //如果有参数指定
+            if ($arg_arr) {
+                $this->pushTplCode(self::TPL_OP_ARGS, $arg_arr);
+            }
         }
     }
 

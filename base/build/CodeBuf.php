@@ -236,7 +236,7 @@ class CodeBuf implements BufInterface
 
     /**
      * 写入一段字符串 或者 Buf
-     * @param string $item
+     * @param string|BufInterface $item
      * @return $this
      */
     public function push($item)
