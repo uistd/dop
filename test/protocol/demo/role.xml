@@ -32,7 +32,7 @@
     </struct>
     <action name="demo_role">
         <request>
-            <int name="role_id"/>
+            <int name="role_id" v-require="1" v-require-msg="role_id参数不可为空" v-range="1, 1000" v-range-msg="role_id必须在1-1000范围"/>
         </request>
         <response extend="/xapi/result">
             <struct name="data" extend="role_info"/>
@@ -50,7 +50,7 @@
     </action>
     <action name="demo_role" method="delete">
         <request>
-            <int name="role_id" mock="10"/>
+            <int name="role_id" mock="10" v-require="1" v-range="1,"/>
         </request>
         <response extend="/xapi/result">
             <int name="data"/>
@@ -58,7 +58,7 @@
     </action>
     <action name="demo_role" method="put">
         <request>
-            <string name="role_ids"/>
+            <string name="role_ids" v-require="1"/>
         </request>
         <response extend="/xapi/result">
             <map name="data">

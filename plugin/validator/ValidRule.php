@@ -24,16 +24,6 @@ class ValidRule
     const STR_LEN_BY_LETTER = 4;
 
     /**
-     * 数据来源:uri 也就是$_GET
-     */
-    const FROM_HTTP_URI = 1;
-
-    /**
-     * 数据来源：body 也就是$_POST
-     */
-    const FROM_HTTP_BODY = 2;
-
-    /**
      * @var array 内置数据格式
      */
     private static $build_in_type = array(
@@ -78,16 +68,6 @@ class ValidRule
     public $str_len_type;
 
     /**
-     * @var string 数据类型
-     */
-    public $format_type;
-
-    /**
-     * @var int 来源
-     */
-    public $data_from;
-
-    /**
      * @var bool 是否是必须的参数
      */
     public $is_require;
@@ -113,14 +93,39 @@ class ValidRule
     public $is_strip_tags;
 
     /**
-     * @var string 允许字符正则设置
+     * @var string 字符串的格式
      */
-    public $preg_set;
+    public $format_set;
 
     /**
      * @var int 小数点精度
      */
     public $precision;
+
+    /**
+     * @var string require 检查出错后的消息
+     */
+    public $require_msg;
+
+    /**
+     * @var string range 检查出错后的消息
+     */
+    public $range_msg;
+
+    /**
+     * @var string format 检查出错后的消息
+     */
+    public $format_msg;
+
+    /**
+     * @var string length检查出错后的消息
+     */
+    public $length_msg;
+
+    /**
+     * @var string 通用的错误消息
+     */
+    public $err_msg;
 
     /**
      * 数据类型格式化

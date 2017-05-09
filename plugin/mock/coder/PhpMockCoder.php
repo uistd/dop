@@ -104,7 +104,7 @@ class PhpMockCoder extends PluginCoderBase
          */
         foreach ($all_item as $name => $item) {
             /** @var MockRule $mock_rule */
-            $mock_rule = $item->getPluginData('mock');
+            $mock_rule = $item->getPluginData($this->plugin->getPluginName());
             Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }

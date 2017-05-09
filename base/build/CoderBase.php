@@ -314,8 +314,6 @@ abstract class CoderBase
                     $result = true;
                 }
                 break;
-            default:
-                throw new \InvalidArgumentException('Unknown type');
         }
         return $result;
     }
@@ -347,8 +345,6 @@ abstract class CoderBase
                     $result = true;
                 }
                 break;
-            default:
-                throw new \InvalidArgumentException('Unknown type');
         }
         return $result;
     }
