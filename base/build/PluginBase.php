@@ -269,6 +269,11 @@ abstract class PluginBase extends ConfigBase
      */
     public function getNameSpace()
     {
-        return $this->getConfigString('namespace', 'plugin/'. $this->plugin_name);
+        $ns = $this->getConfigString('namespace');
+        if (!empty($ns)) {
+            return $ns;
+        } else {
+            return $this->getCoder()->joinNameSpace('plugin/'. $this->plugin_name);
+        }
     }
 }

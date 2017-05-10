@@ -154,17 +154,4 @@ class Plugin extends PluginBase
             'dateTime'
         ));
     }
-
-    /**
-     * 获取命名空间
-     */
-    public function getNameSpace()
-    {
-        $ns = $this->getConfigString('namespace');
-        if (!empty($ns)) {
-            return $ns;
-        } else {
-            return $this->getCoder()->joinNameSpace('plugin/mock');
-        }
-    }
 }

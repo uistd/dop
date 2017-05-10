@@ -1,10 +1,10 @@
 <?php
 
-namespace ffan\dop\plugin\valid;
+namespace {{$namespace}};
 
 /**
  * Class DopValidator
- * @package ffan\dop\plugin\valid
+ * @package {{$namespace}}
  */
 class DopValidator
 {
@@ -31,7 +31,7 @@ class DopValidator
      * @param int $max_len 最大长度
      * @return bool
      */
-    public static function checkLength($str, $str_len_type, $min_len = null, $max_len = null)
+    public static function checkStrLength($str, $str_len_type, $min_len = null, $max_len = null)
     {
         if (null === $min_len && null === $max_len) {
             return true;

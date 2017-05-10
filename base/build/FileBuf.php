@@ -39,6 +39,11 @@ class FileBuf extends CodeBuf
     private $variable_arr;
 
     /**
+     * @var string 相对路径
+     */
+    private $path;
+
+    /**
      * FileBuf constructor.
      * @param null $name
      */
@@ -49,12 +54,32 @@ class FileBuf extends CodeBuf
     }
 
     /**
+     * 设置路径
+     * @param string $path
+     */
+    public function setPath($path)
+    {
+        $this->path = $path;
+    }
+
+    /**
      * 获取文件名
      * @return string
      */
     public function getFileName()
     {
         return $this->file_name;
+    }
+
+    /**
+     * 获取文件全名
+     */
+    public function getFullName()
+    {
+        if (null === $this->path) {
+            throw new Exception('Path is null');
+        }
+        return $this->path . '/' . $this->file_name;
     }
 
     /**

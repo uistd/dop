@@ -34,14 +34,24 @@ class PhpValidCoder extends PluginCoderBase
     {
         //加入autoload
         $build_path = $this->plugin->getBuildPath();
-        $name_space = $this->plugin->getNameSpace();
+        $namespace = $this->plugin->getNameSpace();
         $folder = $this->coder->getFolder();
-        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => '$build_path',");
+        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $namespace . "' => '$build_path',");
         //生成公共文件
         $base_class_file = $folder->touch($build_path, 'DopValidator.php');
-        $this->plugin->loadTpl($base_class_file, 'tpl/DopValidator.tpl');
+        $this->plugin->loadTpl($base_class_file, 'tpl/DopValidator.tpl', array('namespace' => $namespace));
         //方法生成到每个类中
         $this->coder->structIterator([$this, 'validateCode']);
+        /**
+         * @var string $name
+         * @var FileBuf $file
+         */
+        foreach ($this->use_validator as $name => $file) {
+            $use_buf = $file->getBuf(FileBuf::IMPORT_BUF);
+            if ($use_buf) {
+                $use_buf->pushStr('use '. $namespace .'\DopValidator;');
+            }
+        }
     }
 
     /**
@@ -218,7 +228,7 @@ class PhpValidCoder extends PluginCoderBase
      */
     private function addUseFlag($dop_file)
     {
-        $this->use_validator[$dop_file->getName()] = $dop_file;
+        $this->use_validator[$dop_file->getFullName()] = $dop_file;
     }
 
     /**

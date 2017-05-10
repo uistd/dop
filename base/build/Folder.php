@@ -189,6 +189,7 @@ class Folder
         if (!isset($this->file_list[$path])) {
             $this->file_list[$path] = array();
         }
+        $dop_file->setPath($path);
         $this->file_list[$path][$dop_file->getFileName()] = $dop_file;
     }
 }
