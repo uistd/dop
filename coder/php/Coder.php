@@ -127,20 +127,21 @@ class Coder extends CoderBase
         
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
-        $class_name_buf = new StrBuf();
+        $folder = $this->getFolder();
+        $class_file = $folder->touch($name_space, $main_class_name . '.php');
+        $this->loadTpl($class_file, 'tpl/class.tpl');
+        $class_name_buf = $class_file->getBuf('php_class');
+        if (null === $class_name_buf) {
+            throw new Exception('Can not found class name buf');
+        }
         $class_name_buf->pushStr($main_class_name);
         if ($struct->hasExtend()) {
             $class_name_buf->pushStr(' extends ' . $parent_struct->getClassName());
         }
-        $tpl_data = array(
-            'namespace' => $this->joinNameSpace($name_space),
-            'class_name' => $class_name_buf,
-            'struct_note' => ' '. $struct->getNote()
-        );
+        //模板中的变量处理
+        $class_file->setVariableValue('namespace', $this->joinNameSpace($name_space));
+        $class_file->setVariableValue('struct_node', ' '. $struct->getNote());
         
-        $folder = $this->getFolder();
-        $class_file = $folder->touch($name_space, $main_class_name . '.php');
-        $this->loadTpl($class_file, 'tpl/class.tpl', $tpl_data);
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
         if (!$use_buf || !$property_buf ) {

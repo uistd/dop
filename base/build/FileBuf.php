@@ -67,7 +67,7 @@ class FileBuf extends CodeBuf
     }
 
     /**
-     * 生成一个带名字的buf
+     * 生成一个具名CodeBuf，并将buf insert
      * @param string $name
      * @return CodeBuf
      * @throws Exception
@@ -75,11 +75,27 @@ class FileBuf extends CodeBuf
     public function touchBuf($name)
     {
         if (isset($this->buf_arr[$name])) {
-            throw new Exception('Add buf name "' . $name . '" conflict, file:' . $this->file_name);
+            throw new Exception('Code buf name "' . $name . '" conflict, file:' . $this->file_name);
         }
         $buf = new CodeBuf();
         $this->buf_arr[$name] = $buf;
         $this->insertBuf($buf);
+        return $buf;
+    }
+
+    /**
+     * 生成一个具名StrBuf
+     * @param string $name
+     * @return StrBuf
+     * @throws Exception
+     */
+    public function touchStrBuf($name)
+    {
+        if (isset($this->buf_arr[$name])) {
+            throw new Exception('Code buf name "' . $name . '" conflict, file:' . $this->file_name);
+        }
+        $buf = new StrBuf();
+        $this->buf_arr[$name] = $buf;
         return $buf;
     }
 
@@ -155,14 +171,5 @@ class FileBuf extends CodeBuf
         }
         $this->buf_arr[$name]->push($content);
         return true;
-    }
-
-    /**
-     * 加载一个模板
-     * @param string $tpl_name 模板名称，相对于 Coder的目录
-     * @param null|array $data 模板上的变量名
-     */
-    public function loadTpl($tpl_name, $data = null)
-    {
     }
 }

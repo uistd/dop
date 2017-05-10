@@ -239,7 +239,8 @@ class Protocol
             $class_name = $this->joinName($class_name, $node_name);
             $this->current_struct_type = $type;
             /** @var \DOMElement $node */
-            $this->parseStruct($class_name, $node, false, $type);
+            $struct = $this->parseStruct($class_name, $node, false, $type);
+            $struct->addReferType($type);
         }
     }
 
@@ -377,17 +378,33 @@ class Protocol
      */
     private function parsePlugin($dom_node, $item)
     {
-        $plugin_list = $this->protocol_manager->getPluginList();
-        if (null === $plugin_list) {
-            return;
+        $item_list = $dom_node->childNodes;
+        for ($i = 0; $i < $item_list->length; ++$i) {
+            $tmp_node = $item_list->item($i);
+            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
+                continue;
+            }
+            if (!$this->isPluginNode($tmp_node)) {
+                continue;
+            }
+            $this->setLineNumber($tmp_node->getLineNo());
+            $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
+            $plugin = $this->protocol_manager->getPlugin($plugin_name);
+            if (!$plugin) {
+                continue;
+            }
+            $plugin->init($tmp_node, $item);
         }
-        /**
-         * @var string $name
-         * @var PluginBase $plugin
-         */
-        foreach ($plugin_list as $name => $plugin) {
-            $plugin->init($dom_node, $item);
-        }
+    }
+
+    /**
+     * 是否是插件节点
+     * @param \DOMNode $node
+     * @return bool
+     */
+    private function isPluginNode($node)
+    {
+        return 0 === strpos($node->nodeName, 'plugin_');
     }
 
     /**
@@ -405,6 +422,9 @@ class Protocol
             $tmp_node = $item_list->item($i);
             $this->setLineNumber($tmp_node->getLineNo());
             if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
+                continue;
+            }
+            if ($this->isPluginNode($tmp_node)) {
                 continue;
             }
             if (null !== $type_node) {
@@ -435,6 +455,9 @@ class Protocol
             $tmp_node = $item_list->item($i);
             $this->setLineNumber($tmp_node->getLineNo());
             if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
+                continue;
+            }
+            if ($this->isPluginNode($tmp_node)) {
                 continue;
             }
             if (null === $key_node) {

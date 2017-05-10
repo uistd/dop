@@ -1,38 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
     <struct name="role_info" note="用户信息">
-        <string name="user_name" note="用户名" mock-range="8,15"/>
-        <string name="name" note="真实姓名" mock-range="6, 9"/>
-        <string name="mobile" note="手机号" mock-type="mobile"/>
-        <string name="email" note="电子邮件" default="demo@wanda.cn" mock-type="email"/>
-        <int name="level" note="等级" mock-range="10, 20"/>
-        <string name="address" note="地址" mock-range="20, 30"/>
-        <string name="country" note="国籍" default="中国" mock="中国"/>
-        <int name="gender" note="性别" default="1" mock-enum="1,2"/>
+        <string name="user_name" note="用户名">
+            <plugin_mock range="8,15"/>
+        </string>
+        <string name="name" note="真实姓名">
+            <plugin_mock range="6, 9"/>
+        </string>
+        <string name="mobile" note="手机号">
+            <plugin_mock type="mobile"/>
+        </string>
+        <string name="email" note="电子邮件" default="demo@wanda.cn" mock-type="email">
+            <plugin_mock type="email"/>
+        </string>
+        <int name="level" note="等级" mock-range="10, 20">
+            <plugin_mock range="10, 20"/>
+        </int>
+        <string name="address" note="地址" mock-range="20, 30">
+            <plugin_mock range="20, 30"/>
+        </string>
+        <string name="country" note="国籍" default="中国">
+            <plugin_mock value="中国"/>
+        </string>
+        <int name="gender" note="性别" default="1" mock-enum="1,2">
+            <plugin_mock enum="1,2"/>
+        </int>
         <list name="exp" mock-range="1, 10">
-            <int mock-range="100, 10000"/>
+            <plugin_mock range="1, 10"/>
+            <int>
+                <plugin_mock range="100, 100000"/>
+            </int>
         </list>
-        <list name="info" mock-range="1,2">
-            <string mock-range="10,20"/>
+        <list name="info">
+            <plugin_mock  range="1,2"/>
+            <string>
+                <plugin_mock range="10,20"/>
+            </string>
         </list>
-        <list name="demo" info="测试" mock-range="1,10">
-            <list mock-range="1,10">
-                <list mock-range="1,10">
-                    <int mock-range="20,110000"/>
+        <list name="demo" info="测试">
+            <plugin_mock range="1,10"/>
+            <list>
+                <plugin_mock range="1,10"/>
+                <list>
+                    <plugin_mock range="1,10"/>
+                    <int><plugin_mock range="20,110000"/></int>
                 </list>
             </list>
         </list>
-        <list name="children" mock-range="1,3">
+        <list name="children">
+            <plugin_mock range="1,3"/>
             <struct>
-                <int name="gender" default="1" note="性别" mock-enum="1,2"/>
-                <int name="age" mock-range="1, 30"/>
-                <string name="name" mock-type="chinese_name"/>
+                <int name="gender" default="1" note="性别">
+                    <plugin_mock enum="1,2"/>
+                </int>
+                <int name="age">
+                    <plugin_mock range="1, 30"/>
+                </int>
+                <string name="name">
+                    <plugin_mock type="chinese_name"/>
+                </string>
             </struct>
         </list>
     </struct>
     <action name="demo_role">
         <request>
-            <int name="role_id" v-require="1" v-require-msg="role_id参数不可为空" v-range="1, 1000" v-range-msg="role_id必须在1-1000范围"/>
+            <int name="role_id">
+                <plugin_valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>
+            </int>
         </request>
         <response extend="/xapi/result">
             <struct name="data" extend="role_info"/>
@@ -40,7 +74,9 @@
     </action>
     <action name="demo_role" method="post">
         <request>
-            <string name="role_ids" mock-enum="10,20|30,35"/>
+            <string name="role_ids">
+                <plugin_mock enum="10,20|30,35"/>
+            </string>
         </request>
         <response extend="/xapi/result">
             <list name="data">
@@ -50,7 +86,10 @@
     </action>
     <action name="demo_role" method="delete">
         <request>
-            <int name="role_id" mock="10" v-require="1" v-range="1,"/>
+            <int name="role_id">
+                <plugin_mock value="10"/>
+                <plugin_valid  require="1" range="1," range-msg="role_id不能小于1" require-msg="role_id为必传参数"/>
+            </int>
         </request>
         <response extend="/xapi/result">
             <int name="data"/>
@@ -58,17 +97,27 @@
     </action>
     <action name="demo_role" method="put">
         <request>
-            <string name="role_ids" v-require="1"/>
+            <string name="role_ids">
+                <plugin_valid require="1" error-msg="role_ids参数错误" length="200"/>
+            </string>
         </request>
         <response extend="/xapi/result">
             <map name="data">
                 <int note="role_id"/>
                 <struct extend="role_info" note="用户信息">
-                    <string name="remark" note="备注" mock="note"/>
+                    <string name="remark" note="备注">
+                        <plugin_mock value="note"/>
+                    </string>
                     <struct name="demo">
-                        <string name="user_name" note="用户名" mock-range="6,10"/>
-                        <string name="name" note="真实姓名" mock-type="chinese_name"/>
-                        <string name="mobile" note="手机号" mock-type="mobile"/>
+                        <string name="user_name" note="用户名">
+                            <plugin_mock range="6,10"/>
+                        </string>
+                        <string name="name" note="真实姓名">
+                            <plugin_mock type="chinese_name"/>
+                        </string>
+                        <string name="mobile" note="手机号">
+                            <plugin_mock type="mobile"/>
+                        </string>
                     </struct>
                 </struct>
             </map>

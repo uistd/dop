@@ -168,14 +168,14 @@ class TplLoader
                     else {
                         $buf = new StrBuf($tmp_parse_result);
                         $file_buf->addVariable($tmp_parse_result, $buf);
-                    }// ? $data[$tmp_parse_result] : ('$' . $tmp_parse_result);
+                        $tmp_line_result[] = $buf;
+                    }
                     break;
                 //buf
                 case self::TPL_OP_CODE_BUF:
                 case self::TPL_OP_STR_BUF:
                     if (self::TPL_OP_STR_BUF === $code_type) {
-                        $buf = new StrBuf($tmp_line_result);
-                        $file_buf->addVariable($tmp_parse_result, $buf);
+                        $buf = $file_buf->touchStrBuf($tmp_parse_result);
                     } else {
                         $buf = new CodeBuf($tmp_parse_result);
                     }

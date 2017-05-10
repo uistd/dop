@@ -1,13 +1,12 @@
 <?php
 
-namespace ffan\dop\plugin\validator;
+namespace ffan\dop\plugin\valid;
 
 use ffan\dop\build\PluginBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Struct;
-use ffan\php\utils\Str;
 
 /**
  * Class Plugin 数据有效性检验
@@ -118,6 +117,8 @@ class Plugin extends PluginBase
                 throw new Exception('Unknown format set:'. $format_set);
             }
         }
+        //长度计算方式
+        $valid_rule->str_len_type = (int)$this->read($node, 'strlen_type', 1);
     }
 
     /**
@@ -137,26 +138,6 @@ class Plugin extends PluginBase
      */
     public function isBuildCode($struct)
     {
-        $side = $this->getConfig('side_type', 'server');
-        $type = $struct->getType();
-        $result = false;
-        switch ($type) {
-            //如果是response,客户端生成
-            case Struct::TYPE_RESPONSE:
-                if ('client' === $side) {
-                    $result = true;
-                }
-                break;
-            //如果是Request 服务端生成
-            case Struct::TYPE_REQUEST:
-                if ('server' === $side) {
-                    $result = true;
-                }
-                break;
-            case Struct::TYPE_STRUCT:
-                $result = true;
-                break;
-        }
-        return $result;
+        return $struct->hasReferType(Struct::TYPE_REQUEST);
     }
 }

@@ -23,26 +23,19 @@ use ffan\php\utils\Str as FFanStr;
 class PhpMockCoder extends PluginCoderBase
 {
     /**
-     * 获取命名空间
-     */
-    private function mockNameSpace()
-    {
-        return $this->coder->joinNameSpace('plugin/mock');
-    }
-
-    /**
      * 生成插件 PHP 代码
      */
     public function buildCode()
     {
-        $autoload_buf = $this->coder->getBuf('', Coder::MAIN_FILE, 'autoload');
-        $name_space = $this->mockNameSpace();
-        if ($autoload_buf) {
-            $autoload_buf->pushStr("'" . $name_space . "' => 'dop_mock',");
-        }
+        $build_path = $this->plugin->getBuildPath();
+        $folder = $this->coder->getFolder();
+        $name_space = $this->plugin->getNameSpace();
+        //在autoload中加入映射
+        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => '$build_path'," );
+        //按xml文件生成代码
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
-        $folder = $this->plugin->getFolder();
-        $base_class_file = $folder->touch('dop_mock', 'DopMock.php');
+        //生成公共文件
+        $base_class_file = $folder->touch($build_path, 'DopMock.php');
         $tpl_data = array(
             'namespace' => $name_space
         );
@@ -56,11 +49,12 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function mockCode($file_name, $struct_list)
     {
+        $build_path = $this->plugin->getBuildPath();
         $class_name = FFanStr::camelName('mock_' . str_replace('/', '_', $file_name));
-        $main_buf = $this->coder->getFolder()->touch('dop_mock', $class_name . '.php');
+        $main_buf = $this->coder->getFolder()->touch($build_path, $class_name . '.php');
         $main_buf->pushStr('<?php');
         $main_buf->emptyLine();
-        $main_buf->pushStr('namespace ' . $this->mockNameSpace() . ';');
+        $main_buf->pushStr('namespace ' . $this->plugin->getNameSpace() . ';');
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
         $main_buf->emptyLine();

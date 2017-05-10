@@ -132,6 +132,27 @@ class Folder
     }
 
     /**
+     * 直接在指定文件夹下面的某个文件的指定buf里写入代码
+     * @param string $path
+     * @param string $file_name
+     * @param string $buf_name
+     * @param string|BufInterface $code
+     */
+    public function writeToFile($path, $file_name, $buf_name, $code)
+    {
+        $file = $this->doFind($path, $file_name);
+        if (null === $file) {
+            return;
+        }
+        $buf = $file->getBuf($buf_name);
+        if (null === $buf) {
+            return;
+        }
+        $buf->push($code);
+    }
+        
+
+    /**
      * 目录检查
      * @param string $path
      * @return string

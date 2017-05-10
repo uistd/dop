@@ -15,11 +15,6 @@ use ffan\php\utils\Utils as FFanUtils;
 abstract class PluginBase extends ConfigBase
 {
     /**
-     * @var string 插件相关属性名的前缀
-     */
-    protected $attribute_name_prefix;
-
-    /**
      * @var Manager;
      */
     protected $manager;
@@ -48,12 +43,12 @@ abstract class PluginBase extends ConfigBase
      * @var string 所在路径
      */
     private $base_path;
-    
+
     /**
      * @var CoderBase
      */
     private $coder;
-    
+
     /**
      * PluginInterface constructor.
      * @param Manager $manager
@@ -116,25 +111,34 @@ abstract class PluginBase extends ConfigBase
         $set_str = $this->read($node, $name);
         $min = null;
         $max = null;
-        if (!empty($set_str)) {
-            if (false === strpos($set_str, ',')) {
-                $max = $set_str;
-            } else {
-                $tmp = explode(',', $set_str);
-                $min = trim($tmp[0]);
-                $max = trim($tmp[1]);
-            }
+        if (0 === strlen($set_str)) {
+            return [$min, $max];
+        }
+        if (false === strpos($set_str, ',')) {
+            $max = ($is_int) ? (int)$set_str : (float)$set_str;
+        } else {
+            $tmp = explode(',', $set_str);
+            $min_str = trim($tmp[0]);
+            $max_str = trim($tmp[1]);
             if ($is_int) {
-                $min = (int)$min;
-                $max = (int)$max;
+                if (strlen($min_str) > 0) {
+                    $min = (int)$min_str;
+                }
+                if (strlen($max_str) > 0) {
+                    $max = (int)$max_str;
+                }
             } else {
-                $min = (float)$min;
-                $max = (float)$max;
+                if (strlen($min_str)) {
+                    $min = (float)$min_str;
+                }
+                if (strlen($max_str) > 0) {
+                    $max = (float)$max_str;
+                }
             }
-            if ($max < $min) {
-                $this->manager->buildLogError('v-length:' . $set_str . ' 无效');
-                $max = $min = null;
-            }
+        }
+        if ($min !== null && $max !== null && $max < $min) {
+            $this->manager->buildLogError('v-length:' . $set_str . ' 无效');
+            $max = $min = null;
         }
         return [$min, $max];
     }
@@ -153,37 +157,18 @@ abstract class PluginBase extends ConfigBase
     }
 
     /**
-     * 读取一条规则
+     * 读取插件属性
      * @param \DOMElement $node
-     * @param string $name 规则名
+     * @param string $attr_name 规则名
      * @param null $default
      * @return mixed
      */
-    protected function read($node, $name, $default = null)
+    protected function read($node, $attr_name, $default = null)
     {
-        $attr_name = $this->attributeName($name);
         if (!$node->hasAttribute($attr_name)) {
             return $default;
         }
         return trim($node->getAttribute($attr_name));
-    }
-
-    /**
-     * 属性名称
-     * @param string $name 属性名
-     * @return string
-     */
-    protected function attributeName($name)
-    {
-        if (null !== $this->attribute_name_prefix) {
-            $result = $this->attribute_name_prefix;
-        } else {
-            $result = '';
-        }
-        if (!empty($name)) {
-            $result .= '-';
-        }
-        return $result . $name;
     }
 
     /**
@@ -271,17 +256,19 @@ abstract class PluginBase extends ConfigBase
     }
 
     /**
-     * 获取代码生成目录，如果插件自己定义了代码生成目录，那就生成到自定义目录，否则生成到coder的目录
-     * @return Folder
+     * 获取代码生成目录
+     * @return string
      */
-    public function getFolder()
+    public function getBuildPath()
     {
-        $build_path = $this->getConfigString('build_path');
-        if (!$build_path) {
-            $build_path = FFanUtils::fixWithRootPath($build_path);
-            return $this->manager->getFolder($build_path);
-        } else {
-            return $this->getCoder()->getFolder();
-        }
+        return $this->getConfigString('build_path', 'plugin_'. $this->plugin_name);
+    }
+
+    /**
+     * 获取命名空间
+     */
+    public function getNameSpace()
+    {
+        return $this->getConfigString('namespace', 'plugin/'. $this->plugin_name);
     }
 }

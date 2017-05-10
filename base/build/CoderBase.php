@@ -36,7 +36,7 @@ abstract class CoderBase
      * @var array 注册的打包器
      */
     private $reg_packer;
-    
+
     /**
      * @var string 生成代码的基础目录
      */
@@ -100,7 +100,7 @@ abstract class CoderBase
     {
         $all_struct = $this->manager->getAllStruct();
         /** @var Struct $struct */
-        foreach ( $all_struct as $struct) {
+        foreach ($all_struct as $struct) {
             if ($struct->loadFromCache()) {
                 continue;
             }
@@ -121,7 +121,7 @@ abstract class CoderBase
             call_user_func_array($call_back, array($file_name, $struct_list));
         }
     }
-    
+
     /**
      * 生成插件内容
      */
@@ -246,11 +246,10 @@ abstract class CoderBase
         if (null === $code_buf) {
             return;
         }
-        $struct_type = $struct->getType();
-        if ($this->isBuildPackMethod($struct_type)) {
+        if ($this->isBuildPackMethod($struct)) {
             $packer->buildPackMethod($struct, $code_buf);
         }
-        if ($this->isBuildUnpackMethod($struct_type)) {
+        if ($this->isBuildUnpackMethod($struct)) {
             $packer->buildUnpackMethod($struct, $code_buf);
         }
     }
@@ -290,63 +289,33 @@ abstract class CoderBase
 
     /**
      * 是否需要生成Encode方法
-     * @param int $type
+     * @param Struct $struct
      * @return bool
      */
-    private function isBuildPackMethod($type)
+    private function isBuildPackMethod($struct)
     {
-        $result = false;
-        switch ($type) {
-            //如果是response,服务端生成
-            case Struct::TYPE_RESPONSE:
-                if (BuildOption::SIDE_SERVER === $this->build_opt->build_side) {
-                    $result = true;
-                }
-                break;
-            //如果是Request 客户端生成
-            case Struct::TYPE_REQUEST:
-                if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
-                    $result = true;
-                }
-                break;
-            case Struct::TYPE_STRUCT:
-                if (0 !== $this->build_opt->build_side) {
-                    $result = true;
-                }
-                break;
+        //客户端代码
+        if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
+            return $struct->hasReferType(Struct::TYPE_REQUEST);
+        } else {
+            return $struct->hasReferType(Struct::TYPE_RESPONSE);
         }
-        return $result;
     }
 
 
     /**
      * 是否需要生成Decode方法
-     * @param int $type
+     * @param Struct $struct
      * @return bool
      */
-    private function isBuildUnpackMethod($type)
+    private function isBuildUnpackMethod($struct)
     {
-        $result = false;
-        switch ($type) {
-            //如果是response,客户端生成
-            case Struct::TYPE_RESPONSE:
-                if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
-                    $result = true;
-                }
-                break;
-            //如果是Request 服务端生成
-            case Struct::TYPE_REQUEST:
-                if (BuildOption::SIDE_SERVER === $this->build_opt->build_side) {
-                    $result = true;
-                }
-                break;
-            case Struct::TYPE_STRUCT:
-                if (0 !== $this->build_opt->build_side) {
-                    $result = true;
-                }
-                break;
+        //客户端代码
+        if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
+            return $struct->hasReferType(Struct::TYPE_RESPONSE);
+        } else {
+            return $struct->hasReferType(Struct::TYPE_REQUEST);
         }
-        return $result;
     }
 
     /**

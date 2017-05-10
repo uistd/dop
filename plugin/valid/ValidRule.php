@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\plugin\validator;
+namespace ffan\dop\plugin\valid;
 
 /**
  * Class ValidRule 数据有效规则
@@ -9,19 +9,19 @@ namespace ffan\dop\plugin\validator;
 class ValidRule
 {
     /**
-     * 字符串长度计算方式：按显示宽度 传统的 ascii 占1位，其它2位
-     */
-    const STR_LEN_BY_DISPLAY = 1;
-
-    /**
      * 字符串长度计算方式：按实际占用字节数
      */
-    const STR_LEN_BY_BYTE = 2;
+    const STR_LEN_BY_BYTE = 1;
 
+    /**
+     * 字符串长度计算方式：按显示宽度 传统的 ascii 占1位，其它2位
+     */
+    const STR_LEN_BY_DISPLAY = 2;
+    
     /**
      * 字符串长度计算方式: 按字数 英文字母和汉字都是1的长度，比较容易理解
      */
-    const STR_LEN_BY_LETTER = 4;
+    const STR_LEN_BY_LETTER = 3;
 
     /**
      * @var array 内置数据格式
@@ -63,7 +63,7 @@ class ValidRule
     public $min_str_len;
 
     /**
-     * @var int 字符串长度计算方式：1：显示宽度 2：实际字节数 3：固定为1
+     * @var int 字符串长度计算方式：1：实际字节数 2：显示宽度 3：固定为1
      */
     public $str_len_type;
 

@@ -810,7 +810,7 @@ class Manager
     /**
      * 获取插件实例
      * @param string $plugin_name 插件名称
-     * @return PluginBase
+     * @return PluginBase|null
      * @throws Exception
      */
     public function getPlugin($plugin_name)
@@ -823,13 +823,13 @@ class Manager
         $class_name = 'Plugin';
         $file = FFanUtils::joinFilePath($plugin_dir, $class_name . '.php');
         if (!is_file($file)) {
-            throw new Exception('Plugin class file: ' . $file . ' not found!');
+            return null;
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
         $full_class = 'ffan\dop\plugin\\' . $plugin_name . '\\' . $class_name;
         if (!class_exists($full_class)) {
-            throw new Exception('Class "' . $full_class . '" not found in file:' . $file);
+            return null;
         }
         $parents = class_parents($full_class);
         if (!isset($parents['ffan\dop\build\PluginBase'])) {

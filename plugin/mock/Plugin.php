@@ -34,10 +34,9 @@ class Plugin extends PluginBase
         }
         $mock_rule = new MockRule();
         $find_flag = false;
-        $attr_range = $this->attributeName('range');
         $item_type = $item->getType();
         //在一个范围内 mock
-        if ($node->hasAttribute($attr_range)) {
+        if ($node->hasAttribute('range')) {
             list($min, $max) = $this->readSplitSet($node, 'range');
             $min = (int)$min;
             $max = (int)$max;
@@ -50,7 +49,7 @@ class Plugin extends PluginBase
             $find_flag = true;
         }
         //在指定的列表里随机
-        $attr_enum = $this->attributeName('enum');
+        $attr_enum = 'enum';
         if (!$find_flag && $node->hasAttribute($attr_enum)) {
             $enum_set = FFanStr::split($this->read($node, 'enum'), '|');
             if (empty($enum_set)) {
@@ -65,8 +64,7 @@ class Plugin extends PluginBase
             $find_flag = true;
         }
         //指定类型
-        $mock_type = $this->attributeName('type');
-        if (!$find_flag && $node->hasAttribute($mock_type)) {
+        if (!$find_flag && $node->hasAttribute('type')) {
             $mock_rule->build_in_type = FFanStr::camelName($this->read($node, 'type'), false);
             if (!self::isBuildInType($mock_rule->build_in_type)) {
                 throw new Exception('Unknown build in mock type:' . $mock_rule->build_in_type);
@@ -75,8 +73,7 @@ class Plugin extends PluginBase
             $find_flag = true;
         }
         //固定值
-        $attr_fix = $this->attributeName('');
-        if (!$find_flag && $node->hasAttribute($attr_fix)) {
+        if (!$find_flag && $node->hasAttribute('value')) {
             $fixed_value = $this->read($node, '');
             $mock_rule->fixed_value = self::fixValue($item_type, $fixed_value);
             $find_flag = true;

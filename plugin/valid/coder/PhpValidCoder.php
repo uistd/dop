@@ -1,31 +1,40 @@
 <?php
 
-namespace ffan\dop\plugin\validator;
+namespace ffan\dop\plugin\valid;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\PluginCoderBase;
 use ffan\dop\build\StrBuf;
+use ffan\dop\coder\php\Coder;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Struct;
 
 /**
- * Class PhpValidatorCode
+ * Class PhpValidCoder
  * @package ffan\dop\plugin\validator
  */
-class PhpValidatorCoder extends PluginCoderBase
+class PhpValidCoder extends PluginCoderBase
 {
     /**
      * @var Plugin
      */
     protected $plugin;
-    
+
     /**
      * 生成插件代码
      */
     public function buildCode()
     {
+        //加入autoload
+        $build_path = $this->plugin->getBuildPath();
+        $name_space = $this->plugin->getNameSpace();
+        $folder = $this->coder->getFolder();
+        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => '$build_path',");
+        //生成公共文件
+        $base_class_file = $folder->touch($build_path, 'DopValidator.php');
+        $this->plugin->loadTpl($base_class_file, 'tpl/DopValidator.tpl');
         //方法生成到每个类中
         $this->coder->structIterator([$this, 'validateCode']);
     }
@@ -84,7 +93,7 @@ class PhpValidatorCoder extends PluginCoderBase
         $method_buf->pushStr(' */');
         $method_buf->pushStr('public function getValidateErrorMsg()');
         $method_buf->pushStr('{');
-        $method_buf->pushIndent('return $this->$validate_error_msg;');
+        $method_buf->pushIndent('return $this->validate_error_msg;');
         $method_buf->pushStr('}');
     }
 
@@ -115,7 +124,7 @@ class PhpValidatorCoder extends PluginCoderBase
                     $this->lengthCheck($valid_buf, $var_name, $rule);
                 }
                 if (null !== $rule->format_set) {
-                    
+                    $this->formatCheck($valid_buf, $var_name, $rule);
                 }
                 break;
         }
@@ -129,7 +138,7 @@ class PhpValidatorCoder extends PluginCoderBase
      */
     private function requireCheck($valid_buf, $var_name, $rule)
     {
-        $this->conditionCode($valid_buf, 'null === ' . $var_name, $rule, 'require');
+        $this->conditionCode($valid_buf, 'null === $' . $var_name, $rule, 'require');
     }
 
     /**
@@ -141,12 +150,12 @@ class PhpValidatorCoder extends PluginCoderBase
     private function rangeCheck($valid_buf, $var_name, $rule)
     {
         $if_str = new StrBuf();
-        $if_str->setJoinStr(' && ');
+        $if_str->setJoinStr(' || ');
         if (null !== $rule->min_value) {
-            $if_str->pushStr($var_name . ' < ' . $rule->min_value);
+            $if_str->pushStr('$' . $var_name . ' < ' . $rule->min_value);
         }
         if (null !== $rule->max_value) {
-            $if_str->pushStr($var_name . ' > ' . $rule->max_value);
+            $if_str->pushStr('$' . $var_name . ' > ' . $rule->max_value);
         }
         $this->conditionCode($valid_buf, $if_str->dump(), $rule, 'range');
     }
@@ -159,7 +168,7 @@ class PhpValidatorCoder extends PluginCoderBase
      */
     private function lengthCheck($valid_buf, $var_name, $rule)
     {
-        $valid_buf->pushStr('if (null !== '.$var_name.') {');
+        $valid_buf->pushStr('if (null !== $' . $var_name . ') {');
         $valid_buf->indentIncrease();
         //字符串安全性处理
         if ($rule->is_trim || $rule->is_add_slashes || $rule->is_html_special_chars || $rule->is_strip_tags) {
@@ -180,33 +189,34 @@ class PhpValidatorCoder extends PluginCoderBase
                 $left_buf->pushStr('htmlspecialchars(');
                 $right_buf->pushStr(')');
             }
-            $left_buf->pushStr($var_name);
+            $left_buf->pushStr('$' . $var_name);
             $left_buf->push($right_buf);
-            $valid_buf->push($var_name .' = '. $left_buf->dump());
+            $valid_buf->push('$' . $var_name . ' = ' . $left_buf->dump() .';');
         }
         $min_len = null === $rule->min_str_len ? 'null' : $rule->min_str_len;
         $max_len = null === $rule->max_str_len ? 'null' : $rule->max_str_len;
-        $if_str = 'DopValidator::checkStrLength('.$var_name.', '. $rule->str_len_type.', '. $min_len .', '. $max_len .')';
+        $if_str = 'DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
         $this->conditionCode($valid_buf, $if_str, $rule, 'length');
+        $valid_buf->indentDecrease()->pushStr('}');
     }
-    
+
     /**
      * 范围检查
      * @param CodeBuf $valid_buf
      * @param string $var_name
      * @param ValidRule $rule
-     */    
+     */
     private function formatCheck($valid_buf, $var_name, $rule)
     {
         //如果以 / 开始的字符串，表示为正则表达式
         if ('/' === $rule->format_set[0]) {
-            $if_str = '!preg_match('.$rule->format_set.', '.$var_name.')';
-        } else{
-            $if_str = 'DopValidator::isValid'. ucfirst($rule->format_set).'('.$var_name.')';
+            $if_str = '!preg_match(' . $rule->format_set . ', $' . $var_name . ')';
+        } else {
+            $if_str = 'DopValidator::isValid' . ucfirst($rule->format_set) . '(' . $var_name . ')';
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');
     }
-    
+
     /**
      * 生成if判断语句
      * @param CodeBuf $valid_buf
@@ -224,7 +234,7 @@ class PhpValidatorCoder extends PluginCoderBase
         } else {
             $err_msg = $rule->err_msg;
         }
-        $valid_buf->pushStr('$this->validate_error_msg = "' . $err_msg . '"');
+        $valid_buf->pushStr('$this->validate_error_msg = "' . $err_msg . '";');
         $valid_buf->pushStr('return false;');
         $valid_buf->indentDecrease()->pushStr('}');
     }
