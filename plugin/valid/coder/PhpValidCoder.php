@@ -23,6 +23,11 @@ class PhpValidCoder extends PluginCoderBase
     protected $plugin;
 
     /**
+     * @var array 临时缓存，使用了validator的file
+     */
+    private $use_validator = array();
+
+    /**
      * 生成插件代码
      */
     public function buildCode()
@@ -81,7 +86,7 @@ class PhpValidCoder extends PluginCoderBase
             if (null === $valid_rule) {
                 continue;
             }
-            $this->validItem($method_buf, 'this->' . $name, $item, $valid_rule);
+            $this->validItem($dop_file, 'this->' . $name, $item, $valid_rule);
         }
         $method_buf->push('return true;');
         $method_buf->indentDecrease()->push('}');
@@ -99,13 +104,14 @@ class PhpValidCoder extends PluginCoderBase
 
     /**
      * 生成检查代码
-     * @param CodeBuf $valid_buf
+     * @param FileBuf $dop_file
      * @param string $var_name
      * @param Item $item
      * @param ValidRule $rule
      */
-    private function validItem($valid_buf, $var_name, $item, $rule)
+    private function validItem($dop_file, $var_name, $item, $rule)
     {
+        $valid_buf = $dop_file->getBuf(FileBuf::METHOD_BUF);
         if ($rule->is_require) {
             $this->requireCheck($valid_buf, $var_name, $rule);
         }
@@ -119,12 +125,18 @@ class PhpValidCoder extends PluginCoderBase
                 }
                 break;
             case ItemType::STRING:
+                //是否要生成 use ffan\dop\plugin\Validator;
+                $use_code_flag = false;
                 //长度
                 if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
                     $this->lengthCheck($valid_buf, $var_name, $rule);
+                    $use_code_flag = true;
                 }
                 if (null !== $rule->format_set) {
-                    $this->formatCheck($valid_buf, $var_name, $rule);
+                    $this->formatCheck($valid_buf, $var_name, $rule, $use_code_flag);
+                }
+                if ($use_code_flag) {
+                    $this->addUseFlag($dop_file);
                 }
                 break;
         }
@@ -201,18 +213,29 @@ class PhpValidCoder extends PluginCoderBase
     }
 
     /**
+     * 在use列表中加入struct
+     * @param FileBuf $dop_file
+     */
+    private function addUseFlag($dop_file)
+    {
+        $this->use_validator[$dop_file->getName()] = $dop_file;
+    }
+
+    /**
      * 范围检查
      * @param CodeBuf $valid_buf
      * @param string $var_name
      * @param ValidRule $rule
+     * @param bool $use_code_flag
      */
-    private function formatCheck($valid_buf, $var_name, $rule)
+    private function formatCheck($valid_buf, $var_name, $rule, &$use_code_flag)
     {
         //如果以 / 开始的字符串，表示为正则表达式
         if ('/' === $rule->format_set[0]) {
             $if_str = '!preg_match(' . $rule->format_set . ', $' . $var_name . ')';
         } else {
             $if_str = 'DopValidator::isValid' . ucfirst($rule->format_set) . '(' . $var_name . ')';
+            $use_code_flag = true;
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');
     }
