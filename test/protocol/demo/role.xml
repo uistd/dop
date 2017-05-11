@@ -75,6 +75,7 @@
     <action name="demo_role" method="post">
         <request>
             <string name="role_ids">
+                <plugin_valid require="1" error-msg="role_ids参数错误" format="mobile"/>
                 <plugin_mock enum="10,20|30,35"/>
             </string>
         </request>
@@ -98,7 +99,7 @@
     <action name="demo_role" method="put">
         <request>
             <string name="role_ids">
-                <plugin_valid require="1" error-msg="role_ids参数错误" length="200"/>
+                <plugin_valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>
             </string>
         </request>
         <response extend="/xapi/result">

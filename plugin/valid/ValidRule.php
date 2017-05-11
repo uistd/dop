@@ -31,7 +31,6 @@ class ValidRule
         'email' => true,
         'url' => true,
         'ip' => true,
-        'qq' => true,
         'zip_code' => true, //邮编
         'plate_number' => true, //车牌
         'date' => true, //日期
@@ -39,7 +38,6 @@ class ValidRule
         'phone' => true, //电话号码
         'id_card' => true, //中国居民身份,
         'price' => true, //价格
-        'number' => true,
     );
 
     /**

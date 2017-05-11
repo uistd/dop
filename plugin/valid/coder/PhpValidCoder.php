@@ -10,6 +10,7 @@ use ffan\dop\coder\php\Coder;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Struct;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class PhpValidCoder
@@ -21,11 +22,6 @@ class PhpValidCoder extends PluginCoderBase
      * @var Plugin
      */
     protected $plugin;
-
-    /**
-     * @var array 临时缓存，使用了validator的file
-     */
-    private $use_validator = array();
 
     /**
      * 生成插件代码
@@ -42,16 +38,6 @@ class PhpValidCoder extends PluginCoderBase
         $this->plugin->loadTpl($base_class_file, 'tpl/DopValidator.tpl', array('namespace' => $namespace));
         //方法生成到每个类中
         $this->coder->structIterator([$this, 'validateCode']);
-        /**
-         * @var string $name
-         * @var FileBuf $file
-         */
-        foreach ($this->use_validator as $name => $file) {
-            $use_buf = $file->getBuf(FileBuf::IMPORT_BUF);
-            if ($use_buf) {
-                $use_buf->pushStr('use '. $namespace .'\DopValidator;');
-            }
-        }
     }
 
     /**
@@ -110,6 +96,14 @@ class PhpValidCoder extends PluginCoderBase
         $method_buf->pushStr('{');
         $method_buf->pushIndent('return $this->validate_error_msg;');
         $method_buf->pushStr('}');
+        
+        //如果有用到DopValidator 类，加入到 import buf中
+        if ($dop_file->getFlag('use_valid_base')) {
+            $use_buf = $dop_file->getBuf(FileBuf::IMPORT_BUF);
+            if ($use_buf) {
+                $use_buf->pushStr('use '. $this->plugin->getNameSpace() .'\DopValidator;');
+            }            
+        }
     }
 
     /**
@@ -228,7 +222,7 @@ class PhpValidCoder extends PluginCoderBase
      */
     private function addUseFlag($dop_file)
     {
-        $this->use_validator[$dop_file->getFullName()] = $dop_file;
+        $dop_file->addFlag('use_valid_base');
     }
 
     /**
@@ -242,9 +236,9 @@ class PhpValidCoder extends PluginCoderBase
     {
         //如果以 / 开始的字符串，表示为正则表达式
         if ('/' === $rule->format_set[0]) {
-            $if_str = '!preg_match(' . $rule->format_set . ', $' . $var_name . ')';
+            $if_str = '!preg_match(\'' . $rule->format_set . '\', $' . $var_name . ')';
         } else {
-            $if_str = 'DopValidator::isValid' . ucfirst($rule->format_set) . '(' . $var_name . ')';
+            $if_str = 'DopValidator::isValid' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
             $use_code_flag = true;
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');

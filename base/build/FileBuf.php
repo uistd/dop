@@ -44,6 +44,11 @@ class FileBuf extends CodeBuf
     private $path;
 
     /**
+     * @var array 标志列表
+     */
+    private $flag_arr;
+
+    /**
      * FileBuf constructor.
      * @param null $name
      */
@@ -196,5 +201,25 @@ class FileBuf extends CodeBuf
         }
         $this->buf_arr[$name]->push($content);
         return true;
+    }
+
+    /**
+     * 设置一个标志 和 值
+     * @param string $flag_name
+     * @param mixed $value
+     */
+    public function addFlag($flag_name, $value = true)
+    {
+        $this->flag_arr[$flag_name] = $value;
+    }
+
+    /**
+     * 获取一个标志，如果没有，返回 null
+     * @param string $flag_name
+     * @return mixed|null
+     */
+    public function getFlag($flag_name)
+    {
+        return isset($this->flag_arr[$flag_name]) ? $this->flag_arr[$flag_name] : null;
     }
 }
