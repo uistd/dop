@@ -21,7 +21,7 @@
   "autoload": {
     "psr-4": {
       "ffan\\dop\\" : "base",
-      "ffan\\dop\\pack\\" : "pack",
+      "ffan\\dop\\coder\\" : "coder",
       "ffan\\dop\\plugin\\" : "plugin"
     }
   },
