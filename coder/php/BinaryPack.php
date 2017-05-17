@@ -4,6 +4,7 @@ namespace ffan\dop\coder\php;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\PackerBase;
+use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -49,7 +50,13 @@ class BinaryPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            
+            //null值判断
+            $code_buf->pushStr('if (null === $this->'.$name.') {');
+            $code_buf->pushIndent('$result->writeChar(0);');
+            $code_buf->pushStr('} else {')->indentIncrease();
+            $code_buf->pushStr('$result->writeChar('.$item->getType().');');
+            self::packItemValue($code_buf, 'this->' . $name, $item, 0);
+            $code_buf->indentDecrease()->pushStr('}');
         }
         $code_buf->pushStr('return $result->dump();');
         $code_buf->indentDecrease()->pushStr('}');
@@ -64,6 +71,22 @@ class BinaryPack extends PackerBase
     public function buildUnpackMethod($struct, $code_buf)
     {
         // TODO: Implement buildUnpackMethod() method.
+    }
+
+    /**
+     * 打包一项数据
+     * @param CodeBuf $code_buf
+     * @param string $var_name 变量名
+     * @param Item $item 节点对象
+     * @param int $depth 深度
+     * @throws Exception
+     */
+    private static function packItemValue($code_buf, $var_name, $item, $depth = 0)
+    {
+        $item_type = $item->getType();
+        switch($item_type) {
+            
+        }
     }
 
     /**
