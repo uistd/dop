@@ -11,6 +11,20 @@ use ffan\dop\protocol\Struct;
 abstract class PackerBase
 {
     /**
+     * @var CoderBase
+     */
+    protected $coder;
+
+    /**
+     * PackerBase constructor.
+     * @param CoderBase $coder
+     */
+    public function __construct(CoderBase $coder)
+    {
+        $this->coder = $coder;
+    }
+
+    /**
      * 获取依赖的packer
      * @return null|array
      */
@@ -34,4 +48,12 @@ abstract class PackerBase
      * @return void
      */
     abstract public function buildUnpackMethod($struct, $code_buf);
+
+    /**
+     * 生成通用代码
+     */
+    public function buildCommonCode()
+    {
+        
+    }
 }

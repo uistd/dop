@@ -62,31 +62,19 @@ class ItemType
         'bin' => self::BINARY,
         'binary' => self::BINARY,
         'int' => self::INT,
-        'int32' => self::INT,
+        'uint' => self::INT,
         'int8' => self::INT,
-        'tinyint' => self::INT,
+        'uint8' => self::INT,
         'int16' => self::INT,
-        'smallint' => self::INT,
+        'uint16' => self::INT,
+        'int32' => self::INT,
+        'uint32' => self::INT,
         'int64' => self::INT,
-        'bigint' => self::INT,
+        'uint64' => self::INT,
         'list' => self::ARR,
         'struct' => self::STRUCT,
         'map' => self::MAP,
         'double' => self::DOUBLE
-    );
-
-    /**
-     * @var array int的字节数设置
-     */
-    private static $int_byte = array(
-        'int' => IntItem::BYTE_INT,
-        'int32' => IntItem::BYTE_INT,
-        'int8' => IntItem::BYTE_TINY,
-        'tinyint' => IntItem::BYTE_TINY,
-        'int16' => IntItem::BYTE_SMALL,
-        'smallint' => IntItem::BYTE_SMALL,
-        'int64' => IntItem::BYTE_BIG,
-        'bigint' => IntItem::BYTE_BIG,
     );
 
     /**

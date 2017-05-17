@@ -351,10 +351,11 @@ class Protocol
                 $this->parseMap($name, $dom_node, $item_obj);
                 break;
             case ItemType::INT:
-            default:
                 $item_obj = new IntItem($name, $this->protocol_manager);
-                $item_obj->setByte(ItemType::getIntByte($type));
+                $item_obj->setIntType($dom_node->nodeName);
                 break;
+            default:
+                throw new Exception('Unknown type');
         }
         //注释
         /** @var \DOMElement $dom_node */

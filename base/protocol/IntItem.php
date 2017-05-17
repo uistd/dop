@@ -46,33 +46,45 @@ class IntItem extends Item
     protected $type = ItemType::INT;
 
     /**
-     * 设置字节数
-     * @param int $byte
+     * @var array int的字节数设置
      */
-    public function setByte($byte)
+    private static $int_byte = array(
+        'int' => IntItem::BYTE_INT,
+        'uint' => IntItem::BYTE_INT,
+        'int8' => IntItem::BYTE_TINY,
+        'uint8' => IntItem::BYTE_TINY,
+        'int16' => IntItem::BYTE_SMALL,
+        'uint16' => IntItem::BYTE_SMALL,
+        'int32' => IntItem::BYTE_INT,
+        'uint32' => IntItem::BYTE_INT,
+        'int64' => IntItem::BYTE_BIG,
+        'uint64' => IntItem::BYTE_BIG,
+    );
+
+    /**
+     * @var array 无符号int标签
+     */
+    private static $unsigned_set = array(
+        'uint' => true,
+        'uint8' => true,
+        'uint16' => true,
+        'uint32' => true,
+        'uint64' => true,
+    );
+
+    /**
+     * 设置int字节数 和 是否无符号
+     * @param string $tag_name
+     * @throws Exception
+     */
+    public function setIntType($tag_name)
     {
-        if (!is_int($byte) || ($byte !== self::BYTE_INT && $byte !== self::BYTE_SMALL
-                && $byte !== self::BYTE_TINY && $byte !== self::BYTE_BIG)
-        ) {
-            throw new \InvalidArgumentException('invalid byte');
+        $tag_name = strtolower($tag_name);
+        if (!isset(self::$int_byte[$tag_name])) {
+            throw new Exception('Unknown int type:'. $tag_name);
         }
-        $this->byte = $byte;
-    }
-
-    /**
-     * 设置无符号
-     */
-    public function setUnsigned()
-    {
-        $this->is_unsigned = true;
-    }
-
-    /**
-     * 是否是无符号
-     */
-    public function isUnsigned()
-    {
-        return $this->is_unsigned;
+        $this->byte = self::$int_byte[$tag_name];
+        $this->is_unsigned = isset(self::$unsigned_set[$tag_name]);
     }
 
     /**
@@ -86,5 +98,21 @@ class IntItem extends Item
             throw new Exception('默认值只能是int类型');
         }
         $this->default = $value;
+    }
+
+    /**
+     * 获取类型的二进制表示
+     * @return int
+     */
+    public function getBinaryType()
+    {
+        //第1位表示 是否有符号  第2-4位 字节长度 最后4位表示 int
+        $result = $this->type;
+        $byte_len = $this->byte << 4;
+        if ($this->is_unsigned) {
+            $result |= 0x80;
+        }
+        $result |= $byte_len;
+       return $result; 
     }
 }

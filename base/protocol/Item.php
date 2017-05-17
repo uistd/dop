@@ -161,4 +161,13 @@ abstract class Item
     {
         return $this->default;
     }
+
+    /**
+     * 获取类型的二进制表示
+     * @return int
+     */
+    public function getBinaryType()
+    {
+        return $this->type;
+    }
 }

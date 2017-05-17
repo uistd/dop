@@ -104,18 +104,6 @@ class Coder extends CoderBase
     }
 
     /**
-     * 生成文件名
-     * @param string $build_path
-     * @param Struct $struct
-     * @return string
-     */
-    protected function buildFileName($build_path, Struct $struct)
-    {
-        $class_name = $struct->getClassName();
-        return $build_path . $class_name . '.php';
-    }
-
-    /**
      * 按Struct生成代码
      * @param Struct $struct
      * @return void
@@ -124,11 +112,9 @@ class Coder extends CoderBase
     public function codeByStruct($struct)
     {
         $parent_struct = $struct->getParent();
-        
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
-        $folder = $this->getFolder();
-        $class_file = $folder->touch($name_space, $main_class_name . '.php');
+        $class_file = $this->getClassFileBuf($struct);
         $this->loadTpl($class_file, 'tpl/class.tpl');
         $class_name_buf = $class_file->getBuf('php_class');
         if (null === $class_name_buf) {
@@ -152,7 +138,7 @@ class Coder extends CoderBase
             //如果不是同一个全名空间
             if ($parent_struct->getNamespace() !== $name_space) {
                 $use_buf->emptyLine();
-                $use_name_space = $this->joinNameSpace($parent_struct->getNamespace()) . '\\' . $parent_struct->getClassName();
+                $use_name_space = $this->joinNameSpace($parent_struct->getNamespace(), $parent_struct->getClassName());
                 $use_buf->pushStr('use ' . $use_name_space . ';');
             }
         }
@@ -225,12 +211,31 @@ class Coder extends CoderBase
     /**
      * 连接命名空间
      * @param string $ns
+     * @param string $class_name
      * @param string $separator
      * @return string
      */
-    public function joinNameSpace($ns, $separator = '\\')
+    public function joinNameSpace($ns, $class_name = '', $separator = '\\')
     {
         $ns = $this->pathToNs($ns);
-        return parent::joinNameSpace($ns, $separator);
+        return parent::joinNameSpace($ns, $class_name, $separator);
     }
+
+    /**
+     * 获取php class的fileBuf
+     * @param Struct $struct
+     * @return FileBuf
+     */
+    public function getClassFileBuf($struct)
+    {
+        $folder = $this->getFolder();
+        $path = $struct->getNamespace();
+        $file_name = $struct->getClassName() .'.php';
+        $file = $folder->getFile($path, $file_name);
+        if (null === $file) {
+            $file = $folder->touch($path, $file_name);
+        }
+        return $file;
+    }
+    
 }

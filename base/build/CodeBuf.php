@@ -27,6 +27,11 @@ class CodeBuf implements BufInterface
     private $line_buffer = [];
 
     /**
+     * @var array 代码锁，用于控制一行代码只允许出现一次的场景
+     */
+    private $code_lock;
+
+    /**
      * @var string 缩进字符串， 默认是4个空格
      */
     private static $indent_space = '    ';
@@ -267,5 +272,18 @@ class CodeBuf implements BufInterface
     public function pop()
     {
         return array_pop($this->line_buffer);
+    }
+
+    /**
+     * 写入一行代码，并锁定，不允许再写入第二次
+     * @param string $code
+     */
+    public function pushLockStr($code)
+    {
+        if (isset($this->code_lock[$code])) {
+            return;
+        }
+        $this->code_lock[$code] = true;
+        $this->pushStr($code);
     }
 }

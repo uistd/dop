@@ -262,6 +262,15 @@ class Struct
     }
 
     /**
+     * 是否是子struct
+     * @return bool
+     */
+    public function isSubStruct()
+    {
+        return self::TYPE_STRUCT === $this->type;
+    }
+
+    /**
      * 获取全路径名
      * @return string
      */

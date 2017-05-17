@@ -85,6 +85,16 @@
             </list>
         </response>
     </action>
+    <action name="new_role" method="post">
+        <request>
+            <list name="roles">
+                <struct extend="role_info"/>
+            </list>
+        </request>
+        <response extend="/xapi/result">
+            <int name="re_code"/>
+        </response>
+    </action>
     <action name="demo_role" method="delete">
         <request>
             <int name="role_id">

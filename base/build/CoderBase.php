@@ -283,8 +283,11 @@ abstract class CoderBase
         if (!isset($parents['ffan\dop\build\PackerBase'])) {
             throw new Exception('Class ' . $full_class_name . ' must extend of PackerBase');
         }
-        $this->pack_instance_arr[$pack_type] = new $full_class_name();
-        return $this->pack_instance_arr[$pack_type];
+        /** @var PackerBase $packer */
+        $packer = new $full_class_name($this);
+        $packer->buildCommonCode();
+        $this->pack_instance_arr[$pack_type] = $packer;
+        return $packer;
     }
 
     /**
@@ -335,10 +338,11 @@ abstract class CoderBase
     /**
      * 连接命名空间
      * @param string $ns
+     * @param string $class_name
      * @param string $separator
      * @return string
      */
-    public function joinNameSpace($ns, $separator = '/')
+    public function joinNameSpace($ns, $class_name = '', $separator = '/')
     {
         $result = $this->build_opt->namespace_prefix;
         $len = strlen($result);
@@ -350,6 +354,13 @@ abstract class CoderBase
                 $ns = substr($ns, 1);
             }
             $result .= $ns;
+        }
+        if (!empty($class_name)) {
+            $len = strlen($result);
+            if ($separator !== $result[$len - 1]) {
+                $result .= $separator;
+            }
+            $result .= $class_name;
         }
         return $result;
     }
