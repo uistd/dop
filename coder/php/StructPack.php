@@ -56,6 +56,8 @@ class StructPack extends PackerBase
             $code_buf->pushStr('$buffer->writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
+        //写入一个空字符串，表示结束
+        $code_buf->pushStr('$buffer->writeString(\'\');');
         $code_buf->indentDecrease()->pushStr('}');
     }
 
@@ -68,7 +70,6 @@ class StructPack extends PackerBase
     public function buildUnpackMethod($struct, $code_buf)
     {
         $this->buildUseCode($struct);
-        
     }
 
     /**

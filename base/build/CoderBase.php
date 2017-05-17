@@ -345,11 +345,11 @@ abstract class CoderBase
     public function joinNameSpace($ns, $class_name = '', $separator = '/')
     {
         $result = $this->build_opt->namespace_prefix;
-        $len = strlen($result);
-        if ($separator !== $result[$len - 1]) {
-            $result .= $separator;
-        }
         if (!empty($ns)) {
+            $len = strlen($result);
+            if ($separator !== $result[$len - 1]) {
+                $result .= $separator;
+            }
             if ($separator === $ns[0]) {
                 $ns = substr($ns, 1);
             }

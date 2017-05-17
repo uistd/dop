@@ -27,21 +27,29 @@ class BinaryPack extends PackerBase
     {
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
-        $code_buf->pushStr(' * 生成二进制协议头');
+        $code_buf->pushStr(' * 二进制打包');
+        $code_buf->pushStr(' * @param bool $pid 是否打包协议ID');
+        $code_buf->pushStr(' * @param bool $mask 是否加密');
+        $code_buf->pushStr(' * @param bool $sign 是否签名');
         $code_buf->pushStr(' * @return string');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('public static function binaryStruct()');
+        $code_buf->pushStr('public function binaryPack($pid = true, $mask = true, $sign = false)');
         $code_buf->pushStr('{');
         $code_buf->indentIncrease();
         $code_buf->pushStr('$result = new BinaryBuffer;');
+        $code_buf->pushStr('if ($pid) {');
+        $pid = $struct->getNamespace() . $struct->getClassName();
+        $code_buf->pushIndent('$result->writeString(\'' . $pid . '\');');
+        $code_buf->pushStr('}');
+        //打包进去协议
+        $code_buf->pushStr('self::binaryStruct($result);');
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            $code_buf->pushStr('$result->writeString(\'' . $name . '\')');
-            $this->writeItemType($code_buf, $item);
+            
         }
         $code_buf->pushStr('return $result->dump();');
         $code_buf->indentDecrease()->pushStr('}');
@@ -84,7 +92,7 @@ class BinaryPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('$result->writeBinary('.$class_name.'::binaryStruct());');
+                $code_buf->pushStr('$result->writeBinary(' . $class_name . '::binaryStruct());');
                 break;
         }
     }
