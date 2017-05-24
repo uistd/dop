@@ -102,17 +102,32 @@ class IntItem extends Item
 
     /**
      * 获取类型的二进制表示
+     * 00010010(0x12)  byte
+     * 10010010(0x92)  unsigned byte
+     * 00100010(0x22)  short
+     * 10100010(0xA2)  unsigned short
+     * 01000010(0x42)  int
+     * 11000010(0xC2)  unsigned int
+     * 10000010(0x82)  bigint
+     * 11110010(0xf2)  unsigned bigint
      * @return int
      */
     public function getBinaryType()
     {
         //第1位表示 是否有符号  第2-4位 字节长度 最后4位表示 int
         $result = $this->type;
-        $byte_len = $this->byte << 4;
+        //int占用的位置 左移4位
+        $or_value = $this->byte << 4;
+        //如果是无符号数
         if ($this->is_unsigned) {
-            $result |= 0x80;
+            //如果是bigInt，位数不够，直接 1111
+            if (self::BYTE_BIG === $this->byte) {
+                $or_value = 0xf0;
+            } else {
+                $or_value |= 0x80;
+            }
         }
-        $result |= $byte_len;
-       return $result; 
+        $result |= $or_value;
+        return $result; 
     }
 }
