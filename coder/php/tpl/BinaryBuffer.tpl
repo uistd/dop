@@ -46,6 +46,16 @@ class BinaryBuffer
     public function writeString($str)
     {
         $len = strlen($str);
+        $this->writeLength($len);
+        $this->bin_str .= pack('a' . $len, $str);
+    }
+
+    /**
+     * 写入长度表示
+     * @param int $len
+     */
+    public function writeLength($len)
+    {
         //如果长度小于252 表示真实的长度
         if ($len < 0xfc) {
             $this->writeUnsignedChar($len);
@@ -53,14 +63,29 @@ class BinaryBuffer
         elseif ($len <= 0xffff) {
             $this->writeUnsignedChar(0xfc);
             $this->writeShort($len);
-        } //4GB长度字符串
+        } //如果长度小于等于4GB，先写入 0xfe，后面再写入两位表示字符串长度
         elseif ($len <= 0xffffffff) {
             $this->writeUnsignedChar(0xfe);
             $this->writeInt($len);
-        } else {
+        } //更大
+        else {
             $this->writeUnsignedChar(0xff);
             $this->writeBigInt($len);
         }
+    }
+
+    /**
+     * 在最前面写入长度值
+     * @param int $len
+     */
+    public function writeLengthAtBegin($len)
+    {
+        $tmp_buff = new self();
+        $tmp_buff->writeLength($len);
+        $len = $tmp_buff->getLength();
+        $result = $tmp_buff->dump();
+        $this->bin_str = $result . $this->bin_str;
+        $this->max_read_pos += $len;
     }
 
     /**
@@ -259,6 +284,23 @@ class BinaryBuffer
         $result = substr($this->bin_str, $this->read_pos, $str_len);
         $this->read_pos += $str_len;
         return $result;
+    }
+
+    /**
+     * 获取长度
+     * @return int
+     */
+    public function getLength()
+    {
+        return $this->max_read_pos;
+    }
+
+    /**
+     * 将两个buffer连接
+     */
+    public function joinBuffer()
+    {
+
     }
 
     /**
