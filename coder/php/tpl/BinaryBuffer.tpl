@@ -297,10 +297,12 @@ class BinaryBuffer
 
     /**
      * 将两个buffer连接
+     * @param BinaryBuffer $sub_buffer
      */
-    public function joinBuffer()
+    public function joinBuffer($sub_buffer)
     {
-
+        $this->bin_str .= $sub_buffer->dump();
+        $this->max_read_pos += $sub_buffer->getLength();
     }
 
     /**
@@ -309,9 +311,7 @@ class BinaryBuffer
      */
     public function dump()
     {
-        $result = $this->bin_str;
-        $this->bin_str = null;
-        return $result;
+        return $this->bin_str;
     }
 
     /**

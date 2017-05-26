@@ -42,11 +42,12 @@ class StructPack extends PackerBase
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
-        $code_buf->pushStr(' * @param BinaryBuffer $buffer');
+        $code_buf->pushStr(' * @return BinaryBuffer');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('public static function binaryStruct(BinaryBuffer $buffer)');
+        $code_buf->pushStr('public static function binaryStruct()');
         $code_buf->pushStr('{');
         $code_buf->indentIncrease();
+        $code_buf->pushStr('$buffer = new BinaryBuffer();');
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
@@ -56,8 +57,7 @@ class StructPack extends PackerBase
             $code_buf->pushStr('$buffer->writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
-        //写入一个空字符串，表示结束
-        $code_buf->pushStr('$buffer->writeString(\'\');');
+        $code_buf->pushStr('return $buffer;');
         $code_buf->indentDecrease()->pushStr('}');
     }
 
@@ -111,7 +111,7 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr($class_name.'::binaryStruct($buffer);');
+                $code_buf->pushStr('$buffer->joinBuf('.$class_name.'::binaryStruct());');
                 break;
         }
     }

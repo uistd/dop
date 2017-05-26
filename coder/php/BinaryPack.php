@@ -20,6 +20,15 @@ use ffan\dop\protocol\StructItem;
 class BinaryPack extends PackerBase
 {
     /**
+     * 获取依赖的packer
+     * @return null|array
+     */
+    public function getRequirePacker()
+    {
+        return array('struct');
+    }
+
+    /**
      * 数据序列化
      * @param Struct $struct 结构体
      * @param CodeBuf $code_buf 生成的代码缓存
@@ -39,22 +48,28 @@ class BinaryPack extends PackerBase
             $code_buf->indentIncrease();
         } else {
             $code_buf->pushStr(' * @param bool $pid 是否打包协议ID');
-            $code_buf->pushStr(' * @param bool $mask 是否加密');
             $code_buf->pushStr(' * @param bool $sign 是否签名');
             $code_buf->pushStr(' * @return string');
             $code_buf->pushStr(' */');
-            $code_buf->pushStr('public function binaryPack($pid = true, $mask = true, $sign = false)');
+            $code_buf->pushStr('public function binaryPack($pid = false, $sign = false)');
             $code_buf->pushStr('{');
             $code_buf->indentIncrease();
             $code_buf->pushStr('$result = new BinaryBuffer;');
-            $code_buf->pushStr('if ($pid) {');
+            $code_buf->pushStr('$opt_flag = 0;');
             $pid = $struct->getNamespace() . $struct->getClassName();
-            $code_buf->pushIndent('$result->writeString(\'' . $pid . '\');');
+            $code_buf->pushStr('if ($pid) {');
+            $code_buf->pushIndent('$opt_flag |= 0x1;');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('if ($sign) {');
+            $code_buf->pushIndent('$opt_flag |= 0x2;');
+            $code_buf->pushStr('}');
+            $code_buf->pushIndent('$result->writeChar($opt_flag);');
+            $code_buf->pushStr('if ($pid) {');
+            $code_buf->pushIndent('$result->pushString(\''.$pid.'\');');
             $code_buf->pushStr('}');
             //打包进去协议
             $code_buf->pushStr('self::binaryStruct($result);');
         }
-
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
@@ -70,6 +85,10 @@ class BinaryPack extends PackerBase
             $code_buf->indentDecrease()->pushStr('}');
         }
         if (!$struct->isSubStruct()) {
+            $code_buf->pushStr('if ($sign) {');
+            $code_buf->pushIndent('$result->sign();');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('$result->writeLengthAtBegin($result->getLength());');
             $code_buf->pushStr('return $result->dump();');
         }
         $code_buf->indentDecrease()->pushStr('}');
@@ -101,7 +120,7 @@ class BinaryPack extends PackerBase
             case ItemType::BINARY:
             case ItemType::STRING:
                 if ($depth > 0) {
-                    $code_buf->pushStr('if (!is_string($' . $var_name.')) {');
+                    $code_buf->pushStr('if (!is_string($' . $var_name . ')) {');
                     $code_buf->pushIndent('continue;');
                     $code_buf->pushStr('}');
                 }
@@ -137,16 +156,16 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('$' . $len_var_name . ' = 0;');
                 $sub_item = $item->getItem();
                 //写入list的类型
-                $code_buf->pushStr('$'.$buffer_name.' = new BinaryBuffer();');
-                $code_buf->pushStr('$'.$buffer_name.'->writeChar(' . $sub_item->getBinaryType() . ');');
+                $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
+                $code_buf->pushStr('$' . $buffer_name . '->writeChar(' . $sub_item->getBinaryType() . ');');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $sub_item, $depth + 1);
-                $code_buf->pushStr('++$'. $len_var_name .';');
+                $code_buf->pushStr('++$' . $len_var_name . ';');
                 $code_buf->indentDecrease();
                 $code_buf->pushStr('}');
-                $code_buf->pushStr('$'. $buffer_name .'->writeLengthAtBegin($'. $len_var_name .');');
-                $code_buf->pushStr('$'. $result_name .'->joinBuffer($'. $buffer_name .');');
+                $code_buf->pushStr('$' . $buffer_name . '->writeLengthAtBegin($' . $len_var_name . ');');
+                $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
                 break;
             case ItemType::MAP:
                 if ($depth > 0) {
@@ -167,16 +186,16 @@ class BinaryPack extends PackerBase
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 //写入map key 和 value 的类型
-                $code_buf->pushStr('$'.$buffer_name.' = new BinaryBuffer();');
-                $code_buf->pushStr('$'. $buffer_name .'->writeChar(' . $key_item->getBinaryType() . ')');
-                $code_buf->pushStr('$'. $buffer_name .'->writeChar(' . $value_item->getBinaryType() . ')');
+                $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
+                $code_buf->pushStr('$' . $buffer_name . '->writeChar(' . $key_item->getBinaryType() . ')');
+                $code_buf->pushStr('$' . $buffer_name . '->writeChar(' . $value_item->getBinaryType() . ')');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $key_var_name . ' =>  $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $key_item, $depth + 1);
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $value_item, $depth + 1);
-                $code_buf->pushStr('++$'. $len_var_name .';');
-                $code_buf->pushStr('$'. $buffer_name .'->writeLengthAtBegin($'. $len_var_name .');');
-                $code_buf->pushStr('$'. $result_name .'->joinBuffer($'. $buffer_name .');');
+                $code_buf->pushStr('++$' . $len_var_name . ';');
+                $code_buf->pushStr('$' . $buffer_name . '->writeLengthAtBegin($' . $len_var_name . ');');
+                $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
                 $code_buf->indentDecrease();
                 $code_buf->pushStr('}');
                 break;
@@ -242,6 +261,6 @@ class BinaryPack extends PackerBase
      */
     private static function packItemCode($code_buf, $var_name, $result_name, $func_name)
     {
-        $code_buf->pushStr('$'.$result_name.'->' . $func_name . '($' . $var_name . ');');
+        $code_buf->pushStr('$' . $result_name . '->' . $func_name . '($' . $var_name . ');');
     }
 }
