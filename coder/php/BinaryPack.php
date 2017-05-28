@@ -51,7 +51,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr(' * @param bool $sign 是否签名');
             $code_buf->pushStr(' * @return string');
             $code_buf->pushStr(' */');
-            $code_buf->pushStr('public function binaryPack($pid = false, $sign = false)');
+            $code_buf->pushStr('public function binaryEncode($pid = false, $sign = false)');
             $code_buf->pushStr('{');
             $code_buf->indentIncrease();
             $code_buf->pushStr('$result = new BinaryBuffer;');
@@ -63,12 +63,12 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('if ($sign) {');
             $code_buf->pushIndent('$opt_flag |= 0x2;');
             $code_buf->pushStr('}');
-            $code_buf->pushIndent('$result->writeChar($opt_flag);');
+            $code_buf->pushStr('$result->writeChar($opt_flag);');
             $code_buf->pushStr('if ($pid) {');
-            $code_buf->pushIndent('$result->pushString(\''.$pid.'\');');
+            $code_buf->pushIndent('$result->writeString(\'' . $pid . '\');');
             $code_buf->pushStr('}');
             //打包进去协议
-            $code_buf->pushStr('self::binaryStruct($result);');
+            $code_buf->pushStr('$result->joinBuffer(self::binaryStruct());');
         }
         $all_item = $struct->getAllExtendItem();
         /**
@@ -86,7 +86,7 @@ class BinaryPack extends PackerBase
         }
         if (!$struct->isSubStruct()) {
             $code_buf->pushStr('if ($sign) {');
-            $code_buf->pushIndent('$result->sign();');
+            $code_buf->pushIndent('$result->sign("' . $this->coder->getSignCode($struct) . '");');
             $code_buf->pushStr('}');
             $code_buf->pushStr('$result->writeLengthAtBegin($result->getLength());');
             $code_buf->pushStr('return $result->dump();');
@@ -102,7 +102,13 @@ class BinaryPack extends PackerBase
      */
     public function buildUnpackMethod($struct, $code_buf)
     {
-        // TODO: Implement buildUnpackMethod() method.
+        $code_buf->emptyLine();
+        $code_buf->pushStr('/**');
+        $code_buf->pushStr(' * 二进制解包');
+        $code_buf->pushStr(' * @param string $raw_data');
+        $code_buf->pushStr(' */');
+        $code_buf->pushStr('public function binaryDecode($raw_data)');
+        $code_buf->pushStr('{');
     }
 
     /**

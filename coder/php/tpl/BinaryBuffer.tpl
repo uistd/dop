@@ -19,6 +19,11 @@ class BinaryBuffer
     const LITTLE_ENDIAN = 2;
 
     /**
+     * 签名字符串长度
+     */
+    const SIGN_CODE_LEN = 8;
+
+    /**
      *
      * @var string
      */
@@ -303,6 +308,18 @@ class BinaryBuffer
     {
         $this->bin_str .= $sub_buffer->dump();
         $this->max_read_pos += $sub_buffer->getLength();
+    }
+
+    /**
+     * 数据签名
+     * @param string $sign_key
+     */
+    public function sign($sign_key)
+    {
+        $sign_code = md5($sign_key . $this->bin_str . $sign_key);
+        $sign_code = substr($sign_code, 0, self::SIGN_CODE_LEN);
+        $this->bin_str .= $sign_code;
+        $this->max_read_pos += self::SIGN_CODE_LEN;
     }
 
     /**

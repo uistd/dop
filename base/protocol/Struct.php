@@ -76,6 +76,11 @@ class Struct
     private $all_extend_item;
 
     /**
+     * @var string 数据签名key
+     */
+    private $sign_key;
+
+    /**
      * @var bool 是否是从缓存加载的
      */
     private $load_from_cache = false;
@@ -317,6 +322,7 @@ class Struct
 
     /**
      * 获取注释信息
+     * @return string|null
      */
     public function getNote()
     {
@@ -324,48 +330,20 @@ class Struct
     }
 
     /**
-     * 导出为数组格式，方便生成文件
-     * @return array
-
-    public function export()
-     * {
-     *
-     *
-     * foreach ($this->item_list as $name => $item) {
-     * $type = $item->getType();
-     * if (ItemType::ARR === $type) {
-     *
-     * $item = $item->getItem();
-     * } elseif (ItemType::MAP === $type) {
-     *
-     * $item = $item->getValueItem();
-     * }
-     * //如果是struct
-     * if (ItemType::STRUCT === $item->getType()) {
-     *
-     * $struct = $item->getStruct();
-     * $import_struct[$struct->getFullName()] = true;
-     * }
-     * }
-     * $result = array(
-     * 'is_extend' => null !== $this->parent,
-     * 'class_name' => $this->className,
-     * 'note' => $this->note,
-     * 'type' => $this->type,
-     * 'item_list' => $this->getAllItem(),
-     * 'extend_item_list' => $this->getAllExtendItem(),
-     * 'namespace' => $this->namespace,
-     * 'import_struct' => $import_struct,
-     * 'self' => $this
-     * );
-     * if ($this->parent) {
-     * $result['parent'] = array(
-     * 'class' => $this->parent->getClassName(),
-     * 'namespace' => $this->parent->getNamespace(),
-     * 'full_name' => $this->parent->getFullName()
-     * );
-     * }
-     * return $result;
-     * }
+     * 获取二进制数据签名key
+     * @return string|null
      */
+    public function getSignKey()
+    {
+        return $this->sign_key;
+    }
+
+    /**
+     * 设置二进制签名key
+     * @param $sign_key
+     */
+    public function setSignKey($sign_key)
+    {
+        $this->sign_key = $sign_key;
+    }
 }
