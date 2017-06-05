@@ -396,18 +396,4 @@ abstract class CoderBase
         $tpl_loader = TplLoader::getInstance($tpl_file);
         $tpl_loader->execute($file_buf, $data);
     }
-
-    /**
-     * 获取二进制数据签名的签名key
-     * @param Struct $struct
-     * @return string
-     */
-    public function getSignCode(Struct $struct)
-    {
-        $result = $struct->getSignKey();
-        if (null === $result) {
-            $result = $this->build_opt->sign_key;
-        }
-        return $result;
-    }
 }

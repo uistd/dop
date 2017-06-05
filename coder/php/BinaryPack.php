@@ -49,19 +49,26 @@ class BinaryPack extends PackerBase
         } else {
             $code_buf->pushStr(' * @param bool $pid 是否打包协议ID');
             $code_buf->pushStr(' * @param bool $sign 是否签名');
+            $code_buf->pushStr(' * @param null|string $mask_key 加密字符');
             $code_buf->pushStr(' * @return string');
             $code_buf->pushStr(' */');
-            $code_buf->pushStr('public function binaryEncode($pid = false, $sign = false)');
+            $code_buf->pushStr('public function binaryEncode($pid = false, $sign = false, $mask_key = null)');
             $code_buf->pushStr('{');
             $code_buf->indentIncrease();
             $code_buf->pushStr('$result = new BinaryBuffer;');
             $code_buf->pushStr('$opt_flag = 0;');
+            $code_buf->pushStr('if ($mask_key && (!is_string($mask_key) || empty($mask_key))) {');
+            $code_buf->pushIndent('$mask_key = null;');
+            $code_buf->pushStr('}');
             $pid = $struct->getNamespace() . $struct->getClassName();
             $code_buf->pushStr('if ($pid) {');
-            $code_buf->pushIndent('$opt_flag |= 0x1;');
+            $code_buf->pushIndent('$opt_flag |= BinaryBuffer::OPTION_PID;');
             $code_buf->pushStr('}');
-            $code_buf->pushStr('if ($sign) {');
-            $code_buf->pushIndent('$opt_flag |= 0x2;');
+            $code_buf->pushStr('if ($sign || $mask_key) {');
+            $code_buf->pushIndent('$opt_flag |= BinaryBuffer::OPTION_SIGN;');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('if ($mask_key) {');
+            $code_buf->pushIndent('$opt_flag |= BinaryBuffer::OPTION_MASK;');
             $code_buf->pushStr('}');
             $code_buf->pushStr('$result->writeChar($opt_flag);');
             $code_buf->pushStr('if ($pid) {');
@@ -76,17 +83,26 @@ class BinaryPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            //null值判断
-            $code_buf->pushStr('if (null === $this->' . $name . ') {');
-            $code_buf->pushIndent('$result->writeChar(0);');
-            $code_buf->pushStr('} else {')->indentIncrease();
-            $code_buf->pushStr('$result->writeChar(' . $item->getBinaryType() . ');');
-            self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
-            $code_buf->indentDecrease()->pushStr('}');
+            $item_type = $item->getType();
+            //如果是以下几种类型，要判断null值
+            if (ItemType::ARR === $item_type || ItemType::STRUCT === $item_type || ItemType::MAP === $item_type) {
+                //null值判断
+                $code_buf->pushStr('if (null === $this->' . $name . ') {');
+                $code_buf->pushIndent('$result->writeChar(0);');
+                $code_buf->pushStr('} else {')->indentIncrease();
+                $code_buf->pushStr('$result->writeChar(' . $item_type . ');');
+                self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
+                $code_buf->indentDecrease()->pushStr('}');
+            } else {
+                self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
+            }
         }
         if (!$struct->isSubStruct()) {
-            $code_buf->pushStr('if ($sign) {');
-            $code_buf->pushIndent('$result->sign("' . $this->coder->getSignCode($struct) . '");');
+            $code_buf->pushStr('if ($sign || $mask_key) {');
+            $code_buf->pushIndent('$result->sign();');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('if ($mask_key) {');
+            $code_buf->pushIndent('$result->mask($mask_key);');
             $code_buf->pushStr('}');
             $code_buf->pushStr('$result->writeLengthAtBegin($result->getLength());');
             $code_buf->pushStr('return $result->dump();');
@@ -108,7 +124,9 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr(' * @param string $raw_data');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function binaryDecode($raw_data)');
-        $code_buf->pushStr('{');
+        $code_buf->pushStr('{')->indentIncrease();
+        $code_buf->pushStr('$bin_item_arr = array();');
+        $code_buf->indentDecrease()->pushStr('}');
     }
 
     /**

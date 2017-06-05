@@ -9,6 +9,41 @@ namespace {{$namespace}};
 class BinaryBuffer
 {
     /**
+     * 标志位：带数据ID
+     */
+    const OPTION_PID = 0x1;
+
+    /**
+     * 标志位：数据签名
+     */
+    const OPTION_SIGN = 0x2;
+
+    /**
+     * 标志位：数据加密
+     */
+    const OPTION_MASK = 0x4;
+
+    /**
+     * 数据长度错误
+     */
+    const ERROR_SIZE = 1;
+
+    /**
+     * 数据签名出错
+     */
+    const ERROR_SIGN_CODE = 2;
+    
+    /**
+     * 读数据出错
+     */
+    const ERROR_DATA = 3;
+
+    /**
+     * 数据解密出错
+     */
+    const ERROR_MASK = 4;
+
+    /**
      * Big Endian
      */
     const BIG_ENDIAN = 1;
@@ -22,6 +57,11 @@ class BinaryBuffer
      * 签名字符串长度
      */
     const SIGN_CODE_LEN = 8;
+
+    /**
+     * 加密key最小长度
+     */
+    const MIN_MASK_KEY_LEN = 16;
 
     /**
      *
@@ -45,14 +85,51 @@ class BinaryBuffer
     private $max_read_pos = 0;
 
     /**
+     * @var string 数据包ID
+     */
+    private $pid;
+
+    /**
+     * @var int 数据打包参数
+     */
+    private $pack_opt;
+
+    /**
+     * @var int 错误ID
+     */
+    private $error_code = 0;
+
+    /**
+     * @var bool 是否已经解析完头信息
+     */
+    private $unpack_head = false;
+
+    /**
+     * BinaryBuffer constructor.
+     * @param null|string $raw_data 初始数据
+     */
+    public function __construct($raw_data = null)
+    {
+        if (null !== $raw_data || !is_string($raw_data)) {
+            return;
+        }
+        $this->bin_str = $raw_data;
+        $this->max_read_pos = strlen($raw_data);
+    }
+
+    /**
      * 写入一段字符串
      * @param string $str
      */
     public function writeString($str)
     {
-        $len = strlen($str);
-        $this->writeLength($len);
-        $this->bin_str .= pack('a' . $len, $str);
+        if (null === $str) {
+            $this->writeLength(0);
+        } else {
+            $len = strlen($str);
+            $this->writeLength($len);
+            $this->bin_str .= pack('a' . $len, $str);
+        }
     }
 
     /**
@@ -91,6 +168,28 @@ class BinaryBuffer
         $result = $tmp_buff->dump();
         $this->bin_str = $result . $this->bin_str;
         $this->max_read_pos += $len;
+    }
+
+    /**
+     * 读出一个长度值
+     * @return int
+     */
+    public function readLength()
+    {
+        $flag = $this->readUnsignedChar();
+        //长度小于252 直接表示
+        if ($flag < 0xfc) {
+            return $flag;
+        } //长度小于65535
+        elseif (0xfc === $flag) {
+            return $this->readUnsignedShort();
+        } //长度小于4gb
+        elseif (0xfe === $flag) {
+            return $this->readUnsignedInt();
+        } //更长
+        else {
+            return $this->readUnsignedBigInt();
+        }
     }
 
     /**
@@ -153,6 +252,7 @@ class BinaryBuffer
     public function readChar()
     {
         if ($this->read_pos <= $this->max_read_pos) {
+            $this->error_code = self::ERROR_DATA;
             return 0;
         }
         $result = unpack('cre', $this->bin_str{$this->read_pos++});
@@ -166,6 +266,7 @@ class BinaryBuffer
     public function readUnsignedChar()
     {
         if ($this->read_pos <= $this->max_read_pos) {
+            $this->error_code = self::ERROR_DATA;
             return 0;
         }
         $result = unpack('Cre', $this->bin_str{$this->read_pos++});
@@ -193,6 +294,7 @@ class BinaryBuffer
     {
         if ($this->max_read_pos - $this->read_pos < 2) {
             $this->read_pos = $this->max_read_pos;
+            $this->error_code = self::ERROR_DATA;
             return 0;
         }
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'v' : 'n';
@@ -223,6 +325,7 @@ class BinaryBuffer
     {
         if ($this->max_read_pos - $this->read_pos < 4) {
             $this->read_pos = $this->max_read_pos;
+            $this->error_code = self::ERROR_DATA;
             return 0;
         }
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'V' : 'N';
@@ -253,6 +356,7 @@ class BinaryBuffer
     {
         if ($this->max_read_pos - $this->read_pos < 8) {
             $this->read_pos = $this->max_read_pos;
+            $this->error_code = self::ERROR_DATA;
             return 0;
         }
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'P' : 'J';
@@ -284,6 +388,7 @@ class BinaryBuffer
         //长度 不够
         if ($this->max_read_pos - $this->read_pos < $str_len) {
             $this->read_pos = $this->max_read_pos;
+            $this->error_code = self::ERROR_DATA;
             return '';
         }
         $result = substr($this->bin_str, $this->read_pos, $str_len);
@@ -301,6 +406,16 @@ class BinaryBuffer
     }
 
     /**
+     * 获取可读长度
+     * @return int
+     */
+    public function readAvailableLength()
+    {
+        $result = $this->max_read_pos - $this->read_pos;
+        return $result > 0 ?: 0;
+    }
+
+    /**
      * 将两个buffer连接
      * @param BinaryBuffer $sub_buffer
      */
@@ -312,14 +427,39 @@ class BinaryBuffer
 
     /**
      * 数据签名
-     * @param string $sign_key
      */
-    public function sign($sign_key)
+    public function sign()
     {
-        $sign_code = md5($sign_key . $this->bin_str . $sign_key);
-        $sign_code = substr($sign_code, 0, self::SIGN_CODE_LEN);
+        $sign_code = $this->makeSignCode($this->bin_str);
         $this->bin_str .= $sign_code;
         $this->max_read_pos += self::SIGN_CODE_LEN;
+    }
+
+    /**
+     * 数据加密
+     * @param string $mask_key
+     */
+    public function mask($mask_key)
+    {
+        $this->doMask(1, $mask_key);
+    }
+    
+    /**
+     * 数据加密
+     * @param int $beg_pos
+     * @param string $mask_key
+     */
+    private function doMask($beg_pos, $mask_key)
+    {
+        if (strlen($mask_key) < self::MIN_MASK_KEY_LEN) {
+            $mask_key = md5($mask_key);
+        }
+        $mask_len = strlen($mask_key);
+        //第一位不mask
+        for ($i = $beg_pos; $i < $this->max_read_pos; ++$i){
+            $index = $i % $mask_len;
+            $this->bin_str{$i} ^= $mask_key{$index};
+        }
     }
 
     /**
@@ -349,5 +489,243 @@ class BinaryBuffer
     {
         $result = $this->dump();
         return base64_encode($result);
+    }
+
+    /**
+     * 生成签名串
+     * @param string $bin_str 二进制内容
+     * @return string 
+     */
+    private function makeSignCode($bin_str)
+    {
+        return substr(md5($bin_str), 0, self::SIGN_CODE_LEN);
+    }
+
+    /**
+     * 获取数据id
+     * @return string|null
+     */
+    public function getPid()
+    {
+        if (!$this->unpack_head) {
+            $this->unpackHead();
+        }
+        return $this->pid;
+    }
+
+    /**
+     * 解包header区
+     */
+    private function unpackHead()
+    {
+        if ($this->unpack_head) {
+            return;
+        }
+        $this->unpack_head = true;
+        $total_len = $this->readLength();
+        //长度错误
+        if ($total_len !== $this->readAvailableLength()) {
+            $this->error_code = self::ERROR_SIZE;
+            return;
+        }
+        $this->pack_opt = $this->readUnsignedChar();
+        //带pid
+        if ($this->pack_opt & self::OPTION_PID) {
+            $this->pid = $this->readString();
+        }
+    }
+
+    /**
+     * 数据解密
+     * @param string $mask_key
+     * @return bool
+     */
+    public function unmask($mask_key)
+    {
+        if (!$this->unpack_head) {
+            $this->unpackHead();
+        }
+        //如果没有设置加密flag
+        if (!($this->pack_opt & self::OPTION_MASK)) {
+            $this->error_code = self::ERROR_MASK;
+            return false;
+        }
+        $begin_pos = $this->getDataPos() + 1;
+        $this->doMask($begin_pos, $mask_key);
+        if (!$this->checkSignCode()) {
+            $this->error_code = self::ERROR_MASK;
+            return false;
+        }
+        $this->pack_opt ^= self::OPTION_MASK;
+        return true;
+    }
+
+    /**
+     * 解包二进制数据
+     * @return bool|array
+     */
+    public function unpack()
+    {
+        if (!$this->unpack_head) {
+            $this->unpackHead();
+        }
+        //如果还需要解密
+        if ($this->pack_opt & self::OPTION_MASK) {
+            $this->error_code = self::ERROR_MASK;
+            return false;
+        }
+        if (($this->pack_opt & self::OPTION_SIGN) && !$this->checkSignCode()) {
+            return false;
+        }
+        $result = array();
+        //协议字符串
+        $protocol_str = $this->readString();
+        $protocol = new BinaryBuffer($protocol_str);
+        //先解析出协议
+        $protocol->readStruct();
+        return $result;
+    }
+
+    /**
+     * 读出协议结构
+     * @return array
+     */
+    private function readStruct()
+    {
+        $result_arr = array();
+        while (0 === $this->error_code && $this->read_pos < $this->max_read_pos) {
+            $item_name = $this->readString();
+            $item = $this->readItem();
+            if ($this->error_code > 0) {
+                break;
+            }
+            $result_arr[$item_name] = $item;
+        }
+        return $result_arr;
+    }
+
+    /**
+     * 读一个item类型
+     * @return array
+     */
+    private function readItem()
+    {
+        $result = array();
+        $item_type = $this->readUnsignedChar();
+        $result['type'] = $item_type;
+        switch($item_type) {
+            case ItemType::ARR:
+                $result['sub_item'] = $this->readItem();
+                break;
+            case ItemType::MAP:
+                $result['key_item'] = $this->readItem();
+                $result['value_item'] = $this->readItem();
+                break;
+            case ItemType::STRUCT:
+                //子struct协议
+                $sub_protocol = new BinaryBuffer($this->readString());
+                $sub_struct = $sub_protocol->readStruct();
+                if (0 === $sub_protocol->getErrorCode()) {
+                    $result['struct'] = $sub_struct;
+                }
+                break;
+        }
+        return $result;
+    }
+
+    /**
+     * 验证数据签名
+     * @return bool
+     */
+    private function checkSignCode()
+    {
+        if (!($this->pack_opt & self::OPTION_SIGN)) {
+            $this->error_code = self::ERROR_SIGN_CODE;
+            return false;
+        }
+        //找出参与签名数据的起始位置
+        $begin_pos = $this->getDataPos();
+        //如果剩余数据不够签名串，表示数据出错了
+        if ($this->readAvailableLength() < self::SIGN_CODE_LEN) {
+            $this->error_code = self::ERROR_DATA;
+            return false;
+        }
+        //找出参与签名的数据
+        $end_pos = self::SIGN_CODE_LEN * -1;
+        $sign_str = substr($this->bin_str, $begin_pos, $end_pos);
+        $sign_code = $this->makeSignCode($sign_str);
+        if ($sign_code !== substr($this->bin_str, $end_pos)) {
+            $this->error_code = self::ERROR_SIGN_CODE;
+            return false;
+        }
+        $this->max_read_pos -= self::SIGN_CODE_LEN;
+        $this->pack_opt ^= self::OPTION_SIGN;
+        return true;
+    }
+
+    /**
+     * 获取数据开始的位置
+     */
+    private function getDataPos()
+    {
+        $tmp_read_pos = $this->read_pos;
+        $this->read_pos = 0;
+        $this->readLength();
+        $result = $this->read_pos;
+        $this->read_pos = $tmp_read_pos;
+        return $result;
+    }
+
+    /**
+     * 是否签名
+     * @return bool
+     */
+    public function isSign()
+    {
+        return ($this->pack_opt & self::OPTION_SIGN) > 0;
+    }
+
+    /**
+     * 是否加密
+     * @return bool
+     */
+    public function isMask()
+    {
+        return ($this->pack_opt & self::OPTION_MASK) > 0;
+    }
+
+    /**
+     * 获取错误代码
+     * @return int
+     */
+    public function getErrorCode()
+    {
+        return $this->error_code;
+    }
+
+    /**
+     * 获取错误的描述内容
+     * @return string
+     */
+    public function getErrorMessage()
+    {
+        switch ($this->error_code) {
+            case self::ERROR_SIZE:
+                $re = '数据长度出错';
+                break;
+            case self::ERROR_SIGN_CODE:
+                $re = '数据签名出错';
+                break;
+            case self::ERROR_DATA:
+                $re = '数据出错';
+                break;
+            case self::ERROR_MASK:
+                $re = '数据解密出错';
+                break;
+            default:
+                $re = 'success';
+                break;
+        }
+        return $re;
     }
 }

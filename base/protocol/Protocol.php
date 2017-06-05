@@ -241,12 +241,6 @@ class Protocol
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($class_name, $node, false, $type);
             $struct->addReferType($type);
-            if ($action->hasAttribute('sign_key')) {
-                $sign_key = trim($action->getAttribute('sign_key'));
-                if (!empty($sign_key)) {
-                    $struct->setSignKey($sign_key);
-                }
-            }
         }
     }
 

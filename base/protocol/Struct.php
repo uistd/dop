@@ -74,12 +74,7 @@ class Struct
      * @var array 所有item包括继承的
      */
     private $all_extend_item;
-
-    /**
-     * @var string 数据签名key
-     */
-    private $sign_key;
-
+    
     /**
      * @var bool 是否是从缓存加载的
      */
@@ -327,23 +322,5 @@ class Struct
     public function getNote()
     {
         return $this->note;
-    }
-
-    /**
-     * 获取二进制数据签名key
-     * @return string|null
-     */
-    public function getSignKey()
-    {
-        return $this->sign_key;
-    }
-
-    /**
-     * 设置二进制签名key
-     * @param $sign_key
-     */
-    public function setSignKey($sign_key)
-    {
-        $this->sign_key = $sign_key;
     }
 }

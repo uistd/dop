@@ -56,12 +56,7 @@ class BuildOption
      * @var string
      */
     public $section_name;
-
-    /**
-     * @var string 二进制数据通用签名key
-     */
-    public $sign_key;
-
+    
     /**
      * BuildOption constructor.
      * @param string $section_name
@@ -77,8 +72,7 @@ class BuildOption
         static $default_config = array(
             'build_path' => 'build',
             'namespace' => 'ffan\dop',
-            'packer' => 'json',
-            'sign_key' => 'www.ffan.com'
+            'packer' => 'json'
         );
         //修正缺失的配置项
         foreach ($default_config as $name => $value) {
@@ -110,7 +104,6 @@ class BuildOption
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
         $this->coder_name = $section_conf['coder'];
-        $this->sign_key = $section_conf['sign_key'];
         $packer = FFanStr::split($section_conf['packer'], ',');
         foreach ($packer as $name) {
             $this->addPacker($name);
