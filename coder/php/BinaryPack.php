@@ -25,7 +25,8 @@ class BinaryPack extends PackerBase
      */
     public function getRequirePacker()
     {
-        return array('struct');
+        //依赖 struct 打包 和 数组 解包方法 
+        return array('struct', 'array');
     }
 
     /**
@@ -121,14 +122,24 @@ class BinaryPack extends PackerBase
      */
     public function buildUnpackMethod($struct, $code_buf)
     {
+        //只有主协议 才会有这个方法
+        if ($struct->isSubStruct()) {
+            return;
+        }
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制解包');
-        $code_buf->pushStr(' * @param string $raw_data');
+        $code_buf->pushStr(' * @param BinaryBuffer $data');
+        $code_buf->pushStr(' * @return bool');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('public function binaryDecode($raw_data)');
+        $code_buf->pushStr('public function binaryDecode($data)');
         $code_buf->pushStr('{')->indentIncrease();
-        $code_buf->pushStr('$bin_item_arr = array();');
+        $code_buf->pushStr('$data_arr = $data->unpack();');
+        $code_buf->pushStr('if ($data->getErrorCode()) {');
+        $code_buf->pushIndent('return false;');
+        $code_buf->pushStr('}');
+        $code_buf->pushStr('$this->arrayUnpack($data_arr);');
+        $code_buf->pushStr('return true;');
         $code_buf->indentDecrease()->pushStr('}');
     }
 

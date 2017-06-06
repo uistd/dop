@@ -2,6 +2,8 @@
 
 namespace {{$namespace}};
 
+use ffan\dop\protocol\ItemType;
+
 /**
  * Class BinaryBuffer PHP二进制操作类
  * @package {{$namespace}}
@@ -871,23 +873,14 @@ class BinaryBuffer
      */
     public function getErrorMessage()
     {
-        switch ($this->error_code) {
-            case self::ERROR_SIZE:
-                $re = '数据长度出错';
-                break;
-            case self::ERROR_SIGN_CODE:
-                $re = '数据签名出错';
-                break;
-            case self::ERROR_DATA:
-                $re = '数据出错';
-                break;
-            case self::ERROR_MASK:
-                $re = '数据解密出错';
-                break;
-            default:
-                $re = 'success';
-                break;
-        }
-        return $re;
+        static $msg_arr = array(
+            0 => 'success',
+            self::ERROR_SIZE => '数据长度出错',
+            self::ERROR_SIGN_CODE => '数据签名出错',
+            self::ERROR_DATA => '数据出错',
+            self::ERROR_MASK => '数据解码出错'
+        );
+        $err_code = $this->error_code;
+        return isset($msg_arr[$err_code]) ? $msg_arr[$err_code] : 'Unknown error';
     }
 }
