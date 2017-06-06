@@ -64,6 +64,21 @@ class BinaryBuffer
     const MIN_MASK_KEY_LEN = 16;
 
     /**
+     * 读int数据的函数
+     * @var array
+     */
+    private static $read_int_func = array(
+        0x12 => 'Char',
+        0x92 => 'UnsignedChar',
+        0x22 => 'Short',
+        0xa2 => 'UnsignedShort',
+        0x42 => 'Int',
+        0xc2 => 'UnsignedInt',
+        0x82 => 'Bigint',
+        0xf2 => 'UnsignedBigint',
+    );
+
+    /**
      *
      * @var string
      */
@@ -246,6 +261,26 @@ class BinaryBuffer
     }
 
     /**
+     * 写入符点数
+     * @param float $value
+     */
+    public function writeFloat($value)
+    {
+        $this->bin_str .= pack('f', $value);
+        $this->max_read_pos += 4;
+    }
+
+    /**
+     * 写入双精度符点数
+     * @param float $value
+     */
+    public function writeDouble($value)
+    {
+        $this->bin_str .= pack('d', $value);
+        $this->max_read_pos += 8;
+    }
+
+    /**
      * 读出一个char
      * @return int
      */
@@ -292,9 +327,7 @@ class BinaryBuffer
      */
     public function readUnsignedShort()
     {
-        if ($this->max_read_pos - $this->read_pos < 2) {
-            $this->read_pos = $this->max_read_pos;
-            $this->error_code = self::ERROR_DATA;
+        if (!$this->sizeCheck(2)) {
             return 0;
         }
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'v' : 'n';
@@ -323,9 +356,7 @@ class BinaryBuffer
      */
     public function readUnsignedInt()
     {
-        if ($this->max_read_pos - $this->read_pos < 4) {
-            $this->read_pos = $this->max_read_pos;
-            $this->error_code = self::ERROR_DATA;
+        if (!$this->sizeCheck(4)) {
             return 0;
         }
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'V' : 'N';
@@ -354,9 +385,7 @@ class BinaryBuffer
      */
     public function readUnsignedBigInt()
     {
-        if ($this->max_read_pos - $this->read_pos < 8) {
-            $this->read_pos = $this->max_read_pos;
-            $this->error_code = self::ERROR_DATA;
+        if (!$this->sizeCheck(8)) {
             return 0;
         }
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'P' : 'J';
@@ -364,6 +393,47 @@ class BinaryBuffer
         $this->read_pos += 8;
         $result = unpack($pack_arg . 're', $sub_str);
         return $result['re'];
+    }
+
+    /**
+     * 读出一个符点数
+     * @return float
+     */
+    public function readFloat()
+    {
+        if (!$this->sizeCheck(4)) {
+            return 0.0;
+        }
+        $result = unpack('fre', substr($this->bin_str, $this->read_pos, 4));
+        return $result['re'];
+    }
+
+    /**
+     * 读出一个双精度符点数
+     * @return float
+     */
+    public function readDouble()
+    {
+        if (!$this->sizeCheck(8)) {
+            return 0.0;
+        }
+        $result = unpack('dre', substr($this->bin_str, $this->read_pos, 8));
+        return $result['re'];
+    }
+
+    /**
+     * 检查空间是否够
+     * @param int $size 需要的空间
+     * @return bool
+     */
+    private function sizeCheck($size)
+    {
+        if ($this->max_read_pos - $this->read_pos < $size) {
+            $this->read_pos = $this->max_read_pos;
+            $this->error_code = self::ERROR_DATA;
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -385,10 +455,7 @@ class BinaryBuffer
         } else {
             $str_len = $this->readUnsignedBigInt();
         }
-        //长度 不够
-        if ($this->max_read_pos - $this->read_pos < $str_len) {
-            $this->read_pos = $this->max_read_pos;
-            $this->error_code = self::ERROR_DATA;
+        if (!$this->sizeCheck($str_len)) {
             return '';
         }
         $result = substr($this->bin_str, $this->read_pos, $str_len);
@@ -577,25 +644,117 @@ class BinaryBuffer
         if (($this->pack_opt & self::OPTION_SIGN) && !$this->checkSignCode()) {
             return false;
         }
-        $result = array();
         //协议字符串
         $protocol_str = $this->readString();
         $protocol = new BinaryBuffer($protocol_str);
         //先解析出协议
-        $protocol->readStruct();
+        $struct_list = $protocol->readProtocolStruct();
+        //再解出数据
+        $result = $this->readStructData($struct_list);
         return $result;
+    }
+
+    /**
+     * 读出数据
+     * @param array $struct_list
+     * @return array
+     */
+    private function readStructData($struct_list)
+    {
+        $result = array();
+        foreach ($struct_list as $name => $item) {
+            if ($this->error_code > 0) {
+                break;
+            }
+            $this->readItemData($item, true);
+        }
+        return $result;
+    }
+
+    /**
+     * 读出一项数据
+     * @param array $item
+     * @param int $is_property 是否是属性
+     * @return mixed
+     */
+    private function readItemData($item, $is_property)
+    {
+        $item_type = $item['type'];
+        switch ($item_type) {
+            case ItemType::STRING:
+            case ItemType::BINARY:
+                $value = $this->readString();
+                break;
+            case ItemType::FLOAT:
+                $value = $this->readFloat();
+                break;
+            case ItemType::DOUBLE:
+                $value = $this->readDouble();
+                break;
+            case ItemType::ARR:
+                $length = $this->readLength();
+                $value = array();
+                if ($length > 0) {
+                    $sub_item = $item['sub_item'];
+                    for ($i = 0; $i < $length; ++$i) {
+                        if ($this->error_code) {
+                            break;
+                        }
+                        $value[] = $this->readItemData($sub_item, false);
+                    }
+                }
+                break;
+            case ItemType::MAP:
+                $length = $this->readLength();
+                $value = array();
+                if ($length > 0) {
+                    $key_item = $item['key_item'];
+                    $value_item = $item['value_item'];
+                    for ($i = 0; $i < $length; ++$i) {
+                        if ($this->error_code) {
+                            break;
+                        }
+                        $key = $this->readItemData($key_item, false);
+                        $value[$key] = $this->readItemData($value_item, false);
+                    }
+                }
+                break;
+            case ItemType::STRUCT:
+                //如果是属性，要检查这个struct是否为null
+                if ($is_property) {
+                    $data_flag = $this->readUnsignedChar();
+                    if (0xff !== $data_flag) {
+                        $value = null;
+                        break;
+                    }
+                }
+                $sub_struct = $item['sub_struct'];
+                $value = $this->readStructData($sub_struct);
+                break;
+            default:
+                //如果是int
+                if (isset(self::$read_int_func[$item_type])) {
+                    $func_name = 'read'. self::$read_int_func[$item_type];
+                    $value = call_user_func([$this, $func_name]);
+                } else {
+                    $value = null;
+                    $this->error_code = self::ERROR_DATA;
+                }
+                break;
+        }
+        return $value;
     }
 
     /**
      * 读出协议结构
      * @return array
      */
-    private function readStruct()
+    private function readProtocolStruct()
     {
         $result_arr = array();
         while (0 === $this->error_code && $this->read_pos < $this->max_read_pos) {
             $item_name = $this->readString();
-            $item = $this->readItem();
+            $item = $this->readProtocolItem();
             if ($this->error_code > 0) {
                 break;
             }
@@ -605,28 +764,31 @@ class BinaryBuffer
     }
 
     /**
-     * 读一个item类型
+     * 读出一个协议的item
      * @return array
      */
-    private function readItem()
+    private function readProtocolItem()
     {
         $result = array();
         $item_type = $this->readUnsignedChar();
         $result['type'] = $item_type;
         switch($item_type) {
             case ItemType::ARR:
-                $result['sub_item'] = $this->readItem();
+                $result['sub_item'] = $this->readProtocolItem();
                 break;
             case ItemType::MAP:
-                $result['key_item'] = $this->readItem();
-                $result['value_item'] = $this->readItem();
+                $result['key_item'] = $this->readProtocolItem();
+                $result['value_item'] = $this->readProtocolItem();
                 break;
             case ItemType::STRUCT:
                 //子struct协议
                 $sub_protocol = new BinaryBuffer($this->readString());
-                $sub_struct = $sub_protocol->readStruct();
-                if (0 === $sub_protocol->getErrorCode()) {
-                    $result['struct'] = $sub_struct;
+                $sub_struct = $sub_protocol->readProtocolStruct();
+                $err_code = $sub_protocol->getErrorCode();
+                if ( $err_code > 0) {
+                    $this->error_code = $err_code;
+                } else {
+                    $result['sub_struct'] = $sub_struct;
                 }
                 break;
         }

@@ -81,20 +81,6 @@ abstract class Item
     abstract public function setDefault($value);
 
     /**
-     * 获取属性的魔术方法
-     * @param string $name
-     * @return mixed
-     * @throws Exception
-     */
-    public function __get($name)
-    {
-        if (!property_exists($this, $name)) {
-            throw new Exception('No property ' . $name);
-        }
-        return $this->$name;
-    }
-
-    /**
      * 获取类型
      * @return int
      */

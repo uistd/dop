@@ -90,7 +90,10 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('if (null === $this->' . $name . ') {');
                 $code_buf->pushIndent('$result->writeChar(0);');
                 $code_buf->pushStr('} else {')->indentIncrease();
-                $code_buf->pushStr('$result->writeChar(' . $item_type . ');');
+                //struct 之前，要先写入一个0xff，表示非空 struct
+                if (ItemType::STRUCT === $item_type) {
+                    $code_buf->pushStr('$result->writeChar(0xff);');
+                }
                 self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
                 $code_buf->indentDecrease()->pushStr('}');
             } else {
@@ -224,31 +227,6 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('}');
                 break;
         }
-    }
-
-    /**
-     * 获取int值的读方法名
-     * @param IntItem $item
-     * @return string
-     * @throws Exception
-     */
-    private static function getIntReadFuncName($item)
-    {
-        $bin_type = $item->getBinaryType();
-        $func_arr = array(
-            0x12 => 'Char',
-            0x92 => 'UnsignedChar',
-            0x22 => 'Short',
-            0xa2 => 'UnsignedShort',
-            0x42 => 'Int',
-            0xc2 => 'UnsignedInt',
-            0x82 => 'Bigint',
-            0xf2 => 'UnsignedBigint',
-        );
-        if (!isset($func_arr[$bin_type])) {
-            throw new Exception('Error int type:' . $bin_type);
-        }
-        return 'read' . $func_arr[$bin_type];
     }
 
     /**
