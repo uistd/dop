@@ -140,7 +140,7 @@ class BinaryBuffer
      */
     public function writeString($str)
     {
-        if (null === $str) {
+        if (!is_string($str)) {
             $this->writeLength(0);
         } else {
             $len = strlen($str);
@@ -229,7 +229,7 @@ class BinaryBuffer
      */
     public function writeUnsignedChar($char)
     {
-        $this->bin_str .= pack('C', $char);
+        $this->bin_str .= pack('C', (int)$char);
         ++$this->max_read_pos;
     }
 
@@ -240,7 +240,7 @@ class BinaryBuffer
     public function writeShort($short)
     {
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'v' : 'n';
-        $this->bin_str .= pack($pack_arg, $short);
+        $this->bin_str .= pack($pack_arg, (int)$short);
         $this->max_read_pos += 2;
     }
 
@@ -251,7 +251,7 @@ class BinaryBuffer
     public function writeInt($int)
     {
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'V' : 'N';
-        $this->bin_str .= pack($pack_arg, $int);
+        $this->bin_str .= pack($pack_arg, (int)$int);
         $this->max_read_pos += 4;
     }
 
@@ -262,7 +262,7 @@ class BinaryBuffer
     public function writeBigInt($bigint)
     {
         $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'P' : 'J';
-        $this->bin_str .= pack($pack_arg, $bigint);
+        $this->bin_str .= pack($pack_arg, (int)$bigint);
         $this->max_read_pos += 8;
     }
 
@@ -272,7 +272,7 @@ class BinaryBuffer
      */
     public function writeFloat($value)
     {
-        $this->bin_str .= pack('f', $value);
+        $this->bin_str .= pack('f', (float)$value);
         $this->max_read_pos += 4;
     }
 
@@ -282,7 +282,7 @@ class BinaryBuffer
      */
     public function writeDouble($value)
     {
-        $this->bin_str .= pack('d', $value);
+        $this->bin_str .= pack('d', (float)$value);
         $this->max_read_pos += 8;
     }
 

@@ -162,13 +162,19 @@ class BinaryPack extends PackerBase
             case ItemType::STRING:
                 self::packItemCode($code_buf, $var_name, $result_name, 'writeString');
                 break;
+            case ItemType::FLOAT:
+                self::packItemCode($code_buf, $var_name, $result_name, 'writeFloat');
+                break;
+            case ItemType::DOUBLE:
+                self::packItemCode($code_buf, $var_name, $result_name, 'writeDouble');
+                break;
             case ItemType::INT:
                 /** @var IntItem $item */
                 $func_name = self::getIntWriteFuncName($item);
                 self::packItemCode($code_buf, $var_name, $result_name, $func_name);
                 break;
             case ItemType::STRUCT:
-                $code_buf->pushStr('$' . $var_name . '->binaryPack($result);');
+                $code_buf->pushStr('$' . $var_name . '->binaryPack($'.$result_name.');');
                 break;
             case ItemType::ARR:
                 //临时buffer
