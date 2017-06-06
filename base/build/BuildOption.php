@@ -72,7 +72,8 @@ class BuildOption
         static $default_config = array(
             'build_path' => 'build',
             'namespace' => 'ffan\dop',
-            'packer' => 'json'
+            'packer' => 'json',
+            'code_side' => self::SIDE_CLIENT
         );
         //修正缺失的配置项
         foreach ($default_config as $name => $value) {
@@ -104,6 +105,7 @@ class BuildOption
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
         $this->coder_name = $section_conf['coder'];
+        $this->build_side = $section_conf['code_side'];
         $packer = FFanStr::split($section_conf['packer'], ',');
         foreach ($packer as $name) {
             $this->addPacker($name);

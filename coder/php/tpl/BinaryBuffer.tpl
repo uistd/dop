@@ -179,12 +179,16 @@ class BinaryBuffer
      */
     public function writeLengthAtBegin($len)
     {
-        $tmp_buff = new self();
+        static $tmp_buff;
+        if (null === $tmp_buff) {
+            $tmp_buff = new self();
+        }
         $tmp_buff->writeLength($len);
         $len = $tmp_buff->getLength();
         $result = $tmp_buff->dump();
         $this->bin_str = $result . $this->bin_str;
         $this->max_read_pos += $len;
+        $tmp_buff->reset();
     }
 
     /**
@@ -541,23 +545,12 @@ class BinaryBuffer
     }
 
     /**
-     * 导出成hex串
-     * @return string
+     * 重置
      */
-    public function dumpHex()
+    public function reset()
     {
-        $result = $this->dump();
-        return bin2hex($result);
-    }
-
-    /**
-     * 导出成base64
-     * @return string
-     */
-    public function dumpBase64()
-    {
-        $result = $this->dump();
-        return base64_encode($result);
+        $this->read_pos = $this->max_read_pos = $this->error_code = 0;
+        $this->bin_str = '';
     }
 
     /**

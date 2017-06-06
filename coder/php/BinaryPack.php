@@ -154,14 +154,12 @@ class BinaryPack extends PackerBase
     private static function packItemValue($code_buf, $var_name, $result_name, $item, $depth = 0)
     {
         $item_type = $item->getType();
+        if ($depth > 0) {
+            self::typeCheckCode($code_buf, $var_name, $item);
+        }
         switch ($item_type) {
             case ItemType::BINARY:
             case ItemType::STRING:
-                if ($depth > 0) {
-                    $code_buf->pushStr('if (!is_string($' . $var_name . ')) {');
-                    $code_buf->pushIndent('continue;');
-                    $code_buf->pushStr('}');
-                }
                 self::packItemCode($code_buf, $var_name, $result_name, 'writeString');
                 break;
             case ItemType::INT:
@@ -170,21 +168,9 @@ class BinaryPack extends PackerBase
                 self::packItemCode($code_buf, $var_name, $result_name, $func_name);
                 break;
             case ItemType::STRUCT:
-                /** @var StructItem $item */
-                if ($depth > 0) {
-                    $code_buf->pushStr('if (!$' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
-                    $code_buf->pushIndent('continue;');
-                    $code_buf->pushStr('}');
-                }
                 $code_buf->pushStr('$' . $var_name . '->binaryPack($result);');
                 break;
             case ItemType::ARR:
-                /** @var ListItem $item */
-                if ($depth > 0) {
-                    $code_buf->pushStr('if (!is_array($' . $var_name . ')) {');
-                    $code_buf->pushIndent('continue;');
-                    $code_buf->pushStr('}');
-                }
                 //临时buffer
                 $buffer_name = tmp_var_name($depth, 'arr_buf');
                 //长度变量
@@ -192,6 +178,7 @@ class BinaryPack extends PackerBase
                 //循环变量
                 $for_var_name = tmp_var_name($depth, 'item');
                 $code_buf->pushStr('$' . $len_var_name . ' = 0;');
+                /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 //写入list的类型
                 $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
@@ -206,11 +193,6 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
                 break;
             case ItemType::MAP:
-                if ($depth > 0) {
-                    $code_buf->pushStr('if (!is_array($' . $var_name . ')) {');
-                    $code_buf->pushIndent('continue;');
-                    $code_buf->pushStr('}');
-                }
                 //临时buffer
                 $buffer_name = tmp_var_name($depth, 'map_buf');
                 //长度变量
@@ -225,16 +207,43 @@ class BinaryPack extends PackerBase
                 $value_item = $item->getValueItem();
                 //写入map key 和 value 的类型
                 $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
-                $code_buf->pushStr('$' . $buffer_name . '->writeChar(' . $key_item->getBinaryType() . ')');
-                $code_buf->pushStr('$' . $buffer_name . '->writeChar(' . $value_item->getBinaryType() . ')');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $key_var_name . ' =>  $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
+                self::typeCheckCode($code_buf, $for_var_name, $value_item);
+                $code_buf->indentDecrease();
+                $code_buf->indentIncrease();
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $key_item, $depth + 1);
-                self::packItemValue($code_buf, $for_var_name, $buffer_name, $value_item, $depth + 1);
+                //这里的depth 变成 0，因为之前已经typeCheckCode了
+                self::packItemValue($code_buf, $for_var_name, $buffer_name, $value_item, 0);
                 $code_buf->pushStr('++$' . $len_var_name . ';');
+                $code_buf->indentDecrease();
+                $code_buf->pushStr('}');
                 $code_buf->pushStr('$' . $buffer_name . '->writeLengthAtBegin($' . $len_var_name . ');');
                 $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
-                $code_buf->indentDecrease();
+                break;
+        }
+    }
+
+    /**
+     * 类型检查代码
+     * @param CodeBuf $code_buf
+     * @param string $var_name
+     * @param Item $item
+     */
+    private static function typeCheckCode($code_buf, $var_name, $item)
+    {
+        $item_type = $item->getType();
+        switch ($item_type) {
+            case ItemType::MAP:
+                case ItemType::ARR:
+                $code_buf->pushStr('if (!is_array($' . $var_name . ')) {');
+                $code_buf->pushIndent('continue;');
+                $code_buf->pushStr('}');
+                break;
+            case ItemType::STRUCT:
+                /** @var StructItem $item */
+                $code_buf->pushStr('if (!$' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
+                $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
                 break;
         }
@@ -249,7 +258,7 @@ class BinaryPack extends PackerBase
     private static function getIntWriteFuncName($item)
     {
         $bin_type = $item->getBinaryType();
-        $func_arr = array(
+        static $func_arr = array(
             0x12 => 'Char',
             0x92 => 'Char',
             0x22 => 'Short',

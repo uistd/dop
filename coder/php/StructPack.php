@@ -57,6 +57,7 @@ class StructPack extends PackerBase
             $code_buf->pushStr('$buffer->writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
+        $code_buf->pushStr('$buffer->writeLengthAtBegin($buffer->getLength());');
         $code_buf->pushStr('return $buffer;');
         $code_buf->indentDecrease()->pushStr('}');
     }
@@ -93,6 +94,7 @@ class StructPack extends PackerBase
     private function writeItemType($code_buf, $item)
     {
         $bin_type = $item->getBinaryType();
+        $code_buf->pushStr('//'. $this->typeComment($bin_type));
         $code_buf->pushStr('$buffer->writeUnsignedChar(0x' . dechex($bin_type) . ');');
         $type = $item->getType();
         switch ($type) {
@@ -111,8 +113,35 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('$buffer->joinBuf('.$class_name.'::binaryStruct());');
+                $code_buf->pushStr('$buffer->joinBuffer('.$class_name.'::binaryStruct());');
                 break;
         }
+    }
+
+    /**
+     * 注释
+     * @param int $type
+     * @return string
+     */
+    private function typeComment($type)
+    {
+        static $comment_arr = array(
+            ItemType::STRING => 'string',
+            ItemType::BINARY => 'binary',
+            ItemType::ARR => 'list',
+            ItemType::MAP => 'map',
+            ItemType::STRUCT => 'struct',
+            ItemType::FLOAT => 'float',
+            ItemType::DOUBLE => 'double',
+            0x12 => 'int8',
+            0x92 => 'unsigned int8',
+            0x22 => 'int16',
+            0xa2 => 'unsigned int16',
+            0x42 => 'int32',
+            0xc2 => 'unsigned int32',
+            0x82 => 'int64',
+            0xf2 => 'unsigned int64',
+        );
+        return isset($comment_arr[$type]) ? $comment_arr[$type] : '';
     }
 }
