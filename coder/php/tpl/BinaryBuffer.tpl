@@ -146,6 +146,7 @@ class BinaryBuffer
             $len = strlen($str);
             $this->writeLength($len);
             $this->bin_str .= pack('a' . $len, $str);
+            $this->max_read_pos += $len;
         }
     }
 
@@ -282,7 +283,7 @@ class BinaryBuffer
      */
     public function writeDouble($value)
     {
-        $this->bin_str .= pack('d', (float)$value);
+        $this->bin_str .= pack('d', $value);
         $this->max_read_pos += 8;
     }
 
@@ -292,7 +293,7 @@ class BinaryBuffer
      */
     public function readChar()
     {
-        if ($this->read_pos <= $this->max_read_pos) {
+        if ($this->read_pos >= $this->max_read_pos) {
             $this->error_code = self::ERROR_DATA;
             return 0;
         }
@@ -306,7 +307,7 @@ class BinaryBuffer
      */
     public function readUnsignedChar()
     {
-        if ($this->read_pos <= $this->max_read_pos) {
+        if ($this->read_pos >= $this->max_read_pos) {
             $this->error_code = self::ERROR_DATA;
             return 0;
         }
@@ -411,6 +412,7 @@ class BinaryBuffer
             return 0.0;
         }
         $result = unpack('fre', substr($this->bin_str, $this->read_pos, 4));
+        $this->read_pos += 4;
         return $result['re'];
     }
 
@@ -424,6 +426,7 @@ class BinaryBuffer
             return 0.0;
         }
         $result = unpack('dre', substr($this->bin_str, $this->read_pos, 8));
+        $this->read_pos += 8;
         return $result['re'];
     }
 
@@ -448,19 +451,7 @@ class BinaryBuffer
      */
     public function readString()
     {
-        $len = $this->readUnsignedChar();
-        if (0 === $len) {
-            return '';
-        }
-        if ($len < 0xfc) {
-            $str_len = $len;
-        } elseif ($len === 0xfc) {
-            $str_len = $this->readUnsignedShort();
-        } elseif ($len === 0xfe) {
-            $str_len = $this->readUnsignedInt();
-        } else {
-            $str_len = $this->readUnsignedBigInt();
-        }
+        $str_len = $this->readLength();
         if (!$this->sizeCheck($str_len)) {
             return '';
         }
