@@ -106,6 +106,14 @@
             <int name="data"/>
         </response>
     </action>
+    <action name="demo_data">
+        <request>
+
+        </request>
+        <response extend="/xapi/result">
+            <int name="re_code"/>
+        </response>
+    </action>
     <action name="demo_role" method="put">
         <request>
             <string name="role_ids">

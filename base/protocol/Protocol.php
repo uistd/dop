@@ -2,7 +2,6 @@
 
 namespace ffan\dop\protocol;
 
-use ffan\dop\build\PluginBase;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
@@ -291,24 +290,28 @@ class Protocol
                 throw new Exception('struct:' . $struct_name . ' is not public!');
             }
         }
-        if (!empty($item_arr)) {
-            $struct_obj = new Struct($this->namespace, $class_name, $this->xml_file_name, $type, $is_public);
-            //如果有注释
-            if ($struct->hasAttribute('note')) {
-                $struct_obj->setNote($struct->getAttribute('note'));
-            }
-            foreach ($item_arr as $name => $item) {
-                $struct_obj->addItem($name, $item);
-            }
+        //如果item为空
+        if (empty($item_arr)) {
+            //完全继承
             if ($extend_struct) {
-                $struct_obj->extend($extend_struct);
+                return $extend_struct;
+            } //struct不允许空item
+            elseif (Struct::TYPE_STRUCT === $type) {
+                throw new Exception('Empty struct');
             }
-            $this->protocol_manager->addStruct($struct_obj);
-        } elseif ($extend_struct) {
-            $struct_obj = $extend_struct;
-        } else {
-            throw new Exception('Empty struct');
         }
+        $struct_obj = new Struct($this->namespace, $class_name, $this->xml_file_name, $type, $is_public);
+        //如果有注释
+        if ($struct->hasAttribute('note')) {
+            $struct_obj->setNote($struct->getAttribute('note'));
+        }
+        foreach ($item_arr as $name => $item) {
+            $struct_obj->addItem($name, $item);
+        }
+        if ($extend_struct) {
+            $struct_obj->extend($extend_struct);
+        }
+        $this->protocol_manager->addStruct($struct_obj);
         return $struct_obj;
     }
 
