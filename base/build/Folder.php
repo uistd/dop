@@ -140,7 +140,7 @@ class Folder
      */
     public function writeToFile($path, $file_name, $buf_name, $code)
     {
-        $file = $this->doFind($path, $file_name);
+        $file = $this->getFile($path, $file_name);
         if (null === $file) {
             return;
         }

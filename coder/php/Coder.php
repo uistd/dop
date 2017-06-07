@@ -182,6 +182,9 @@ class Coder extends CoderBase
     {
         $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
         $this->loadTpl($main_buf, 'tpl/dop.tpl');
+        $folder = $this->getFolder();
+        $name_space = $this->joinNameSpace('');
+        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => ''," );
     }
 
     /**
