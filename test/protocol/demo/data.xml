@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol>
+    <struct name="test_arr">
+        <int8 name="a"/>
+        <uint8 name="a"/>
+        <int16 name="b"/>
+        <uint16 name="b"/>
+        <int name="c"/>
+        <uint name="c"/>
+        <int64 name="d"/>
+        <string name="e"/>
+        <float name="f"/>
+        <double name="g"/>
+        <binary name="h"/>
+    </struct>
+    <data name="test_data">
+        
+    </data>
+</protocol>

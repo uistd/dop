@@ -58,7 +58,6 @@ class IntItem extends Item
         'int32' => IntItem::BYTE_INT,
         'uint32' => IntItem::BYTE_INT,
         'int64' => IntItem::BYTE_BIG,
-        'uint64' => IntItem::BYTE_BIG,
     );
 
     /**
@@ -109,7 +108,6 @@ class IntItem extends Item
      * 01000010(0x42)  int
      * 11000010(0xC2)  unsigned int
      * 10000010(0x82)  bigint
-     * 11110010(0xf2)  unsigned bigint
      * @return int
      */
     public function getBinaryType()
@@ -120,12 +118,7 @@ class IntItem extends Item
         $or_value = $this->byte << 4;
         //如果是无符号数
         if ($this->is_unsigned) {
-            //如果是bigInt，位数不够，直接 1111
-            if (self::BYTE_BIG === $this->byte) {
-                $or_value = 0xf0;
-            } else {
-                $or_value |= 0x80;
-            }
+            $or_value |= 0x80;
         }
         $result |= $or_value;
         return $result; 

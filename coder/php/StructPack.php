@@ -140,7 +140,6 @@ class StructPack extends PackerBase
             0x42 => 'int32',
             0xc2 => 'unsigned int32',
             0x82 => 'int64',
-            0xf2 => 'unsigned int64',
         );
         return isset($comment_arr[$type]) ? $comment_arr[$type] : '';
     }

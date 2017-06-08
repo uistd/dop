@@ -121,9 +121,6 @@ class Coder extends CoderBase
             throw new Exception('Can not found class name buf');
         }
         $class_name_buf->pushStr($main_class_name);
-        if ($struct->hasExtend()) {
-            $class_name_buf->pushStr(' extends ' . $parent_struct->getClassName());
-        }
         //模板中的变量处理
         $class_file->setVariableValue('namespace', $this->joinNameSpace($name_space));
         $class_file->setVariableValue('struct_node', ' '. $struct->getNote());

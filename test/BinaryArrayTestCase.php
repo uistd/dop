@@ -30,7 +30,11 @@ $bin_arr->writeString(str_repeat('www.ffan.com', 100));
 $bin_arr->writeFloat(100.10);
 $bin_arr->writeDouble(100.10);
 
+$bin_arr->writeLengthAtBegin($bin_arr->getLength());
+
 echo base64_encode($bin_arr->dump()) . PHP_EOL;
+
+var_dump($bin_arr->readLength());
 
 var_dump($bin_arr->readChar());
 var_dump($bin_arr->readChar());
