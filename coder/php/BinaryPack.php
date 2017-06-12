@@ -226,7 +226,7 @@ class BinaryPack extends PackerBase
                 self::typeCheckCode($code_buf, $for_var_name, $value_item);
                 $code_buf->indentDecrease();
                 $code_buf->indentIncrease();
-                self::packItemValue($code_buf, $for_var_name, $buffer_name, $key_item, $depth + 1);
+                self::packItemValue($code_buf, $key_var_name, $buffer_name, $key_item, $depth + 1);
                 //这里的depth 变成 0，因为之前已经typeCheckCode了
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $value_item, 0);
                 $code_buf->pushStr('++$' . $len_var_name . ';');

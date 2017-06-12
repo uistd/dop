@@ -502,8 +502,36 @@ class BinaryBuffer
      */
     public function mask($mask_key)
     {
-        $this->doMask(1, $mask_key);
+        $beg_pos = $this->getMaskBegPos(false);
+        $this->doMask($beg_pos, $mask_key);
     }
+
+    /**
+     * 获取用于加密的数据的起始位置
+     * @param bool $is_unpack 是否是解码
+     * @return int
+     */
+    private function getMaskBegPos($is_unpack)
+    {
+        //先记录一下此时的read_pos
+        $now_pos = $this->read_pos;
+        $this->read_pos = 0;
+        //如果是解码 先读出length
+        if ($is_unpack) {
+            $this->readLength();
+        }
+        //先读出1位，表示flag
+        $flag = $this->readUnsignedChar();
+        //如果带pid，pid不能加密，否则无法解出
+        if ($flag & self::OPTION_PID) {
+            $this->readString();
+        }
+        $beg_pos = $this->read_pos;
+        //还原pos
+        $this->read_pos = $now_pos;
+        return $beg_pos;
+    }
+    
     
     /**
      * 数据加密
@@ -516,10 +544,10 @@ class BinaryBuffer
             $mask_key = md5($mask_key);
         }
         $mask_len = strlen($mask_key);
-        //第一位不mask
+        $pos = 0;
         for ($i = $beg_pos; $i < $this->max_read_pos; ++$i){
-            $index = $i % $mask_len;
-            $this->bin_str{$i} ^= $mask_key{$index};
+            $index = $pos++ % $mask_len;
+            $this->bin_str{$i} = $this->bin_str{$i} ^ $mask_key{$index};
         }
     }
 
@@ -600,7 +628,7 @@ class BinaryBuffer
             $this->error_code = self::ERROR_MASK;
             return false;
         }
-        $begin_pos = $this->getDataPos() + 1;
+        $begin_pos = $this->getMaskBegPos(true);
         $this->doMask($begin_pos, $mask_key);
         if (!$this->checkSignCode()) {
             $this->error_code = self::ERROR_MASK;
@@ -619,6 +647,7 @@ class BinaryBuffer
         if (!$this->unpack_head) {
             $this->unpackHead();
         }
+        //var_dump($this->pack_opt & self::OPTION_MASK);
         //如果还需要解密
         if ($this->pack_opt & self::OPTION_MASK) {
             $this->error_code = self::ERROR_MASK;
