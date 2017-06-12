@@ -634,11 +634,6 @@ class BinaryBuffer
         $struct_list = $protocol->readProtocolStruct();
         //再解出数据
         $result = $this->readStructData($struct_list);
-        //如果还有数据未读取，表示解析出错了
-        if ($this->readAvailableLength() > 0) {
-            $this->error_code = self::ERROR_DATA;
-            $result = array();
-        }
         return $result;
     }
 

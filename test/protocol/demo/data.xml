@@ -19,6 +19,9 @@
         <binary name="binary"/>
         <list name="list"><int/></list>
         <map name="map"><int/><string/></map>
+        <struct name="null_struct">
+            <int name="no_value"/>
+        </struct>
         <struct name="struct">
             <string name="first_name"/>
             <string name="last_name"/>

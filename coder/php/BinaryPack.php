@@ -85,11 +85,20 @@ class BinaryPack extends PackerBase
          */
         foreach ($all_item as $name => $item) {
             $item_type = $item->getType();
-            //如果是以下几种类型，要判断null值
+            //如果是以下几种类型，特殊判断
             if (ItemType::ARR === $item_type || ItemType::STRUCT === $item_type || ItemType::MAP === $item_type) {
-                //null值判断
-                $code_buf->pushStr('if (null === $this->' . $name . ') {');
-                $code_buf->pushIndent('$result->writeChar(0);');
+                //struct
+                if (ItemType::STRUCT === $item_type) {
+                    /** @var $item StructItem */
+                    $sub_struct = $item->getStruct();
+                    $code_buf->pushStr('if (!$this->' . $name . ' instanceof ' . $sub_struct->getClassName() . ' ) {');
+                    //写入 0 表示空struct
+                    $code_buf->pushIndent('$result->writeChar(0);');
+                } else {
+                    $code_buf->pushStr('if (!is_array($this->' . $name . ')){');
+                    //写入 0，表示数组长度 0
+                    $code_buf->pushIndent('$result->writeChar(0);');
+                }
                 $code_buf->pushStr('} else {')->indentIncrease();
                 //struct 之前，要先写入一个0xff，表示非空 struct
                 if (ItemType::STRUCT === $item_type) {
@@ -174,7 +183,7 @@ class BinaryPack extends PackerBase
                 self::packItemCode($code_buf, $var_name, $result_name, $func_name);
                 break;
             case ItemType::STRUCT:
-                $code_buf->pushStr('$' . $var_name . '->binaryPack($'.$result_name.');');
+                $code_buf->pushStr('$' . $var_name . '->binaryPack($' . $result_name . ');');
                 break;
             case ItemType::ARR:
                 //临时buffer
@@ -240,7 +249,7 @@ class BinaryPack extends PackerBase
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::MAP:
-                case ItemType::ARR:
+            case ItemType::ARR:
                 $code_buf->pushStr('if (!is_array($' . $var_name . ')) {');
                 $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
