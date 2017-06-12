@@ -2,8 +2,6 @@
 
 namespace {{$namespace}};
 
-use ffan\dop\protocol\ItemType;
-
 /**
  * Class BinaryBuffer PHP二进制操作类
  * @package {{$namespace}}
@@ -76,8 +74,7 @@ class BinaryBuffer
         0xa2 => 'UnsignedShort',
         0x42 => 'Int',
         0xc2 => 'UnsignedInt',
-        0x82 => 'Bigint',
-        0xf2 => 'UnsignedBigint',
+        0x82 => 'Bigint'
     );
 
     /**
@@ -127,7 +124,7 @@ class BinaryBuffer
      */
     public function __construct($raw_data = null)
     {
-        if (null !== $raw_data || !is_string($raw_data)) {
+        if (null === $raw_data || !is_string($raw_data)) {
             return;
         }
         $this->bin_str = $raw_data;
@@ -476,7 +473,7 @@ class BinaryBuffer
     public function readAvailableLength()
     {
         $result = $this->max_read_pos - $this->read_pos;
-        return $result > 0 ?: 0;
+        return $result > 0 ? $result : 0;
     }
 
     /**
@@ -637,6 +634,11 @@ class BinaryBuffer
         $struct_list = $protocol->readProtocolStruct();
         //再解出数据
         $result = $this->readStructData($struct_list);
+        //如果还有数据未读取，表示解析出错了
+        if ($this->readAvailableLength() > 0) {
+            $this->error_code = self::ERROR_DATA;
+            $result = array();
+        }
         return $result;
     }
 
@@ -652,7 +654,7 @@ class BinaryBuffer
             if ($this->error_code > 0) {
                 break;
             }
-            $this->readItemData($item, true);
+            $result[$name] = $this->readItemData($item, true);
         }
         return $result;
     }
@@ -667,17 +669,17 @@ class BinaryBuffer
     {
         $item_type = $item['type'];
         switch ($item_type) {
-            case ItemType::STRING:
-            case ItemType::BINARY:
+            case 1: //string
+            case 4: //binary
                 $value = $this->readString();
                 break;
-            case ItemType::FLOAT:
+            case 3: //float
                 $value = $this->readFloat();
                 break;
-            case ItemType::DOUBLE:
+            case 8: //double
                 $value = $this->readDouble();
                 break;
-            case ItemType::ARR:
+            case 5: //list
                 $length = $this->readLength();
                 $value = array();
                 if ($length > 0) {
@@ -690,7 +692,7 @@ class BinaryBuffer
                     }
                 }
                 break;
-            case ItemType::MAP:
+            case 7: //map
                 $length = $this->readLength();
                 $value = array();
                 if ($length > 0) {
@@ -705,7 +707,7 @@ class BinaryBuffer
                     }
                 }
                 break;
-            case ItemType::STRUCT:
+            case 6: //struct
                 //如果是属性，要检查这个struct是否为null
                 if ($is_property) {
                     $data_flag = $this->readUnsignedChar();
@@ -759,14 +761,14 @@ class BinaryBuffer
         $item_type = $this->readUnsignedChar();
         $result['type'] = $item_type;
         switch($item_type) {
-            case ItemType::ARR:
+            case 5: //list
                 $result['sub_item'] = $this->readProtocolItem();
                 break;
-            case ItemType::MAP:
+            case 7: //map
                 $result['key_item'] = $this->readProtocolItem();
                 $result['value_item'] = $this->readProtocolItem();
                 break;
-            case ItemType::STRUCT:
+            case 6: //struct
                 //子struct协议
                 $sub_protocol = new BinaryBuffer($this->readString());
                 $sub_struct = $sub_protocol->readProtocolStruct();

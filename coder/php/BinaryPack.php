@@ -188,7 +188,6 @@ class BinaryPack extends PackerBase
                 $sub_item = $item->getItem();
                 //写入list的类型
                 $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
-                $code_buf->pushStr('$' . $buffer_name . '->writeChar(' . $sub_item->getBinaryType() . ');');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $sub_item, $depth + 1);
