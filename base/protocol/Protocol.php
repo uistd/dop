@@ -34,6 +34,11 @@ class Protocol
     const QUERY_STEP_ACTION = 2;
 
     /**
+     * 解析步骤：data
+     */
+    const QUERY_STEP_DATA = 4;
+
+    /**
      * @var \DOMDocument xml_handle
      */
     private $xml_handle;
@@ -135,6 +140,7 @@ class Protocol
     {
         $this->queryStruct();
         $this->queryAction();
+        $this->queryData();
     }
 
     /**
@@ -168,7 +174,7 @@ class Protocol
     }
 
     /**
-     * 解析Action
+     * 解析Action协议
      */
     private function queryAction()
     {
@@ -176,7 +182,7 @@ class Protocol
         if ($this->query_step & self::QUERY_STEP_ACTION) {
             return;
         }
-        $this->query_step &= self::QUERY_STEP_ACTION;
+        $this->query_step |= self::QUERY_STEP_ACTION;
         $path_handle = $this->getPathHandle();
         $action_list = $path_handle->query('/protocol/action');
         if (null === $action_list) {
@@ -191,6 +197,36 @@ class Protocol
             }
             $name = FFanStr::camelName(trim($action->getAttribute('name')));
             $this->parseAction($name, $action);
+        }
+    }
+
+    /**
+     * 解析Data协议
+     */
+    private function queryData()
+    {
+        //已经解析过了，就打标志，避免重复解析
+        if ($this->query_step & self::QUERY_STEP_DATA) {
+            return;
+        }
+        $this->query_step |= self::QUERY_STEP_DATA;
+        $path_handle = $this->getPathHandle();
+        $node_list = $path_handle->query('/protocol/data');
+        if (null === $node_list) {
+            return;
+        }
+        $this->current_struct_type = Struct::TYPE_DATA;
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            /** @var \DOMElement $struct */
+            $struct = $node_list->item($i);
+            $this->setLineNumber($struct->getLineNo());
+            if (!$struct->hasAttribute('name')) {
+                throw new Exception('Data must have name attribute');
+            }
+            $name = trim($struct->getAttribute('name'));
+            $name = FFanStr::camelName($name, true);
+            $is_public = true === (bool)$struct->getAttribute('public');
+            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false);
         }
     }
 
@@ -296,7 +332,7 @@ class Protocol
             if ($extend_struct) {
                 return $extend_struct;
             } //struct不允许空item
-            elseif (Struct::TYPE_STRUCT === $type) {
+            elseif (Struct::TYPE_STRUCT === $type || Struct::TYPE_DATA === $type) {
                 throw new Exception('Empty struct');
             }
         }
@@ -356,6 +392,9 @@ class Protocol
             case ItemType::INT:
                 $item_obj = new IntItem($name, $this->protocol_manager);
                 $item_obj->setIntType($dom_node->nodeName);
+                break;
+            case ItemType::DOUBLE:
+                $item_obj = new DoubleItem($name, $this->protocol_manager);
                 break;
             default:
                 throw new Exception('Unknown type');

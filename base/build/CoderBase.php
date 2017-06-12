@@ -5,6 +5,7 @@ namespace ffan\dop\build;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Struct;
+use ffan\php\utils\Str;
 use ffan\php\utils\Utils as FFanUtils;
 
 
@@ -95,13 +96,15 @@ abstract class CoderBase
     /**
      * 按struct迭代
      * @param callable $callback
+     * @param bool $ignore_cache 是否忽略缓存
      */
-    public function structIterator(callable $callback)
+    public function structIterator(callable $callback, $ignore_cache = false)
     {
         $all_struct = $this->manager->getAllStruct();
         /** @var Struct $struct */
         foreach ($all_struct as $struct) {
-            if ($struct->loadFromCache()) {
+            //如果struct来自缓存，或者 struct 不需要生成
+            if (!$this->isBuildStructCode($struct, $ignore_cache)) {
                 continue;
             }
             call_user_func($callback, $struct);
@@ -297,14 +300,17 @@ abstract class CoderBase
      */
     private function isBuildPackMethod($struct)
     {
-        //客户端代码
-        if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
+        if ($struct->hasReferType(Struct::TYPE_DATA) || Struct::TYPE_DATA === $struct->getType()) {
+            return true;
+        }
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
             return $struct->hasReferType(Struct::TYPE_REQUEST);
-        } else {
+        }
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)) {
             return $struct->hasReferType(Struct::TYPE_RESPONSE);
         }
+        return false;
     }
-
 
     /**
      * 是否需要生成Decode方法
@@ -313,12 +319,41 @@ abstract class CoderBase
      */
     private function isBuildUnpackMethod($struct)
     {
-        //客户端代码
-        if (BuildOption::SIDE_CLIENT === $this->build_opt->build_side) {
+        if ($struct->hasReferType(Struct::TYPE_DATA) || Struct::TYPE_DATA === $struct->getType()) {
+            return true;
+        }
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
             return $struct->hasReferType(Struct::TYPE_RESPONSE);
-        } else {
+        }
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)) {
             return $struct->hasReferType(Struct::TYPE_REQUEST);
         }
+        return false;
+    }
+
+    /**
+     * 是否需要生成struct代码
+     * @param Struct $struct
+     * @param bool $ignore_cache 忽略缓存
+     * @return bool
+     */
+    public function isBuildStructCode($struct, $ignore_cache = false)
+    {
+        if ($struct->loadFromCache() && !$ignore_cache) {
+            return false;
+        }
+        $struct_type = $struct->getType();
+        if (Struct::TYPE_STRUCT === $struct_type) {
+            $refer_type = $struct->getReferType();
+            //没有任何引用
+            if (0 === $refer_type) {
+                return false;
+            }
+            if (Struct::TYPE_DATA === $refer_type) {
+                return $this->build_opt->hasBuildProtocol(Struct::TYPE_DATA);
+            }
+        }
+        return $this->build_opt->hasBuildProtocol($struct_type);
     }
 
     /**

@@ -26,6 +26,11 @@ class Struct
     const TYPE_RESPONSE = 1;
 
     /**
+     * 普通数据
+     */
+    const TYPE_DATA = 4;
+
+    /**
      * @var array
      */
     private $item_list = array();
@@ -93,9 +98,6 @@ class Struct
         if (!is_string($namespace) || '/' !== $namespace[0]) {
             throw new \InvalidArgumentException('namespace error');
         }
-        if (self::TYPE_STRUCT !== $type && self::TYPE_REQUEST !== $type && self::TYPE_RESPONSE !== $type) {
-            throw new \InvalidArgumentException('Invalid type');
-        }
         $this->file = $file;
         $this->namespace = $namespace;
         $this->className = $name;
@@ -138,6 +140,15 @@ class Struct
     public function hasReferType($type)
     {
         return ($this->refer_type & $type) === $type;
+    }
+
+    /**
+     * 获取refer type
+     * @return int
+     */
+    public function getReferType()
+    {
+        return $this->refer_type;
     }
 
     /**

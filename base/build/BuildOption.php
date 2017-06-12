@@ -3,6 +3,7 @@
 namespace ffan\dop\build;
 
 use ffan\dop\Exception;
+use ffan\dop\protocol\Struct;
 use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
 
@@ -13,12 +14,12 @@ use ffan\php\utils\Str as FFanStr;
 class BuildOption
 {
     /**
-     * 服务端
+     * 服务端 编译 request 的 unpack 和  response的 pack
      */
     const SIDE_SERVER = 1;
 
     /**
-     * 客户端
+     * 客户端 编译 request 的 pack 和 response的 unpack
      */
     const SIDE_CLIENT = 2;
 
@@ -30,7 +31,12 @@ class BuildOption
     /**
      * @var int 指定编译哪一侧的协议
      */
-    public $build_side = self::SIDE_CLIENT;
+    private $build_side;
+
+    /**
+     * @var int 指定编译什么类型struct的代码
+     */
+    private $build_protocol;
 
     /**
      * @var string 命名空间前缀
@@ -72,8 +78,8 @@ class BuildOption
         static $default_config = array(
             'build_path' => 'build',
             'namespace' => 'ffan\dop',
-            'packer' => 'json',
-            'code_side' => self::SIDE_CLIENT
+            'protocol_type' => 'action',
+            'code_side' => 'server'
         );
         //修正缺失的配置项
         foreach ($default_config as $name => $value) {
@@ -105,11 +111,89 @@ class BuildOption
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
         $this->coder_name = $section_conf['coder'];
-        $this->build_side = $section_conf['code_side'];
-        $packer = FFanStr::split($section_conf['packer'], ',');
+        $this->build_side = $this->parseCodeSide($section_conf['code_side']);
+        $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
+        $this->parsePacker($section_conf['packer']);
+    }
+
+    /**
+     * 解析 packer配置
+     * @param string $packer_set
+     */
+    public function parsePacker($packer_set)
+    {
+        $packer = FFanStr::split($packer_set);
         foreach ($packer as $name) {
             $this->addPacker($name);
         }
+    }
+
+    /**
+     * 是否编译指定类型的协议类型
+     * @param int $type
+     * @return bool
+     */
+    public function hasBuildProtocol($type)
+    {
+        return ($type & $this->build_protocol) > 0;
+    }
+
+    /**
+     * 是否生成指定side的代码
+     * @param int $side 服务器端 或者 客户端
+     * @return bool
+     */
+    public function hasBuildSide($side)
+    {
+        return ($side & $this->build_side) > 0;
+    }
+    
+    /**
+     * 解析build_struct配置
+     * @param string $struct_type
+     * @return int
+     */
+    public function parseBuildStructType($struct_type)
+    {
+        $result = 0;
+        $arr = FFanstr::split($struct_type, ',');
+        if (in_array('action', $arr)) {
+            $result |= Struct::TYPE_REQUEST;
+            $result |= Struct::TYPE_RESPONSE;
+        }
+        if (in_array('data', $arr)) {
+            $result |= Struct::TYPE_DATA;
+        }
+        //默认值
+        if (0 === $result) {
+            $result = Struct::TYPE_REQUEST|Struct::TYPE_RESPONSE;
+            if (self::SIDE_SERVER === $this->build_side) {
+                $result |= Struct::TYPE_DATA;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 解析code_side配置
+     * @param string $code_side
+     * @return int
+     */
+    public function parseCodeSide($code_side)
+    {
+        $result = 0;
+        $arr = FFanstr::split($code_side, ',');
+        if (in_array('client', $arr)) {
+            $result |= self::SIDE_CLIENT;
+        }
+        if (in_array('server', $arr)) {
+            $result |= self::SIDE_SERVER;
+        }
+        //默认值
+        if (0 === $result) {
+            $result = self::SIDE_SERVER;
+        }
+        return $result;
     }
 
     /**

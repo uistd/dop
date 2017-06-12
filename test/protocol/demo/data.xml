@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
     <struct name="test_arr">
-        <int8 name="a"/>
-        <uint8 name="a"/>
-        <int16 name="b"/>
-        <uint16 name="b"/>
-        <int name="c"/>
-        <uint name="c"/>
-        <int64 name="d"/>
-        <string name="e"/>
-        <float name="f"/>
-        <double name="g"/>
-        <binary name="h"/>
+        <string name="name"/>
+        <string name="mobile"/>
+        <int name="age"/>
     </struct>
     <data name="test_data">
-        
+        <int8 name="int8"/>
+        <uint8 name="uint8"/>
+        <int16 name="int16"/>
+        <uint16 name="uint16"/>
+        <int name="int"/>
+        <uint name="uint"/>
+        <int64 name="int64"/>
+        <string name="string"/>
+        <float name="float"/>
+        <double name="double"/>
+        <binary name="binary"/>
+        <list name="list"><int/></list>
+        <map name="map"><int/><string/></map>
+        <struct name="struct">
+            <string name="first_name"/>
+            <string name="last_name"/>
+            <int8 name="gender"/>
+        </struct>
+        <struct name="test_arr" extend="test_arr"/>
     </data>
 </protocol>
