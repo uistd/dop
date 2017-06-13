@@ -168,7 +168,8 @@ class Protocol
             }
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
-            $is_public = true === (bool)$struct->getAttribute('public');
+            //默认是公共的struct
+            $is_public = (false === (bool)$struct->getAttribute('public')) ? false : true;
             $this->parseStruct($name, $struct, $is_public, Struct::TYPE_STRUCT, false);
         }
     }

@@ -5,7 +5,7 @@ namespace ffan\dop\build;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Struct;
-use ffan\php\utils\Str;
+use ffan\php\utils\ConfigBase;
 use ffan\php\utils\Utils as FFanUtils;
 
 
@@ -13,7 +13,7 @@ use ffan\php\utils\Utils as FFanUtils;
  * Class CoderBase 生成器基类
  * @package ffan\dop\build
  */
-abstract class CoderBase
+abstract class CoderBase extends ConfigBase
 {
     /**
      * @var Manager
@@ -53,7 +53,13 @@ abstract class CoderBase
         $this->manager = $manager;
         $this->build_opt = $build_opt;
         $this->coder_name = $build_opt->getCoderName();
-        $this->build_base_path = $build_opt->build_path;
+        //$this->build_base_path = $build_opt->build_path;
+        $conf_arr = $manager->getCoderConfig($this->coder_name);
+        if (!empty($conf_arr)) {
+            $this->initConfig($conf_arr);
+        }
+        $build_path = $this->getConfigString('build_path', 'build');
+        $this->build_base_path = FFanUtils::fixWithRootPath($build_path);
     }
 
     /**
@@ -74,7 +80,7 @@ abstract class CoderBase
      */
     public function getFolder()
     {
-        return $this->manager->getFolder($this->build_opt->build_path);
+        return $this->manager->getFolder($this->build_base_path);
     }
 
     /**

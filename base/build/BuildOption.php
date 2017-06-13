@@ -4,7 +4,6 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\dop\protocol\Struct;
-use ffan\php\utils\Utils as FFanUtils;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -22,11 +21,6 @@ class BuildOption
      * 客户端 编译 request 的 pack 和 response的 unpack
      */
     const SIDE_CLIENT = 2;
-
-    /**
-     * @var string 生成文件目录
-     */
-    public $build_path;
 
     /**
      * @var int 指定编译哪一侧的协议
@@ -76,7 +70,6 @@ class BuildOption
         $this->section_name = $section_name;
         //默认配置
         static $default_config = array(
-            'build_path' => 'build',
             'namespace' => 'ffan\dop',
             'protocol_type' => 'action',
             'code_side' => 'server'
@@ -88,7 +81,7 @@ class BuildOption
             }
         }
         //如果没有设置coder 直接报错
-        if (!$section_conf['coder']) {
+        if (!isset($section_conf['coder'])) {
             throw new Exception('`Coder` not found in build config:' . $section_name);
         }
         //命名空间检查
@@ -106,8 +99,6 @@ class BuildOption
      */
     public function init($section_conf)
     {
-        //代码生成目录
-        $this->build_path = FFanUtils::fixWithRootPath($section_conf['build_path']);
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
         $this->coder_name = $section_conf['coder'];

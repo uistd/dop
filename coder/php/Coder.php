@@ -81,6 +81,7 @@ class Coder extends CoderBase
                 $str = 'string';
                 break;
             case ItemType::FLOAT:
+            case ItemType::DOUBLE:
                 $str = 'float';
                 break;
             case ItemType::STRUCT;
@@ -111,7 +112,6 @@ class Coder extends CoderBase
      */
     public function codeByStruct($struct)
     {
-        $parent_struct = $struct->getParent();
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
         $class_file = $this->getClassFileBuf($struct);
@@ -129,15 +129,6 @@ class Coder extends CoderBase
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
         if (!$use_buf || !$property_buf ) {
             throw new Exception('Tpl error, IMPORT_BUF or PROPERTY_BUF not found!');
-        }
-        //如果有父类，加入父类
-        if ($struct->hasExtend()) {
-            //如果不是同一个全名空间
-            if ($parent_struct->getNamespace() !== $name_space) {
-                $use_buf->emptyLine();
-                $use_name_space = $this->joinNameSpace($parent_struct->getNamespace(), $parent_struct->getClassName());
-                $use_buf->pushStr('use ' . $use_name_space . ';');
-            }
         }
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
@@ -237,5 +228,4 @@ class Coder extends CoderBase
         }
         return $file;
     }
-    
 }

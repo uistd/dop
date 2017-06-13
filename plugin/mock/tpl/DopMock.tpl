@@ -56,6 +56,7 @@ class DopMock
 
     /**
      * 随机生成
+     * @return string
      */
     public static function chineseNameTypeMock()
     {
@@ -86,6 +87,7 @@ class DopMock
 
     /**
      * 随机生成日期（从去年今日 到 明年今日 之间随机）
+     * @return string
      */
     public static function dateTypeMock()
     {
@@ -97,6 +99,7 @@ class DopMock
 
     /**
      * 随机生成日期 - 时间（从去年今日 到 明年今日 之间随机）
+     * @return string
      */
     public static function dateTimeTypeMock()
     {

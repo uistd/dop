@@ -79,6 +79,11 @@ class Manager
     private $plugin_config;
 
     /**
+     * @var array 每个coder的配置
+     */
+    private $coder_config;
+
+    /**
      * @var array 本次编译的文件
      */
     private $build_file_list;
@@ -160,6 +165,8 @@ class Manager
                 $this->registerPlugin($name, $path);
             }
         }
+        $plugin_config = 'plugin:';
+        $colder_config = 'coder:';
         foreach ($ini_config as $name => $value) {
             //代码生成配置
             if (0 === strpos($name, 'build')) {
@@ -168,11 +175,18 @@ class Manager
                     $name = 'build:main';
                 }
                 $this->build_section[$name] = $value;
-            }
-            //插件配置
-            elseif (0 === strpos($name, 'plugin:')) {
-                $plugin_name = substr($name, strlen('plugin:'));
-                $this->plugin_config[$plugin_name] = $value;
+            } //插件配置
+            elseif (0 === strpos($name, $plugin_config)) {
+                $plugin_name = substr($name, strlen($plugin_config));
+                if (!empty($plugin_name)) {
+                    $this->plugin_config[$plugin_name] = $value;
+                }
+            }//生成器配置
+            elseif (0 === strpos($name, $colder_config)) {
+                $coder_name = substr($name, strlen($colder_config));
+                if (!empty($coder_name)) {
+                    $this->coder_config[$coder_name] = $value;
+                }
             }
         }
     }
@@ -770,6 +784,19 @@ class Manager
             return null;
         }
         return $this->plugin_config[$plugin_name];
+    }
+
+    /**
+     * 获取代码生成器配置
+     * @param string $coder_name
+     * @return null|array
+     */
+    public function getCoderConfig($coder_name)
+    {
+        if (!isset($this->coder_config[$coder_name])) {
+            return null;
+        }
+        return $this->coder_config[$coder_name];
     }
 
     /**
