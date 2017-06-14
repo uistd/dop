@@ -162,7 +162,7 @@ class TplLoader
                 //变量
                 case self::TPL_OP_VAR:
                     //如果变量存在，替换变更
-                    if (isset($data[$tmp_parse_result]) ) {
+                    if (isset($data[$tmp_parse_result])) {
                         $tmp_line_result[] = $data[$tmp_parse_result];
                     } //如果变量不存在，转换为str_buf
                     else {
@@ -217,7 +217,7 @@ class TplLoader
      */
     private function lineExecuteResult($line_result, $file_buf)
     {
-        $indent = array_shift($line_result);
+        $indent_str = array_shift($line_result);
         if (empty($line_result)) {
             return;
         }
@@ -226,15 +226,15 @@ class TplLoader
         if (1 === $count && is_object($line_result[0]) && $line_result[0] instanceof CodeBuf) {
             /** @var CodeBuf $code_buf */
             $code_buf = $line_result[0];
-            $code_buf->setIndent($indent);
+            $code_buf->setIndent($this->strToIndent($indent_str));
             $file_buf->insertNameBuf($code_buf->getName(), $code_buf);
         } //全部当成str buf
         else {
             $str_buf = new StrBuf();
+            $str_buf->pushStr($indent_str);
             foreach ($line_result as $item) {
                 $str_buf->push($item);
             }
-            $str_buf->setIndent($indent);
             $file_buf->insertBuf($str_buf);
         }
     }
@@ -250,6 +250,19 @@ class TplLoader
         $this->parse_result[] = $value;
     }
 
+    /**
+     * 将str转成缩进次数
+     * @param string $str
+     * @return int
+     */
+    private function strToIndent($str)
+    {
+        //统计4个空格  或者  tab 作为缩进的
+        $blank_indent = substr_count($str, '    ');
+        $tab_indent = substr_count($str, "\t");
+        return $blank_indent + $tab_indent;
+    }
+
 
     /**
      * 解析一行
@@ -263,20 +276,16 @@ class TplLoader
         $trim_len = strlen($content);
         //得到缩进内容的长度
         $indent_len = $total_len - $trim_len;
-        $indent_value = 0;
+        $indent_str = '';
         if ($indent_len > 0) {
             //得到缩进的内容
             $indent_str = substr($line_content, 0, $indent_len);
-            //统计4个空格  或者  tab 作为缩进的
-            $blank_indent = substr_count($indent_str, '    ');
-            $tab_indent = substr_count($indent_str, "\t");
-            $indent_value = $blank_indent + $tab_indent;
         }
         $content = rtrim($content);
         $tag_len = strlen(self::LEFT_TAG);
         $tmp_end_pos = $tag_len * -1;
         $beg_pos = strpos($content, self::LEFT_TAG);
-        $this->pushTplCode(self::TPL_OP_TAG_LINE, $indent_value);
+        $this->pushTplCode(self::TPL_OP_TAG_LINE, $indent_str);
 
         //↑↑↑以上代码比较复杂，目的就是将一行前的空白转换成缩进
         while (false !== $beg_pos) {
@@ -317,7 +326,7 @@ class TplLoader
         if ('$' === $tag_content[0]) {
             $var_name = substr($tag_content, 1);
             if (!FFanStr::isValidVarName($var_name)) {
-                $err_msg = $this->errorMsg('Invalid name:'. $var_name);
+                $err_msg = $this->errorMsg('Invalid name:' . $var_name);
                 throw new Exception($err_msg);
             }
             $this->pushTplCode(self::TPL_OP_VAR, $var_name);

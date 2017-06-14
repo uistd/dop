@@ -53,13 +53,11 @@ abstract class CoderBase extends ConfigBase
         $this->manager = $manager;
         $this->build_opt = $build_opt;
         $this->coder_name = $build_opt->getCoderName();
-        //$this->build_base_path = $build_opt->build_path;
+        $this->build_base_path = $build_opt->build_path;
         $conf_arr = $manager->getCoderConfig($this->coder_name);
         if (!empty($conf_arr)) {
             $this->initConfig($conf_arr);
         }
-        $build_path = $this->getConfigString('build_path', 'build');
-        $this->build_base_path = FFanUtils::fixWithRootPath($build_path);
     }
 
     /**

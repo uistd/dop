@@ -144,6 +144,20 @@ class FileBuf extends CodeBuf
     }
 
     /**
+     * 设置一个buf的名称
+     * @param string $name
+     * @param BufInterface $buf
+     * @throws Exception
+     */
+    public function setBuf($name, BufInterface $buf)
+    {
+        if (isset($this->buf_arr[$name])) {
+            throw new Exception('Buf name "' . $name . '" conflict, file:' . $this->file_name);
+        }
+        $this->buf_arr[$name] = $buf;
+    }
+
+    /**
      * 插入一个带key的子buf
      * @param string $name
      * @param BufInterface $buf
@@ -151,10 +165,7 @@ class FileBuf extends CodeBuf
      */
     public function insertNameBuf($name, BufInterface $buf)
     {
-        if (isset($this->buf_arr[$name])) {
-            throw new Exception('InsertNameBuf name "' . $name . '" conflict, file:' . $this->file_name);
-        }
-        $this->buf_arr[$name] = $buf;
+        $this->setBuf($name, $buf);
         $this->insertBuf($buf);
     }
 

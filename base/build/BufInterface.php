@@ -51,12 +51,6 @@ interface BufInterface
      * @return $this
      */
     public function push($item);
-
-    /**
-     * 移除最后一项
-     * @return string|BufInterface
-     */
-    public function pop();
     
     /**
      * 获取name

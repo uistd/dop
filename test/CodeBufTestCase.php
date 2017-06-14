@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop;
+namespace ffan\dop\build;
 
 require_once '../vendor/autoload.php';
 
@@ -25,7 +25,7 @@ $buf = new CodeBuf();
 $buf->push('第一行');
 $buf->indentIncrease();
 $buf->push('第二行缩进');
-$buf->pushBuffer($sub_buf);
+$buf->push($sub_buf);
 $buf->push('第三行');
 $buf->push('第四行');
 $buf->indentDecrease();
@@ -43,7 +43,7 @@ $buf = new CodeBuf();
 $buf->push('第一行');
 $buf->indentIncrease();
 $buf->push('第二行缩进');
-$buf->pushBuffer($sub_buf, true);
+$buf->push($sub_buf);
 $buf->push('第三行');
 $buf->push('第四行');
 $buf->indentDecrease();
@@ -53,4 +53,13 @@ $buf->push('bye');
 $sub_buf->push('子buf继续写入');
 echo $buf->dump(), PHP_EOL;
 
-//$sub_buf = new CodeBuf(); 
+//测试修改最后一行的值
+$sub_buf = new CodeBuf();
+$sub_buf->pushStr('This is test string');
+$sub_buf->lastLineSuffix(';');
+
+$str_buf = new StrBuf();
+$str_buf->pushStr('function');
+$sub_buf->push($str_buf);
+$sub_buf->lastLineSuffix('(){}');
+echo $sub_buf->dump(), PHP_EOL;

@@ -266,15 +266,6 @@ class CodeBuf implements BufInterface
     }
 
     /**
-     * 移除最后一项
-     * @return string|BufInterface
-     */
-    public function pop()
-    {
-        return array_pop($this->line_buffer);
-    }
-
-    /**
      * 写入一行代码，并锁定，不允许再写入第二次
      * @param string $code
      */

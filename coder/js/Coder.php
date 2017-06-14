@@ -7,7 +7,6 @@ use ffan\dop\build\StrBuf;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\StructItem;
 
@@ -28,7 +27,9 @@ class Coder extends CoderBase
         $class_name = $struct->getClassName();
         $class_file = $this->getClassFileBuf($struct);
         $this->loadTpl($class_file, 'tpl/class.tpl');
-        $class_file->setVariableValue('className', $class_name);
+        $class_file->setVariableValue('class_name', $class_name);
+        $class_file->setVariableValue('dop_base_path', $this->getConfigString('require_path', 'dop'));
+        $class_file->setVariableValue('struct_note', $struct->getNote());
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
         if (!$use_buf || !$property_buf ) {
@@ -58,13 +59,13 @@ class Coder extends CoderBase
             $property_buf->pushStr(' */');
             $property_line_buf = new StrBuf();
             $property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr($name.':');
+            $property_line_buf->pushStr($name.': ');
             if ($item->hasDefault()) {
                 $property_line_buf->pushStr($item->getDefault());
             } else {
                 $property_line_buf->pushStr(self::defaultValue($item));
             }
-            $property_line_buf->pushStr(';');
+            $property_line_buf->pushStr(',');
         }
         $this->packMethodCode($class_file, $struct);
     }
@@ -118,7 +119,7 @@ class Coder extends CoderBase
         switch ($type) {
             case ItemType::BINARY:
             case ItemType::STRING:
-                $str = '';
+                $str = '""';
                 break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
