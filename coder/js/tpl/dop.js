@@ -1,4 +1,4 @@
-define(function (require, exports, module) {
+define(function (require, exports) {
     /**
      * 判断变量是否是数组
      * @param {*} tmp_var

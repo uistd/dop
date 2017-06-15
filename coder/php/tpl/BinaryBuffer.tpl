@@ -24,6 +24,11 @@ class BinaryBuffer
     const OPTION_MASK = 0x4;
 
     /**
+     * 标志位：是否是big endian
+     */
+    const OPTION_ENDIAN = 0x8;
+
+    /**
      * 数据长度错误
      */
     const ERROR_SIZE = 1;
@@ -32,7 +37,7 @@ class BinaryBuffer
      * 数据签名出错
      */
     const ERROR_SIGN_CODE = 2;
-    
+
     /**
      * 读数据出错
      */
@@ -51,7 +56,7 @@ class BinaryBuffer
     /**
      * Little Endian
      */
-    const LITTLE_ENDIAN = 2;
+    const LITTLE_ENDIAN = 0;
 
     /**
      * 签名字符串长度
@@ -129,6 +134,43 @@ class BinaryBuffer
         }
         $this->bin_str = $raw_data;
         $this->max_read_pos = strlen($raw_data);
+    }
+
+    /**
+     * 获取字节序
+     * @return int
+     */
+    private static function getEndIan()
+    {
+        static $endian = null;
+        if (null === $endian) {
+            $endian = pack('L', 1) === pack('N', 1) ? self::BIG_ENDIAN : self::LITTLE_ENDIAN;
+        }
+        return $endian;
+    }
+
+    /**
+     * 写入标志位
+     * @param bool $pid
+     * @param bool $sign
+     * @param bool $mask
+     */
+    public function writeOptionFlag($pid, $sign, $mask)
+    {
+        $opt_flag = 0;
+        if ($pid) {
+            $opt_flag |= self::OPTION_PID;
+        }
+        if ($sign || $mask) {
+            $opt_flag |= self::OPTION_SIGN;
+        }
+        if ($mask) {
+            $opt_flag |= self::OPTION_MASK;
+        }
+        if (self::BIG_ENDIAN === self::getEndIan()) {
+            $opt_flag |= self::OPTION_ENDIAN;
+        }
+        $this->writeUnsignedChar($opt_flag);
     }
 
     /**
@@ -237,8 +279,7 @@ class BinaryBuffer
      */
     public function writeShort($short)
     {
-        $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'v' : 'n';
-        $this->bin_str .= pack($pack_arg, (int)$short);
+        $this->bin_str .= pack('S', (int)$short);
         $this->max_read_pos += 2;
     }
 
@@ -248,8 +289,7 @@ class BinaryBuffer
      */
     public function writeInt($int)
     {
-        $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'V' : 'N';
-        $this->bin_str .= pack($pack_arg, (int)$int);
+        $this->bin_str .= pack('L', (int)$int);
         $this->max_read_pos += 4;
     }
 
@@ -259,8 +299,7 @@ class BinaryBuffer
      */
     public function writeBigInt($bigint)
     {
-        $pack_arg = $this->endian === self::LITTLE_ENDIAN ? 'P' : 'J';
-        $this->bin_str .= pack($pack_arg, (int)$bigint);
+        $this->bin_str .= pack('Q', (int)$bigint);
         $this->max_read_pos += 8;
     }
 
@@ -531,8 +570,8 @@ class BinaryBuffer
         $this->read_pos = $now_pos;
         return $beg_pos;
     }
-    
-    
+
+
     /**
      * 数据加密
      * @param int $beg_pos
@@ -545,7 +584,7 @@ class BinaryBuffer
         }
         $mask_len = strlen($mask_key);
         $pos = 0;
-        for ($i = $beg_pos; $i < $this->max_read_pos; ++$i){
+        for ($i = $beg_pos; $i < $this->max_read_pos; ++$i) {
             $index = $pos++ % $mask_len;
             $this->bin_str{$i} = $this->bin_str{$i} ^ $mask_key{$index};
         }
@@ -572,7 +611,7 @@ class BinaryBuffer
     /**
      * 生成签名串
      * @param string $bin_str 二进制内容
-     * @return string 
+     * @return string
      */
     private function makeSignCode($bin_str)
     {
@@ -610,6 +649,12 @@ class BinaryBuffer
         //带pid
         if ($this->pack_opt & self::OPTION_PID) {
             $this->pid = $this->readString();
+        }
+	//字节序判断
+        if ($this->pack_opt & self::OPTION_ENDIAN) {
+            $this->endian = self::BIG_ENDIAN;
+        } else {
+            $this->endian = self::LITTLE_ENDIAN;
         }
     }
 
@@ -746,7 +791,7 @@ class BinaryBuffer
             default:
                 //如果是int
                 if (isset(self::$read_int_func[$item_type])) {
-                    $func_name = 'read'. self::$read_int_func[$item_type];
+                    $func_name = 'read' . self::$read_int_func[$item_type];
                     $value = call_user_func([$this, $func_name]);
                 } else {
                     $value = null;
@@ -784,7 +829,7 @@ class BinaryBuffer
         $result = array();
         $item_type = $this->readUnsignedChar();
         $result['type'] = $item_type;
-        switch($item_type) {
+        switch ($item_type) {
             case 5: //list
                 $result['sub_item'] = $this->readProtocolItem();
                 break;
@@ -797,7 +842,7 @@ class BinaryBuffer
                 $sub_protocol = new BinaryBuffer($this->readString());
                 $sub_struct = $sub_protocol->readProtocolStruct();
                 $err_code = $sub_protocol->getErrorCode();
-                if ( $err_code > 0) {
+                if ($err_code > 0) {
                     $this->error_code = $err_code;
                 } else {
                     $result['sub_struct'] = $sub_struct;

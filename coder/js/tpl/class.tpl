@@ -5,8 +5,13 @@ define(function (require, exports, module) {
 
     /**
      * {{$struct_note}}
+     * @param {Object} data 初始数据
      */
-    function {{$class_name}}() {
+    function {{$class_name}}(data) {
+        {{code_buf::init_property}}
+        if ('object' === typeof data) {
+            this.arrayUnpack(data);
+        }
     }
 
     {{$class_name}}.prototype = {
