@@ -1,0 +1,17 @@
+const console = require('console');
+var BinaryBuffer = require('../coder/js/tpl/BinaryBuffer');
+var binary = new BinaryBuffer();
+binary.writeChar(10);
+binary.writeChar(20);
+binary.writeChar(30);
+binary.writeChar(40);
+binary.writeChar(50);
+binary.writeChar(60);
+binary.writeChar(70);
+binary.writeChar(90);
+binary.writeChar(100);
+binary.writeChar(150);
+binary.writeChar(200);
+binary.writeChar(300);
+binary.writeChar(400);
+console.dir(binary);

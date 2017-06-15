@@ -249,7 +249,7 @@ class BinaryBuffer
             return $this->readUnsignedInt();
         } //更长
         else {
-            return $this->readUnsignedBigInt();
+            return $this->readBigInt();
         }
     }
 
@@ -381,7 +381,7 @@ class BinaryBuffer
     }
 
     /**
-     * 读出一个16位有符号 int
+     * 读出一个32位有符号 int
      * @return int
      */
     public function readInt()
@@ -394,7 +394,7 @@ class BinaryBuffer
     }
 
     /**
-     * 读出一个16位有符号 int
+     * 读出一个32位有符号 int
      * @return int
      */
     public function readUnsignedInt()
@@ -410,7 +410,7 @@ class BinaryBuffer
     }
 
     /**
-     * 读出一个16位有符号 int
+     * 读出一个64位有符号 int
      * @return int
      */
     public function readBigInt()
@@ -423,7 +423,7 @@ class BinaryBuffer
     }
 
     /**
-     * 读出一个16位有符号 int
+     * 读出一个64位有符号 int
      * @return int
      */
     public function readUnsignedBigInt()
