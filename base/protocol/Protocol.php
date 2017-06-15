@@ -99,7 +99,7 @@ class Protocol
         $this->xml_file_name = $file_name;
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
-            throw new \InvalidArgumentException('Invalid file:' . $full_name);
+            throw new \InvalidArgumentException('Can not open xml:' . $full_name);
         }
         $this->file_name = $full_name;
         Exception::setAppendMsg('Parse xml ' . $full_name);
@@ -169,7 +169,10 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             //默认是公共的struct
-            $is_public = (false === (bool)$struct->getAttribute('public')) ? false : true;
+            $is_public = true;
+            if ($struct->hasAttribute('public') && false === (bool)$struct->getAttribute('public')) {
+                $is_public = false;
+            }
             $this->parseStruct($name, $struct, $is_public, Struct::TYPE_STRUCT, false);
         }
     }

@@ -2,6 +2,7 @@
 
 namespace ffan\dop\coder\php;
 
+use ffan\dop\build\CodeBuf;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\StrBuf;
@@ -9,6 +10,7 @@ use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
+use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\StructItem;
 use ffan\php\utils\Str as FFanStr;
@@ -142,6 +144,7 @@ class Coder extends CoderBase
             } else {
                 $is_first_property = false;
             }
+            $this->makeImportCode($item, $name_space, $use_buf);
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
             $property_desc_buf = new StrBuf();
@@ -161,6 +164,35 @@ class Coder extends CoderBase
             $property_line_buf->pushStr(';');
         }
         $this->packMethodCode($class_file, $struct);
+    }
+
+    /**
+     * 生成引用相关的代码
+     * @param Item $item
+     * @param string $name_space 所在命名空间
+     * @param CodeBuf $use_buf
+     */
+    private function makeImportCode($item, $name_space, $use_buf)
+    {
+        $type = $item->getType();
+        if (ItemType::STRUCT === $type) {
+            /** @var StructItem $item */
+            $struct = $item->getStruct();
+            $use_ns = $struct->getNamespace();
+            if ($use_ns !== $name_space) {
+                $use_name_space = $this->joinNameSpace($use_ns . '\\' . $struct->getClassName());
+                if ($use_buf->isEmpty()) {
+                    $use_buf->emptyLine();
+                }
+                $use_buf->pushLockStr('use ' . $use_name_space . ';');
+            }
+        } elseif (ItemType::ARR === $type) {
+            /** @var ListItem $item */
+            $this->makeImportCode($item->getItem(), $name_space, $use_buf);
+        } elseif (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $this->makeImportCode($item->getValueItem(), $name_space, $use_buf);
+        }
     }
 
     /**

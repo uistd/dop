@@ -5,7 +5,7 @@ namespace ffan\dop;
 require_once '../vendor/autoload.php';
 require_once 'config.php';
 $manager = new Manager('test/protocol');
-$build_result = $manager->build('js');
+$build_result = $manager->build();
 if (true !== $build_result) {
     echo '编译失败', PHP_EOL;
 }

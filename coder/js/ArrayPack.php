@@ -237,7 +237,7 @@ class ArrayPack extends PackerBase
             case ItemType::STRUCT:
                 $tmp_var_name = tmp_var_name($key_name, 'struct');
                 /** @var StructItem $item */
-                $code_buf->pushStr($tmp_var_name . ' = new ' . $item->getStructName() . '();');
+                $code_buf->pushStr('var '. $tmp_var_name . ' = new ' . $item->getStructName() . '();');
                 $code_buf->pushStr($tmp_var_name . '.arrayUnpack(' . $data_value . ');');
                 $code_buf->pushStr($var_name . ' = ' . $tmp_var_name . ';');
                 break;
@@ -252,9 +252,9 @@ class ArrayPack extends PackerBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $code_buf->pushStr('for (var ' . $for_index_name . ' = 0; ' . $for_index_name . ' < ' . $data_value . '.length; ++' . $for_index_name . ') {');
-                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $data_value . '[' . $for_index_name . ']');
                 $code_buf->indentIncrease();
-                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $sub_item, $depth + 1);
+                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $data_value . '[' . $for_index_name . '];');
+                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $sub_item, $depth + 1, null, $tmp_index);
                 $code_buf->pushStr($result_var_name . '.push(' . $for_var_name . ');');
                 $code_buf->indentDecrease();
                 $code_buf->pushStr('}');
@@ -275,10 +275,10 @@ class ArrayPack extends PackerBase
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 $code_buf->pushStr('for (var ' . $for_index_name . ' in ' . $data_value . ') {');
-                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $data_value . '[' . $for_index_name . '];');
                 $code_buf->indentIncrease();
-                self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
-                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
+                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $data_value . '[' . $for_index_name . '];');
+                self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1, null, $tmp_index);
+                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1, null, $tmp_index);
                 $code_buf->pushStr($result_var_name . '[' . $key_var_name . '] = ' . $for_var_name . ';');
                 $code_buf->indentDecrease();
                 $code_buf->pushStr('}');

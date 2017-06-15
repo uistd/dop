@@ -30,10 +30,10 @@ class Coder extends CoderBase
         $class_file->setVariableValue('class_name', $class_name);
         $class_file->setVariableValue('dop_base_path', $this->getConfigString('require_path', 'dop'));
         $class_file->setVariableValue('struct_note', $struct->getNote());
-        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
+        $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
-        if (!$use_buf || !$property_buf ) {
-            throw new Exception('Tpl error, IMPORT_BUF or PROPERTY_BUF not found!');
+        if (!$method_buf || !$property_buf ) {
+            throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF not found!');
         }
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
@@ -68,6 +68,10 @@ class Coder extends CoderBase
             $property_line_buf->pushStr(',');
         }
         $this->packMethodCode($class_file, $struct);
+        //写入一个无用的属性，保证js语法正确
+        if (!$method_buf->isEmpty() || !$property_buf->isEmpty()) {
+            $method_buf->pushStr('dopClassName: "'. $class_name .'"');
+        }
     }
 
     /**
