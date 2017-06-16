@@ -235,11 +235,11 @@ class ArrayPack extends PackerBase
                 break;
             //对象
             case ItemType::STRUCT:
-                $self::varName = self::varName($key_name, 'struct');
+                $tmp_var_name = self::varName($key_name, 'struct');
                 /** @var StructItem $item */
-                $code_buf->pushStr('var '. $self::varName . ' = new ' . $item->getStructName() . '();');
-                $code_buf->pushStr($self::varName . '.arrayUnpack(' . $data_value . ');');
-                $code_buf->pushStr($var_name . ' = ' . $self::varName . ';');
+                $code_buf->pushStr('var '. $tmp_var_name . ' = new ' . $item->getStructName() . '();');
+                $code_buf->pushStr($tmp_var_name . '.arrayUnpack(' . $data_value . ');');
+                $code_buf->pushStr($var_name . ' = ' . $tmp_var_name . ';');
                 break;
             //枚举数组
             case ItemType::ARR:

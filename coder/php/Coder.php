@@ -13,7 +13,6 @@ use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\StructItem;
-use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class Coder
