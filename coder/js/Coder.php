@@ -29,6 +29,11 @@ class Coder extends CoderBase
     {
         $class_name = $struct->getClassName();
         $class_file = $this->getClassFileBuf($struct);
+        $build_define_code = $this->getConfigBool('define_code', false);
+        if ($build_define_code) {
+            $class_file->pushStr('define(function (require, exports, module) {');
+            $class_file->indentIncrease();
+        }
         $this->loadTpl($class_file, 'tpl/class.tpl');
         $class_file->setVariableValue('class_name', $class_name);
         $dop_base_path = $this->getConfigString('require_path', 'dop');
@@ -79,6 +84,10 @@ class Coder extends CoderBase
         //写入dopClassName，保证js语法正确
         if (!$method_buf->isEmpty() || !$property_buf->isEmpty()) {
             $method_buf->pushStr('dopClassName: "'. $class_name .'"');
+        }
+        if ($build_define_code) {
+            $class_file->indentDecrease();
+            $class_file->pushStr('});');
         }
     }
 

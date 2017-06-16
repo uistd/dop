@@ -27,48 +27,6 @@ class Coder extends CoderBase
     const MAIN_FILE = 'dop.php';
 
     /**
-     * require 路径判断
-     * @param string $require_path 引用的类路径
-     * @param string $this_ns 当前的域名
-     * @return string
-     */
-    public static function requirePath($require_path, $this_ns)
-    {
-        static $cache_path = array();
-        $class_name = basename($require_path);
-        $path = dirname($require_path);
-        if ($this_ns === $path) {
-            $file_name = $class_name;
-        } else {
-            //两个目录之间的相对关系增加缓存机制，减少系统开销时间
-            $key = $path . ':' . $this_ns;
-            if (isset($cache_path[$key])) {
-                $relative_path = $cache_path[$key];
-            } else {
-                $require_path_arr = FFanStr::split($path, '/');
-                $current_path_arr = FFanStr::split($this_ns, '/');
-                $len = min(count($current_path_arr), count($require_path_arr));
-                for ($i = 0; $i < $len; ++$i) {
-                    $tmp_path = current($require_path_arr);
-                    $tmp_ns = current($current_path_arr);
-                    if ($tmp_ns !== $tmp_path) {
-                        break;
-                    }
-                    array_shift($require_path_arr);
-                    array_shift($current_path_arr);
-                }
-                $relative_path = str_repeat('../', count($current_path_arr));
-                if (!empty($require_path_arr)) {
-                    $relative_path .= join('/', $require_path_arr) . '/';
-                }
-                $cache_path[$key] = $relative_path;
-            }
-            $file_name = $relative_path . $class_name;
-        }
-        return $file_name . '.php';
-    }
-
-    /**
      * 变量类型
      * @param Item $item
      * @return string

@@ -64,6 +64,11 @@ class BuildOption
     public $section_name;
 
     /**
+     * @var array 代码生成配置
+     */
+    private $section_conf;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -89,7 +94,7 @@ class BuildOption
         }
         //如果没有设置coder 直接报错
         if (!isset($section_conf['coder'])) {
-            throw new Exception('`Coder` not found in build config:' . $section_name);
+            $section_conf['coder'] = $section_name;
         }
         //命名空间检查
         $ns = rtrim(trim($section_conf['namespace']), '\\/');
@@ -97,6 +102,7 @@ class BuildOption
             $ns = $default_config['namespace'];
         }
         $section_conf['namespace'] = $ns;
+        $this->section_conf = $section_conf;
         $this->init($section_conf);
     }
 
@@ -166,7 +172,7 @@ class BuildOption
         }
         //默认值
         if (0 === $result) {
-            $result = Struct::TYPE_REQUEST|Struct::TYPE_RESPONSE;
+            $result = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
             if (self::SIDE_SERVER === $this->build_side) {
                 $result |= Struct::TYPE_DATA;
             }
@@ -239,5 +245,14 @@ class BuildOption
     public function getCoderName()
     {
         return $this->coder_name;
+    }
+
+    /**
+     * 获取section 配置
+     * @return array
+     */
+    public function getSectionConf()
+    {
+        return $this->section_conf;
     }
 }

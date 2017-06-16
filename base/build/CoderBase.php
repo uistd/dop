@@ -7,6 +7,7 @@ use ffan\dop\Manager;
 use ffan\dop\protocol\Struct;
 use ffan\php\utils\ConfigBase;
 use ffan\php\utils\Utils as FFanUtils;
+use ffan\php\utils\Str as FFanStr;
 
 
 /**
@@ -54,10 +55,7 @@ abstract class CoderBase extends ConfigBase
         $this->build_opt = $build_opt;
         $this->coder_name = $build_opt->getCoderName();
         $this->build_base_path = $build_opt->build_path;
-        $conf_arr = $manager->getCoderConfig($this->coder_name);
-        if (!empty($conf_arr)) {
-            $this->initConfig($conf_arr);
-        }
+        $this->initConfig($build_opt->getSectionConf());
     }
 
     /**
@@ -434,5 +432,48 @@ abstract class CoderBase extends ConfigBase
         $tpl_file = FFanUtils::joinFilePath($path, $tpl_name);
         $tpl_loader = TplLoader::getInstance($tpl_file);
         $tpl_loader->execute($file_buf, $data);
+    }
+    
+    /**
+     * 返回两个路径之间的相对引用路径
+     * @param string $path 引用的类路径
+     * @param string $this_path 当前的路径
+     * @return string
+     */
+    public static function relativePath($path, $this_path)
+    {
+        static $cache_path = array();
+        if ($this_path === $path) {
+            $result = './';
+        } else {
+            //两个目录之间的相对关系增加缓存机制，减少系统开销时间
+            $key = $path . ':' . $this_path;
+            if (isset($cache_path[$key])) {
+                $relative_path = $cache_path[$key];
+            } else {
+                $require_path_arr = FFanStr::split($path, '/');
+                $current_path_arr = FFanStr::split($this_path, '/');
+                $len = min(count($current_path_arr), count($require_path_arr));
+                for ($i = 0; $i < $len; ++$i) {
+                    $tmp_path = current($require_path_arr);
+                    $tmp_ns = current($current_path_arr);
+                    if ($tmp_ns !== $tmp_path) {
+                        break;
+                    }
+                    array_shift($require_path_arr);
+                    array_shift($current_path_arr);
+                }
+                $relative_path = str_repeat('../', count($current_path_arr));
+                if (!empty($require_path_arr)) {
+                    $relative_path .= join('/', $require_path_arr) . '/';
+                }
+                $cache_path[$key] = $relative_path;
+            }
+            $result = $relative_path;
+        }
+        if ('.' !== $result[0]) {
+            $result = './'. $result;
+        }
+        return $result;
     }
 }
