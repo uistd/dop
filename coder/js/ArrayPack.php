@@ -108,11 +108,11 @@ class ArrayPack extends PackerBase
                 $code_buf->pushStr($result_var . ' = dopBase.strVal(' . $var_name . ');');
                 break;
             case ItemType::ARR:
-                $result_var_name = tmp_var_name($tmp_index++, 'tmp_arr');
+                $result_var_name = self::varName($tmp_index++, 'tmp_arr');
                 $code_buf->pushStr('var ' . $result_var_name . ' = [];');
                 self::packArrayCheckCode($code_buf, $var_name, $depth);
-                $for_var_name = tmp_var_name($tmp_index++, 'item');
-                $for_index_name = tmp_var_name($tmp_index++, 'i');
+                $for_var_name = self::varName($tmp_index++, 'item');
+                $for_index_name = self::varName($tmp_index++, 'i');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $code_buf->pushStr('for (var ' . $for_index_name . ' = 0; ' . $for_index_name . ' < ' . $var_name . '.length; ' . $for_index_name . '++) {');
@@ -126,12 +126,12 @@ class ArrayPack extends PackerBase
                 $code_buf->pushStr($result_var . ' = ' . $result_var_name . ';');
                 break;
             case ItemType::MAP:
-                $result_var_name = tmp_var_name($tmp_index++, 'tmp_' . $item->getName());
+                $result_var_name = self::varName($tmp_index++, 'tmp_' . $item->getName());
                 $code_buf->pushStr($result_var_name . ' = {};');
                 self::packArrayCheckCode($code_buf, $var_name, $depth);
-                $key_var_name = tmp_var_name($tmp_index++, 'key');
-                $for_var_name = tmp_var_name($tmp_index++, 'item');
-                $for_index_name = tmp_var_name($tmp_index++, 'i');
+                $key_var_name = self::varName($tmp_index++, 'key');
+                $for_var_name = self::varName($tmp_index++, 'item');
+                $for_index_name = self::varName($tmp_index++, 'i');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
@@ -235,19 +235,19 @@ class ArrayPack extends PackerBase
                 break;
             //对象
             case ItemType::STRUCT:
-                $tmp_var_name = tmp_var_name($key_name, 'struct');
+                $self::varName = self::varName($key_name, 'struct');
                 /** @var StructItem $item */
-                $code_buf->pushStr('var '. $tmp_var_name . ' = new ' . $item->getStructName() . '();');
-                $code_buf->pushStr($tmp_var_name . '.arrayUnpack(' . $data_value . ');');
-                $code_buf->pushStr($var_name . ' = ' . $tmp_var_name . ';');
+                $code_buf->pushStr('var '. $self::varName . ' = new ' . $item->getStructName() . '();');
+                $code_buf->pushStr($self::varName . '.arrayUnpack(' . $data_value . ');');
+                $code_buf->pushStr($var_name . ' = ' . $self::varName . ';');
                 break;
             //枚举数组
             case ItemType::ARR:
                 //循环变量
-                $for_var_name = tmp_var_name($tmp_index++, 'item');
+                $for_var_name = self::varName($tmp_index++, 'item');
                 //临时结果变量
-                $result_var_name = tmp_var_name($tmp_index++, 'result');
-                $for_index_name = tmp_var_name($tmp_index++, 'i');
+                $result_var_name = self::varName($tmp_index++, 'result');
+                $for_index_name = self::varName($tmp_index++, 'i');
                 $code_buf->pushStr('var '. $result_var_name . ' = [];');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
@@ -263,13 +263,13 @@ class ArrayPack extends PackerBase
             //关联数组
             case ItemType::MAP:
                 //循环键名
-                $key_var_name = tmp_var_name($tmp_index++, 'key');
+                $key_var_name = self::varName($tmp_index++, 'key');
                 //循环变量
-                $for_var_name = tmp_var_name($tmp_index++, 'item');
+                $for_var_name = self::varName($tmp_index++, 'item');
                 //循环下标
-                $for_index_name = tmp_var_name($tmp_index++, 'i');
+                $for_index_name = self::varName($tmp_index++, 'i');
                 //临时结果变量
-                $result_var_name = tmp_var_name($tmp_index++, 'result');
+                $result_var_name = self::varName($tmp_index++, 'result');
                 $code_buf->pushStr($result_var_name . ' = {};');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();

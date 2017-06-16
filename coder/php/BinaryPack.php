@@ -177,11 +177,11 @@ class BinaryPack extends PackerBase
                 break;
             case ItemType::ARR:
                 //临时buffer
-                $buffer_name = tmp_var_name($depth, 'arr_buf');
+                $buffer_name = self::varName($depth, 'arr_buf');
                 //长度变量
-                $len_var_name = tmp_var_name($depth, 'len');
+                $len_var_name = self::varName($depth, 'len');
                 //循环变量
-                $for_var_name = tmp_var_name($depth, 'item');
+                $for_var_name = self::varName($depth, 'item');
                 $code_buf->pushStr('$' . $len_var_name . ' = 0;');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
@@ -198,13 +198,13 @@ class BinaryPack extends PackerBase
                 break;
             case ItemType::MAP:
                 //临时buffer
-                $buffer_name = tmp_var_name($depth, 'map_buf');
+                $buffer_name = self::varName($depth, 'map_buf');
                 //长度变量
-                $len_var_name = tmp_var_name($depth, 'len');
+                $len_var_name = self::varName($depth, 'len');
                 //循环变量
-                $for_var_name = tmp_var_name($depth, 'item');
+                $for_var_name = self::varName($depth, 'item');
                 //循环键名
-                $key_var_name = tmp_var_name($depth, 'key');
+                $key_var_name = self::varName($depth, 'key');
                 $code_buf->pushStr('$' . $len_var_name . ' = 0;');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();

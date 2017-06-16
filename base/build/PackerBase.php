@@ -56,4 +56,15 @@ abstract class PackerBase
     {
         
     }
+    
+    /**
+     * 生成临时变量名
+     * @param string $var
+     * @param string $type
+     * @return string
+     */
+    public static function varName($var, $type)
+    {
+        return $type . '_' . (string)$var;
+    }
 }

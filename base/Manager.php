@@ -1,7 +1,6 @@
 <?php
 
 namespace ffan\dop;
-require_once 'Common.php';
 use ffan\dop\build\BuildCache;
 use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;

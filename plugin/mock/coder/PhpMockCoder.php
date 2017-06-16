@@ -4,6 +4,7 @@ namespace ffan\dop\plugin\mock;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
+use ffan\dop\build\PackerBase;
 use ffan\dop\build\PluginCoderBase;
 use ffan\dop\build\StrBuf;
 use ffan\dop\coder\php\Coder;
@@ -129,9 +130,9 @@ class PhpMockCoder extends PluginCoderBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $sub_mock_rule = $sub_item->getPluginData($plugin_name);
-                $for_var_name = tmp_var_name($depth, 'i');
-                $len_var_name = tmp_var_name($depth, 'len');
-                $result_var_name = tmp_var_name($depth, 'mock_arr');
+                $for_var_name = PackerBase::varName($depth, 'i');
+                $len_var_name = PackerBase::varName($depth, 'len');
+                $result_var_name = PackerBase::varName($depth, 'mock_arr');
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
@@ -151,11 +152,11 @@ class PhpMockCoder extends PluginCoderBase
                 $value_item = $item->getValueItem();
                 $key_mock_rule = $key_item->getPluginData($plugin_name);
                 $value_mock_rule = $value_item->getPluginData($plugin_name);
-                $for_var_name = tmp_var_name($depth, 'i');
-                $len_var_name = tmp_var_name($depth, 'len');
-                $key_var_name = tmp_var_name($depth, 'tmp_key');
-                $value_var_name = tmp_var_name($depth, 'tmp_value');
-                $result_var_name = tmp_var_name($depth, 'mock_arr');
+                $for_var_name = PackerBase::varName($depth, 'i');
+                $len_var_name = PackerBase::varName($depth, 'len');
+                $key_var_name = PackerBase::varName($depth, 'tmp_key');
+                $value_var_name = PackerBase::varName($depth, 'tmp_value');
+                $result_var_name = PackerBase::varName($depth, 'mock_arr');
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');

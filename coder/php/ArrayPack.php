@@ -99,10 +99,10 @@ class ArrayPack extends PackerBase
                 self::packItemCode($code_buf, $result_var, $var_name, 'string', $depth);
                 break;
             case ItemType::ARR:
-                $result_var_name = tmp_var_name($depth, 'tmp_arr');
+                $result_var_name = self::varName($depth, 'tmp_arr');
                 $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 self::packArrayCheckCode($code_buf, $var_name, $depth);
-                $for_var_name = tmp_var_name($depth, 'item');
+                $for_var_name = self::varName($depth, 'item');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
@@ -115,11 +115,11 @@ class ArrayPack extends PackerBase
                 $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 break;
             case ItemType::MAP:
-                $result_var_name = tmp_var_name($depth, 'tmp_' . $item->getName());
+                $result_var_name = self::varName($depth, 'tmp_' . $item->getName());
                 $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 self::packArrayCheckCode($code_buf, $var_name, $depth);
-                $key_var_name = tmp_var_name($depth, 'key');
-                $for_var_name = tmp_var_name($depth, 'item');
+                $key_var_name = self::varName($depth, 'key');
+                $for_var_name = self::varName($depth, 'item');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
@@ -240,18 +240,18 @@ class ArrayPack extends PackerBase
                 break;
             //对象
             case ItemType::STRUCT:
-                $tmp_var_name = tmp_var_name($key_name, 'struct');
+                $self::varName = self::varName($key_name, 'struct');
                 /** @var StructItem $item */
-                $code_buf->pushStr('$' . $tmp_var_name . ' = new ' . $item->getStructName() . '();');
-                $code_buf->pushStr('$' . $tmp_var_name . '->arrayUnpack($' . $data_value . ');');
-                $code_buf->pushStr('$' . $var_name . ' = $' . $tmp_var_name . ';');
+                $code_buf->pushStr('$' . $self::varName . ' = new ' . $item->getStructName() . '();');
+                $code_buf->pushStr('$' . $self::varName . '->arrayUnpack($' . $data_value . ');');
+                $code_buf->pushStr('$' . $var_name . ' = $' . $self::varName . ';');
                 break;
             //枚举数组
             case ItemType::ARR:
                 //循环变量
-                $for_var_name = tmp_var_name($depth, 'item');
+                $for_var_name = self::varName($depth, 'item');
                 //临时结果变量
-                $result_var_name = tmp_var_name($depth, 'result');
+                $result_var_name = self::varName($depth, 'result');
                 $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
@@ -266,11 +266,11 @@ class ArrayPack extends PackerBase
             //关联数组
             case ItemType::MAP:
                 //循环键名
-                $key_var_name = tmp_var_name($depth, 'key');
+                $key_var_name = self::varName($depth, 'key');
                 //循环变量
-                $for_var_name = tmp_var_name($depth, 'item');
+                $for_var_name = self::varName($depth, 'item');
                 //临时结果变量
-                $result_var_name = tmp_var_name($depth, 'result');
+                $result_var_name = self::varName($depth, 'result');
                 $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
