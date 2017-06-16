@@ -42,7 +42,7 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr(' * 二进制打包');
         //如果是子 struct
         if ($struct->isSubStruct()) {
-            $code_buf->pushStr(' * @param BinaryBuffer $result');
+            $code_buf->pushStr(' * @param DopEncode $result');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public function binaryPack($result)');
             $code_buf->pushStr('{');
@@ -56,14 +56,16 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('public function binaryEncode($pid = false, $sign = false, $mask_key = null)');
             $code_buf->pushStr('{');
             $code_buf->indentIncrease();
-            $code_buf->pushStr('$result = new BinaryBuffer;');
-            $code_buf->pushStr('if ($mask_key && (!is_string($mask_key) || empty($mask_key))) {');
-            $code_buf->pushIndent('$mask_key = null;');
-            $code_buf->pushStr('}');
+            $code_buf->pushStr('$result = new DopEncode;');
             $pid = $struct->getNamespace() . $struct->getClassName();
-            $code_buf->pushStr('$result->writeOptionFlag($pid, $sign, null !== $mask_key);');
             $code_buf->pushStr('if ($pid) {');
             $code_buf->pushIndent('$result->writeString(\'' . $pid . '\');');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('if ($sign) {');
+            $code_buf->pushIndent('$result->sign();');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('if (null !== $mask_key && is_string($mask_key)) {');
+            $code_buf->pushIndent('$result->mask($mask_key);');
             $code_buf->pushStr('}');
             //打包进去协议
             $code_buf->pushStr('$result->joinBuffer(self::binaryStruct());');
@@ -101,14 +103,7 @@ class BinaryPack extends PackerBase
             }
         }
         if (!$struct->isSubStruct()) {
-            $code_buf->pushStr('if ($sign || $mask_key) {');
-            $code_buf->pushIndent('$result->sign();');
-            $code_buf->pushStr('}');
-            $code_buf->pushStr('if ($mask_key) {');
-            $code_buf->pushIndent('$result->mask($mask_key);');
-            $code_buf->pushStr('}');
-            $code_buf->pushStr('$result->writeLengthAtBegin($result->getLength());');
-            $code_buf->pushStr('return $result->dump();');
+            $code_buf->pushStr('return $result->pack();');
         }
         $code_buf->indentDecrease()->pushStr('}');
     }
@@ -186,7 +181,7 @@ class BinaryPack extends PackerBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 //写入list的类型
-                $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
+                $code_buf->pushStr('$' . $buffer_name . ' = new DopEncode();');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $sub_item, $depth + 1);

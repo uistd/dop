@@ -25,9 +25,10 @@ class StructPack extends PackerBase
     public function buildCommonCode()
     {
         $folder = $this->coder->getFolder();
-        $buffer_file = $folder->touch('', 'BinaryBuffer.php');
+        $dop_encode = $folder->touch('', 'DopEncode.php');
         $namespace = $this->coder->joinNameSpace('');
-        $this->coder->loadTpl($buffer_file, 'tpl/BinaryBuffer.tpl', array('namespace' => $namespace));
+        $tpl_data = array('namespace' => $namespace);
+        $this->coder->loadTpl($dop_encode, 'tpl/DopEncode.tpl', $tpl_data);
     }
 
     /**
@@ -42,12 +43,12 @@ class StructPack extends PackerBase
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
-        $code_buf->pushStr(' * @return BinaryBuffer');
+        $code_buf->pushStr(' * @return DopEncode');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public static function binaryStruct()');
         $code_buf->pushStr('{');
         $code_buf->indentIncrease();
-        $code_buf->pushStr('$buffer = new BinaryBuffer();');
+        $code_buf->pushStr('$buffer = new DopEncode();');
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
@@ -82,6 +83,7 @@ class StructPack extends PackerBase
         $class_file = $this->coder->getClassFileBuf($struct);
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         if ($use_buf) {
+            $use_buf->pushLockStr('use '. $this->coder->joinNameSpace('', 'DopEncode') .';');
             $use_buf->pushLockStr('use '. $this->coder->joinNameSpace('', 'BinaryBuffer') .';');
         }
     }
@@ -95,7 +97,7 @@ class StructPack extends PackerBase
     {
         $bin_type = $item->getBinaryType();
         $code_buf->pushStr('//'. $this->typeComment($bin_type));
-        $code_buf->pushStr('$buffer->writeUnsignedChar(0x' . dechex($bin_type) . ');');
+        $code_buf->pushStr('$buffer->writeChar(0x' . dechex($bin_type) . ');');
         $type = $item->getType();
         switch ($type) {
             case ItemType::ARR:
