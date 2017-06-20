@@ -26,9 +26,11 @@ class StructPack extends PackerBase
     {
         $folder = $this->coder->getFolder();
         $dop_encode = $folder->touch('', 'DopEncode.php');
+        $dop_decode = $folder->touch('', 'DopDecode.php');
         $namespace = $this->coder->joinNameSpace('');
         $tpl_data = array('namespace' => $namespace);
         $this->coder->loadTpl($dop_encode, 'tpl/DopEncode.tpl', $tpl_data);
+        $this->coder->loadTpl($dop_decode, 'tpl/DopDecode.tpl', $tpl_data);
     }
 
     /**
@@ -43,7 +45,7 @@ class StructPack extends PackerBase
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
-        $code_buf->pushStr(' * @return DopEncode');
+        $code_buf->pushStr(' * @return String');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public static function binaryStruct()');
         $code_buf->pushStr('{');
@@ -58,8 +60,7 @@ class StructPack extends PackerBase
             $code_buf->pushStr('$buffer->writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
-        $code_buf->pushStr('$buffer->writeLengthAtBegin($buffer->getLength());');
-        $code_buf->pushStr('return $buffer;');
+        $code_buf->pushStr('return $buffer->dump();');
         $code_buf->indentDecrease()->pushStr('}');
     }
 
@@ -84,7 +85,6 @@ class StructPack extends PackerBase
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         if ($use_buf) {
             $use_buf->pushLockStr('use '. $this->coder->joinNameSpace('', 'DopEncode') .';');
-            $use_buf->pushLockStr('use '. $this->coder->joinNameSpace('', 'BinaryBuffer') .';');
         }
     }
 
@@ -115,7 +115,7 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('$buffer->joinBuffer('.$class_name.'::binaryStruct());');
+                $code_buf->pushStr('$buffer->writeString('.$class_name.'::binaryStruct());');
                 break;
         }
     }

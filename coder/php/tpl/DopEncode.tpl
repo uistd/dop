@@ -54,9 +54,9 @@ class DopEncode
     private $opt_flag;
 
     /**
-     * @var string 数据ID
+     * @var int pid的长度
      */
-    private $pid;
+    private $pid_len = 0;
 
     /**
      * @var string 加密key
@@ -82,7 +82,8 @@ class DopEncode
     public function writePid($pid)
     {
         $this->opt_flag |= self::OPTION_PID;
-        $this->pid = $pid;
+        $this->writeString($pid);
+        $this->pid_len = strlen($this->bin_str);
     }
 
     /**
@@ -224,17 +225,19 @@ class DopEncode
     {
         $this->bin_str .= $sub_buffer->dump();
     }
-    
+
     /**
      * 数据加密
+     * @param int $begin_pos 开始位置
      */
-    private function doMask()
+    private function doMask($begin_pos)
     {
         $mask_key = self::fixMaskKey($this->mask_key);
         $mask_len = strlen($mask_key);
         $data_size = strlen($this->bin_str);
-        for ($i = 0; $i < $data_size; ++$i) {
-            $index = $i % $mask_len;
+        $pos = 0;
+        for ($i = $begin_pos; $i < $data_size; ++$i) {
+            $index = $pos++ % $mask_len;
             $this->bin_str{$i} = $this->bin_str{$i} ^ $mask_key{$index};
         }
     }
@@ -277,25 +280,22 @@ class DopEncode
      */
     public function pack()
     {
-        if ($this->opt_flag & self::OPTION_MASK) {
-            $this->doMask();
-        }
-        if ($this->opt_flag & self::OPTION_PID) {
-            $tmp_buf = new DopEncode();
-            $tmp_buf->writeString($this->pid);
-            $this->bin_str = $tmp_buf->dump(). $this->bin_str;
-        }
         if ($this->opt_flag & self::OPTION_SIGN) {
             $this->bin_str .= self::makeSignCode($this->bin_str);
         }
+        if ($this->opt_flag & self::OPTION_MASK) {
+            $this->doMask($this->pid_len);
+        }
+        if (pack('L', 1) === pack('N', 1)) {
+            $this->opt_flag |= self::OPTION_ENDIAN;
+        }
         $tmp_str = $this->bin_str;
-        //这里加1 是因为有1位是option flag
-        $result_len = strlen($tmp_str) + 1;
+        $result_len = strlen($tmp_str);
         $this->bin_str = '';
-        //写入长度
-        $this->writeLength($result_len);
         //写入标志位
         $this->writeChar($this->opt_flag);
+        //写入长度
+        $this->writeLength($result_len);
         $this->bin_str .= $tmp_str;
         return $this->bin_str;
     }

@@ -3,6 +3,7 @@
 namespace ffan\dop\coder\php;
 
 use ffan\dop\build\CodeBuf;
+use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\IntItem;
@@ -19,6 +20,11 @@ use ffan\dop\protocol\StructItem;
  */
 class BinaryPack extends PackerBase
 {
+    /**
+     * @var Coder
+     */
+    protected $coder;
+    
     /**
      * 获取依赖的packer
      * @return null|array
@@ -59,7 +65,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('$result = new DopEncode;');
             $pid = $struct->getNamespace() . $struct->getClassName();
             $code_buf->pushStr('if ($pid) {');
-            $code_buf->pushIndent('$result->writeString(\'' . $pid . '\');');
+            $code_buf->pushIndent('$result->writePid(\'' . $pid . '\');');
             $code_buf->pushStr('}');
             $code_buf->pushStr('if ($sign) {');
             $code_buf->pushIndent('$result->sign();');
@@ -68,7 +74,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushIndent('$result->mask($mask_key);');
             $code_buf->pushStr('}');
             //打包进去协议
-            $code_buf->pushStr('$result->joinBuffer(self::binaryStruct());');
+            $code_buf->pushStr('$result->writeString(self::binaryStruct());');
         }
         $all_item = $struct->getAllExtendItem();
         /**
@@ -120,10 +126,15 @@ class BinaryPack extends PackerBase
         if ($struct->isSubStruct()) {
             return;
         }
+        $class_file = $this->coder->getClassFileBuf($struct);
+        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
+        if ($use_buf) {
+            $use_buf->pushLockStr('use '. $this->coder->joinNameSpace('', 'DopDecode') .';');
+        }
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制解包');
-        $code_buf->pushStr(' * @param BinaryBuffer $data');
+        $code_buf->pushStr(' * @param DopDecode $data');
         $code_buf->pushStr(' * @return bool');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function binaryDecode($data)');
@@ -188,7 +199,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('++$' . $len_var_name . ';');
                 $code_buf->indentDecrease();
                 $code_buf->pushStr('}');
-                $code_buf->pushStr('$' . $buffer_name . '->writeLengthAtBegin($' . $len_var_name . ');');
+                $code_buf->pushStr('$' . $result_name . '->writeLength($' . $len_var_name . ');');
                 $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
                 break;
             case ItemType::MAP:
@@ -205,7 +216,7 @@ class BinaryPack extends PackerBase
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 //写入map key 和 value 的类型
-                $code_buf->pushStr('$' . $buffer_name . ' = new BinaryBuffer();');
+                $code_buf->pushStr('$' . $buffer_name . ' = new DopEncode();');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $key_var_name . ' =>  $' . $for_var_name . ') {');
                 $code_buf->indentIncrease();
                 self::typeCheckCode($code_buf, $for_var_name, $value_item);
@@ -217,7 +228,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('++$' . $len_var_name . ';');
                 $code_buf->indentDecrease();
                 $code_buf->pushStr('}');
-                $code_buf->pushStr('$' . $buffer_name . '->writeLengthAtBegin($' . $len_var_name . ');');
+                $code_buf->pushStr('$' . $result_name . '->writeLength($' . $len_var_name . ');');
                 $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
                 break;
         }

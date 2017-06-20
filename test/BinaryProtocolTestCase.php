@@ -31,7 +31,7 @@ $data->test_arr->mobile = '18018684626';
 $bin_data = $data->binaryEncode();
 
 $new_data = new TestData();
-$buffer = new \ffan\dop\BinaryBuffer($bin_data);
+$buffer = new \ffan\dop\DopDecode($bin_data);
 $re = $new_data->binaryDecode($buffer);
 if ($re) {
     echo 'success', PHP_EOL;
@@ -42,7 +42,7 @@ if ($re) {
 $bin_data2 = $data->binaryEncode(true);
 
 $new_data2 = new TestData();
-$buffer2 = new \ffan\dop\BinaryBuffer($bin_data2);
+$buffer2 = new \ffan\dop\DopDecode($bin_data2);
 $re = $new_data2->binaryDecode($buffer2);
 if ($re) {
     echo $buffer2->getPid() .' success', PHP_EOL;
@@ -52,7 +52,7 @@ if ($re) {
 
 $bin_data3 = $data->binaryEncode(true, true);
 $new_data3 = new TestData();
-$buffer3 = new \ffan\dop\BinaryBuffer($bin_data3);
+$buffer3 = new \ffan\dop\DopDecode($bin_data3);
 $re = $new_data3->binaryDecode($buffer3);
 if ($re) {
     echo $buffer3->getPid() .' success', PHP_EOL;
@@ -62,7 +62,7 @@ if ($re) {
 
 $bin_data4 = $data->binaryEncode(true, true, 'www.ffan.com');
 $new_data4 = new TestData();
-$buffer4 = new \ffan\dop\BinaryBuffer($bin_data4);
+$buffer4 = new \ffan\dop\DopDecode($bin_data4);
 $buffer4->unmask('www.ffan.com');
 $re = $new_data4->binaryDecode($buffer4);
 if ($re) {
