@@ -36,7 +36,7 @@ class DopEncode
     /**
      * 加密key最小长度
      */
-    const MIN_MASK_KEY_LEN = 16;
+    const MIN_MASK_KEY_LEN = 8;
 
     /**
      * @var string
@@ -142,25 +142,6 @@ class DopEncode
             $this->writeBigInt($len);
         }
     }
-
-    /**
-     * 在最前面写入长度值
-     * @param int $len
-     
-    public function writeLengthAtBegin($len)
-    {
-        static $tmp_buff;
-        if (null === $tmp_buff) {
-            $tmp_buff = new self();
-        }
-        $tmp_buff->writeLength($len);
-        $len = $tmp_buff->getLength();
-        $result = $tmp_buff->dump();
-        $this->bin_str = $result . $this->bin_str;
-        $this->data_size += $len;
-        $tmp_buff->reset();
-    }
-    */
     
     /**
      * 写入一个符号char

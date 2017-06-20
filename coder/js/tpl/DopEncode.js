@@ -4,8 +4,9 @@ var dopBase = require('./dop');
 //固定值
 var LITTLE_ENDIAN = 0, BIG_ENDIAN = 1, DEFAULT_SIZE = 1024;
 
-function DopEncode() {
-    this.buffer = new Uint8Array(DEFAULT_SIZE);
+function DopEncode(size) {
+    size |= 0;
+    this.buffer = new Uint8Array(size || DEFAULT_SIZE);
     this.max_size = DEFAULT_SIZE;
 }
 
@@ -17,6 +18,8 @@ DopEncode.prototype = {
     OPTION_SIGN: 0x2,
     OPTION_MASK: 0x4,
     OPTION_ENDIAN: 0x8,
+    SIGN_CODE_LEN: 8,
+    MIN_MASK_KEY_LEN: 8,
 
     /**
      * 写入点
@@ -29,9 +32,24 @@ DopEncode.prototype = {
     max_size: 0,
 
     /**
+     * 标志位
+     */
+    opt_flag: 0,
+
+    /**
      * 字节序
      */
     endian: LITTLE_ENDIAN,
+
+    /**
+     * 写入的pid占据的长度
+     */
+    pid_pos: 0,
+
+    /**
+     * 数据加密的key
+     */
+    mask_key: '',
 
     /**
      * 内存扩展容量
@@ -222,6 +240,104 @@ DopEncode.prototype = {
      */
     getBuffer: function () {
         return this.buffer.slice(0, this.write_pos);
+    },
+
+    /**
+     * 写入数据ID
+     * @param {string} pid
+     */
+    writePid: function (pid) {
+        this.writeString();
+        this.pid_pos = this.write_pos;
+        this.opt_flag |= DopEncode.prototype.OPTION_PID;
+    },
+
+    /**
+     * 设置数据加密标志
+     * @param {string} mask_key
+     */
+    mask: function (mask_key) {
+        this.opt_flag |= DopEncode.prototype.OPTION_MASK;
+        this.mask_key = mask_key;
+    },
+
+    /**
+     * 设置数据签名标志
+     */
+    sign: function () {
+        this.opt_flag |= DopEncode.prototype.OPTION_SIGN;
+    },
+
+    /**
+     * 返回最终结果
+     * @return Uint8Array
+     */
+    pack: function () {
+        var result_buf = new DopEncode();
+        result_buf.writeChar(this.opt_flag);
+        result_buf.writeLength(this.write_pos);
+        if (this.opt_flag & DopEncode.prototype.OPTION_SIGN) {
+            var sign_code = this.signCode(this.buffer, this.write_pos);
+            var buffer = dopBase.strToBin(sign_code);
+            this.joinBuffer(buffer);
+        }
+        if (this.opt_flag & DopEncode.prototype.OPTION_MASK) {
+            this.doMask(this.pid_pos);
+        }
+        //字节序判断
+        var m = new Uint32Array(1);
+        m[0] = 0x12345678;
+        var c = new Uint8Array(m.buffer);
+        if (0x12 === c[0] && 0x34 === c[1]) {
+            this.opt_flag |= DopEncode.prototype.OPTION_ENDIAN;
+        }
+        var current_pos = this.write_pos;
+        this.writeChar(this.opt_flag);
+        this.writeLength(current_pos);
+        var new_buffer = new DopEncode(this.write_pos);
+        new_buffer.writeChar(this.opt_flag);
+        new_buffer.writeLength(current_pos);
+        for (var i = 0; i < current_pos; ++i) {
+            new_buffer.buffer[new_buffer.write_pos++] = this.buffer[i];
+        }
+        return this.buffer;
+    },
+
+    /**
+     * 生成签名串
+     * @param {Uint8Array} bin_arr
+     * @param {int} length
+     */
+    signCode: function (bin_arr, length) {
+        var md5_str = dopBase.md5(bin_arr, length);
+        return md5_str.substr(0, DopEncode.prototype.SIGN_CODE_LEN);
+
+    },
+
+    /**
+     * 数据加密
+     */
+    doMask: function (beg_pos) {
+        var key = this.fixMaskKey(this.mask_key), pos = 0;
+        var key_arr = dopBase.strToBin(key), index;
+        for (var i = beg_pos; i < this.write_pos; ++i) {
+            index = pos++ % key_arr.write_pos;
+            this.buffer[i] ^= key_arr.buffer[index];
+        }
+    },
+
+    /**
+     * @param {string} key
+     */
+    fixMaskKey: function (key) {
+        if ('string' !== typeof key) {
+            key = String(key);
+        }
+        if (key.length < DopEncode.prototype.MIN_MASK_KEY_LEN) {
+            key = dopBase.md5(key);
+        }
+        return key;
     }
+
 };
 module.exports = DopEncode;
