@@ -20,6 +20,36 @@ use ffan\dop\protocol\StructItem;
 class Coder extends CoderBase
 {
     /**
+     * 重写 加载一个模板，并将内容写入FileBuf
+     * @param FileBuf $file_buf
+     * @param string $tpl_name
+     * @param null $data
+     */
+    public function loadTpl(FileBuf $file_buf, $tpl_name, $data = null)
+    {
+        $build_define_code = $this->getConfigBool('define_code', false);
+        if ($build_define_code) {
+            $file_buf->pushStr('define(function (require, exports, module) {');
+            $file_buf->indentIncrease();
+        }
+        parent::loadTpl($file_buf, $tpl_name, $data);
+        if ($build_define_code) {
+            $file_buf->indentDecrease();
+            $file_buf->pushStr('});');
+        }
+    }
+
+    /**
+     * 生成通用代码
+     */
+    public function buildCommonCode()
+    {
+        $folder = $this->getFolder();
+        $dop_file = $folder->touch('', 'dop.js');
+        $this->loadTpl($dop_file, 'tpl/dop.js');
+    }
+
+    /**
      * 按Struct生成代码
      * @param Struct $struct
      * @return void
@@ -29,11 +59,6 @@ class Coder extends CoderBase
     {
         $class_name = $struct->getClassName();
         $class_file = $this->getClassFileBuf($struct);
-        $build_define_code = $this->getConfigBool('define_code', false);
-        if ($build_define_code) {
-            $class_file->pushStr('define(function (require, exports, module) {');
-            $class_file->indentIncrease();
-        }
         $this->loadTpl($class_file, 'tpl/class.tpl');
         $class_file->setVariableValue('class_name', $class_name);
         $dop_base_path = $this->getConfigString('require_path', 'dop');
@@ -58,7 +83,7 @@ class Coder extends CoderBase
             } else {
                 $is_first_property = false;
             }
-            $this->makeImportCode($item, $dop_base_path, $use_buf);
+            $this->makeImportCode($item, $struct->getNamespace(), $use_buf);
             $this->makeInitCode($name, $item, $init_buf);
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
@@ -84,10 +109,6 @@ class Coder extends CoderBase
         //写入dopClassName，保证js语法正确
         if (!$method_buf->isEmpty() || !$property_buf->isEmpty()) {
             $method_buf->pushStr('dopClassName: "'. $class_name .'"');
-        }
-        if ($build_define_code) {
-            $class_file->indentDecrease();
-            $class_file->pushStr('});');
         }
     }
 
@@ -115,24 +136,25 @@ class Coder extends CoderBase
     /**
      * 生成引用相关的代码
      * @param Item $item
-     * @param string $dop_base_path dop基础目录
+     * @param string $base_path dop基础目录
      * @param CodeBuf $use_buf
      */
-    private function makeImportCode($item, $dop_base_path, $use_buf)
+    private function makeImportCode($item, $base_path, $use_buf)
     {
         $type = $item->getType();
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
             $class_name = $struct->getClassName();
-            $path = './'. $dop_base_path . $struct->getNamespace() . '/'. $class_name;
+            //$path = './'. $dop_base_path . $struct->getNamespace() . '/'. $class_name;
+            $path = self::relativePath($struct->getNamespace(), $base_path). $class_name;
             $use_buf->pushLockStr('var '. $class_name .' = require("'.$path.'");');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
-            $this->makeImportCode($item->getItem(), $dop_base_path, $use_buf);
+            $this->makeImportCode($item->getItem(), $base_path, $use_buf);
         } elseif (ItemType::MAP === $type) {
             /** @var MapItem $item */
-            $this->makeImportCode($item->getValueItem(), $dop_base_path, $use_buf);
+            $this->makeImportCode($item->getValueItem(), $base_path, $use_buf);
         }
     }
 
@@ -151,10 +173,8 @@ class Coder extends CoderBase
                 $str = 'string';
                 break;
             case ItemType::FLOAT:
-                $str = 'float';
-                break;
             case ItemType::DOUBLE:
-                $str = 'double';
+                $str = 'number';
                 break;
             case ItemType::STRUCT;
                 /** @var StructItem $item */

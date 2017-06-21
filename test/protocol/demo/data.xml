@@ -17,7 +17,7 @@
         <float name="float"/>
         <double name="double"/>
         <binary name="binary"/>
-        <list name="list"><int/></list>
+        <list name="list"><list name="list"><int/></list></list>
         <map name="map"><int/><string/></map>
         <struct name="null_struct">
             <int name="no_value"/>

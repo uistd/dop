@@ -36,8 +36,7 @@ class ArrayPack extends PackerBase
         $code_buf->pushStr(' * 转成数组');
         $code_buf->pushStr(' * @return {Object}');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('arrayPack: function()');
-        $code_buf->pushStr('{');
+        $code_buf->pushStr('arrayPack: function() {');
         $code_buf->indentIncrease();
         $code_buf->pushStr('var result = {};');
         $all_item = $struct->getAllExtendItem();
@@ -47,7 +46,6 @@ class ArrayPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-
             self::packItemValue($code_buf, 'this.' . $name, "result['" . $name . "']", $item, $tmp_index);
         }
         $code_buf->pushStr('return result;');
@@ -67,8 +65,7 @@ class ArrayPack extends PackerBase
         $code_buf->pushStr(' * 对象初始化');
         $code_buf->pushStr(' * @param {Object} data');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('arrayUnpack: function(data)');
-        $code_buf->pushStr('{');
+        $code_buf->pushStr('arrayUnpack: function(data) {');
         $code_buf->indentIncrease();
         $all_item = $struct->getAllExtendItem();
         $tmp_index = 0;
@@ -110,7 +107,7 @@ class ArrayPack extends PackerBase
             case ItemType::ARR:
                 $result_var_name = self::varName($tmp_index++, 'tmp_arr');
                 $code_buf->pushStr('var ' . $result_var_name . ' = [];');
-                self::packArrayCheckCode($code_buf, $var_name, $depth);
+                self::packArrayCheckCode($code_buf, $var_name, $item_type, $depth);
                 $for_var_name = self::varName($tmp_index++, 'item');
                 $for_index_name = self::varName($tmp_index++, 'i');
                 /** @var ListItem $item */
@@ -127,17 +124,16 @@ class ArrayPack extends PackerBase
                 break;
             case ItemType::MAP:
                 $result_var_name = self::varName($tmp_index++, 'tmp_' . $item->getName());
-                $code_buf->pushStr($result_var_name . ' = {};');
-                self::packArrayCheckCode($code_buf, $var_name, $depth);
+                $code_buf->pushStr('var ' . $result_var_name . ' = {};');
+                self::packArrayCheckCode($code_buf, $var_name, $item_type, $depth);
                 $key_var_name = self::varName($tmp_index++, 'key');
                 $for_var_name = self::varName($tmp_index++, 'item');
-                $for_index_name = self::varName($tmp_index++, 'i');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
-                $code_buf->pushStr('for (var ' . $$for_index_name . ' in $' . $var_name . ') {');
+                $code_buf->pushStr('for (var ' . $key_var_name . ' in ' . $var_name . ') {');
                 $code_buf->indentIncrease();
-                self::packItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $tmp_index, $depth + 1);
+                self::packItemValue($code_buf, $var_name . '[' . $key_var_name . ']', 'var ' . $for_var_name, $value_item, $tmp_index, $depth + 1);
                 self::packItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $tmp_index, $depth + 1);
                 $code_buf->pushStr($result_var_name . '[' . $key_var_name . '] = ' . $for_var_name . ';');
                 $code_buf->indentDecrease()->pushStr('}');
@@ -149,13 +145,13 @@ class ArrayPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 if (0 === $depth) {
-                    $code_buf->pushStr('if ("function" === typeof ' . $var_name . '["arrayPack"]) {');
+                    $code_buf->pushStr('if (' . $var_name . '.constructor === '. $item->getStructName() .') {');
                     $code_buf->pushIndent($result_var . ' = ' . $var_name . '.arrayPack();');
                     $code_buf->pushStr('} else {');
                     $code_buf->pushIndent($result_var . ' = {};');
                     $code_buf->pushStr('}');
                 } else {
-                    $code_buf->pushStr('if ("function" !== typeof ' . $var_name . '["arrayPack"]) {');
+                    $code_buf->pushStr('if (' . $var_name . '.constructor !== '. $item->getStructName() .') {');
                     $code_buf->pushIndent('continue;');
                     $code_buf->pushStr('}');
                     $code_buf->pushStr($result_var . ' = ' . $var_name . '.arrayPack();');
@@ -171,17 +167,33 @@ class ArrayPack extends PackerBase
      * 生成判断数组的代码
      * @param CodeBuf $code_buf
      * @param string $var_name
+     * @param int $item_type
      * @param int $depth
      */
-    private static function packArrayCheckCode($code_buf, $var_name, $depth)
+    private static function packArrayCheckCode($code_buf, $var_name, $item_type, $depth)
     {
+        $func_name = self::arrayCheckFunName($item_type);
         if (0 === $depth) {
-            $code_buf->pushStr('if (dopBase.isArray(' . $var_name . ')) {');
+            $code_buf->pushStr('if (' . $func_name . '(' . $var_name . ')) {');
             $code_buf->indentIncrease();
         } else {
-            $code_buf->pushStr('if (dopBase.isArray(' . $var_name . ')) {');
+            $code_buf->pushStr('if (' . $func_name . '(' . $var_name . ')) {');
             $code_buf->pushIndent('continue;');
             $code_buf->pushStr('}');
+        }
+    }
+
+    /**
+     * 数组判断的方法名
+     * @param int $type
+     * @return string
+     */
+    private static function arrayCheckFunName($type)
+    {
+        if (ItemType::ARR === $type) {
+            return 'dopBase.isArray';
+        } else {
+            return 'dopBase.isObject';
         }
     }
 
@@ -210,14 +222,14 @@ class ArrayPack extends PackerBase
         //是否需要判断值是否是数组
         $array_type_check = (ItemType::ARR === $item_type || ItemType::MAP === $item_type || ItemType::STRUCT === $item_type);
         if ($isset_check && $array_type_check) {
-            $code_buf->pushStr('if (dopBase.isset(' . $data_value . ') && dopBase.isArray(' . $data_value . ')) {');
+            $code_buf->pushStr('if (dopBase.isset(' . $data_value . ') && ' . self::arrayCheckFunName($item_type) . '(' . $data_value . ')) {');
             $code_buf->indentIncrease();
         } elseif ($isset_check) {
             $code_buf->pushStr('if (dopBase.isset(' . $data_value . ')) {');
             $code_buf->indentIncrease();
         } //如果只用判断是否为数组，不为数组就continue
         elseif ($array_type_check) {
-            $code_buf->pushStr('if (!dopBase.isArray(' . $data_value . ')) {');
+            $code_buf->pushStr('if (!' . self::arrayCheckFunName($item_type) . '(' . $data_value . ')) {');
             $code_buf->pushIndent('continue;');
             $code_buf->pushStr('}');
         }
@@ -237,7 +249,7 @@ class ArrayPack extends PackerBase
             case ItemType::STRUCT:
                 $tmp_var_name = self::varName($key_name, 'struct');
                 /** @var StructItem $item */
-                $code_buf->pushStr('var '. $tmp_var_name . ' = new ' . $item->getStructName() . '();');
+                $code_buf->pushStr('var ' . $tmp_var_name . ' = new ' . $item->getStructName() . '();');
                 $code_buf->pushStr($tmp_var_name . '.arrayUnpack(' . $data_value . ');');
                 $code_buf->pushStr($var_name . ' = ' . $tmp_var_name . ';');
                 break;
@@ -248,7 +260,7 @@ class ArrayPack extends PackerBase
                 //临时结果变量
                 $result_var_name = self::varName($tmp_index++, 'result');
                 $for_index_name = self::varName($tmp_index++, 'i');
-                $code_buf->pushStr('var '. $result_var_name . ' = [];');
+                $code_buf->pushStr('var ' . $result_var_name . ' = [];');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $code_buf->pushStr('for (var ' . $for_index_name . ' = 0; ' . $for_index_name . ' < ' . $data_value . '.length; ++' . $for_index_name . ') {');
@@ -266,17 +278,15 @@ class ArrayPack extends PackerBase
                 $key_var_name = self::varName($tmp_index++, 'key');
                 //循环变量
                 $for_var_name = self::varName($tmp_index++, 'item');
-                //循环下标
-                $for_index_name = self::varName($tmp_index++, 'i');
                 //临时结果变量
                 $result_var_name = self::varName($tmp_index++, 'result');
-                $code_buf->pushStr($result_var_name . ' = {};');
+                $code_buf->pushStr('var ' . $result_var_name . ' = {};');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
-                $code_buf->pushStr('for (var ' . $for_index_name . ' in ' . $data_value . ') {');
+                $code_buf->pushStr('for (var ' . $key_var_name . ' in ' . $data_value . ') {');
                 $code_buf->indentIncrease();
-                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $data_value . '[' . $for_index_name . '];');
+                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $data_value . '[' . $key_var_name . '];');
                 self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1, null, $tmp_index);
                 self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1, null, $tmp_index);
                 $code_buf->pushStr($result_var_name . '[' . $key_var_name . '] = ' . $for_var_name . ';');

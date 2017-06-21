@@ -32,6 +32,15 @@ exports.intVal = function (tmp_var) {
 };
 
 /**
+ * 判断变量是否是Object
+ * @param {*} tmp_var
+ * @returns {boolean}
+ */
+exports.isObject = function(tmp_var) {
+    return '[object Object]' === Object.prototype.toString.apply(tmp_var);
+};
+
+/**
  * 传入的值转float
  * @param {*} tmp_var
  * @return {number}

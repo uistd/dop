@@ -213,6 +213,18 @@ DopEncode.prototype = {
     },
 
     /**
+     * 写入Uint8Array
+     * @param {Uint8Array} arr
+     */
+    writeUint8Array: function(arr){
+        var len = arr.length;
+        this.writeLength(len);
+        for (var i = 0; i < len; ++i) {
+            this.pushData(arr[i]);
+        }
+    },
+
+    /**
      * 写入长度表示
      * @param {int} len
      */

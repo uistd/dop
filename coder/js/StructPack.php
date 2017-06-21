@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\coder\php;
+namespace ffan\dop\coder\js;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
@@ -14,7 +14,7 @@ use ffan\dop\protocol\StructItem;
 
 /**
  * Class StructPack
- * @package ffan\dop\coder\php
+ * @package ffan\dop\coder\js
  */
 class StructPack extends PackerBase
 {
@@ -29,12 +29,10 @@ class StructPack extends PackerBase
     public function buildCommonCode()
     {
         $folder = $this->coder->getFolder();
-        $dop_encode = $folder->touch('', 'DopEncode.php');
-        $dop_decode = $folder->touch('', 'DopDecode.php');
-        $namespace = $this->coder->joinNameSpace('');
-        $tpl_data = array('namespace' => $namespace);
-        $this->coder->loadTpl($dop_encode, 'tpl/DopEncode.tpl', $tpl_data);
-        $this->coder->loadTpl($dop_decode, 'tpl/DopDecode.tpl', $tpl_data);
+        $dop_encode = $folder->touch('', 'DopEncode.js');
+        $dop_decode = $folder->touch('', 'DopDecode.js');
+        $this->coder->loadTpl($dop_encode, 'tpl/DopEncode.js');
+        $this->coder->loadTpl($dop_decode, 'tpl/DopDecode.js');
     }
 
     /**
@@ -49,23 +47,22 @@ class StructPack extends PackerBase
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
-        $code_buf->pushStr(' * @return String');
+        $code_buf->pushStr(' * @return Uint8Array');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('public static function binaryStruct()');
-        $code_buf->pushStr('{');
+        $code_buf->pushStr('binaryStruct: function(){');
         $code_buf->indentIncrease();
-        $code_buf->pushStr('$buffer = new DopEncode();');
+        $code_buf->pushStr('var buffer = new DopEncode();');
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            $code_buf->pushStr('$buffer->writeString(\'' . $name . '\');');
+            $code_buf->pushStr('buffer.writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
-        $code_buf->pushStr('return $buffer->dump();');
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->pushStr('return buffer.getBuffer();');
+        $code_buf->indentDecrease()->pushStr('},');
     }
 
     /**
@@ -88,7 +85,7 @@ class StructPack extends PackerBase
         $class_file = $this->coder->getClassFileBuf($struct);
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         if ($use_buf) {
-            $use_buf->pushLockStr('use '. $this->coder->joinNameSpace('', 'DopEncode') .';');
+            $use_buf->pushLockStr('var DopEncode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopEncode");');
         }
     }
 
@@ -101,7 +98,7 @@ class StructPack extends PackerBase
     {
         $bin_type = $item->getBinaryType();
         $code_buf->pushStr('//'. $this->typeComment($bin_type));
-        $code_buf->pushStr('$buffer->writeChar(0x' . dechex($bin_type) . ');');
+        $code_buf->pushStr('buffer.writeChar(0x' . dechex($bin_type) . ');');
         $type = $item->getType();
         switch ($type) {
             case ItemType::ARR:
@@ -119,7 +116,7 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('$buffer->writeString('.$class_name.'::binaryStruct());');
+                $code_buf->pushStr('buffer.writeUint8Array('.$class_name.'.prototype.binaryStruct());');
                 break;
         }
     }

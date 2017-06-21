@@ -29,6 +29,7 @@ $data->test_arr->name = 'bluebird';
 $data->test_arr->age = 20;
 $data->test_arr->mobile = '18018684626';
 $bin_data = $data->binaryEncode();
+echo 'pack result:'. md5($bin_data), PHP_EOL;
 
 $new_data = new TestData();
 $buffer = new \ffan\dop\DopDecode($bin_data);
@@ -40,6 +41,7 @@ if ($re) {
 }
 
 $bin_data2 = $data->binaryEncode(true);
+echo 'pack sign result:'. md5($bin_data2), PHP_EOL;
 
 $new_data2 = new TestData();
 $buffer2 = new \ffan\dop\DopDecode($bin_data2);
@@ -51,6 +53,8 @@ if ($re) {
 }
 
 $bin_data3 = $data->binaryEncode(true, true);
+echo 'pack mask result:'. md5($bin_data3), PHP_EOL;
+
 $new_data3 = new TestData();
 $buffer3 = new \ffan\dop\DopDecode($bin_data3);
 $re = $new_data3->binaryDecode($buffer3);
