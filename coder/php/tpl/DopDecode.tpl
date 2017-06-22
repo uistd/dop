@@ -43,7 +43,7 @@ class DopDecode
      * @var string
      */
     private $bin_str = '';
-    
+
     /**
      * @var int 字节序
      */
@@ -78,7 +78,7 @@ class DopDecode
      * @var bool 是否已经解析过head了
      */
     private $is_unpack_head = false;
-    
+
     /**
      * BinaryBuffer constructor.
      * @param null|string $raw_data 初始数据
@@ -97,7 +97,7 @@ class DopDecode
         $this->max_read_pos = $len;
         $this->bin_str = $raw_data;
     }
-    
+
     /**
      * 读出一个长度值
      * @return int
@@ -119,7 +119,7 @@ class DopDecode
             return $this->readBigInt();
         }
     }
-    
+
     /**
      * 读出一个char
      * @return int
@@ -276,7 +276,7 @@ class DopDecode
     private function readString()
     {
         $str_len = $this->readLength();
-        if (!$this->sizeCheck($str_len)) {
+        if (0 === $str_len || !$this->sizeCheck($str_len)) {
             return '';
         }
         $result = substr($this->bin_str, $this->read_pos, $str_len);
@@ -292,18 +292,6 @@ class DopDecode
     {
         $result = $this->max_read_pos - $this->read_pos;
         return $result > 0 ? $result : 0;
-    }
-
-    /**
-     * 获取数据id
-     * @return string|null
-     */
-    public function getPid()
-    {
-        if (!$this->is_unpack_head) {
-            $this->unpackHead();
-        }
-        return $this->pid;
     }
 
     /**
@@ -333,33 +321,6 @@ class DopDecode
         if ($this->pack_opt & DopEncode::OPTION_PID) {
             $this->pid = $this->readString();
         }
-    }
-
-    /**
-     * 解包二进制数据
-     * @return bool|array
-     */
-    public function unpack()
-    {
-        if (!$this->is_unpack_head) {
-            $this->unpackHead();
-        }
-        //如果还需要解密
-        if ($this->pack_opt & DopEncode::OPTION_MASK) {
-            $this->error_code = self::ERROR_MASK;
-            return false;
-        }
-        if (($this->pack_opt & DopEncode::OPTION_SIGN) && !$this->checkSignCode()) {
-            return false;
-        }
-        //协议字符串
-        $protocol_str = $this->readString();
-        $protocol = new DopDecode($protocol_str);
-        //先解析出协议
-        $struct_list = $protocol->readProtocolStruct();
-        //再解出数据
-        $result = $this->readStructData($struct_list);
-        return $result;
     }
 
     /**
@@ -542,15 +503,47 @@ class DopDecode
     }
 
     /**
-     * 数据加密
-     * @param string $mask_key
-     * @return bool
+     * 解包二进制数据
+     * @param string|null $mask_key
+     * @return array|bool
      */
-    public function unMask($mask_key)
+    public function unpack($mask_key = null)
     {
         if (!$this->is_unpack_head) {
             $this->unpackHead();
         }
+        //如果还需要解密
+        if ($this->pack_opt & DopEncode::OPTION_MASK) {
+            if (!is_string($mask_key) || empty($mask_key)) {
+                $this->error_code = self::ERROR_MASK;
+                return false;
+            }
+            $this->unMask($mask_key);
+            if ($this->error_code > 0) {
+                return false;
+            }
+        }
+        //还需要判断签名
+        if (($this->pack_opt & DopEncode::OPTION_SIGN) && !$this->checkSignCode()) {
+            return false;
+        }
+        //协议字符串
+        $protocol_str = $this->readString();
+        $protocol = new DopDecode($protocol_str);
+        //先解析出协议
+        $struct_list = $protocol->readProtocolStruct();
+        //再解出数据
+        $result = $this->readStructData($struct_list);
+        return $result;
+    }
+
+    /**
+     * 数据加密
+     * @param string $mask_key
+     * @return bool
+     */
+    private function unMask($mask_key)
+    {
         //数据未被加密
         if (!($this->pack_opt & DopEncode::OPTION_MASK)) {
             return true;
@@ -595,6 +588,18 @@ class DopDecode
         return true;
     }
 
+    /**
+     * 获取数据id
+     * @return string|null
+     */
+    public function getPid()
+    {
+        if (!$this->is_unpack_head) {
+            $this->unpackHead();
+        }
+        return $this->pid;
+    }
+    
     /**
      * 是否加密
      * @return bool

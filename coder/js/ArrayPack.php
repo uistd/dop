@@ -94,15 +94,15 @@ class ArrayPack extends PackerBase
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::INT:
-                $code_buf->pushStr($result_var . ' = dopBase.intVal(' . $var_name . ');');
+                $code_buf->pushStr($result_var . ' = DopBase.intVal(' . $var_name . ');');
                 break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
-                $code_buf->pushStr($result_var . ' = dopBase.floatVal(' . $var_name . ');');
+                $code_buf->pushStr($result_var . ' = DopBase.floatVal(' . $var_name . ');');
                 break;
             case ItemType::STRING:
             case ItemType::BINARY:
-                $code_buf->pushStr($result_var . ' = dopBase.strVal(' . $var_name . ');');
+                $code_buf->pushStr($result_var . ' = DopBase.strVal(' . $var_name . ');');
                 break;
             case ItemType::ARR:
                 $result_var_name = self::varName($tmp_index++, 'tmp_arr');
@@ -191,9 +191,9 @@ class ArrayPack extends PackerBase
     private static function arrayCheckFunName($type)
     {
         if (ItemType::ARR === $type) {
-            return 'dopBase.isArray';
+            return 'DopBase.isArray';
         } else {
-            return 'dopBase.isObject';
+            return 'DopBase.isObject';
         }
     }
 
@@ -222,10 +222,10 @@ class ArrayPack extends PackerBase
         //是否需要判断值是否是数组
         $array_type_check = (ItemType::ARR === $item_type || ItemType::MAP === $item_type || ItemType::STRUCT === $item_type);
         if ($isset_check && $array_type_check) {
-            $code_buf->pushStr('if (dopBase.isset(' . $data_value . ') && ' . self::arrayCheckFunName($item_type) . '(' . $data_value . ')) {');
+            $code_buf->pushStr('if (DopBase.isset(' . $data_value . ') && ' . self::arrayCheckFunName($item_type) . '(' . $data_value . ')) {');
             $code_buf->indentIncrease();
         } elseif ($isset_check) {
-            $code_buf->pushStr('if (dopBase.isset(' . $data_value . ')) {');
+            $code_buf->pushStr('if (DopBase.isset(' . $data_value . ')) {');
             $code_buf->indentIncrease();
         } //如果只用判断是否为数组，不为数组就continue
         elseif ($array_type_check) {
@@ -235,15 +235,15 @@ class ArrayPack extends PackerBase
         }
         switch ($item_type) {
             case ItemType::INT:
-                $code_buf->pushStr($var_name . ' = dopBase.intVal(' . $data_value . ');');
+                $code_buf->pushStr($var_name . ' = DopBase.intVal(' . $data_value . ');');
                 break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
-                $code_buf->pushStr($var_name . ' = dopBase.floatVal(' . $data_value . ');');
+                $code_buf->pushStr($var_name . ' = DopBase.floatVal(' . $data_value . ');');
                 break;
             case ItemType::STRING:
             case ItemType::BINARY:
-                $code_buf->pushStr($var_name . ' = dopBase.strVal(' . $data_value . ');');
+                $code_buf->pushStr($var_name . ' = DopBase.strVal(' . $data_value . ');');
                 break;
             //对象
             case ItemType::STRUCT:

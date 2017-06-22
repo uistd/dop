@@ -92,7 +92,7 @@ class BinaryPack extends PackerBase
                     //写入 0 表示空struct
                     $code_buf->pushIndent('result.writeChar(0);');
                 } else {
-                    $code_buf->pushStr('if (!dopBase.isArray(this.' . $name . ')){');
+                    $code_buf->pushStr('if (!DopBase.isArray(this.' . $name . ')){');
                     //写入 0，表示数组长度 0
                     $code_buf->pushIndent('result.writeChar(0);');
                 }
@@ -126,19 +126,22 @@ class BinaryPack extends PackerBase
             return;
         }
         $class_file = $this->coder->getClassFileBuf($struct);
-        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
-        if ($use_buf) {
-            $use_buf->pushLockStr('var DopDecode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopDecode");');
+        $import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
+        if ($import_buf) {
+            $import_buf->pushLockStr('var DopDecode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopDecode");');
         }
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制解包');
-        $code_buf->pushStr(' * @param {DopDecode} decoder');
+        $code_buf->pushStr(' * @param {DopDecode|string|Uint8Array} data');
+        $code_buf->pushStr(' * @param {string|null} mask_key');
         $code_buf->pushStr(' * @return {boolean}');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('binaryDecode: function(decoder) {');
+        $code_buf->pushStr('binaryDecode: function(data, mask_key) {');
         $code_buf->indentIncrease();
-        $code_buf->pushStr('var data_arr = decoder.unpack();');
+        $code_buf->pushStr('mask_key = mask_key || null;');
+        $code_buf->pushStr('var decoder = (data.constructor === DopDecode) ? data : new DopDecode(data);');
+        $code_buf->pushStr('var data_arr = decoder.unpack(mask_key);');
         $code_buf->pushStr('if (decoder.getErrorCode()) {');
         $code_buf->pushIndent('return false;');
         $code_buf->pushStr('}');
@@ -213,19 +216,16 @@ class BinaryPack extends PackerBase
                 $for_var_name = self::varName($tmp_index++, 'item');
                 //循环键名
                 $key_var_name = self::varName($tmp_index++, 'key');
-                $for_index_name = self::varName($tmp_index++, 'p');
                 $code_buf->pushStr('var ' . $len_var_name . ' = 0;');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 //写入map key 和 value 的类型
                 $code_buf->pushStr('var ' . $buffer_name . ' = new DopEncode();');
-                $code_buf->pushStr('for( var ' . $for_index_name . ' in ' . $var_name . ') {');
+                $code_buf->pushStr('for( var ' . $key_var_name . ' in ' . $var_name . ') {');
                 $code_buf->indentIncrease();
-                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $var_name . '[' . $for_index_name . '];');
+                $code_buf->pushStr('var ' . $for_var_name . ' = ' . $var_name . '[' . $key_var_name . '];');
                 self::typeCheckCode($code_buf, $for_var_name, $value_item);
-                $code_buf->indentDecrease();
-                $code_buf->indentIncrease();
                 self::packItemValue($code_buf, $key_var_name, $buffer_name, $key_item, $depth + 1, $tmp_index);
                 //这里的depth 变成 0，因为之前已经typeCheckCode了
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $value_item, 0, $tmp_index);
@@ -250,7 +250,7 @@ class BinaryPack extends PackerBase
         switch ($item_type) {
             case ItemType::MAP:
             case ItemType::ARR:
-                $code_buf->pushStr('if (!dopBase.isArray(' . $var_name . ')) {');
+                $code_buf->pushStr('if (!DopBase.isArray(' . $var_name . ')) {');
                 $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
                 break;

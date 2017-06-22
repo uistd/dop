@@ -1,2 +1,34 @@
 const console = require('console');
-var BinaryBuffer = require('./build/js/');
+var TestData = require('./runtime/build/js/demo/data/TestData');
+var TestDataStruct = require('./runtime/build/js/demo/data/TestDataStruct');
+var TestArr = require('./runtime/build/js/demo/data/TestArr');
+var dopBase = require('./runtime/build/js/dop');
+var DopDecode = require('./runtime/build/js/DopDecode');
+
+var data = new TestData;
+data.int8 = 0x7f;
+data.uint8 = 0xff;
+data.int16 = 0x7fff;
+data.uint16 = 0xffff;
+data.int = 0x7fffffff;
+data.uint = 0xffffffff;
+data.int64 = 0x7fffffffffffffff;
+data.float = 100.1;
+data.double = 1000.1001010;
+data.string = 'This is DOP test';
+data.binary = 'This is binary string';
+data.list = [1,2,3,4,5];
+data.map = {1: 'test1', 2: 'test2', 3:'test3'};
+data.struct = new TestDataStruct();
+data.struct.first_name = 'Li';
+data.struct.last_name = 'Gang';
+data.struct.gender = 1;
+data.test_arr = new TestArr();
+data.test_arr.name = 'bluebird';
+data.test_arr.age = 20;
+data.test_arr.mobile = '18018684626';
+var bin_data = data.binaryEncode();
+console.log(dopBase.md5(bin_data));
+
+var decoder = new DopDecode(bin_data);
+console.log(decoder.unpack());

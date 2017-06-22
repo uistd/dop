@@ -29,7 +29,7 @@ $data->test_arr->name = 'bluebird';
 $data->test_arr->age = 20;
 $data->test_arr->mobile = '18018684626';
 $bin_data = $data->binaryEncode();
-echo 'pack result:'. md5($bin_data), PHP_EOL;
+echo 'pack result:'. md5($bin_data) . ' strlen:'. strlen($bin_data), PHP_EOL;
 
 $new_data = new TestData();
 $buffer = new \ffan\dop\DopDecode($bin_data);
@@ -66,11 +66,7 @@ if ($re) {
 
 $bin_data4 = $data->binaryEncode(true, true, 'www.ffan.com');
 $new_data4 = new TestData();
-$buffer4 = new \ffan\dop\DopDecode($bin_data4);
-$buffer4->unmask('www.ffan.com');
-$re = $new_data4->binaryDecode($buffer4);
+$re = $new_data4->binaryDecode($new_data4, 'www.ffan.com');
 if ($re) {
-    echo $buffer4->getPid() .' success', PHP_EOL;
-} else {
-    echo $buffer4->getErrorMessage(), PHP_EOL;
+    echo ' success', PHP_EOL;
 }

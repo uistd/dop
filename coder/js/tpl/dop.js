@@ -347,7 +347,7 @@ exports.md5 = (function(){
         while (index < length) {
             if (this.hashed) {
                 this.hashed = false;
-                for (var _i = 0; _i <=16; ++i) {
+                for (var _i = 0; _i <=16; ++_i) {
                     blocks[_i] = 0;
                 }
             }

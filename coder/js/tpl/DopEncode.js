@@ -294,7 +294,7 @@ DopEncode.prototype = {
             this.joinBuffer(buffer);
         }
         if (this.opt_flag & DopEncode.prototype.OPTION_MASK) {
-            this.doMask(this.pid_pos);
+            this.doMask(this.pid_pos, this.mask_key);
         }
         //字节序判断
         var m = new Uint32Array(1);
@@ -312,7 +312,7 @@ DopEncode.prototype = {
         for (var i = 0; i < current_pos; ++i) {
             new_buffer.buffer[new_buffer.write_pos++] = this.buffer[i];
         }
-        return this.buffer;
+        return new_buffer.buffer;
     },
 
     /**
@@ -328,9 +328,11 @@ DopEncode.prototype = {
 
     /**
      * 数据加密
+     * @param {int} beg_pos 数据开始位置
+     * @param {string} mask_key 数据加密key
      */
-    doMask: function (beg_pos) {
-        var key = this.fixMaskKey(this.mask_key), pos = 0;
+    doMask: function (beg_pos, mask_key) {
+        var key = this.fixMaskKey(mask_key), pos = 0;
         var key_arr = dopBase.strToBin(key), index;
         for (var i = beg_pos; i < this.write_pos; ++i) {
             index = pos++ % key_arr.write_pos;

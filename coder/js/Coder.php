@@ -61,16 +61,16 @@ class Coder extends CoderBase
         $class_file = $this->getClassFileBuf($struct);
         $this->loadTpl($class_file, 'tpl/class.tpl');
         $class_file->setVariableValue('class_name', $class_name);
-        $dop_base_path = $this->getConfigString('require_path', 'dop');
-        $class_file->setVariableValue('dop_base_path', $dop_base_path);
         $class_file->setVariableValue('struct_note', $struct->getNote());
-        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
+        $import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
         $init_buf = $class_file->getBuf('init_property');
-        if (!$method_buf || !$property_buf || !$use_buf || !$init_buf ) {
+        $name_space = $struct->getNamespace();
+        if (!$method_buf || !$property_buf || !$import_buf || !$init_buf ) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF or init_property not found!');
         }
+        $import_buf->pushLockStr('var DopBase = require("' . $this->relativePath('/', $name_space) . 'dop");');
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
@@ -83,7 +83,7 @@ class Coder extends CoderBase
             } else {
                 $is_first_property = false;
             }
-            $this->makeImportCode($item, $struct->getNamespace(), $use_buf);
+            $this->makeImportCode($item, $name_space, $import_buf);
             $this->makeInitCode($name, $item, $init_buf);
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
