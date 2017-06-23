@@ -36,7 +36,7 @@ exports.intVal = function (tmp_var) {
  * @param {*} tmp_var
  * @returns {boolean}
  */
-exports.isObject = function(tmp_var) {
+exports.isObject = function (tmp_var) {
     return '[object Object]' === Object.prototype.toString.apply(tmp_var);
 };
 
@@ -68,7 +68,7 @@ exports.strVal = function (tmp_val) {
 /**
  * 字符串 to Uint8Array
  * @param {string} str
- * @return DopEncode
+ * @return Uint8Array
  */
 exports.strToBin = function (str) {
     if ('string' !== typeof str) {
@@ -107,7 +107,7 @@ exports.strToBin = function (str) {
             buffer.writeChar(0x80 | (0x3f & code));
         }
     }
-    return buffer;
+    return buffer.dumpUint8Array();
 };
 
 /**
@@ -313,7 +313,7 @@ exports.base64 = (function () {
 /**
  * Md5 核心代码拷贝自网上
  */
-exports.md5 = (function(){
+exports.md5 = (function () {
     var HEX_CHARS = '0123456789abcdef'.split('');
     var EXTRA = [128, 32768, 8388608, -2147483648];
 
@@ -347,7 +347,7 @@ exports.md5 = (function(){
         while (index < length) {
             if (this.hashed) {
                 this.hashed = false;
-                for (var _i = 0; _i <=16; ++_i) {
+                for (var _i = 0; _i <= 16; ++_i) {
                     blocks[_i] = 0;
                 }
             }
@@ -585,24 +585,24 @@ exports.md5 = (function(){
 
         var h0 = this.h0, h1 = this.h1, h2 = this.h2, h3 = this.h3;
 
-        return HEX_CHARS[(h0 >> 4) & 0x0F] + HEX_CHARS[h0 & 0x0F] +
-            HEX_CHARS[(h0 >> 12) & 0x0F] + HEX_CHARS[(h0 >> 8) & 0x0F] +
-            HEX_CHARS[(h0 >> 20) & 0x0F] + HEX_CHARS[(h0 >> 16) & 0x0F] +
-            HEX_CHARS[(h0 >> 28) & 0x0F] + HEX_CHARS[(h0 >> 24) & 0x0F] +
-            HEX_CHARS[(h1 >> 4) & 0x0F] + HEX_CHARS[h1 & 0x0F] +
-            HEX_CHARS[(h1 >> 12) & 0x0F] + HEX_CHARS[(h1 >> 8) & 0x0F] +
-            HEX_CHARS[(h1 >> 20) & 0x0F] + HEX_CHARS[(h1 >> 16) & 0x0F] +
-            HEX_CHARS[(h1 >> 28) & 0x0F] + HEX_CHARS[(h1 >> 24) & 0x0F] +
-            HEX_CHARS[(h2 >> 4) & 0x0F] + HEX_CHARS[h2 & 0x0F] +
-            HEX_CHARS[(h2 >> 12) & 0x0F] + HEX_CHARS[(h2 >> 8) & 0x0F] +
-            HEX_CHARS[(h2 >> 20) & 0x0F] + HEX_CHARS[(h2 >> 16) & 0x0F] +
-            HEX_CHARS[(h2 >> 28) & 0x0F] + HEX_CHARS[(h2 >> 24) & 0x0F] +
-            HEX_CHARS[(h3 >> 4) & 0x0F] + HEX_CHARS[h3 & 0x0F] +
-            HEX_CHARS[(h3 >> 12) & 0x0F] + HEX_CHARS[(h3 >> 8) & 0x0F] +
-            HEX_CHARS[(h3 >> 20) & 0x0F] + HEX_CHARS[(h3 >> 16) & 0x0F] +
-            HEX_CHARS[(h3 >> 28) & 0x0F] + HEX_CHARS[(h3 >> 24) & 0x0F];
+        return HEX_CHARS[(h0 >> 4) & 0xf] + HEX_CHARS[h0 & 0xf] +
+            HEX_CHARS[(h0 >> 12) & 0xf] + HEX_CHARS[(h0 >> 8) & 0xf] +
+            HEX_CHARS[(h0 >> 20) & 0xf] + HEX_CHARS[(h0 >> 16) & 0xf] +
+            HEX_CHARS[(h0 >> 28) & 0xf] + HEX_CHARS[(h0 >> 24) & 0xf] +
+            HEX_CHARS[(h1 >> 4) & 0xf] + HEX_CHARS[h1 & 0xf] +
+            HEX_CHARS[(h1 >> 12) & 0xf] + HEX_CHARS[(h1 >> 8) & 0xf] +
+            HEX_CHARS[(h1 >> 20) & 0xf] + HEX_CHARS[(h1 >> 16) & 0xf] +
+            HEX_CHARS[(h1 >> 28) & 0xf] + HEX_CHARS[(h1 >> 24) & 0xf] +
+            HEX_CHARS[(h2 >> 4) & 0xf] + HEX_CHARS[h2 & 0xf] +
+            HEX_CHARS[(h2 >> 12) & 0xf] + HEX_CHARS[(h2 >> 8) & 0xf] +
+            HEX_CHARS[(h2 >> 20) & 0xf] + HEX_CHARS[(h2 >> 16) & 0xf] +
+            HEX_CHARS[(h2 >> 28) & 0xf] + HEX_CHARS[(h2 >> 24) & 0xf] +
+            HEX_CHARS[(h3 >> 4) & 0xf] + HEX_CHARS[h3 & 0xf] +
+            HEX_CHARS[(h3 >> 12) & 0xf] + HEX_CHARS[(h3 >> 8) & 0xf] +
+            HEX_CHARS[(h3 >> 20) & 0xf] + HEX_CHARS[(h3 >> 16) & 0xf] +
+            HEX_CHARS[(h3 >> 28) & 0xf] + HEX_CHARS[(h3 >> 24) & 0xf];
     };
-    return function(data, length){
+    return function (data, length) {
         length |= 0;
         if (0 === length) {
             length = data.length;

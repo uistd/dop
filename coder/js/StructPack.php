@@ -61,7 +61,7 @@ class StructPack extends PackerBase
             $code_buf->pushStr('buffer.writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
-        $code_buf->pushStr('return buffer.getBuffer();');
+        $code_buf->pushStr('return buffer.dumpUint8Array();');
         $code_buf->indentDecrease()->pushStr('},');
     }
 
@@ -116,7 +116,7 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('buffer.writeUint8Array('.$class_name.'.prototype.binaryStruct());');
+                $code_buf->pushStr('buffer.writeUint8Array('.$class_name.'.prototype.binaryStruct(), true);');
                 break;
         }
     }

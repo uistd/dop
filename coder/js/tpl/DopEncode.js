@@ -2,12 +2,12 @@
 var dopBase = require('./dop');
 
 //固定值
-var LITTLE_ENDIAN = 0, BIG_ENDIAN = 1, DEFAULT_SIZE = 1024;
+var LITTLE_ENDIAN = 0, BIG_ENDIAN = 1, DEFAULT_SIZE = 1024, ERROR_OUT_OF_MEMORY = 1;
 
 function DopEncode(size) {
     size |= 0;
-    this.buffer = new Uint8Array(size || DEFAULT_SIZE);
-    this.max_size = DEFAULT_SIZE;
+    this.checkEndian();
+    this.resize(size||DEFAULT_SIZE);
 }
 
 DopEncode.prototype = {
@@ -20,6 +20,16 @@ DopEncode.prototype = {
     OPTION_ENDIAN: 0x8,
     SIGN_CODE_LEN: 8,
     MIN_MASK_KEY_LEN: 8,
+
+    /**
+     * DataView
+     */
+    data_view: null,
+
+    /**
+     * Uint8Array
+     */
+    byte_array: null,
 
     /**
      * 写入点
@@ -37,9 +47,9 @@ DopEncode.prototype = {
     opt_flag: 0,
 
     /**
-     * 字节序
+     * 是否小字节序
      */
-    endian: LITTLE_ENDIAN,
+    is_little_endian: true,
 
     /**
      * 写入的pid占据的长度
@@ -52,28 +62,56 @@ DopEncode.prototype = {
     mask_key: '',
 
     /**
-     * 内存扩展容量
-     * @param {int} new_size
+     * 错误代码
      */
-    resize: function (new_size) {
-        var new_arr = new Uint8Array(new_size);
-        for (var i = 0; i < this.max_size; ++i) {
-            new_arr[i] = this.buffer[i];
-        }
-        this.buffer = new_arr;
-        this.max_size = new_size;
+    error_code: 0,
+
+    /**
+     * 字节序判断
+     */
+    checkEndian: function(){
+        var m = new Uint32Array(1);
+        m[0] = 0x12345678;
+        var c = new Uint8Array(m.buffer);
+        this.is_little_endian = (0x12 === c[3] && 0x34 === c[2]);
     },
 
     /**
-     * 写入数据
-     * @param {int}  value
+     * 内存扩展容量
+     * @param {int} new_size
+     * @return {boolean}
      */
-    pushData: function (value) {
-        //如果已经最大位置了，扩容先
-        if (this.write_pos === this.max_size) {
-            this.resize(this.max_size * 2);
+    resize: function (new_size) {
+        var new_arr = new ArrayBuffer(new_size);
+        //内存不够
+        if (new_arr.byteLength !== new_size) {
+            this.error_code = ERROR_OUT_OF_MEMORY;
+            return false;
         }
-        this.buffer[this.write_pos++] = value;
+        var new_byte_array = new Uint8Array(new_arr);
+        if (this.byte_array) {
+            for (var i = 0; i < this.write_pos; ++i) {
+                new_byte_array[i] = this.byte_array[i];
+            }
+        }
+        this.buffer = new_arr;
+        this.max_size = new_size;
+        this.byte_array = new_byte_array;
+        this.data_view = new DataView(new_arr);
+        return true;
+    },
+
+    /**
+     * 检查可写入字节数
+     * @param {int} need_size
+     * @return {boolean}
+     */
+    checkSize: function (need_size) {
+        //如果已经最大位置了，扩容先
+        if (this.max_pos - this.write_pos < need_size) {
+            return this.resize(this.max_size * 2);
+        }
+        return true;
     },
 
     /**
@@ -81,9 +119,12 @@ DopEncode.prototype = {
      * @param {int} value
      */
     writeChar: function (value) {
+        if (this.error_code || !this.checkSize(1)) {
+            return;
+        }
         value |= 0;
-        value &= 0xff;
-        this.pushData(value);
+        this.data_view.setUint8(this.write_pos, value);
+        this.write_pos++;
     },
 
     /**
@@ -91,16 +132,12 @@ DopEncode.prototype = {
      * @param {int} value
      */
     writeShort: function (value) {
-        value |= 0;
-        var h = (value >> 8) & 0xff;
-        var l = value & 0xff;
-        if (BIG_ENDIAN === this.endian) {
-            this.pushData(h);
-            this.pushData(l);
-        } else {
-            this.pushData(l);
-            this.pushData(h);
+        if (this.error_code || !this.checkSize(2)) {
+            return;
         }
+        value |= 0;
+        this.data_view.setUint16(this.write_pos, value, this.is_little_endian);
+        this.write_pos += 2;
     },
 
     /**
@@ -108,32 +145,46 @@ DopEncode.prototype = {
      * @param {int} value
      */
     writeInt: function (value) {
-        value |= 0;
-        var h = (value >> 16) & 0xffff;
-        var l = value & 0xffff;
-        if (BIG_ENDIAN === this.endian) {
-            this.writeShort(h);
-            this.writeShort(l);
-        } else {
-            this.writeShort(l);
-            this.writeShort(h);
+        if (this.error_code || !this.checkSize(4)) {
+            return;
         }
+        value |= 0;
+        this.data_view.setUint32(this.write_pos, value, this.is_little_endian);
+        this.write_pos += 4;
     },
 
     /**
      * 写入一个64位整数
-     * @param {int} value
+     * 由于JavaScript 不支持64位整数，只能做特殊处理
+     * @param {int|string} value
      */
     writeBigInt: function (value) {
-        value |= 0;
-        var h = (value >> 32) & 0xffffffff;
-        var l = value & 0xffffffff;
-        if (BIG_ENDIAN === this.endian) {
-            this.writeInt(h);
-            this.writeInt(l);
+        if (this.error_code || !this.checkSize(8)) {
+            return;
+        }
+        //可以传入16进制字符串，表示js不支持的超过0x1fffffffffffff的数字
+        if ('string' === typeof value && /^(0x)?[a-f\d]{1,8}$/i.test(value)) {
+            value = value.replace(/^0x/i, '');
+            var hex_arr = new Uint8Array(8), pos, i;
+            //将字符串补齐16位
+            for (i = value.length; i < 16; ++i) {
+                value = '0' + value;
+            }
+            for (i = 0; i < 8; ++i) {
+                pos = i * 2;
+                hex_arr[i] = parseInt(value.charAt(pos) + value.charAt(pos + 1), 16);
+            }
+            //如果是小字节编码，就要重排一下顺序
+            if (LITTLE_ENDIAN === this.is_little_endian) {
+                hex_arr.reverse();
+            }
+            this.writeUint8Array(hex_arr, false);
         } else {
-            this.writeInt(l);
-            this.writeInt(h);
+            if (value < 0) {
+                value = 0xFFFFFFFF + value + 1
+            }
+            value = parseInt(value, 10).toString(16);
+            this.writeBigInt(value);
         }
     },
 
@@ -145,11 +196,8 @@ DopEncode.prototype = {
         if ('string' !== typeof str) {
             str = '';
         }
-        //字符串先写入2字节代表长度
-        var len = dopBase.strlen(str);
-        this.writeLength(len);
         var buffer = dopBase.strToBin(str);
-        this.joinBuffer(buffer);
+        this.writeUint8Array(buffer, true);
     },
 
     /**
@@ -157,13 +205,11 @@ DopEncode.prototype = {
      * @param {number} value
      */
     writeFloat: function (value) {
-        value = dopBase.floatVal(value);
-        var float_arr = new Float32Array(1);
-        float_arr[0] = value;
-        var arr = new Uint8Array(float_arr.buffer);
-        for (var i = 0, len = 4; i < len; ++i) {
-            this.pushData(arr[i]);
+        if (this.error_code || !this.checkSize(4)) {
+            return;
         }
+        this.data_view.setFloat32(this.write_pos, value, this.is_little_endian);
+        this.write_pos += 4;
     },
 
     /**
@@ -171,35 +217,11 @@ DopEncode.prototype = {
      * @param {number} value
      */
     writeDouble: function (value) {
-        value = dopBase.floatVal(value);
-        var float_arr = new Float64Array(1);
-        float_arr[0] = value;
-        var arr = new Uint8Array(float_arr.buffer);
-        for (var i = 0, len = 8; i < len; ++i) {
-            this.pushData(arr[i]);
+        if (this.error_code || !this.checkSize(8)) {
+            return;
         }
-    },
-
-    /**
-     * 写入dop的option标志位
-     */
-    writeDopOptionFlag: function (pid, sign, mask) {
-        var opt_flag = 0;
-        if (pid) {
-            opt_flag |= this.prototype.OPTION_PID;
-        }
-        if (sign || mask) {
-            opt_flag |= this.prototype.OPTION_SIGN;
-        }
-        if (mask) {
-            opt_flag |= this.prototype.OPTION_MASK;
-        }
-        var buffer = new ArrayBuffer(2);
-        new DataView(buffer).setInt16(0, 256, true);
-        if (256 !== new Int16Array(buffer)[0]) {
-            opt_flag |= this.prototype.OPTION_ENDIAN;
-        }
-        this.writeChar(opt_flag);
+        this.data_view.setFloat64(this.write_pos, value, this.is_little_endian);
+        this.write_pos += 8;
     },
 
     /**
@@ -207,20 +229,32 @@ DopEncode.prototype = {
      * @param {DopEncode} buffer
      */
     joinBuffer: function (buffer) {
+        if (null === buffer.byte_array) {
+            return;
+        }
         for (var i = 0; i < buffer.write_pos; ++i) {
-            this.pushData(buffer.buffer[i]);
+            this.writeChar(buffer.byte_array[i]);
         }
     },
 
     /**
      * 写入Uint8Array
      * @param {Uint8Array} arr
+     * @param {boolean} len_head 是否要先写入长度head
      */
-    writeUint8Array: function(arr){
+    writeUint8Array: function(arr, len_head){
+        if (!(arr instanceof Uint8Array)) {
+            return;
+        }
         var len = arr.length;
-        this.writeLength(len);
+        if (len_head) {
+            this.writeLength(len);
+        }
+        if (this.error_code || !this.checkSize(len)) {
+            return;
+        }
         for (var i = 0; i < len; ++i) {
-            this.pushData(arr[i]);
+            this.byte_array[this.write_pos++] = arr[i];
         }
     },
 
@@ -249,9 +283,13 @@ DopEncode.prototype = {
 
     /**
      * 获取ByteArray
+     * @return Uint8Array
      */
-    getBuffer: function () {
-        return this.buffer.slice(0, this.write_pos);
+    dumpUint8Array: function () {
+        if (null === this.byte_array) {
+            return new Uint8Array(0);
+        }
+        return this.byte_array.slice(0, this.write_pos);
     },
 
     /**
@@ -259,7 +297,7 @@ DopEncode.prototype = {
      * @param {string} pid
      */
     writePid: function (pid) {
-        this.writeString();
+        this.writeString(pid);
         this.pid_pos = this.write_pos;
         this.opt_flag |= DopEncode.prototype.OPTION_PID;
     },
@@ -285,34 +323,31 @@ DopEncode.prototype = {
      * @return Uint8Array
      */
     pack: function () {
-        var result_buf = new DopEncode();
-        result_buf.writeChar(this.opt_flag);
-        result_buf.writeLength(this.write_pos);
         if (this.opt_flag & DopEncode.prototype.OPTION_SIGN) {
-            var sign_code = this.signCode(this.buffer, this.write_pos);
+            var sign_code = this.signCode(this.byte_array, this.write_pos);
             var buffer = dopBase.strToBin(sign_code);
-            this.joinBuffer(buffer);
+            this.writeUint8Array(buffer, false);
         }
         if (this.opt_flag & DopEncode.prototype.OPTION_MASK) {
             this.doMask(this.pid_pos, this.mask_key);
         }
-        //字节序判断
-        var m = new Uint32Array(1);
-        m[0] = 0x12345678;
-        var c = new Uint8Array(m.buffer);
-        if (0x12 === c[0] && 0x34 === c[1]) {
+        if (BIG_ENDIAN === this.is_little_endian) {
             this.opt_flag |= DopEncode.prototype.OPTION_ENDIAN;
         }
         var current_pos = this.write_pos;
         this.writeChar(this.opt_flag);
         this.writeLength(current_pos);
         var new_buffer = new DopEncode(this.write_pos);
+        //内在不够的情况
+        if (new_buffer.error_code) {
+            return new Uint8Array(0);
+        }
         new_buffer.writeChar(this.opt_flag);
         new_buffer.writeLength(current_pos);
         for (var i = 0; i < current_pos; ++i) {
-            new_buffer.buffer[new_buffer.write_pos++] = this.buffer[i];
+            new_buffer.byte_array[new_buffer.write_pos++] = this.byte_array[i];
         }
-        return new_buffer.buffer;
+        return new_buffer.byte_array;
     },
 
     /**
@@ -336,7 +371,7 @@ DopEncode.prototype = {
         var key_arr = dopBase.strToBin(key), index;
         for (var i = beg_pos; i < this.write_pos; ++i) {
             index = pos++ % key_arr.write_pos;
-            this.buffer[i] ^= key_arr.buffer[index];
+            this.byte_array[i] ^= key_arr.buffer[index];
         }
     },
 

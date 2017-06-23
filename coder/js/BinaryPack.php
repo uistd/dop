@@ -72,7 +72,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushIndent('result.mask(mask_key);');
             $code_buf->pushStr('}');
             //打包进去协议
-            $code_buf->pushStr('result.writeUint8Array(this.binaryStruct());');
+            $code_buf->pushStr('result.writeUint8Array(this.binaryStruct(), true);');
         }
         $all_item = $struct->getAllExtendItem();
         $tmp_index = 0;
@@ -88,11 +88,12 @@ class BinaryPack extends PackerBase
                 if (ItemType::STRUCT === $item_type) {
                     /** @var $item StructItem */
                     $sub_struct = $item->getStruct();
-                    $code_buf->pushStr('if (this.' . $name . '.constructor !== ' . $sub_struct->getClassName() . ' ) {');
+                    $code_buf->pushStr('if (!(this.' . $name . ' instanceof ' . $sub_struct->getClassName() . ')) {');
                     //写入 0 表示空struct
                     $code_buf->pushIndent('result.writeChar(0);');
                 } else {
-                    $code_buf->pushStr('if (!DopBase.isArray(this.' . $name . ')){');
+                    $func_name = ItemType::MAP === $item_type ? 'isObject' : 'isArray';
+                    $code_buf->pushStr('if (!DopBase.' . $func_name . '(this.' . $name . ')){');
                     //写入 0，表示数组长度 0
                     $code_buf->pushIndent('result.writeChar(0);');
                 }
@@ -140,7 +141,7 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr('binaryDecode: function(data, mask_key) {');
         $code_buf->indentIncrease();
         $code_buf->pushStr('mask_key = mask_key || null;');
-        $code_buf->pushStr('var decoder = (data.constructor === DopDecode) ? data : new DopDecode(data);');
+        $code_buf->pushStr('var decoder = (data instanceof DopDecode) ? data : new DopDecode(data);');
         $code_buf->pushStr('var data_arr = decoder.unpack(mask_key);');
         $code_buf->pushStr('if (decoder.getErrorCode()) {');
         $code_buf->pushIndent('return false;');
@@ -249,6 +250,10 @@ class BinaryPack extends PackerBase
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::MAP:
+                $code_buf->pushStr('if (!DopBase.isObject(' . $var_name . ')) {');
+                $code_buf->pushIndent('continue;');
+                $code_buf->pushStr('}');
+                break;
             case ItemType::ARR:
                 $code_buf->pushStr('if (!DopBase.isArray(' . $var_name . ')) {');
                 $code_buf->pushIndent('continue;');
@@ -256,7 +261,7 @@ class BinaryPack extends PackerBase
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
-                $code_buf->pushStr('if (' . $var_name . '.constructor !== ' . $item->getStructName() . ') {');
+                $code_buf->pushStr('if (!(' . $var_name . ' instanceof ' . $item->getStructName() . ')) {');
                 $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
                 break;
