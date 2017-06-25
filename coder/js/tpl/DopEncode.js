@@ -158,7 +158,7 @@ DopEncode.prototype = {
      * 由于JavaScript 不支持64位整数，只能做特殊处理
      * @param {int|string} value
      */
-    writeBigInt: function (value) {
+    writeBigInt: function writeBigInt(value) {
         if (this.error_code || !this.checkSize(8)) {
             return;
         }
@@ -175,7 +175,7 @@ DopEncode.prototype = {
                 hex_arr[i] = parseInt(value.charAt(pos) + value.charAt(pos + 1), 16);
             }
             //如果是小字节编码，就要重排一下顺序
-            if (LITTLE_ENDIAN === this.is_little_endian) {
+            if (this.is_little_endian) {
                 hex_arr.reverse();
             }
             this.writeUint8Array(hex_arr, false);
