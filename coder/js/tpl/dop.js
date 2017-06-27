@@ -612,3 +612,19 @@ exports.md5 = (function () {
         return md5.hex();
     }
 })();
+
+/**
+ * 二进制转hex
+ * @param {Uint8Array} bin_arr
+ */
+exports.binToHex = function(bin_arr){
+    var result = '', tmp_value;
+    for (var i = 0; i < bin_arr.length; ++i) {
+        tmp_value = bin_arr[i].toString(16);
+        if (tmp_value.length < 2) {
+            tmp_value = '0' + tmp_value;
+        }
+        result += tmp_value;
+    }
+    return result;
+};

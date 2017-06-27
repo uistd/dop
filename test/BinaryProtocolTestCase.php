@@ -30,14 +30,14 @@ $data->test_arr->age = 20;
 $data->test_arr->mobile = '18018684626';
 $bin_data = $data->binaryEncode();
 echo 'pack result:'. md5($bin_data) . ' strlen:'. strlen($bin_data), PHP_EOL;
-$js_bin = base64_decode('APxJAboEaW50OBIFdWludDiSBWludDE2IgZ1aW50MTaiA2ludEIEdWludMIFaW50NjSCBnN0cmluZwEFZmxvYXQDBmRvdWJsZQgGYmluYXJ5BARsaXN0BQVCA21hcAdCAQtudWxsX3N0cnVjdAYKCG5vX3ZhbHVlQgZzdHJ1Y3QGHwpmaXJzdF9uYW1lAQlsYXN0X25hbWUBBmdlbmRlchIIdGVzdF9hcnIGEwRuYW1lAQZtb2JpbGUBA2FnZUJ///9///////9//////wAAAAD/////EFRoaXMgaXMgRE9QIHRlc3QzM8hCYMrAAc1Aj0AVVGhpcyBpcyBiaW5hcnkgc3RyaW5nAAMBAAAABXRlc3QxAgAAAAV0ZXN0MgMAAAAFdGVzdDMA/wJMaQRHYW5nAf8IYmx1ZWJpcmQLMTgwMTg2ODQ2MjYUAAAA');
+/**$js_bin = base64_decode('APxJAboEaW50OBIFdWludDiSBWludDE2IgZ1aW50MTaiA2ludEIEdWludMIFaW50NjSCBnN0cmluZwEFZmxvYXQDBmRvdWJsZQgGYmluYXJ5BARsaXN0BQVCA21hcAdCAQtudWxsX3N0cnVjdAYKCG5vX3ZhbHVlQgZzdHJ1Y3QGHwpmaXJzdF9uYW1lAQlsYXN0X25hbWUBBmdlbmRlchIIdGVzdF9hcnIGEwRuYW1lAQZtb2JpbGUBA2FnZUJ///9///////9//////wAAAAD/////EFRoaXMgaXMgRE9QIHRlc3QzM8hCYMrAAc1Aj0AVVGhpcyBpcyBiaW5hcnkgc3RyaW5nAAMBAAAABXRlc3QxAgAAAAV0ZXN0MgMAAAAFdGVzdDMA/wJMaQRHYW5nAf8IYmx1ZWJpcmQLMTgwMTg2ODQ2MjYUAAAA');
 for ($i = 0; $i < strlen($js_bin); ++$i) {
     if ($js_bin{$i} !== $bin_data{$i}) {
         echo $i, ' ', ord($js_bin{$i}), ':', ord($bin_data{$i}), PHP_EOL;
     }
 }
 die();
-
+*/
 $new_data = new TestData();
 $buffer = new \ffan\dop\DopDecode($bin_data);
 $re = $new_data->binaryDecode($buffer);
@@ -72,6 +72,7 @@ if ($re) {
 }
 
 $bin_data4 = $data->binaryEncode(true, true, 'www.ffan.com');
+echo 'pack mask result:'. md5($bin_data4), PHP_EOL;
 $new_data4 = new TestData();
 $re = $new_data4->binaryDecode($new_data4, 'www.ffan.com');
 if ($re) {

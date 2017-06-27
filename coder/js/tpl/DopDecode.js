@@ -12,8 +12,9 @@ function DopDecode(buffer) {
     if ('[object Uint8Array]' !== Object.prototype.toString.call(buffer)) {
         buffer = new Uint8Array(0);
     }
-    this.buffer = buffer;
+    this.byte_array = buffer;
     this.max_pos = buffer.byteLength;
+    this.data_view = new DataView(this.byte_array.byte_array);
 }
 
 DopDecode.prototype = {
@@ -58,21 +59,33 @@ DopDecode.prototype = {
     mask_data_pos: 0,
 
     /**
-     * 字节顺序
+     * 是否是小字节序
      */
-    endian: LITTLE_ENDIAN,
+    is_little_endian: true,
 
+    /**
+     * 长度检查
+     * @param {int} size
+     */
+    size_check: function(size){
+        if (this.max_pos - this.read_pos < size) {
+            this.error_code = ERROR_SIZE;
+            return false;
+        }
+        return true;
+    },
+    
     /**
      * 读取一个有符号字节
      * @return {int}
      */
     readChar: function () {
-        var re = this.readUnsignedChar();
-        //负数还原
-        if (re > 0x7f) {
-            re = (0xff - re + 1 ) * -1;
+        if(!this.size_check(1)) {
+            return 0;
         }
-        return re;
+        var result = this.data_view.getInt8(this.read_pos);
+        this.read_pos++;
+        return result;
     },
 
     /**
@@ -80,11 +93,12 @@ DopDecode.prototype = {
      * @return {int}
      */
     readUnsignedChar: function () {
-        if (this.read_pos >= this.write_pos) {
-            this.error_code = ERROR_SIZE;
+        if(!this.size_check(1)) {
             return 0;
         }
-        return this.buffer[this.read_pos++];
+        var result = this.data_view.getUint8(this.read_pos);
+        this.read_pos++;
+        return result;
     },
 
     /**
@@ -92,11 +106,12 @@ DopDecode.prototype = {
      * @return {int}
      */
     readShort: function () {
-        var re = this.readUnsignedShort();
-        if (re > 0x7ffff) {
-            re = (0xffff - re + 1 ) * -1;
+        if(!this.size_check(2)) {
+            return 0;
         }
-        return re;
+        var result = this.data_view.getInt16(this.read_pos, this.is_little_endian);
+        this.read_pos += 2;
+        return result;
     },
 
     /**
@@ -104,15 +119,12 @@ DopDecode.prototype = {
      * @return {int}
      */
     readUnsignedShort: function () {
-        var h, l;
-        if (BIG_ENDIAN === this.endian) {
-            h = this.readUnsignedChar();
-            l = this.readUnsignedChar();
-        } else {
-            l = this.readUnsignedChar();
-            h = this.readUnsignedChar();
+        if(!this.size_check(2)) {
+            return 0;
         }
-        return (h << 8) + l;
+        var result = this.data_view.getUint16(this.read_pos, this.is_little_endian);
+        this.read_pos += 2;
+        return result;
     },
 
     /**
@@ -120,11 +132,12 @@ DopDecode.prototype = {
      * @return {int}
      */
     readInt: function () {
-        var re = this.readUnsignedInt();
-        if (re > 0x7fffffff) {
-            re = (0xffffffff - re + 1 ) * -1;
+        if(!this.size_check(4)) {
+            return 0;
         }
-        return re;
+        var result = this.data_view.getInt32(this.read_pos, this.is_little_endian);
+        this.read_pos += 4;
+        return result;
     },
 
     /**
@@ -132,31 +145,28 @@ DopDecode.prototype = {
      * @return {int}
      */
     readUnsignedInt: function () {
-        var h, l;
-        if (BIG_ENDIAN === this.endian) {
-            h = this.readUnsignedShort();
-            l = this.readUnsignedShort();
-        } else {
-            l = this.readUnsignedShort();
-            h = this.readUnsignedShort();
+        if(!this.size_check(4)) {
+            return 0;
         }
-        return (h << 16) + l;
+        var result = this.data_view.getUint32(this.read_pos, this.is_little_endian);
+        this.read_pos += 4;
+        return result;
     },
 
     /**
      * 读无符合64位int
-     * @return {int}
+     * 因为js对64位int的支持非常不好，暂时只能读出字符串，hex字符串
+     * @return {string}
      */
     readBigInt: function () {
-        var h, l;
-        if (BIG_ENDIAN === this.endian) {
-            h = this.readInt();
-            l = this.readUnsignedInt();
-        } else {
-            l = this.readUnsignedInt();
-            h = this.readInt();
+        if(!this.size_check(8)) {
+            return 0;
         }
-        return (h << 32) + l;
+        var tmp_arr = new Uint8Array(8);
+        for (var i = 0; i < 8; i++) {
+            tmp_arr[i] = this.byte_array[this.read_pos++];
+        }
+        return dopBase.binToHex(tmp_arr);
     },
 
     /**
@@ -164,12 +174,13 @@ DopDecode.prototype = {
      * @return {number}
      */
     readFloat: function () {
-        var arr = this.slice(4);
-        if (this.error_code) {
+        if(!this.size_check(4)) {
             return 0;
         }
-        var tmp = new Float32Array(arr.buffer);
-        return tmp[0];
+        //float 标准好像没有 高低位 的说法，不知道为什么js的api 还有高低位，暂时全部使用little endian
+        var result = this.data_view.getFloat32(this.read_pos, true);
+        this.read_pos += 4;
+        return result;
     },
 
     /**
@@ -177,12 +188,12 @@ DopDecode.prototype = {
      * @return {number}
      */
     readDouble: function(){
-        var arr = this.slice(8);
-        if (this.error_code) {
+        if(!this.size_check(8)) {
             return 0;
         }
-        var tmp = new Float64Array(arr.buffer);
-        return tmp[0];
+        var result = this.data_view.getFloat64(this.read_pos, true);
+        this.read_pos += 8;
+        return result;
     },
 
     /**
@@ -194,14 +205,14 @@ DopDecode.prototype = {
         size |= 0;
         if (size <= 0) {
             this.error_code = ERROR_DATA;
-            return this.buffer;
+            return this.byte_array;
         }
         //空间不够了
         if (this.max_pos - this.read_pos < size) {
             this.error_code = ERROR_SIZE;
-            return this.buffer;
+            return this.byte_array;
         }
-        var result = this.buffer.slice(this.read_pos, size);
+        var result = this.byte_array.slice(this.read_pos, size);
         this.read_pos += size;
         return result;
     },
@@ -260,7 +271,7 @@ DopDecode.prototype = {
         this.opt_flag = this.readUnsignedChar();
         //字节序判断
         if (this.opt_flag & DopEncode.prototype.OPTION_ENDIAN) {
-            this.endian = BIG_ENDIAN;
+            this.is_little_endian = false;
         }
         var total_len = this.readLength();
         if (total_len !== this.max_pos - this.read_pos) {
@@ -296,9 +307,9 @@ DopDecode.prototype = {
         }
         //找出参与签名的数据
         var end_pos = DopEncode.prototype.SIGN_CODE_LEN * -1;
-        var sign_buf = this.buffer.slice(this.buffer, this.sign_data_pos, end_pos);
+        var sign_buf = this.byte_array.slice(this.byte_array, this.sign_data_pos, end_pos);
         var sign_code = DopEncode.prototype.signCode(sign_buf, sign_buf.length);
-        var code = dopBase.binToStr(this.buffer.slice(end_pos));
+        var code = dopBase.binToStr(this.byte_array.slice(end_pos));
         if (sign_code !== code) {
             this.error_code = ERROR_SIGN_CODE;
             return false;
@@ -355,6 +366,7 @@ DopDecode.prototype = {
             return false;
         }
         var protocol_decoder = new DopDecode(proto_buf);
+        protocol_decoder.is_little_endian = this.is_little_endian;
         var struct_arr = protocol_decoder.readProtocolStruct();
         //再解出数据
         var result = this.readStructData(struct_arr);
@@ -531,6 +543,7 @@ DopDecode.prototype = {
                     return null;
                 }
                 var sub_protocol = new DopDecode(sub_buffer);
+                sub_protocol.is_little_endian = this.is_little_endian;
                 var sub_struct = sub_protocol.readProtocolStruct();
                 var err_code = sub_protocol.getErrorCode();
                 if (err_code > 0) {

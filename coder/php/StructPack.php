@@ -54,17 +54,17 @@ class StructPack extends PackerBase
         $code_buf->pushStr('public static function binaryStruct()');
         $code_buf->pushStr('{');
         $code_buf->indentIncrease();
-        $code_buf->pushStr('$buffer = new DopEncode();');
+        $code_buf->pushStr('$byte_array = new DopEncode();');
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            $code_buf->pushStr('$buffer->writeString(\'' . $name . '\');');
+            $code_buf->pushStr('$byte_array->writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }
-        $code_buf->pushStr('return $buffer->dump();');
+        $code_buf->pushStr('return $byte_array->dump();');
         $code_buf->indentDecrease()->pushStr('}');
     }
 
@@ -101,7 +101,7 @@ class StructPack extends PackerBase
     {
         $bin_type = $item->getBinaryType();
         $code_buf->pushStr('//'. $this->typeComment($bin_type));
-        $code_buf->pushStr('$buffer->writeChar(0x' . dechex($bin_type) . ');');
+        $code_buf->pushStr('$byte_array->writeChar(0x' . dechex($bin_type) . ');');
         $type = $item->getType();
         switch ($type) {
             case ItemType::ARR:
@@ -119,7 +119,7 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('$buffer->writeString('.$class_name.'::binaryStruct());');
+                $code_buf->pushStr('$byte_array->writeString('.$class_name.'::binaryStruct());');
                 break;
         }
     }

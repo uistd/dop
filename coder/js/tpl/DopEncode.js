@@ -371,7 +371,7 @@ DopEncode.prototype = {
         var key_arr = dopBase.strToBin(key), index;
         for (var i = beg_pos; i < this.write_pos; ++i) {
             index = pos++ % key_arr.write_pos;
-            this.byte_array[i] ^= key_arr.buffer[index];
+            this.byte_array[i] ^= key_arr[index];
         }
     },
 

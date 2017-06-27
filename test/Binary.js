@@ -30,7 +30,14 @@ data.test_arr.mobile = '18018684626';
 data.null_struct = null;
 var bin_data = data.binaryEncode();
 console.log('len:', bin_data.length, dopBase.md5(bin_data));
-console.log(dopBase.base64.encode(bin_data));
+var bin_data2 = data.binaryEncode(true);
+console.log('len:', bin_data2.length, dopBase.md5(bin_data2));
+var bin_data3 = data.binaryEncode(true, true);
+console.log('len:', bin_data3.length, dopBase.md5(bin_data3));
+var bin_data4 = data.binaryEncode(true, true, 'www.ffan.com');
+console.log('len:', bin_data4.length, dopBase.md5(bin_data4));
+
+
 var decoder = new DopDecode(bin_data);
 console.log(decoder instanceof DopDecode);
 console.log(decoder.unpack());
