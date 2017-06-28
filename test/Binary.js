@@ -12,7 +12,7 @@ data.int16 = 0x7fff;
 data.uint16 = 0xffff;
 data.int = 0x7fffffff;
 data.uint = 0xffffffff;
-data.int64 = 0xffffffff;
+data.int64 = 0xfffffffffff;
 data.float = 100.1;
 data.double = 1000.1001010;
 data.string = 'This is DOP test';
@@ -39,5 +39,17 @@ console.log('len:', bin_data4.length, dopBase.md5(bin_data4));
 
 
 var decoder = new DopDecode(bin_data);
-console.log(decoder instanceof DopDecode);
-console.log(decoder.unpack());
+var arr = decoder.unpack();
+console.dir(arr);
+
+var decoder2 = new DopDecode(bin_data2);
+var arr2 = decoder2.unpack();
+console.dir(arr2);
+
+var decoder3 = new DopDecode(bin_data3);
+var arr3 = decoder3.unpack();
+console.dir(arr3);
+
+var decoder4 = new DopDecode(bin_data4);
+var arr4 = decoder4.unpack('www.ffan.com');
+console.dir(arr4);

@@ -2,7 +2,7 @@
 var dopBase = require('./dop');
 
 //固定值
-var LITTLE_ENDIAN = 0, BIG_ENDIAN = 1, DEFAULT_SIZE = 1024, ERROR_OUT_OF_MEMORY = 1;
+var DEFAULT_SIZE = 1024, ERROR_OUT_OF_MEMORY = 1;
 
 function DopEncode(size) {
     size |= 0;
@@ -163,7 +163,7 @@ DopEncode.prototype = {
             return;
         }
         //可以传入16进制字符串，表示js不支持的超过0x1fffffffffffff的数字
-        if ('string' === typeof value && /^(0x)?[a-f\d]{1,8}$/i.test(value)) {
+        if ('string' === typeof value && /^(0x)?[a-f\d]{1,16}$/i.test(value)) {
             value = value.replace(/^0x/i, '');
             var hex_arr = new Uint8Array(8), pos, i;
             //将字符串补齐16位
@@ -329,9 +329,9 @@ DopEncode.prototype = {
             this.writeUint8Array(buffer, false);
         }
         if (this.opt_flag & DopEncode.prototype.OPTION_MASK) {
-            this.doMask(this.pid_pos, this.mask_key);
+            this.doMask(this.pid_pos, this.write_pos, this.mask_key);
         }
-        if (BIG_ENDIAN === this.is_little_endian) {
+        if (!this.is_little_endian) {
             this.opt_flag |= DopEncode.prototype.OPTION_ENDIAN;
         }
         var current_pos = this.write_pos;
@@ -364,18 +364,20 @@ DopEncode.prototype = {
     /**
      * 数据加密
      * @param {int} beg_pos 数据开始位置
+     * @param {int} end_pos 结束位置
      * @param {string} mask_key 数据加密key
      */
-    doMask: function (beg_pos, mask_key) {
+    doMask: function (beg_pos, end_pos, mask_key) {
         var key = this.fixMaskKey(mask_key), pos = 0;
         var key_arr = dopBase.strToBin(key), index;
-        for (var i = beg_pos; i < this.write_pos; ++i) {
-            index = pos++ % key_arr.write_pos;
+        for (var i = beg_pos; i < end_pos; ++i) {
+            index = pos++ % key_arr.length;
             this.byte_array[i] ^= key_arr[index];
         }
     },
 
     /**
+     * mask key处理
      * @param {string} key
      */
     fixMaskKey: function (key) {

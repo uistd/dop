@@ -626,5 +626,5 @@ exports.binToHex = function(bin_arr){
         }
         result += tmp_value;
     }
-    return result;
+    return '0x' + result;
 };

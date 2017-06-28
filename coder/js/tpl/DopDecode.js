@@ -1,8 +1,6 @@
 'use strict';
 var dopBase = require('./dop');
 var DopEncode = require('./DopEncode');
-//固定值
-var BIG_ENDIAN = 1, LITTLE_ENDIAN = 2;
 var ERROR_SIZE = 1, ERROR_SIGN_CODE = 2, ERROR_DATA = 3, ERROR_MASK = 4;
 
 function DopDecode(buffer) {
@@ -14,7 +12,7 @@ function DopDecode(buffer) {
     }
     this.byte_array = buffer;
     this.max_pos = buffer.byteLength;
-    this.data_view = new DataView(this.byte_array.byte_array);
+    this.data_view = new DataView(this.byte_array.buffer);
 }
 
 DopDecode.prototype = {
@@ -27,7 +25,7 @@ DopDecode.prototype = {
      * 最大的可读位置
      */
     max_pos: 0,
-    
+
     /**
      * 错误码
      */
@@ -74,7 +72,7 @@ DopDecode.prototype = {
         }
         return true;
     },
-    
+
     /**
      * 读取一个有符号字节
      * @return {int}
@@ -156,7 +154,7 @@ DopDecode.prototype = {
     /**
      * 读无符合64位int
      * 因为js对64位int的支持非常不好，暂时只能读出字符串，hex字符串
-     * @return {string}
+     * @return {string|int}
      */
     readBigInt: function () {
         if(!this.size_check(8)) {
@@ -166,7 +164,36 @@ DopDecode.prototype = {
         for (var i = 0; i < 8; i++) {
             tmp_arr[i] = this.byte_array[this.read_pos++];
         }
-        return dopBase.binToHex(tmp_arr);
+        if (this.is_little_endian) {
+            tmp_arr.reverse();
+        }
+        //去掉前面所有的0
+        for (i = 0; i < 8; i++) {
+            if (0 !== tmp_arr[i]) {
+                break;
+            }
+        }
+        //全部是0
+        if (8 === i) {
+            return 0;
+        }
+        var new_arr;
+        //没有0
+        if (0 === i) {
+            new_arr = tmp_arr;
+        } else {
+            new_arr = new Uint8Array(8 - i);
+        }
+        for (var m = 0; i < 8; ++i) {
+            new_arr[m++] = tmp_arr[i];
+        }
+        var int_str = dopBase.binToHex(new_arr);
+        //如果大于53位，js已经不能表示了，就以hex字符串表示
+        if (new_arr.length * 8 < 53) {
+            return parseInt(int_str, 16);
+        } else {
+            return int_str;
+        }
     },
 
     /**
@@ -207,12 +234,10 @@ DopDecode.prototype = {
             this.error_code = ERROR_DATA;
             return this.byte_array;
         }
-        //空间不够了
-        if (this.max_pos - this.read_pos < size) {
-            this.error_code = ERROR_SIZE;
+        if(!this.size_check(size)) {
             return this.byte_array;
         }
-        var result = this.byte_array.slice(this.read_pos, size);
+        var result = this.byte_array.slice(this.read_pos, size + this.read_pos);
         this.read_pos += size;
         return result;
     },
@@ -253,10 +278,13 @@ DopDecode.prototype = {
      */
     readString: function(){
         var len = this.readLength();
-        if (0 === len || this.error_code) {
+        if (0 === len) {
             return '';
         }
         var arr = this.slice(len);
+        if (this.error_code) {
+            return '';
+        }
         return dopBase.binToStr(arr);
     },
 
@@ -282,6 +310,7 @@ DopDecode.prototype = {
         this.sign_data_pos = this.read_pos;
         if (this.opt_flag & DopEncode.prototype.OPTION_PID) {
             this.pid = this.readString();
+            this.mask_data_pos = this.read_pos;
         }
         this.mask_data_pos = this.read_pos;
     },
@@ -307,7 +336,7 @@ DopDecode.prototype = {
         }
         //找出参与签名的数据
         var end_pos = DopEncode.prototype.SIGN_CODE_LEN * -1;
-        var sign_buf = this.byte_array.slice(this.byte_array, this.sign_data_pos, end_pos);
+        var sign_buf = this.byte_array.slice(this.sign_data_pos, end_pos);
         var sign_code = DopEncode.prototype.signCode(sign_buf, sign_buf.length);
         var code = dopBase.binToStr(this.byte_array.slice(end_pos));
         if (sign_code !== code) {
@@ -325,7 +354,13 @@ DopDecode.prototype = {
      * @param {string} mask_key 数据加密key
      */
     doMask: DopEncode.prototype.doMask,
-    
+
+    /**
+     * mask key处理
+     * @param {string} key
+     */
+    fixMaskKey: DopEncode.prototype.fixMaskKey,
+
     /**
      * 数据解密
      * @param {string} mask_key
@@ -335,7 +370,7 @@ DopDecode.prototype = {
         if (!(this.opt_flag & DopEncode.prototype.OPTION_MASK)) {
             return true;
         }
-        this.doMask(this.mask_data_pos, mask_key);
+        this.doMask(this.mask_data_pos, this.max_pos, mask_key);
         if (!this.checkSignCode()) {
             this.error_code = ERROR_MASK;
             return false;
@@ -343,7 +378,7 @@ DopDecode.prototype = {
         this.opt_flag ^= DopEncode.prototype.OPTION_MASK;
         return true;
     },
-    
+
     /**
      * 解压出数据
      * @return {boolean|Object}
@@ -353,9 +388,11 @@ DopDecode.prototype = {
         if (this.opt_flag & DopEncode.prototype.OPTION_MASK) {
             if ('string' !== typeof mask_key || 0 === mask_key.length) {
                 this.error_code = ERROR_MASK;
+                return false;
             }
-            this.unmask(mask_key);
-            return false;
+            if (!this.unmask(mask_key)) {
+                return false;
+            }
         }
         if ((this.opt_flag & DopEncode.prototype.OPTION_SIGN) && !this.checkSignCode()) {
             return false;
