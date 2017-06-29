@@ -85,7 +85,7 @@ class StructPack extends PackerBase
         $class_file = $this->coder->getClassFileBuf($struct);
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         if ($use_buf) {
-            $use_buf->pushLockStr('var DopEncode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopEncode");');
+            $use_buf->pushUniqueStr('var DopEncode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopEncode");');
         }
     }
 

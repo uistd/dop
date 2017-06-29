@@ -17,7 +17,7 @@ class StrBuf implements BufInterface
     /**
      * @var string 连接字符
      */
-    private $join_str;
+    private $join_str = '';
 
     /**
      * @var array

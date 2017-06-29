@@ -269,7 +269,7 @@ class CodeBuf implements BufInterface
      * 写入一行代码，并锁定，不允许再写入第二次
      * @param string $code
      */
-    public function pushLockStr($code)
+    public function pushUniqueStr($code)
     {
         if (isset($this->code_lock[$code])) {
             return;

@@ -3,3 +3,4 @@ vendor/
 composer.lock
 test/tpl/
 test/runtime/
+test/java/com/

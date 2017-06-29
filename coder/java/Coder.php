@@ -1,12 +1,13 @@
 <?php
 
-namespace ffan\dop\coder\php;
+namespace ffan\dop\coder\java;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\StrBuf;
 use ffan\dop\Exception;
+use ffan\dop\protocol\IntItem;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -16,48 +17,75 @@ use ffan\dop\protocol\StructItem;
 
 /**
  * Class Coder
- * @package ffan\dop\coder\php
+ * @package ffan\dop\coder\java
  */
 class Coder extends CoderBase
 {
     /**
-     * 生成后的主文件
-     */
-    const MAIN_FILE = 'dop.php';
-
-    /**
      * 变量类型
      * @param Item $item
+     * @param int $depth 深度
      * @return string
      */
-    public static function varType(Item $item)
+    public static function varType(Item $item, $depth = 0)
     {
         $type = $item->getType();
-        $str = 'mixed';
+        $str = '';
         switch ($type) {
             case ItemType::BINARY:
+                $str = 'byte[]';
+                break;
             case ItemType::STRING:
-                $str = 'string';
+                $str = 'String';
                 break;
             case ItemType::FLOAT:
-            case ItemType::DOUBLE:
                 $str = 'float';
+                break;
+            case ItemType::DOUBLE:
+                $str = 'double';
                 break;
             case ItemType::STRUCT;
                 /** @var StructItem $item */
                 $str = $item->getStructName();
                 break;
             case ItemType::MAP;
-                $str = 'array';
+                if ($depth > 0) {
+                    $str = 'Map';
+                } else {
+                    /** @var MapItem $item */
+                    $key_item = $item->getKeyItem();
+                    $value_item = $item->getValueItem();
+                    $key_type = self::varType($key_item, $depth + 1);
+                    $value_type = self::varType($value_item, $depth + 1);
+                    $str = 'Map<' . $key_type . ', ' . $value_type . '>';
+                }
                 break;
             case ItemType::ARR:
-                /** @var ListItem $item */
-                $sub_item = $item->getItem();
-                $sub_type = self::varType($sub_item);
-                $str = 'array[' . $sub_type . ']';
+                if ($depth > 0) {
+                    $str = 'List';
+                } else {
+                    /** @var ListItem $item */
+                    $sub_item = $item->getItem();
+                    $sub_type = self::varType($sub_item, $depth + 1);
+                    $str = 'List<' . $sub_type . '>';
+                }
                 break;
             case ItemType::INT:
-                $str = 'int';
+                /** @var IntItem $item */
+                $byte = $item->getByte();
+                //因为java不支持unsigned 所以 升位 表示。 char 升 short, short升int int升long
+                if ($item->isUnsigned()) {
+                    $byte <<= 1;
+                }
+                if (IntItem::BYTE_TINY === $byte) {
+                    $str = 'byte';
+                } elseif (IntItem::BYTE_SMALL === $byte) {
+                    $str = 'short';
+                } elseif (IntItem::BYTE_INT === $byte) {
+                    $str = 'int';
+                } else {
+                    $str = 'long';
+                }
                 break;
         }
         return $str;
@@ -74,20 +102,20 @@ class Coder extends CoderBase
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
         $class_file = $this->getClassFileBuf($struct);
-        $this->loadTpl($class_file, 'tpl/class.tpl');
-        $class_name_buf = $class_file->getBuf('php_class');
+        $this->loadTpl($class_file, 'tpl/class.java');
+        $class_name_buf = $class_file->getBuf('java_class');
         if (null === $class_name_buf) {
             throw new Exception('Can not found class name buf');
         }
         $class_name_buf->pushStr($main_class_name);
         //模板中的变量处理
-        $class_file->setVariableValue('namespace', $this->joinNameSpace($name_space));
-        $class_file->setVariableValue('struct_node', ' '. $struct->getNote());
+        $class_file->setVariableValue('package', $this->joinNameSpace($name_space));
+        $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
 
-        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
+        $import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
-        if (!$method_buf || !$property_buf || !$use_buf ) {
+        if (!$method_buf || !$property_buf || !$import_buf) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
         $item_list = $struct->getAllExtendItem();
@@ -102,7 +130,7 @@ class Coder extends CoderBase
             } else {
                 $is_first_property = false;
             }
-            $this->makeImportCode($item, $name_space, $use_buf);
+            $this->makeImportCode($item, $name_space, $import_buf);
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
             $property_desc_buf = new StrBuf();
@@ -115,41 +143,40 @@ class Coder extends CoderBase
             $property_buf->pushStr(' */');
             $property_line_buf = new StrBuf();
             $property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr('public $' . $name);
+            $property_line_buf->pushStr('public ' . $item_type . ' ' . $name);
             if ($item->hasDefault()) {
                 $property_line_buf->pushStr(' = ' . $item->getDefault());
             }
             $property_line_buf->pushStr(';');
         }
-        $this->packMethodCode($class_file, $struct);
+        //$this->packMethodCode($class_file, $struct);
     }
 
     /**
      * 生成引用相关的代码
      * @param Item $item
      * @param string $name_space 所在命名空间
-     * @param CodeBuf $use_buf
+     * @param CodeBuf $import_buf
      */
-    private function makeImportCode($item, $name_space, $use_buf)
+    private function makeImportCode($item, $name_space, $import_buf)
     {
         $type = $item->getType();
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
-            $use_ns = $struct->getNamespace();
-            if ($use_ns !== $name_space) {
-                $use_name_space = $this->joinNameSpace($use_ns, $struct->getClassName());
-                if ($use_buf->isEmpty()) {
-                    $use_buf->emptyLine();
-                }
-                $use_buf->pushUniqueStr('use ' . $use_name_space . ';');
-            }
+            $package = $struct->getNamespace();
+            $use_name_space = $this->joinNameSpace($package, $struct->getClassName());
+            $import_buf->pushUniqueStr('import ' . $use_name_space . ';');
         } elseif (ItemType::ARR === $type) {
+            $import_buf->pushUniqueStr('import java.util.ArrayList;');
+            $import_buf->pushUniqueStr('import java.util.List;');
             /** @var ListItem $item */
-            $this->makeImportCode($item->getItem(), $name_space, $use_buf);
+            $this->makeImportCode($item->getItem(), $name_space, $import_buf);
         } elseif (ItemType::MAP === $type) {
+            $import_buf->pushUniqueStr('import java.util.HashMap;');
+            $import_buf->pushUniqueStr('import java.util.Map;');
             /** @var MapItem $item */
-            $this->makeImportCode($item->getValueItem(), $name_space, $use_buf);
+            $this->makeImportCode($item->getValueItem(), $name_space, $import_buf);
         }
     }
 
@@ -158,25 +185,6 @@ class Coder extends CoderBase
      */
     public function buildCommonCode()
     {
-        $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
-        $this->loadTpl($main_buf, 'tpl/dop.tpl');
-        $folder = $this->getFolder();
-        $name_space = $this->joinNameSpace('');
-        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => ''," );
-    }
-
-    /**
-     * 按xml文件生成代码
-     * @param string $xml_file
-     * @param array $ns_struct
-     */
-    public function codeByXml($xml_file, $ns_struct)
-    {
-        $autoload_buf = $this->getBuf('', 'dop.php', 'autoload');
-        if (!$autoload_buf) {
-            return;
-        }
-        $autoload_buf->pushStr("'" . $this->joinNameSpace($xml_file) . "' => '" . $xml_file . "',");
     }
 
     /**
@@ -186,7 +194,7 @@ class Coder extends CoderBase
      */
     private function pathToNs($path)
     {
-        return str_replace('/', '\\', $path);
+        return str_replace('/', '.', $path);
     }
 
     /**
@@ -196,10 +204,14 @@ class Coder extends CoderBase
      * @param string $separator
      * @return string
      */
-    public function joinNameSpace($ns, $class_name = '', $separator = '\\')
+    public function joinNameSpace($ns, $class_name = '', $separator = '.')
     {
         $ns = $this->pathToNs($ns);
-        return parent::joinNameSpace($ns, $class_name, $separator);
+        $result = $this->getConfig('package', 'dop') . $ns;
+        if ($class_name) {
+            $result .= '.' . $class_name;
+        }
+        return $result;
     }
 
     /**
@@ -211,7 +223,7 @@ class Coder extends CoderBase
     {
         $folder = $this->getFolder();
         $path = $struct->getNamespace();
-        $file_name = $struct->getClassName() .'.php';
+        $file_name = $struct->getClassName() . '.java';
         $file = $folder->getFile($path, $file_name);
         if (null === $file) {
             $file = $folder->touch($path, $file_name);

@@ -129,7 +129,7 @@ class BinaryPack extends PackerBase
         $class_file = $this->coder->getClassFileBuf($struct);
         $import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         if ($import_buf) {
-            $import_buf->pushLockStr('var DopDecode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopDecode");');
+            $import_buf->pushUniqueStr('var DopDecode = require("' . $this->coder->relativePath('/', $struct->getNamespace()) . 'DopDecode");');
         }
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');

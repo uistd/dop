@@ -72,6 +72,24 @@ class IntItem extends Item
     );
 
     /**
+     * 获取int所占字节数
+     * @return int
+     */
+    public function getByte()
+    {
+        return $this->byte;
+    }
+
+    /**
+     * 是否是无符号数
+     * @return bool
+     */
+    public function isUnsigned()
+    {
+        return $this->is_unsigned;
+    }
+
+    /**
      * 设置int字节数 和 是否无符号
      * @param string $tag_name
      * @throws Exception

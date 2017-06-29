@@ -70,7 +70,7 @@ class Coder extends CoderBase
         if (!$method_buf || !$property_buf || !$import_buf || !$init_buf ) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF or init_property not found!');
         }
-        $import_buf->pushLockStr('var DopBase = require("' . $this->relativePath('/', $name_space) . 'dop");');
+        $import_buf->pushUniqueStr('var DopBase = require("' . $this->relativePath('/', $name_space) . 'dop");');
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
@@ -148,7 +148,7 @@ class Coder extends CoderBase
             $class_name = $struct->getClassName();
             //$path = './'. $dop_base_path . $struct->getNamespace() . '/'. $class_name;
             $path = self::relativePath($struct->getNamespace(), $base_path). $class_name;
-            $use_buf->pushLockStr('var '. $class_name .' = require("'.$path.'");');
+            $use_buf->pushUniqueStr('var '. $class_name .' = require("'.$path.'");');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
             $this->makeImportCode($item->getItem(), $base_path, $use_buf);
