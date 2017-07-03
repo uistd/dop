@@ -50,7 +50,7 @@ class StructPack extends PackerBase
         $code_buf->pushStr(' * @return Uint8Array');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('binaryStruct: function(){');
-        $code_buf->indentIncrease();
+        $code_buf->indent();
         $code_buf->pushStr('var byte_array = new DopEncode();');
         $all_item = $struct->getAllExtendItem();
         /**
@@ -62,7 +62,7 @@ class StructPack extends PackerBase
             $this->writeItemType($code_buf, $item);
         }
         $code_buf->pushStr('return byte_array.dumpUint8Array();');
-        $code_buf->indentDecrease()->pushStr('},');
+        $code_buf->backIndent()->pushStr('},');
     }
 
     /**

@@ -132,7 +132,7 @@ class CodeBuf implements BufInterface
      * 增加缩进
      * @return $this
      */
-    public function indentIncrease()
+    public function indent()
     {
         $this->indent++;
         return $this;
@@ -142,7 +142,7 @@ class CodeBuf implements BufInterface
      * 减少缩进
      * @return $this
      */
-    public function indentDecrease()
+    public function backIndent()
     {
         if (--$this->indent < 0) {
             $this->indent = 0;

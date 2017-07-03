@@ -26,14 +26,14 @@ class JsonPack extends PackerBase
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function jsonPack()');
         $code_buf->pushStr('{');
-        $code_buf->indentIncrease();
+        $code_buf->indent();
         $code_buf->pushStr('$data = $this->arrayPack();');
         $code_buf->pushStr('$result = json_encode($data, JSON_UNESCAPED_UNICODE);');
         $code_buf->pushStr('if (JSON_ERROR_NONE !== json_last_error()) {');
         $code_buf->pushIndent('$result = \'\';');
         $code_buf->pushStr('}');
         $code_buf->pushStr('return $result;');
-        $code_buf->indentDecrease();
+        $code_buf->backIndent();
         $code_buf->pushStr('}');
     }
 
@@ -52,13 +52,13 @@ class JsonPack extends PackerBase
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function jsonUnpack($json_raw)');
         $code_buf->pushStr('{');
-        $code_buf->indentIncrease();
+        $code_buf->indent();
         $code_buf->pushStr('$data = json_decode($json_raw, true);');
         $code_buf->pushStr('if (JSON_ERROR_NONE !== json_last_error()) {');
         $code_buf->pushIndent('$data = array();');
         $code_buf->pushStr('}');
         $code_buf->pushStr('$this->arrayUnpack($data);');
-        $code_buf->indentDecrease();
+        $code_buf->backIndent();
         $code_buf->pushStr('}');
     }
 

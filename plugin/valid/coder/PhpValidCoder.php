@@ -70,7 +70,7 @@ class PhpValidCoder extends PluginCoderBase
         $method_buf->pushStr(' * @return bool');
         $method_buf->pushStr(' */');
         $method_buf->pushStr('public function validateCheck()');
-        $method_buf->pushStr('{')->indentIncrease();
+        $method_buf->pushStr('{')->indent();
         $all_items = $struct->getAllExtendItem();
         /**
          * @var string $name
@@ -85,7 +85,7 @@ class PhpValidCoder extends PluginCoderBase
             $this->validItem($dop_file, 'this->' . $name, $item, $valid_rule);
         }
         $method_buf->push('return true;');
-        $method_buf->indentDecrease()->push('}');
+        $method_buf->backIndent()->push('}');
 
         $method_buf->emptyLine();
         $method_buf->pushStr('/**');
@@ -185,7 +185,7 @@ class PhpValidCoder extends PluginCoderBase
     private function lengthCheck($valid_buf, $var_name, $rule)
     {
         $valid_buf->pushStr('if (null !== $' . $var_name . ') {');
-        $valid_buf->indentIncrease();
+        $valid_buf->indent();
         //字符串安全性处理
         if ($rule->is_trim || $rule->is_add_slashes || $rule->is_html_special_chars || $rule->is_strip_tags) {
             $left_buf = new StrBuf();
@@ -213,7 +213,7 @@ class PhpValidCoder extends PluginCoderBase
         $max_len = null === $rule->max_str_len ? 'null' : $rule->max_str_len;
         $if_str = 'DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
         $this->conditionCode($valid_buf, $if_str, $rule, 'length');
-        $valid_buf->indentDecrease()->pushStr('}');
+        $valid_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -254,7 +254,7 @@ class PhpValidCoder extends PluginCoderBase
     private function conditionCode($valid_buf, $if_str, $rule, $err_msg_key)
     {
         $valid_buf->pushStr('if (' . $if_str . ') {');
-        $valid_buf->indentIncrease();
+        $valid_buf->indent();
         $err_msg_key .= '_msg';
         if (property_exists($rule, $err_msg_key) && null !== $rule->$err_msg_key) {
             $err_msg = $rule->$err_msg_key;
@@ -263,6 +263,6 @@ class PhpValidCoder extends PluginCoderBase
         }
         $valid_buf->pushStr('$this->validate_error_msg = "' . $err_msg . '";');
         $valid_buf->pushStr('return false;');
-        $valid_buf->indentDecrease()->pushStr('}');
+        $valid_buf->backIndent()->pushStr('}');
     }
 }

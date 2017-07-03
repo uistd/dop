@@ -30,11 +30,11 @@ class Coder extends CoderBase
         $build_define_code = $this->getConfigBool('define_code', false);
         if ($build_define_code) {
             $file_buf->pushStr('define(function (require, exports, module) {');
-            $file_buf->indentIncrease();
+            $file_buf->indent();
         }
         parent::loadTpl($file_buf, $tpl_name, $data);
         if ($build_define_code) {
-            $file_buf->indentDecrease();
+            $file_buf->backIndent();
             $file_buf->pushStr('});');
         }
     }

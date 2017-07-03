@@ -33,7 +33,7 @@ class ArrayPack extends PackerBase
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function arrayPack()');
         $code_buf->pushStr('{');
-        $code_buf->indentIncrease();
+        $code_buf->indent();
         $code_buf->pushStr('$result = array();');
         $all_item = $struct->getAllExtendItem();
         /**
@@ -44,7 +44,7 @@ class ArrayPack extends PackerBase
             self::packItemValue($code_buf, 'this->' . $name, "result['" . $name . "']", $item, 0);
         }
         $code_buf->pushStr('return $result;');
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -62,7 +62,7 @@ class ArrayPack extends PackerBase
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function arrayUnpack($data)');
         $code_buf->pushStr('{');
-        $code_buf->indentIncrease();
+        $code_buf->indent();
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
@@ -71,7 +71,7 @@ class ArrayPack extends PackerBase
         foreach ($all_item as $name => $item) {
             self::unpackItemValue($code_buf, 'this->' . $name, 'data', $item, 0, $name);
         }
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -106,11 +106,11 @@ class ArrayPack extends PackerBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
+                $code_buf->indent();
                 self::packItemValue($code_buf, $for_var_name, $result_var_name . '[]', $sub_item, $depth + 1);
-                $code_buf->indentDecrease()->pushStr('}');
+                $code_buf->backIndent()->pushStr('}');
                 if (0 === $depth) {
-                    $code_buf->indentDecrease()->pushStr('}');
+                    $code_buf->backIndent()->pushStr('}');
                 }
                 $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 break;
@@ -124,13 +124,13 @@ class ArrayPack extends PackerBase
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $key_var_name . ' => $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
+                $code_buf->indent();
                 self::packItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
                 self::packItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
                 $code_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
-                $code_buf->indentDecrease()->pushStr('}');
+                $code_buf->backIndent()->pushStr('}');
                 if (0 === $depth) {
-                    $code_buf->indentDecrease()->pushStr('}');
+                    $code_buf->backIndent()->pushStr('}');
                 }
                 $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 break;
@@ -165,7 +165,7 @@ class ArrayPack extends PackerBase
     {
         if (0 === $depth) {
             $code_buf->pushStr('if (is_array($' . $var_name . ')) {');
-            $code_buf->indentIncrease();
+            $code_buf->indent();
         } else {
             $code_buf->pushStr('if (!is_array($' . $var_name . ')) {');
             $code_buf->pushIndent('continue;');
@@ -216,10 +216,10 @@ class ArrayPack extends PackerBase
         $array_type_check = (ItemType::ARR === $item_type || ItemType::MAP === $item_type || ItemType::STRUCT === $item_type);
         if ($isset_check && $array_type_check) {
             $code_buf->pushStr('if (isset($' . $data_value . ') && is_array($' . $data_value . ')) {');
-            $code_buf->indentIncrease();
+            $code_buf->indent();
         } elseif ($isset_check) {
             $code_buf->pushStr('if (isset($' . $data_value . ')) {');
-            $code_buf->indentIncrease();
+            $code_buf->indent();
         } //如果只用判断是否为数组，不为数组就continue
         elseif ($array_type_check) {
             $code_buf->pushStr('if (!is_array($' . $data_value . ')) {');
@@ -256,10 +256,10 @@ class ArrayPack extends PackerBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $code_buf->pushStr('foreach ($' . $data_value . ' as $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
+                $code_buf->indent();
                 self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $sub_item, $depth + 1);
                 $code_buf->pushStr('$' . $result_var_name . '[] = $' . $for_var_name . ';');
-                $code_buf->indentDecrease();
+                $code_buf->backIndent();
                 $code_buf->pushStr('}');
                 $code_buf->pushStr('$' . $var_name . ' = $' . $result_var_name . ';');
                 break;
@@ -276,11 +276,11 @@ class ArrayPack extends PackerBase
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 $code_buf->pushStr('foreach ($' . $data_value . ' as $' . $key_var_name . ' => $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
+                $code_buf->indent();
                 self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
                 self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
                 $code_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
-                $code_buf->indentDecrease();
+                $code_buf->backIndent();
                 $code_buf->pushStr('}');
                 $code_buf->pushStr('$' . $var_name . ' = $' . $result_var_name . ';');
                 break;
@@ -288,7 +288,7 @@ class ArrayPack extends PackerBase
                 throw new Exception('Unknown type:' . $item_type);
         }
         if ($isset_check) {
-            $code_buf->indentDecrease();
+            $code_buf->backIndent();
             $code_buf->pushStr('}');
         }
     }

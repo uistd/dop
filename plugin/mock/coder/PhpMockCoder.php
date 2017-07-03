@@ -61,9 +61,9 @@ class PhpMockCoder extends PluginCoderBase
         $main_buf->emptyLine();
         $main_buf->pushStr('class ' . $class_name . ' extends DopMock');
         $main_buf->pushStr('{');
-        $main_buf->indentIncrease();
+        $main_buf->indent();
         $main_buf->touchBuf(FileBuf::METHOD_BUF);
-        $main_buf->indentDecrease()->pushStr('}');
+        $main_buf->backIndent()->pushStr('}');
         $main_buf->emptyLine();
         /** @var Struct $struct */
         foreach ($struct_list as $struct) {
@@ -88,7 +88,7 @@ class PhpMockCoder extends PluginCoderBase
         $mock_buf->pushStr(' */');
         $mock_buf->pushStr('public static function mock' . $class_name . '()');
         $mock_buf->pushStr('{');
-        $mock_buf->indentIncrease();
+        $mock_buf->indent();
         $use_ns = $this->coder->joinNameSpace($struct->getNamespace());
         $import_buf->pushStr('use ' . $use_ns . '\\' . $class_name . ';');
         $mock_buf->pushStr('$data = new ' . $class_name . '();');
@@ -104,7 +104,7 @@ class PhpMockCoder extends PluginCoderBase
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }
         $mock_buf->pushStr('return $data;');
-        $mock_buf->indentDecrease()->pushStr('}');
+        $mock_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -136,9 +136,9 @@ class PhpMockCoder extends PluginCoderBase
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
-                $mock_buf->indentIncrease();
+                $mock_buf->indent();
                 $this->buildItemCode($mock_buf, '$' . $result_var_name, $sub_mock_rule, $sub_item, $depth + 1);
-                $mock_buf->indentDecrease()->pushStr('}');
+                $mock_buf->backIndent()->pushStr('}');
                 $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;
             case ItemType::STRUCT:
@@ -160,11 +160,11 @@ class PhpMockCoder extends PluginCoderBase
                 self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
-                $mock_buf->indentIncrease();
+                $mock_buf->indent();
                 $this->buildItemCode($mock_buf, '$' . $key_var_name, $key_mock_rule, $key_item, $depth + 1);
                 $this->buildItemCode($mock_buf, '$' . $value_var_name, $value_mock_rule, $value_item, $depth + 1);
                 $mock_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $value_var_name . ';');
-                $mock_buf->indentDecrease()->pushStr('}');
+                $mock_buf->backIndent()->pushStr('}');
                 $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;
         }

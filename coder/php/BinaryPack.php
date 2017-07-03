@@ -52,7 +52,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public function binaryPack($result)');
             $code_buf->pushStr('{');
-            $code_buf->indentIncrease();
+            $code_buf->indent();
         } else {
             $code_buf->pushStr(' * @param bool $pid 是否打包协议ID');
             $code_buf->pushStr(' * @param bool $sign 是否签名');
@@ -61,7 +61,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public function binaryEncode($pid = false, $sign = false, $mask_key = null)');
             $code_buf->pushStr('{');
-            $code_buf->indentIncrease();
+            $code_buf->indent();
             $code_buf->pushStr('$result = new DopEncode;');
             $pid = $struct->getNamespace() . $struct->getClassName();
             $code_buf->pushStr('if ($pid) {');
@@ -97,13 +97,13 @@ class BinaryPack extends PackerBase
                     //写入 0，表示数组长度 0
                     $code_buf->pushIndent('$result->writeChar(0);');
                 }
-                $code_buf->pushStr('} else {')->indentIncrease();
+                $code_buf->pushStr('} else {')->indent();
                 //struct 之前，要先写入一个0xff，表示非空 struct
                 if (ItemType::STRUCT === $item_type) {
                     $code_buf->pushStr('$result->writeChar(0xff);');
                 }
                 self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
-                $code_buf->indentDecrease()->pushStr('}');
+                $code_buf->backIndent()->pushStr('}');
             } else {
                 self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
             }
@@ -111,7 +111,7 @@ class BinaryPack extends PackerBase
         if (!$struct->isSubStruct()) {
             $code_buf->pushStr('return $result->pack();');
         }
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -139,7 +139,7 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr(' * @return bool');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function binaryDecode($data, $mask_key = null)');
-        $code_buf->pushStr('{')->indentIncrease();
+        $code_buf->pushStr('{')->indent();
         $code_buf->pushStr('$decoder = $data instanceof DopDecode ? $data : new DopDecode($data);');
         $code_buf->pushStr('$data_arr = $decoder->unpack($mask_key);');
         $code_buf->pushStr('if ($decoder->getErrorCode()) {');
@@ -147,7 +147,7 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr('}');
         $code_buf->pushStr('$this->arrayUnpack($data_arr);');
         $code_buf->pushStr('return true;');
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -196,10 +196,10 @@ class BinaryPack extends PackerBase
                 //写入list的类型
                 $code_buf->pushStr('$' . $buffer_name . ' = new DopEncode();');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
+                $code_buf->indent();
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $sub_item, $depth + 1);
                 $code_buf->pushStr('++$' . $len_var_name . ';');
-                $code_buf->indentDecrease();
+                $code_buf->backIndent();
                 $code_buf->pushStr('}');
                 $code_buf->pushStr('$' . $result_name . '->writeLength($' . $len_var_name . ');');
                 $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');
@@ -220,15 +220,15 @@ class BinaryPack extends PackerBase
                 //写入map key 和 value 的类型
                 $code_buf->pushStr('$' . $buffer_name . ' = new DopEncode();');
                 $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $key_var_name . ' =>  $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
+                $code_buf->indent();
                 self::typeCheckCode($code_buf, $for_var_name, $value_item);
-                $code_buf->indentDecrease();
-                $code_buf->indentIncrease();
+                $code_buf->backIndent();
+                $code_buf->indent();
                 self::packItemValue($code_buf, $key_var_name, $buffer_name, $key_item, $depth + 1);
                 //这里的depth 变成 0，因为之前已经typeCheckCode了
                 self::packItemValue($code_buf, $for_var_name, $buffer_name, $value_item, 0);
                 $code_buf->pushStr('++$' . $len_var_name . ';');
-                $code_buf->indentDecrease();
+                $code_buf->backIndent();
                 $code_buf->pushStr('}');
                 $code_buf->pushStr('$' . $result_name . '->writeLength($' . $len_var_name . ');');
                 $code_buf->pushStr('$' . $result_name . '->joinBuffer($' . $buffer_name . ');');

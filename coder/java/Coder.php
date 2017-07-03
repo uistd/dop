@@ -149,7 +149,7 @@ class Coder extends CoderBase
             }
             $property_line_buf->pushStr(';');
         }
-        //$this->packMethodCode($class_file, $struct);
+        $this->packMethodCode($class_file, $struct);
     }
 
     /**

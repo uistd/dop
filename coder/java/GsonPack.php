@@ -19,6 +19,13 @@ use ffan\dop\protocol\StructItem;
 class GsonPack extends PackerBase
 {
     /**
+     * 变量类型
+     */
+    const JSON_OBJECT = 1;
+    const JSON_ARRAY = 2;
+    const JSON_NORMAL = 3;
+
+    /**
      * 数据序列化
      * @param Struct $struct 结构体
      * @param CodeBuf $code_buf 生成的代码缓存
@@ -28,40 +35,53 @@ class GsonPack extends PackerBase
     {
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
-        $all_item = $struct->getAllExtendItem();
+        $code_buf->pushStr(' * 转成Json字符串');
         if ($struct->isSubStruct()) {
-            $code_buf->pushStr(' * 生成JsonObject');
-            $code_buf->pushStr(' * @return JsonObject');
+            $code_buf->pushStr(' * @param JsonWriter writer');
             $code_buf->pushStr(' */');
-            $code_buf->pushStr('public JsonObject gsonPack() {');
-            $code_buf->indentIncrease();
-            $code_buf->pushStr('JsonObject jsonObject = new JsonObject();');
-            /**
-             * @var string $name
-             * @var Item $item
-             */
-            foreach ($all_item as $name => $item) {
-                self::packItemValue($code_buf, 'this.' . $name, "jsonObject", $item, 0);
-            }
-            $code_buf->pushStr('return jsonObject');
+            $code_buf->pushStr('public void gsonPack(writer) {');
+            $code_buf->indent();
+            $this->writePropertyLoop($code_buf, $struct);
         } else {
-            $code_buf->pushStr(' * 转成Json字符串');
             $code_buf->pushStr(' * @return String');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public String gsonPack() {');
-            $code_buf->indentIncrease();
-            $code_buf->pushStr('JsonObject jsonObject = new JsonObject();');
-            /**
-             * @var string $name
-             * @var Item $item
-             */
-            foreach ($all_item as $name => $item) {
-                self::packItemValue($code_buf, 'this.' . $name, "jsonObject", $item, 0);
-            }
-            $code_buf->pushStr('String json = gson.toJson(jsonObject);');
-            $code_buf->pushStr('return json');
+            $code_buf->indent();
+            $code_buf->pushStr('JsonWriter writer = new JsonWriter(new StringWriter());');
+            $this->writePropertyLoop($code_buf, $struct);
+            $code_buf->pushStr('writer.close();');
+            $code_buf->pushStr('return writer.toString();');
         }
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->backIndent()->pushStr('}');
+    }
+
+    /**
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
+     */
+    private function writePropertyLoop($code_buf, $struct)
+    {
+        $tmp_index = 0;
+        $all_item = $struct->getAllExtendItem();
+        $code_buf->pushStr('writer.beginObject();');
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item as $name => $item) {
+            $type = $item->getType();
+            $null_check = ItemType::INT !== $type && ItemType::FLOAT !== $type && ItemType::DOUBLE !== $type;
+            if ($null_check) {
+                $code_buf->pushStr('if (null == this.' . $name . ') {');
+                $code_buf->pushIndent('writer.name("' . $name . '" ).nullValue();');
+                $code_buf->pushIndent('} else {')->indent();
+            }
+            self::packItemValue($code_buf, 'this.' . $name, $name, $item, $tmp_index);
+            if ($null_check) {
+                $code_buf->backIndent()->pushStr('}');
+            }
+        }
+        $code_buf->pushStr('writer.endObject();');
     }
 
     /**
@@ -74,137 +94,105 @@ class GsonPack extends PackerBase
     {
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
-        $code_buf->pushStr(' * 对象初始化');
-        $code_buf->pushStr(' * @param array $data');
-        $code_buf->pushStr(' */');
-        $code_buf->pushStr('public function arrayUnpack($data)');
-        $code_buf->pushStr('{');
-        $code_buf->indentIncrease();
+        $code_buf->pushStr(' * json串反序列化');
+        if ($struct->isSubStruct()) {
+            $code_buf->pushStr(' * @param JsonReader reader');
+            $code_buf->pushStr(' */');
+            $code_buf->pushStr('public void gsonRead(reader) {');
+            $code_buf->indent();
+            $this->readPropertyLoop($code_buf, $struct);
+        } else {
+            $code_buf->pushStr(' * @param String json_str');
+            $code_buf->pushStr(' */');
+            $code_buf->pushStr('public void gsonRead(json_str) {');
+            $code_buf->indent();
+            $code_buf->pushStr('JsonReader reader = new JsonReader(new StringReader(json_str));');
+            $code_buf->pushStr('reader.beginObject();');
+            $this->readPropertyLoop($code_buf, $struct);
+            $code_buf->pushStr('return writer.toString();');
+        }
+        $code_buf->backIndent()->pushStr('}');
+    }
+
+    /**
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
+     */
+    private function readPropertyLoop($code_buf, $struct)
+    {
         $all_item = $struct->getAllExtendItem();
+        $code_buf->pushStr('reader.beginObject();');
+        $code_buf->pushStr('while (reader.hasNext()) {')->indent();
+        $code_buf->pushStr('String s = reader.nextName(); ');
+        $code_buf->pushStr('switch (s) {')->indent();
+        $tmp_index = 0;
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            self::unpackItemValue($code_buf, 'this->' . $name, 'data', $item, 0, $name);
+            $code_buf->pushStr('case "' . $name . '":')->indent();
+            self::unpackItemValue($code_buf, 'this.' . $name, $item, $tmp_index);
+            $code_buf->pushStr('break;')->backIndent();
         }
-        $code_buf->indentDecrease()->pushStr('}');
+        $code_buf->pushStr('default:')->indent();
+        $code_buf->pushStr('reader.skipValue();');
+        $code_buf->pushStr('break;')->backIndent();
+        $code_buf->backIndent()->pushStr('}')->pushStr('reader.endObject();');
     }
 
     /**
      * 打包一项数据
      * @param CodeBuf $code_buf
-     * @param string $var_name 变量名
-     * @param string $result_var 保存结果变量名
+     * @param string $value_name 变量名
+     * @param string $name 属性名
      * @param Item $item 节点对象
-     * @param int $depth 深度
+     * @param int $tmp_index 临时变量
      * @throws Exception
      */
-    private static function packItemValue($code_buf, $var_name, $result_var, $item, $depth = 0)
+    private static function packItemValue($code_buf, $value_name, $name, $item, &$tmp_index = 0)
     {
         $item_type = $item->getType();
-        switch ($item_type) {
-            case ItemType::INT:
-                self::packItemCode($code_buf, $result_var, $var_name, 'int', $depth);
-                break;
-            case ItemType::FLOAT:
-            case ItemType::DOUBLE:
-                self::packItemCode($code_buf, $result_var, $var_name, 'float', $depth);
-                break;
-            case ItemType::STRING:
-            case ItemType::BINARY:
-                self::packItemCode($code_buf, $result_var, $var_name, 'string', $depth);
-                break;
-            case ItemType::ARR:
-                $result_var_name = self::varName($depth, 'tmp_arr');
-                $code_buf->pushStr('$' . $result_var_name . ' = array();');
-                self::packArrayCheckCode($code_buf, $var_name, $depth);
-                $for_var_name = self::varName($depth, 'item');
-                /** @var ListItem $item */
-                $sub_item = $item->getItem();
-                $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
-                self::packItemValue($code_buf, $for_var_name, $result_var_name . '[]', $sub_item, $depth + 1);
-                $code_buf->indentDecrease()->pushStr('}');
-                if (0 === $depth) {
-                    $code_buf->indentDecrease()->pushStr('}');
-                }
-                $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
-                break;
-            case ItemType::MAP:
-                $result_var_name = self::varName($depth, 'tmp_' . $item->getName());
-                $code_buf->pushStr('$' . $result_var_name . ' = array();');
-                self::packArrayCheckCode($code_buf, $var_name, $depth);
-                $key_var_name = self::varName($depth, 'key');
-                $for_var_name = self::varName($depth, 'item');
-                /** @var MapItem $item */
-                $key_item = $item->getKeyItem();
-                $value_item = $item->getValueItem();
-                $code_buf->pushStr('foreach ($' . $var_name . ' as $' . $key_var_name . ' => $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
-                self::packItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
-                self::packItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
-                $code_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
-                $code_buf->indentDecrease()->pushStr('}');
-                if (0 === $depth) {
-                    $code_buf->indentDecrease()->pushStr('}');
-                }
-                $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
-                break;
-            case ItemType::STRUCT:
-                /** @var StructItem $item */
-                if (0 === $depth) {
-                    $code_buf->pushStr('if ($' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
-                    $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
-                    $code_buf->pushStr('} else {');
-                    $code_buf->pushIndent('$' . $result_var . ' = array();');
-                    $code_buf->pushStr('}');
-                } else {
-                    $code_buf->pushStr('if (!$' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
-                    $code_buf->pushIndent('continue;');
-                    $code_buf->pushStr('}');
-                    $code_buf->pushStr('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
-                }
-                break;
-            default:
-                throw new Exception('Unknown type:' . $item_type);
-
+        if (!empty($name)) {
+            $code_buf->pushStr('writer.name("' . $name . '")');
         }
-    }
-
-    /**
-     * 生成判断数组的代码
-     * @param CodeBuf $code_buf
-     * @param string $var_name
-     * @param int $depth
-     */
-    private static function packArrayCheckCode($code_buf, $var_name, $depth)
-    {
-        if (0 === $depth) {
-            $code_buf->pushStr('if (is_array($' . $var_name . ')) {');
-            $code_buf->indentIncrease();
+        if (ItemType::ARR === $item_type) {
+            /** @var ListItem $item */
+            $sub_item = $item->getItem();
+            $code_buf->pushStr('writer.beginArray();');
+            $for_type = Coder::varType($sub_item);
+            $for_var_name = self::varName($tmp_index++, 'item');
+            $code_buf->pushStr('for (' . $for_type . ' ' . $for_var_name . ' : ' . $value_name . ') {');
+            $code_buf->indent();
+            self::packItemValue($code_buf, $for_var_name, '', $sub_item, $tmp_index);
+            $code_buf->backIndent()->pushStr('}');
+            $code_buf->pushStr('writer.endArray();');
+        } elseif (ItemType::MAP === $item_type) {
+            /** @var MapItem $item */
+            $key_item = $item->getKeyItem();
+            $value_item = $item->getValueItem();
+            $for_type = Coder::varType($item);
+            $for_var_name = self::varName($tmp_index++, 'item');
+            $code_buf->pushStr('writer.beginObject();');
+            $code_buf->pushStr('for (Map.Entry' . $for_type . ' ' . $for_var_name . ' : ' . $value_name . '.entrySet()) {');
+            $code_buf->indent();
+            $key_var_name = self::varName($tmp_index++, 'key');
+            $value_var_name = self::varName($tmp_index++, 'value');
+            if (ItemType::STRING === $key_item->getType()) {
+                $code_buf->pushStr(Coder::varType($key_item) . ' ' . $key_var_name . ' = ' . $for_var_name . '.getKey();');
+            } else {
+                $code_buf->pushStr(Coder::varType($key_item) . ' ' . $key_var_name . ' = new String(' . $for_var_name . '.getKey());');
+            }
+            $code_buf->pushStr(Coder::varType($value_item) . ' ' . $value_var_name . ' = ' . $for_var_name . '.getValue();');
+            self::packItemValue($code_buf, $value_var_name, $key_var_name, $value_item, $tmp_index);
+            $code_buf->backIndent()->pushStr('}');
+            $code_buf->pushStr('writer.endObject();');
+        } elseif (ItemType::STRUCT === $item_type) {
+            $code_buf->pushStr($value_name . '.gsonPack(writer);');
+        } elseif (ItemType::BINARY === $item_type) {
+            $code_buf->pushStr('writer.value(Base64.getEncoder().encodeToString(' . $value_name . '));');
         } else {
-            $code_buf->pushStr('if (!is_array($' . $var_name . ')) {');
-            $code_buf->pushIndent('continue;');
-            $code_buf->pushStr('}');
-        }
-    }
-
-    /**
-     * 生成打包一个节点的代码
-     * @param CodeBuf $code_buf
-     * @param string $result_var
-     * @param string $var_name
-     * @param string $convert_type 强转类型
-     * @param int $depth 深度
-     */
-    private static function packItemCode($code_buf, $result_var, $var_name, $convert_type, $depth)
-    {
-        //如果是最外层，要判断值是不是null
-        if (0 === $depth) {
-            $code_buf->pushStr('$' . $result_var . ' = null === $' . $var_name . ' ? $' . $var_name . ' : (' . $convert_type . ')$' . $var_name . ';');
-        } else {
-            $code_buf->pushStr('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name . ';');
+            $code_buf->pushStr('writer.value(' . $value_name . ')');
         }
     }
 
@@ -212,101 +200,41 @@ class GsonPack extends PackerBase
      * 解出数据
      * @param CodeBuf $code_buf 生成代码缓存
      * @param string $var_name 值变量名
-     * @param string $data_name 数据变量名
      * @param Item $item 节点对象
-     * @param int $depth 深度
-     * @param string $key_name 键名
+     * @param int $tmp_index
      * @throws Exception
      */
-    private static function unpackItemValue($code_buf, $var_name, $data_name, $item, $depth = 0, $key_name = null)
+    private static function unpackItemValue($code_buf, $var_name, $item, &$tmp_index)
     {
         $item_type = $item->getType();
-        if ($key_name) {
-            $isset_check = true;
-            $data_value = $data_name . '[\'' . $key_name . '\']';
-        } else {
-            $isset_check = false;
-            $key_name = $var_name;
-            $data_value = $data_name;
-        }
-        //是否需要判断值是否是数组
-        $array_type_check = (ItemType::ARR === $item_type || ItemType::MAP === $item_type || ItemType::STRUCT === $item_type);
-        if ($isset_check && $array_type_check) {
-            $code_buf->pushStr('if (isset($' . $data_value . ') && is_array($' . $data_value . ')) {');
-            $code_buf->indentIncrease();
-        } elseif ($isset_check) {
-            $code_buf->pushStr('if (isset($' . $data_value . ')) {');
-            $code_buf->indentIncrease();
-        } //如果只用判断是否为数组，不为数组就continue
-        elseif ($array_type_check) {
-            $code_buf->pushStr('if (!is_array($' . $data_value . ')) {');
-            $code_buf->pushIndent('continue;');
-            $code_buf->pushStr('}');
-        }
         switch ($item_type) {
             case ItemType::INT:
-                $code_buf->pushStr('$' . $var_name . ' = (int)$' . $data_value . ';');
+                $code_buf->pushStr($var_name . ' = reader.nextInt();');
                 break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
-                $code_buf->pushStr('$' . $var_name . ' = (float)$' . $data_value . ';');
+                $code_buf->pushStr($var_name . ' = reader.nextDouble();');
                 break;
             case ItemType::STRING:
+                $code_buf->pushStr($var_name . ' = reader.nextString();');
+                break;
             case ItemType::BINARY:
-                $code_buf->pushStr('$' . $var_name . ' = (string)$' . $data_value . ';');
+                $code_buf->pushStr($var_name . ' = Base64.getDecoder().decode(reader.nextString());');
                 break;
             //对象
             case ItemType::STRUCT:
-                $tmp_var_name = self::varName($key_name, 'struct');
-                /** @var StructItem $item */
-                $code_buf->pushStr('$' . $tmp_var_name . ' = new ' . $item->getStructName() . '();');
-                $code_buf->pushStr('$' . $tmp_var_name . '->arrayUnpack($' . $data_value . ');');
-                $code_buf->pushStr('$' . $var_name . ' = $' . $tmp_var_name . ';');
+
                 break;
             //枚举数组
             case ItemType::ARR:
-                //循环变量
-                $for_var_name = self::varName($depth, 'item');
-                //临时结果变量
-                $result_var_name = self::varName($depth, 'result');
-                $code_buf->pushStr('$' . $result_var_name . ' = array();');
-                /** @var ListItem $item */
-                $sub_item = $item->getItem();
-                $code_buf->pushStr('foreach ($' . $data_value . ' as $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
-                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $sub_item, $depth + 1);
-                $code_buf->pushStr('$' . $result_var_name . '[] = $' . $for_var_name . ';');
-                $code_buf->indentDecrease();
-                $code_buf->pushStr('}');
-                $code_buf->pushStr('$' . $var_name . ' = $' . $result_var_name . ';');
+
                 break;
             //关联数组
             case ItemType::MAP:
-                //循环键名
-                $key_var_name = self::varName($depth, 'key');
-                //循环变量
-                $for_var_name = self::varName($depth, 'item');
-                //临时结果变量
-                $result_var_name = self::varName($depth, 'result');
-                $code_buf->pushStr('$' . $result_var_name . ' = array();');
-                /** @var MapItem $item */
-                $key_item = $item->getKeyItem();
-                $value_item = $item->getValueItem();
-                $code_buf->pushStr('foreach ($' . $data_value . ' as $' . $key_var_name . ' => $' . $for_var_name . ') {');
-                $code_buf->indentIncrease();
-                self::unpackItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
-                self::unpackItemValue($code_buf, $for_var_name, $for_var_name, $value_item, $depth + 1);
-                $code_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
-                $code_buf->indentDecrease();
-                $code_buf->pushStr('}');
-                $code_buf->pushStr('$' . $var_name . ' = $' . $result_var_name . ';');
+
                 break;
             default:
                 throw new Exception('Unknown type:' . $item_type);
-        }
-        if ($isset_check) {
-            $code_buf->indentDecrease();
-            $code_buf->pushStr('}');
         }
     }
 }
