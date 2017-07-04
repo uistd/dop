@@ -10,6 +10,9 @@ use ffan\dop\protocol\Struct;
  */
 abstract class PackerBase
 {
+    const PACK_METHOD = 1;
+    const UNPACK_METHOD = 2;
+    
     /**
      * @var CoderBase
      */
@@ -32,7 +35,7 @@ abstract class PackerBase
     {
         return null;
     }
-    
+
     /**
      * 数据序列化
      * @param Struct $struct 结构体
@@ -50,9 +53,20 @@ abstract class PackerBase
     abstract public function buildUnpackMethod($struct, $code_buf);
 
     /**
-     * 生成通用代码
+     * 生成通用代码（加载时）
      */
-    public function buildCommonCode()
+    public function onLoad()
+    {
+
+    }
+
+    /**
+     * 生成通用代码（调用pack方法时）
+     * @param FileBuf $file_buf 文件
+     * @param Struct $struct
+     * @param int $type 类型
+     */
+    public function onPack(FileBuf $file_buf, Struct $struct, $type = self::PACK_METHOD)
     {
         
     }

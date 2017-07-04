@@ -10,14 +10,15 @@
         <uint8 name="uint8"/>
         <int16 name="int16"/>
         <uint16 name="uint16"/>
-        <int name="int"/>
+        <int name="int32"/>
         <uint name="uint"/>
         <int64 name="int64"/>
         <string name="string"/>
-        <float name="float"/>
-        <double name="double"/>
+        <float name="float32"/>
+        <double name="double64"/>
         <binary name="binary"/>
-        <list name="list"><list name="list"><int/></list></list>
+        <list name="list"><string/></list>
+        <list name="list_list"><list name="list"><int/></list></list>
         <map name="map"><int/><string/></map>
         <struct name="null_struct">
             <int name="no_value"/>

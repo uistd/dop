@@ -45,6 +45,11 @@ abstract class CoderBase extends ConfigBase
     private $build_base_path;
 
     /**
+     * @var array 所有加载的packer
+     */
+    private $packer_list;
+
+    /**
      * CoderBase constructor.
      * @param Manager $manager
      * @param BuildOption $build_opt
@@ -200,9 +205,7 @@ abstract class CoderBase extends ConfigBase
      */
     protected function packMethodCode($file_buf, $struct)
     {
-        $packer_list = $this->build_opt->getPacker();
-        $packer_object_arr = array();
-        $this->getAllPackerObject($packer_list, $packer_object_arr);
+        $packer_object_arr = $this->getPackerList();
         /**
          * @var string $name
          * @var PackerBase $packer
@@ -239,6 +242,32 @@ abstract class CoderBase extends ConfigBase
     }
 
     /**
+     * 获取所有的packer
+     * @return array
+     */
+    private function getPackerList()
+    {
+        if (null !== $this->packer_list) {
+            return $this->packer_list;
+        }
+        $packer_list = $this->build_opt->getPacker();
+        $this->packer_list = array();
+        $this->getAllPackerObject($packer_list, $this->packer_list);
+        return $this->packer_list;
+    }
+    
+    /**
+     * 是否存在某个packer
+     * @param $packer_name
+     * @return bool
+     */
+    public function hasPacker($packer_name)
+    {
+        $packers = $this->getPackerList();
+        return isset($packers[$packer_name]);
+    }
+
+    /**
      * 写入pack代码
      * @param Struct $struct
      * @param FileBuf $file_buf
@@ -252,9 +281,11 @@ abstract class CoderBase extends ConfigBase
             return;
         }
         if ($this->isBuildPackMethod($struct)) {
+            $packer->onPack($file_buf, $struct, PackerBase::PACK_METHOD);
             $packer->buildPackMethod($struct, $code_buf);
         }
         if ($this->isBuildUnpackMethod($struct)) {
+            $packer->onPack($file_buf, $struct, PackerBase::UNPACK_METHOD);
             $packer->buildUnpackMethod($struct, $code_buf);
         }
     }
@@ -290,7 +321,7 @@ abstract class CoderBase extends ConfigBase
         }
         /** @var PackerBase $packer */
         $packer = new $full_class_name($this);
-        $packer->buildCommonCode();
+        $packer->onLoad();
         $this->pack_instance_arr[$pack_type] = $packer;
         return $packer;
     }

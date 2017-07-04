@@ -25,9 +25,11 @@ class Coder extends CoderBase
      * 变量类型
      * @param Item $item
      * @param int $depth 深度
+     * @param bool $is_interface 是否返回接口名，例如：List 和 ArrayList的区别
+     * @param bool $is_object 是否必须是对象  例如： int 和 Integer 的区别
      * @return string
      */
-    public static function varType(Item $item, $depth = 0)
+    public static function varType(Item $item, $depth = 0, $is_interface = true, $is_object = false)
     {
         $type = $item->getType();
         $str = '';
@@ -39,36 +41,30 @@ class Coder extends CoderBase
                 $str = 'String';
                 break;
             case ItemType::FLOAT:
-                $str = 'float';
+                $str = $is_object ? 'Float' : 'float';
                 break;
             case ItemType::DOUBLE:
-                $str = 'double';
+                $str = $is_object ? 'Double' : 'double';
                 break;
             case ItemType::STRUCT;
                 /** @var StructItem $item */
                 $str = $item->getStructName();
                 break;
             case ItemType::MAP;
-                if ($depth > 0) {
-                    $str = 'Map';
-                } else {
-                    /** @var MapItem $item */
-                    $key_item = $item->getKeyItem();
-                    $value_item = $item->getValueItem();
-                    $key_type = self::varType($key_item, $depth + 1);
-                    $value_type = self::varType($value_item, $depth + 1);
-                    $str = 'Map<' . $key_type . ', ' . $value_type . '>';
-                }
+                $str = $is_interface ? 'Map' : 'HashMap';
+                /** @var MapItem $item */
+                $key_item = $item->getKeyItem();
+                $value_item = $item->getValueItem();
+                $key_type = self::varType($key_item, $depth + 1, false, true);
+                $value_type = self::varType($value_item, $depth + 1, false, true);
+                $str .= '<' . $key_type . ', ' . $value_type . '>';
                 break;
             case ItemType::ARR:
-                if ($depth > 0) {
-                    $str = 'List';
-                } else {
-                    /** @var ListItem $item */
-                    $sub_item = $item->getItem();
-                    $sub_type = self::varType($sub_item, $depth + 1);
-                    $str = 'List<' . $sub_type . '>';
-                }
+                $str = $is_interface ? 'List' : 'ArrayList';
+                /** @var ListItem $item */
+                $sub_item = $item->getItem();
+                $sub_type = self::varType($sub_item, $depth + 1, false, true);
+                $str .= '<' . $sub_type . '>';
                 break;
             case ItemType::INT:
                 /** @var IntItem $item */
@@ -78,13 +74,13 @@ class Coder extends CoderBase
                     $byte <<= 1;
                 }
                 if (IntItem::BYTE_TINY === $byte) {
-                    $str = 'byte';
+                    $str = $is_object ? 'Byte' : 'byte';
                 } elseif (IntItem::BYTE_SMALL === $byte) {
-                    $str = 'short';
+                    $str = $is_object ? 'Short' : 'short';
                 } elseif (IntItem::BYTE_INT === $byte) {
-                    $str = 'int';
+                    $str = $is_object ? 'Integer' : 'int';
                 } else {
-                    $str = 'long';
+                    $str = $is_object ? 'Long' : 'long';
                 }
                 break;
         }
@@ -131,16 +127,13 @@ class Coder extends CoderBase
                 $is_first_property = false;
             }
             $this->makeImportCode($item, $name_space, $import_buf);
-            $property_buf->pushStr('/**');
             $item_type = self::varType($item);
-            $property_desc_buf = new StrBuf();
-            $property_buf->insertBuf($property_desc_buf);
-            $property_desc_buf->pushStr(' * @var ' . $item_type);
             $tmp_node = $item->getNote();
             if (!empty($tmp_node)) {
-                $property_desc_buf->pushStr(' ' . $tmp_node);
+                $property_buf->pushStr('/**');
+                $property_buf->pushStr(' @VAR ' . $tmp_node);
+                $property_buf->pushStr(' */');
             }
-            $property_buf->pushStr(' */');
             $property_line_buf = new StrBuf();
             $property_buf->insertBuf($property_line_buf);
             $property_line_buf->pushStr('public ' . $item_type . ' ' . $name);
@@ -177,6 +170,8 @@ class Coder extends CoderBase
             $import_buf->pushUniqueStr('import java.util.Map;');
             /** @var MapItem $item */
             $this->makeImportCode($item->getValueItem(), $name_space, $import_buf);
+        } elseif (ItemType::BINARY === $type && $this->hasPacker('gson')) {
+            $import_buf->pushUniqueStr('import java.util.Base64;');
         }
     }
 
@@ -185,6 +180,7 @@ class Coder extends CoderBase
      */
     public function buildCommonCode()
     {
+        
     }
 
     /**

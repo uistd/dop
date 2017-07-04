@@ -26,7 +26,7 @@ class StructPack extends PackerBase
     /**
      * 通用代码
      */
-    public function buildCommonCode()
+    public function onLoad()
     {
         $folder = $this->coder->getFolder();
         $dop_encode = $folder->touch('', 'DopEncode.php');

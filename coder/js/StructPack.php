@@ -24,9 +24,9 @@ class StructPack extends PackerBase
     protected $coder;
     
     /**
-     * 通用代码
+     * 生成通用代码（加载时）
      */
-    public function buildCommonCode()
+    public function onLoad()
     {
         $folder = $this->coder->getFolder();
         $dop_encode = $folder->touch('', 'DopEncode.js');
