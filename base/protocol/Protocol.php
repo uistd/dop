@@ -309,7 +309,7 @@ class Protocol
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
-            $item = $this->makeItemObject($class_name . ucfirst($item_name), $node);
+            $item = $this->makeItemObject($class_name . FFanStr::camelName($item_name), $node);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }

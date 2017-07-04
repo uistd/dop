@@ -11,7 +11,7 @@
     </action>
     <data name="math_test">
         <struct name="role_info" extend="/demo/role/role_info"/>
-        <struct name="test_d" extend="/demo/data/test_arr">
+        <struct name="test_arr" extend="/demo/data/test_arr">
             <int name="gender"/>
         </struct>
     </data>
