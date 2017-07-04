@@ -49,6 +49,11 @@ class ItemType
     const DOUBLE = 8;
 
     /**
+     * boolean类型
+     */
+    const BOOL = 9;
+    
+    /**
      * 类型设置
      * @var array
      */
@@ -71,7 +76,8 @@ class ItemType
         'list' => self::ARR,
         'struct' => self::STRUCT,
         'map' => self::MAP,
-        'double' => self::DOUBLE
+        'double' => self::DOUBLE,
+        'bool' => self::BOOL
     );
 
     /**

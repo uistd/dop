@@ -66,6 +66,14 @@ exports.strVal = function (tmp_val) {
 };
 
 /**
+ * 传入值转bool
+ * @return {boolean}
+ */
+exports.boolVal = function(tmp_val){
+    return !!parseInt(tmp_val);
+};
+
+/**
  * 字符串 to Uint8Array
  * @param {string} str
  * @return Uint8Array

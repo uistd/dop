@@ -59,6 +59,9 @@ class Coder extends CoderBase
             case ItemType::INT:
                 $str = 'int';
                 break;
+            case ItemType::BOOL:
+                $str = 'bool';
+                break;
         }
         return $str;
     }

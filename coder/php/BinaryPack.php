@@ -180,6 +180,9 @@ class BinaryPack extends PackerBase
                 $func_name = self::getIntWriteFuncName($item);
                 self::packItemCode($code_buf, $var_name, $result_name, $func_name);
                 break;
+            case ItemType::BOOL:
+                self::packItemCode($code_buf, $var_name, $result_name, 'writeChar');
+                break;
             case ItemType::STRUCT:
                 $code_buf->pushStr('$' . $var_name . '->binaryPack($' . $result_name . ');');
                 break;

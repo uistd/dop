@@ -72,13 +72,20 @@ class GsonPack extends PackerBase
         $tmp_index = 0;
         $all_item = $struct->getAllExtendItem();
         $code_buf->pushStr('writer.beginObject();');
+        static $null_check_list = array(
+            ItemType::STRING => true,
+            ItemType::ARR => true,
+            ItemType::MAP => true,
+            ItemType::BINARY => true,
+            ItemType::STRUCT => true,
+        );
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
             $type = $item->getType();
-            $null_check = ItemType::INT !== $type && ItemType::FLOAT !== $type && ItemType::DOUBLE !== $type;
+            $null_check = isset($null_check_list[$type]);
             if ($null_check) {
                 $code_buf->pushStr('if (null == this.' . $name . ') {');
                 $code_buf->pushIndent('writer.name("' . $name . '" ).nullValue();');
@@ -146,6 +153,12 @@ class GsonPack extends PackerBase
         $code_buf->pushStr('String s = reader.nextName(); ');
         $code_buf->pushStr('switch (s) {')->indent();
         $tmp_index = 0;
+        static $null_check_list = array(
+            ItemType::BINARY => true,
+            ItemType::MAP => true,
+            ItemType::ARR => true,
+            ItemType::STRUCT => true,
+        );
         /**
          * @var string $name
          * @var Item $item
@@ -158,14 +171,12 @@ class GsonPack extends PackerBase
                 $code_buf->pushStr('this.' . $name . ' = new ' . Coder::varType($item, 0, false) . '();');
             }
             //判断null值
-            $null_check = ItemType::INT !== $type && ItemType::FLOAT !== $type && ItemType::DOUBLE !== $type;
+            $null_check = isset($null_check_list[$type]);
             if ($null_check) {
                 $this->importClass('JsonToken');
                 $code_buf->pushStr('if (JsonToken.NULL == reader.peek()) {')->indent();
                 $code_buf->pushStr('reader.skipValue();');
-                if (ItemType::STRING === $type) {
-                    $code_buf->pushStr('this.' . $name . ' = "";');
-                } elseif (ItemType::BINARY === $type) {
+                if (ItemType::BINARY === $type) {
                     $code_buf->pushStr('this.' . $name . ' = new byte[0];');
                 }
                 $code_buf->backIndent()->pushStr('} else {')->indent();
@@ -271,6 +282,9 @@ class GsonPack extends PackerBase
                     $code_buf->pushStr($var_name . ' = reader.nextInt();');
                 }
                 break;
+            case ItemType::BOOL:
+                $code_buf->pushStr($var_name . ' = reader.nextBoolean();');
+                break;
             case ItemType::FLOAT:
                 $code_buf->pushStr($var_name . ' = (float)reader.nextDouble();');
                 break;
@@ -290,7 +304,6 @@ class GsonPack extends PackerBase
                 $sub_struct = $item->getStruct();
                 $code_buf->pushStr($var_name . ' = new ' . $sub_struct->getClassName() . '();');
                 $code_buf->pushStr($var_name . '.gsonRead(reader);');
-
                 break;
             //枚举数组
             case ItemType::ARR:

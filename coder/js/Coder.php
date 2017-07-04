@@ -189,6 +189,9 @@ class Coder extends CoderBase
             case ItemType::INT:
                 $str = 'int';
                 break;
+            case ItemType::BOOL:
+                $str = 'boolean';
+                break;
         }
         return $str;
     }
@@ -213,6 +216,9 @@ class Coder extends CoderBase
                 break;
             case ItemType::INT:
                 $str = '0';
+                break;
+            case ItemType::BOOL:
+                $str = 'false';
                 break;
         }
         return $str;

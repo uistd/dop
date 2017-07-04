@@ -133,6 +133,7 @@ class StructPack extends PackerBase
             ItemType::BINARY => 'binary',
             ItemType::ARR => 'list',
             ItemType::MAP => 'map',
+            ItemType::BOOL => 'bool',
             ItemType::STRUCT => 'struct',
             ItemType::FLOAT => 'float',
             ItemType::DOUBLE => 'double',

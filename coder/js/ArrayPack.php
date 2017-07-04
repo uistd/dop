@@ -96,6 +96,9 @@ class ArrayPack extends PackerBase
             case ItemType::INT:
                 $code_buf->pushStr($result_var . ' = DopBase.intVal(' . $var_name . ');');
                 break;
+            case ItemType::BOOL:
+                $code_buf->pushStr($result_var . ' = DopBase.boolVal(' . $var_name . ');');
+                break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
                 $code_buf->pushStr($result_var . ' = DopBase.floatVal(' . $var_name . ');');
@@ -236,6 +239,9 @@ class ArrayPack extends PackerBase
         switch ($item_type) {
             case ItemType::INT:
                 $code_buf->pushStr($var_name . ' = DopBase.intVal(' . $data_value . ');');
+                break;
+            case ItemType::BOOL:
+                $code_buf->pushStr($var_name . ' = DopBase.boolVal(' . $data_value . ');');
                 break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:

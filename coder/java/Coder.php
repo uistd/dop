@@ -83,6 +83,9 @@ class Coder extends CoderBase
                     $str = $is_object ? 'Long' : 'long';
                 }
                 break;
+            case ItemType::BOOL:
+                $str = 'Boolean';
+                break;
         }
         return $str;
     }

@@ -378,6 +378,9 @@ class DopDecode
             case 8: //double
                 $value = $this->readDouble();
                 break;
+            case 9: //bool
+                $value = (bool)$this->readChar();
+                break;
             case 5: //list
                 $length = $this->readLength();
                 $value = array();

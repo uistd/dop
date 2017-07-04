@@ -488,6 +488,9 @@ DopDecode.prototype = {
                 var sub_struct = item['sub_struct'];
                 value = this.readStructData(sub_struct);
                 break;
+            case 9: //bool
+                value = 0 !== this.readChar();
+                break;
             default:
                 value = this.tryReadInt(item_type);
                 break;

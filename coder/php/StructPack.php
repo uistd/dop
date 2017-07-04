@@ -139,6 +139,7 @@ class StructPack extends PackerBase
             ItemType::STRUCT => 'struct',
             ItemType::FLOAT => 'float',
             ItemType::DOUBLE => 'double',
+            ItemType::BOOL => 'bool',
             0x12 => 'int8',
             0x92 => 'unsigned int8',
             0x22 => 'int16',

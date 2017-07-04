@@ -96,6 +96,9 @@ class Plugin extends PluginBase
             case ItemType::INT:
                 return (int)$value;
                 break;
+            case ItemType::BOOL:
+                return (bool)$value;
+                break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
                 return (float)$value;
@@ -136,6 +139,7 @@ class Plugin extends PluginBase
             ItemType::FLOAT === $type ||
             ItemType::STRING === $type ||
             ItemType::INT === $type ||
+            ItemType::BOOL === $type ||
             ($depth > 0 && ItemType::STRUCT === $type);
     }
 

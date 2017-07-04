@@ -124,6 +124,7 @@ class PhpMockCoder extends PluginCoderBase
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
             case ItemType::STRING:
+            case ItemType::BOOL:
                 self::mockValue($mock_buf, $mock_item, $mock_rule, $item_type);
                 break;
             case ItemType::ARR:
@@ -185,6 +186,9 @@ class PhpMockCoder extends PluginCoderBase
             switch ($item_type) {
                 case ItemType::INT:
                     $mock_buf->pushStr($mock_item . ' = mt_rand(0, 100);');
+                    break;
+                case ItemType::BOOL:
+                    $mock_buf->pushStr($mock_item . ' = (bool)mt_rand(0, 1);');
                     break;
                 case ItemType::STRING:
                     $mock_buf->pushStr($mock_item . ' = self::strRangeMock(5, 20);');

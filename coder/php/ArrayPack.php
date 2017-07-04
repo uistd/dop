@@ -90,6 +90,9 @@ class ArrayPack extends PackerBase
             case ItemType::INT:
                 self::packItemCode($code_buf, $result_var, $var_name, 'int', $depth);
                 break;
+            case ItemType::BOOL:
+                self::packItemCode($code_buf, $result_var, $var_name, 'bool', $depth);
+                break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
                 self::packItemCode($code_buf, $result_var, $var_name, 'float', $depth);
@@ -229,6 +232,9 @@ class ArrayPack extends PackerBase
         switch ($item_type) {
             case ItemType::INT:
                 $code_buf->pushStr('$' . $var_name . ' = (int)$' . $data_value . ';');
+                break;
+            case ItemType::BOOL:
+                $code_buf->pushStr('$' . $var_name . ' = (bool)$' . $data_value . ';');
                 break;
             case ItemType::FLOAT:
             case ItemType::DOUBLE:

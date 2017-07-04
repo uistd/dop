@@ -71,7 +71,7 @@ class Protocol
     /**
      * @var Manager
      */
-    private $protocol_manager;
+    private $manager;
 
     /**
      * @var int 已经解析的步骤
@@ -118,7 +118,7 @@ class Protocol
             $dir_name .= DIRECTORY_SEPARATOR;
         }
         $this->namespace = $dir_name . basename($file_name, '.xml');
-        $this->protocol_manager = $manager;
+        $this->manager = $manager;
     }
 
     /**
@@ -323,7 +323,7 @@ class Protocol
             }
             $struct_name = trim($struct->getAttribute('extend'));
             $struct_name = $this->getFullName($struct_name);
-            $extend_struct = $this->protocol_manager->loadRequireStruct($struct_name, $this->xml_file_name);
+            $extend_struct = $this->manager->loadRequireStruct($struct_name, $this->xml_file_name);
             if (null === $extend_struct) {
                 throw new Exception('无法找到Struct ' . $struct_name);
             } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {
@@ -351,7 +351,7 @@ class Protocol
         if ($extend_struct) {
             $struct_obj->extend($extend_struct);
         }
-        $this->protocol_manager->addStruct($struct_obj);
+        $this->manager->addStruct($struct_obj);
         return $struct_obj;
     }
 
@@ -370,35 +370,38 @@ class Protocol
         }
         switch ($type) {
             case ItemType::STRING:
-                $item_obj = new StringItem($name, $this->protocol_manager);
+                $item_obj = new StringItem($name, $this->manager);
                 break;
             case ItemType::FLOAT:
-                $item_obj = new FloatItem($name, $this->protocol_manager);
+                $item_obj = new FloatItem($name, $this->manager);
                 break;
             case ItemType::BINARY:
-                $item_obj = new BinaryItem($name, $this->protocol_manager);
+                $item_obj = new BinaryItem($name, $this->manager);
                 break;
             case ItemType::ARR:
-                $item_obj = new ListItem($name, $this->protocol_manager);
+                $item_obj = new ListItem($name, $this->manager);
                 $list_item = $this->parseList($name, $dom_node);
                 $item_obj->setItem($list_item);
                 break;
             case ItemType::STRUCT:
-                $item_obj = new StructItem($name, $this->protocol_manager);
+                $item_obj = new StructItem($name, $this->manager);
                 $struct_obj = $this->parsePrivateStruct($name, $dom_node);
                 $item_obj->setStruct($struct_obj);
                 $struct_obj->addReferType($this->current_struct_type);
                 break;
             case ItemType::MAP:
-                $item_obj = new MapItem($name, $this->protocol_manager);
+                $item_obj = new MapItem($name, $this->manager);
                 $this->parseMap($name, $dom_node, $item_obj);
                 break;
             case ItemType::INT:
-                $item_obj = new IntItem($name, $this->protocol_manager);
+                $item_obj = new IntItem($name, $this->manager);
                 $item_obj->setIntType($dom_node->nodeName);
                 break;
             case ItemType::DOUBLE:
-                $item_obj = new DoubleItem($name, $this->protocol_manager);
+                $item_obj = new DoubleItem($name, $this->manager);
+                break;
+            case ItemType::BOOL:
+                $item_obj = new BoolItem($name, $this->manager);
                 break;
             default:
                 throw new Exception('Unknown type');
@@ -436,7 +439,7 @@ class Protocol
             }
             $this->setLineNumber($tmp_node->getLineNo());
             $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
-            $plugin = $this->protocol_manager->getPlugin($plugin_name);
+            $plugin = $this->manager->getPlugin($plugin_name);
             if (!$plugin) {
                 continue;
             }

@@ -174,6 +174,9 @@ class BinaryPack extends PackerBase
             case ItemType::FLOAT:
                 self::packItemCode($code_buf, $var_name, $result_name, 'writeFloat');
                 break;
+            case ItemType::BOOL:
+                self::packItemCode($code_buf, $var_name, $result_name, 'writeChar');
+                break;
             case ItemType::DOUBLE:
                 self::packItemCode($code_buf, $var_name, $result_name, 'writeDouble');
                 break;
