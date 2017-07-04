@@ -3,7 +3,6 @@
 namespace ffan\dop\coder\java;
 
 use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\IntItem;
@@ -51,10 +50,12 @@ class GsonPack extends PackerBase
             $code_buf->pushStr('public String gsonWrite() {');
             $code_buf->indent();
             $code_buf->pushStr('try {')->indent();
-            $code_buf->pushStr('JsonWriter writer = new JsonWriter(new StringWriter());');
+            $code_buf->pushStr('StringWriter result = new StringWriter();');
+            $code_buf->pushStr('JsonWriter writer = new JsonWriter(result);');
             $this->writePropertyLoop($code_buf, $struct);
+            $code_buf->pushStr('writer.flush();');
             $code_buf->pushStr('writer.close();');
-            $code_buf->pushStr('return writer.toString();');
+            $code_buf->pushStr('return result.toString();');
             $code_buf->backIndent()->pushStr('} catch(IOException e) {');
             $code_buf->pushIndent('return "null";');
             $code_buf->pushStr('}');
@@ -181,14 +182,6 @@ class GsonPack extends PackerBase
         $code_buf->backIndent()->pushStr('}');
         $code_buf->backIndent()->pushStr('}');
         $code_buf->pushStr('reader.endObject();');
-    }
-
-    /**
-     *
-     */
-    private function makeInitValue()
-    {
-
     }
 
     /**

@@ -14,7 +14,7 @@ public class GsonTest {
     	data.int16 = 0x7fff;
     	data.uint16 = 0xffff;
     	data.int32 = 0x7fffffff;
-    	data.uint = 0xffffffff;
+    	data.uint = 0xffffffffL;
     	data.int64 = 0xfffffffffffL;
     	data.float32 = 100.1F;
     	data.double64 = 1000.1001010;
