@@ -293,7 +293,7 @@ class Manager
             /** @var CoderBase $coder */
             $this->current_coder = $coder = new $coder_class($this, $build_opt);
             $coder->build();
-            $this->saveFiles();
+            $this->saveFiles($build_opt->getFileOption());
             $this->buildLog('done!');
         } catch (Exception $exception) {
             $msg = $exception->getMessage();
@@ -306,8 +306,9 @@ class Manager
 
     /**
      * 保存生成的所有文件
+     * @param int $option 各选项
      */
-    private function saveFiles()
+    private function saveFiles($option = 0)
     {
         if (empty($this->folder_list)) {
             return;
@@ -317,7 +318,7 @@ class Manager
          * @var Folder $folder
          */
         foreach ($this->folder_list as $path => $folder) {
-            $folder->save();
+            $folder->save($option);
         }
         $this->folder_list = null;
     }

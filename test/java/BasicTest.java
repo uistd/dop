@@ -20,6 +20,7 @@ public class BasicTest {
 
     public String testb()
     {
+    	byte[] a = new byte[0];
         return "hello";
     }
 

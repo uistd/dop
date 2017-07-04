@@ -24,6 +24,11 @@ class BuildOption
     const SIDE_CLIENT = 2;
 
     /**
+     * 生成文件的一些选项
+     */
+    const FILE_OPTION_UTF8_BOM = 1;
+    
+    /**
      * @var string 生成文件目录
      */
     public $build_path;
@@ -69,6 +74,11 @@ class BuildOption
     private $section_conf;
 
     /**
+     * @var int 生成文件选项
+     */
+    private $file_option = 0;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -84,7 +94,8 @@ class BuildOption
             'build_path' => 'build',
             'namespace' => 'ffan\dop',
             'protocol_type' => 'action',
-            'code_side' => 'server'
+            'code_side' => 'server',
+            'utf8_bom' => false
         );
         //修正缺失的配置项
         foreach ($default_config as $name => $value) {
@@ -102,6 +113,9 @@ class BuildOption
             $ns = $default_config['namespace'];
         }
         $section_conf['namespace'] = $ns;
+        if ($section_conf['utf8_bom']) {
+            $this->file_option |= self::FILE_OPTION_UTF8_BOM;
+        }
         $this->section_conf = $section_conf;
         $this->init($section_conf);
     }
@@ -254,5 +268,14 @@ class BuildOption
     public function getSectionConf()
     {
         return $this->section_conf;
+    }
+
+    /**
+     * 获取生成文件的选项
+     * @return int
+     */
+    public function getFileOption()
+    {
+        return $this->file_option;
     }
 }

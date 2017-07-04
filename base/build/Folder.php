@@ -105,8 +105,9 @@ class Folder
 
     /**
      * 保存每个文件
+     * @param int $option 文件选项
      */
-    public function save()
+    public function save($option)
     {
         if (empty($this->file_list)) {
             return;
@@ -124,6 +125,10 @@ class Folder
                 }
                 $full_file_name = FFanUtils::joinFilePath($abs_path, $file_name);
                 $content = $file_buf->dump();
+                //utf8 bom头
+                if (($option & BuildOption::FILE_OPTION_UTF8_BOM)) {
+                    $content = chr(0xEF).chr(0xBB).chr(0xBF) . $content;
+                }
                 $re = file_put_contents($full_file_name, $content);
                 $log_file_name = $path .'/'. $file_name;
                 $this->manager->buildLog('Build file ' . $log_file_name . ($re ? ' success' : ' failed'));

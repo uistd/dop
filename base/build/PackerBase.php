@@ -10,13 +10,20 @@ use ffan\dop\protocol\Struct;
  */
 abstract class PackerBase
 {
-    const PACK_METHOD = 1;
-    const UNPACK_METHOD = 2;
-    
     /**
      * @var CoderBase
      */
     protected $coder;
+
+    /**
+     * @var FileBuf 当前正在编辑的文件
+     */
+    private $file_buf;
+
+    /**
+     * @var CodeBuf 生成import的buf
+     */
+    private $import_buf;
 
     /**
      * PackerBase constructor.
@@ -63,12 +70,27 @@ abstract class PackerBase
     /**
      * 生成通用代码（调用pack方法时）
      * @param FileBuf $file_buf 文件
-     * @param Struct $struct
-     * @param int $type 类型
      */
-    public function onPack(FileBuf $file_buf, Struct $struct, $type = self::PACK_METHOD)
+    public function setFileBuf(FileBuf $file_buf)
     {
-        
+        $this->file_buf = $file_buf;
+        if (null !== $file_buf) {
+            $this->import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
+        } else {
+            $this->import_buf = null;
+        }
+    }
+
+    /**
+     * 写入import代码
+     * @param string $str
+     */
+    protected function pushImportCode($str)
+    {
+       if (!$this->import_buf) {
+           return;
+       }
+       $this->import_buf->pushUniqueStr($str);
     }
     
     /**

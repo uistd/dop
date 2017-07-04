@@ -161,17 +161,22 @@ class Coder extends CoderBase
             $use_name_space = $this->joinNameSpace($package, $struct->getClassName());
             $import_buf->pushUniqueStr('import ' . $use_name_space . ';');
         } elseif (ItemType::ARR === $type) {
-            $import_buf->pushUniqueStr('import java.util.ArrayList;');
+            $type_str = self::varType($item);
+            $import_buf->pushUniqueStr('import java.util.List;');
+            if (false !== strpos($type_str, 'ArrayList')) {
+                $import_buf->pushUniqueStr('import java.util.ArrayList;');
+            }
             $import_buf->pushUniqueStr('import java.util.List;');
             /** @var ListItem $item */
             $this->makeImportCode($item->getItem(), $name_space, $import_buf);
         } elseif (ItemType::MAP === $type) {
-            $import_buf->pushUniqueStr('import java.util.HashMap;');
             $import_buf->pushUniqueStr('import java.util.Map;');
+            $type_str = self::varType($item);
+            if (false !== strpos($type_str, 'HashMap')) {
+                $import_buf->pushUniqueStr('import java.util.HashMap;');
+            }
             /** @var MapItem $item */
             $this->makeImportCode($item->getValueItem(), $name_space, $import_buf);
-        } elseif (ItemType::BINARY === $type && $this->hasPacker('gson')) {
-            $import_buf->pushUniqueStr('import java.util.Base64;');
         }
     }
 
