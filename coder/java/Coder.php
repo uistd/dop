@@ -134,7 +134,7 @@ class Coder extends CoderBase
             $tmp_node = $item->getNote();
             if (!empty($tmp_node)) {
                 $property_buf->pushStr('/**');
-                $property_buf->pushStr(' @VAR ' . $tmp_node);
+                $property_buf->pushStr(' * ' . $tmp_node);
                 $property_buf->pushStr(' */');
             }
             $property_line_buf = new StrBuf();

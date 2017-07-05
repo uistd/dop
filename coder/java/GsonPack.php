@@ -34,15 +34,10 @@ class GsonPack extends PackerBase
         $code_buf->pushStr(' * 转成JSON字符串');
         if ($struct->isSubStruct()) {
             $code_buf->pushStr(' * @param JsonWriter writer');
-            $code_buf->pushStr(' * @throws IOException');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public void gsonWrite(JsonWriter writer) throws IOException {');
             $code_buf->indent();
-            $code_buf->pushStr('try {')->indent();
             $this->writePropertyLoop($code_buf, $struct);
-            $code_buf->backIndent()->pushStr('} catch(IOException e) {');
-            $code_buf->pushIndent('throw e;');
-            $code_buf->pushStr('}');
         } else {
             $this->pushImportCode('import java.io.StringWriter;');
             $code_buf->pushStr(' * @return String');
@@ -114,15 +109,10 @@ class GsonPack extends PackerBase
         $code_buf->pushStr(' * JSON字符串解析');
         if ($struct->isSubStruct()) {
             $code_buf->pushStr(' * @param reader');
-            $code_buf->pushStr(' * @throws IOException');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public void gsonRead(JsonReader reader) throws IOException {');
             $code_buf->indent();
-            $code_buf->pushStr('try {')->indent();
             $this->readPropertyLoop($code_buf, $struct);
-            $code_buf->backIndent()->pushStr('} catch(IOException e) {');
-            $code_buf->pushIndent('throw e;');
-            $code_buf->pushStr('}');
         } else {
             $this->pushImportCode('import java.io.StringReader;');
             $code_buf->pushStr(' * @param json_str');

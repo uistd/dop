@@ -8,3 +8,5 @@ test/java/com/
 *.classpath
 *.project
 test/java/.settings/
+test/java/DopTest/GsonTest/src/com/ffan/dop/demo/
+*.iml
