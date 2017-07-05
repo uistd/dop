@@ -22,6 +22,7 @@
         <string name="country" note="国籍" default="中国">
             <plugin_mock value="中国"/>
         </string>
+        <bool name="is_reg" note="是否注册用户"/>
         <int name="gender" note="性别" default="1" mock-enum="1,2">
             <plugin_mock enum="1,2"/>
         </int>

@@ -273,9 +273,9 @@ class GsonPack extends PackerBase
                     $bytes <<= 1;
                 }
                 if (1 === $bytes) {
-                    $code_buf->pushStr($var_name . ' = (byte)reader.nextInt();');
+                    $code_buf->pushStr($var_name . ' = (byte) reader.nextInt();');
                 } elseif (2 === $bytes) {
-                    $code_buf->pushStr($var_name . ' = (short)reader.nextInt();');
+                    $code_buf->pushStr($var_name . ' = (short) reader.nextInt();');
                 } elseif (8 === $bytes) {
                     $code_buf->pushStr($var_name . ' = reader.nextLong();');
                 } else {
@@ -286,7 +286,7 @@ class GsonPack extends PackerBase
                 $code_buf->pushStr($var_name . ' = reader.nextBoolean();');
                 break;
             case ItemType::FLOAT:
-                $code_buf->pushStr($var_name . ' = (float)reader.nextDouble();');
+                $code_buf->pushStr($var_name . ' = (float) reader.nextDouble();');
                 break;
             case ItemType::DOUBLE:
                 $code_buf->pushStr($var_name . ' = reader.nextDouble();');
@@ -336,22 +336,25 @@ class GsonPack extends PackerBase
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 $map_type = Coder::varType($item, 0, false);
-                $code_buf->pushStr($var_name . ' = new ' . $map_type . '();');
-                $key_item_type = Coder::varType($key_item, 0, false);
+                if ($depth > 0) {
+                    $code_buf->pushStr($var_name . ' = new ' . $map_type . '();');
+                }
                 $value_item_type = Coder::varType($value_item, 0, false);
                 $tmp_key = self::varName($tmp_index++, 'key');
                 $tmp_value = self::varName($tmp_index++, 'value');
-                $code_buf->pushStr($key_item_type . ' ' . $tmp_key . ';');
                 $code_buf->pushStr($value_item_type . ' ' . $tmp_value . ';');
                 $code_buf->pushStr('reader.beginObject();');
                 $code_buf->pushStr('while (reader.hasNext()) {')->indent();
                 $this->importClass('JsonToken');
+                $code_buf->pushStr('String ' . $tmp_key . ' = reader.nextName();');
                 $code_buf->pushStr('if (JsonToken.NULL == reader.peek()) {')->indent();
                 $code_buf->pushStr('reader.skipValue();');
                 $code_buf->pushStr('continue;');
                 $code_buf->backIndent()->pushStr('}');
-                $this->unpackItemValue($code_buf, $tmp_key, $key_item, $tmp_index, $depth + 1);
                 $this->unpackItemValue($code_buf, $tmp_value, $value_item, $tmp_index, $depth + 1);
+                if (ItemType::INT === $key_item->getType()) {
+                    $tmp_key = 'Integer.valueOf('. $tmp_key .')';
+                }
                 $code_buf->pushStr($var_name . '.put(' . $tmp_key . ', ' . $tmp_value . ');');
                 $code_buf->backIndent()->pushStr('}');
                 $code_buf->pushStr('reader.endObject();');

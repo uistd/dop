@@ -52,11 +52,14 @@ class IntItem extends Item
         'int' => IntItem::BYTE_INT,
         'uint' => IntItem::BYTE_INT,
         'int8' => IntItem::BYTE_TINY,
+        'tinyint' => IntItem::BYTE_TINY,
         'uint8' => IntItem::BYTE_TINY,
+        'smallint' => IntItem::BYTE_SMALL,
         'int16' => IntItem::BYTE_SMALL,
         'uint16' => IntItem::BYTE_SMALL,
         'int32' => IntItem::BYTE_INT,
         'uint32' => IntItem::BYTE_INT,
+        'bigint' => IntItem::BYTE_BIG,
         'int64' => IntItem::BYTE_BIG,
     );
 

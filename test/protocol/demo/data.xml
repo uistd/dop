@@ -17,6 +17,7 @@
         <float name="float32"/>
         <double name="double64"/>
         <binary name="binary"/>
+        <bool name="is_ok" default="false"/>
         <list name="list"><string/></list>
         <list name="list_list"><list name="list"><int/></list></list>
         <map name="map"><int/><string/></map>
@@ -29,5 +30,22 @@
             <int8 name="gender"/>
         </struct>
         <struct name="test_arr" extend="test_arr"/>
+    </data>
+    
+    <data name="simple_data">
+        <int8 name="int8"/>
+        <uint8 name="uint8"/>
+        <int16 name="int16"/>
+        <uint16 name="uint16"/>
+        <int name="int32"/>
+        <uint name="uint"/>
+        <int64 name="int64"/>
+        <string name="string"/>
+        <float name="float32"/>
+        <double name="double64"/>
+        <binary name="binary"/>
+        <bool name="is_ok" default="false"/>
+        <list name="list"><string/></list>
+        <map name="map"><int/><string/></map>
     </data>
 </protocol>

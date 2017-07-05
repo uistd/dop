@@ -68,6 +68,14 @@ abstract class PackerBase
     }
 
     /**
+     * 生成通用代码（类代码）
+     */
+    public function build()
+    {
+        
+    }
+    
+    /**
      * 生成通用代码（调用pack方法时）
      * @param FileBuf $file_buf 文件
      */

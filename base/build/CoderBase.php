@@ -281,6 +281,7 @@ abstract class CoderBase extends ConfigBase
             return;
         }
         $packer->setFileBuf($file_buf);
+        $packer->build();
         if ($this->isBuildPackMethod($struct)) {
             $packer->buildPackMethod($struct, $code_buf);
         }
