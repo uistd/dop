@@ -234,7 +234,7 @@ public class DopEncode {
     /**
      * hexArr
      */
-    private final static char[] hex_array = "0123456789ABCDEF".toCharArray();
+    private final static char[] hex_array = "0123456789abcdef".toCharArray();
     
     /**
      * md5加密

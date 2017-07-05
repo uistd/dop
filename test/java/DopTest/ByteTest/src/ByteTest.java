@@ -2,6 +2,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 public class ByteTest {
     public static void main(String[] var0) throws NoSuchAlgorithmException {
@@ -25,9 +26,13 @@ public class ByteTest {
         
         byte[] arr2 = new byte[6];
         System.arraycopy(arr, 0, arr2, 0, 3);
-        MessageDigest msgDigest = MessageDigest.getInstance("MD5");
-        
-        
+
+        byte[] arr3 = new byte[10];
+        for (int i = 0; i < 10; ++i) {
+            arr3[i] = (byte) (190 + i);
+        }
+        String base64_str = Base64.getEncoder().encodeToString(arr3);
+        System.out.println(base64_str);
         System.out.println("ok");    
     }
 }

@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.ffan.dop.DopEncode;
 import com.ffan.dop.demo.data.SimpleData;
 import com.ffan.dop.demo.data.TestArr;
 import com.ffan.dop.demo.data.TestData;
@@ -85,7 +86,9 @@ public class GsonTest {
     	SimpleData test3 = new SimpleData();
     	Boolean re = test3.gsonRead(json2);
     	
-    	System.out.println(re);   	
+    	System.out.println(re);
+    	
+    	System.out.println(DopEncode.md5("www.ffan.com"));
     	System.out.println("end");
     }
 }
