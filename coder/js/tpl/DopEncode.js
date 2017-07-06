@@ -308,6 +308,7 @@ DopEncode.prototype = {
      */
     mask: function (mask_key) {
         this.opt_flag |= DopEncode.prototype.OPTION_MASK;
+        this.sign();
         this.mask_key = mask_key;
     },
 

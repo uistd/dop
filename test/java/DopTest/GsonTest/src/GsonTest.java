@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.ffan.dop.DopDecode;
 import com.ffan.dop.DopEncode;
 import com.ffan.dop.demo.data.SimpleData;
 import com.ffan.dop.demo.data.TestArr;
@@ -87,8 +88,45 @@ public class GsonTest {
     	Boolean re = test3.gsonRead(json2);
     	
     	System.out.println(re);
+
+		DopEncode encode = new DopEncode();
+		encode.writeByte((byte) 0x7f);
+		encode.writeByte((short) 0xff);
+		encode.writeShort((short) 0x7fff);
+		encode.writeShort(0xffff);
+
+		encode.writeInt(0x7fffffff);
+		encode.writeInt(0xffffffffL);
+		
+		encode.writeBigInt(0x7fffffffffffffffL);
+		
+		encode.writeFloat(123743.13F);
+		encode.writeDouble(9293892.929394);
+		
+		byte[] pack_re = encode.getBuffer();
+		DopDecode decode = new DopDecode(pack_re);
+		byte re_1 = decode.readByte();
+		short re_2 = decode.readUnsignedByte();
+		short re_3 = decode.readShort();
+		int re_4 = decode.readUnsignedShort();
+		
+		int re_5 = decode.readInt();
+		long re_6 = decode.readUnsignedInt();
+		long re_7 = decode.readBigInt();
+		
+		float re_8 = decode.readFloat();
+		double re_9 = decode.readDouble();
+		
+		System.out.println(re_1);
+		System.out.println(re_2);
+		System.out.println(re_3);
+		System.out.println(re_4);
+		System.out.println(re_5);
+		System.out.println(re_6);
+		System.out.println(re_7);
+		System.out.println(re_8);
+    	System.out.println(re_9);
     	
-    	System.out.println(DopEncode.md5("www.ffan.com"));
     	System.out.println("end");
     }
 }

@@ -1,5 +1,6 @@
 package com.ffan.dop;
 
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -10,7 +11,6 @@ public class DopEncode {
     public static final int OPTION_PID = 0x1;
     public static final int OPTION_SIGN = 0x2;
     public static final int OPTION_MASK = 0x4;
-    public static final int OPTION_ENDIAN = 0x8;
     public static final int SIGN_CODE_LEN = 8;
     public static final int MIN_MASK_KEY_LEN = 8;
 
@@ -37,17 +37,12 @@ public class DopEncode {
     /**
      * 写入的PID占用的长度
      */
-    private int pid_pos = 0;
+    private int mask_beg_pos = 0;
 
     /**
      * 数据加密key
      */
     private String mask_key;
-
-    /**
-     * 错误码
-     */
-    int error_code = 0;
 
     /**
      * 构造函数
@@ -112,10 +107,8 @@ public class DopEncode {
      */
     public void writeShort(short value) {
         this.sizeCheck(2);
-        byte h = (byte) ((value >> 8) & 0xff);
-        byte l = (byte) (value & 0xff);
-        this.buffer[this.write_pos++] = h;
-        this.buffer[this.write_pos++] = l;
+        this.buffer[this.write_pos++] = (byte) (value & 0xff);
+        this.buffer[this.write_pos++] = (byte) ((value >> 8) & 0xff);
     }
 
     /**
@@ -130,10 +123,10 @@ public class DopEncode {
      */
     public void writeInt(int value) {
         this.sizeCheck(4);
-        this.buffer[this.write_pos++] = (byte) ((value >> 24) & 0xff);
-        this.buffer[this.write_pos++] = (byte) ((value >> 16) & 0xff);
+        this.buffer[this.write_pos++] = (byte) (value & 0xff);
         this.buffer[this.write_pos++] = (byte) ((value >> 8) & 0xff);
-        this.buffer[this.write_pos++] = (byte) ((value) & 0xff);
+        this.buffer[this.write_pos++] = (byte) ((value >> 16) & 0xff);
+        this.buffer[this.write_pos++] = (byte) ((value >> 24) & 0xff);
     }
 
     /**
@@ -147,8 +140,37 @@ public class DopEncode {
      * 写入64位int
      */
     public void writeBigInt(long value) {
-        this.writeInt((int) ((value >> 32) & 0xffffffffL));
         this.writeInt((int) (value & 0xffffffffL));
+        this.writeInt((int) ((value >> 32) & 0xffffffffL));
+    }
+
+    /**
+     * 写入float
+     */
+    public void writeFloat(float value) {
+        byte[] byte_arr = new byte[4];
+        ByteBuffer buf = ByteBuffer.wrap(byte_arr);
+        buf.putFloat(value);
+        this.writeByteArray(byte_arr);
+    }
+
+    /**
+     * 写入double
+     */
+    public void writeDouble(double value) {
+        byte[] byte_arr = new byte[8];
+        ByteBuffer buf = ByteBuffer.wrap(byte_arr);
+        buf.putDouble(value);
+        this.writeByteArray(byte_arr);
+    }
+
+    /**
+     * 写入一个byte[]
+     */
+    private void writeByteArray(byte[] byte_arr) {
+        this.sizeCheck(byte_arr.length);
+        System.arraycopy(byte_arr, 0, this.buffer, this.write_pos, byte_arr.length);
+        this.write_pos += byte_arr.length;
     }
 
     /**
@@ -180,19 +202,17 @@ public class DopEncode {
     public void writeString(String str) {
         int len = str.length();
         this.writeLength(len);
-        this.sizeCheck(len);
         byte[] str_byte = str.getBytes();
-        System.arraycopy(this.buffer, this.write_pos, str_byte, 0, len);
-        this.write_pos += len;
+        this.writeByteArray(str_byte);
     }
 
     /**
      * 写入数据ID
      */
     public void writePid(String pid) {
-       this.opt_flag |= DopEncode.OPTION_PID;
-       this.writeString(pid);
-       this.pid_pos = this.write_pos;
+        this.opt_flag |= DopEncode.OPTION_PID;
+        this.writeString(pid);
+        this.mask_beg_pos = this.write_pos;
     }
 
     /**
@@ -201,6 +221,7 @@ public class DopEncode {
     public void mask(String mask_key) {
         this.mask_key = mask_key;
         this.opt_flag |= OPTION_MASK;
+        this.sign();
     }
 
     /**
@@ -211,23 +232,73 @@ public class DopEncode {
     }
 
     /**
+     * 返回打包好的数据
+     *
+     * @return byte[]
+     */
+    public byte[] pack() {
+        if (0 != (this.opt_flag & OPTION_SIGN)) {
+            String signCode = signCode(this.buffer, 0, this.write_pos);
+            this.sizeCheck(SIGN_CODE_LEN);
+            System.arraycopy(signCode.getBytes(), 0, this.buffer, this.write_pos, SIGN_CODE_LEN);
+            this.write_pos += SIGN_CODE_LEN;
+        }
+
+        if (0 != (this.opt_flag & OPTION_MASK)) {
+            doMask(this.buffer, this.mask_beg_pos, this.mask_key);
+        }
+        int current_len = this.write_pos;
+        this.writeLength(this.write_pos);
+        //+1，因为第1位是标志位
+        byte[] result = new byte[this.write_pos + 1];
+        result[0] = this.opt_flag;
+        int length_len = this.write_pos - current_len;
+        System.arraycopy(this.buffer, current_len, result, 1, length_len);
+        System.arraycopy(this.buffer, 0, result, 1 + length_len, current_len);
+        return result;
+    }
+
+    /**
+     * 获取byte[]
+     */
+    public byte[] getBuffer() {
+        byte[] result = new byte[this.write_pos];
+        System.arraycopy(this.buffer, 0, result, 0, this.write_pos);
+        return result;
+    }
+
+    /**
      * 生成数据签名
      */
-    private void signData() {
-        
+    public static String signCode(byte[] byte_arr, int begin, int length) {
+        String md5_str;
+        //需要复制一份新的出来
+        if (length != byte_arr.length) {
+            byte[] sub_byte = new byte[length];
+            System.arraycopy(byte_arr, begin, sub_byte, 0, length);
+            md5_str = md5(sub_byte);
+        } else {
+            md5_str = md5(byte_arr);
+        }
+        return md5_str.substring(0, SIGN_CODE_LEN);
     }
 
     /**
      * 数据加密
      */
-    private void doMask() {
-        
+    private void doMask(byte[] byte_arr, int begin_pos, String mask_key) {
+        byte[] mask_key_arr = fixMaskKey(mask_key).getBytes();
+        int pos = 0, key_ken = mask_key_arr.length;
+        for (int i = begin_pos, len = byte_arr.length; i < len; ++i) {
+            int index = pos++ % key_ken;
+            byte_arr[i] ^= mask_key_arr[index];
+        }
     }
 
     /**
      * 修正mask key
      */
-    public static String fixMaskKey(String mask_key) {
+    private static String fixMaskKey(String mask_key) {
         return (mask_key.length() < MIN_MASK_KEY_LEN) ? md5(mask_key) : mask_key;
     }
 
@@ -235,17 +306,27 @@ public class DopEncode {
      * hexArr
      */
     private final static char[] hex_array = "0123456789abcdef".toCharArray();
-    
+
     /**
      * md5加密
+     *
      * @return hex string
      */
-    public static String md5(String str) {
+    private static String md5(String str) {
+        return md5(str.getBytes());
+    }
+
+    /**
+     * md5加密
+     *
+     * @return hex string
+     */
+    private static String md5(byte[] byte_arr) {
         try {
             MessageDigest msgDigest = MessageDigest.getInstance("MD5");
-            byte[] dig_arr = msgDigest.digest(str.getBytes());
+            byte[] dig_arr = msgDigest.digest(byte_arr);
             char[] hex_chars = new char[dig_arr.length * 2];
-            for ( int j = 0; j < dig_arr.length; j++ ) {
+            for (int j = 0; j < dig_arr.length; j++) {
                 int v = dig_arr[j] & 0xff;
                 hex_chars[j * 2] = hex_array[v >>> 4];
                 hex_chars[j * 2 + 1] = hex_array[v & 0x0f];
