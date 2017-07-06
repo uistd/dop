@@ -1,7 +1,5 @@
 package com.ffan.dop;
 
-import com.ffan.dop.DopEncode;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Base64;
@@ -39,24 +37,29 @@ public class DopDecode {
     private int error_code = 0;
 
     /**
+     * 是否解析出头信息
+     */
+    private boolean is_unpack_head = false;
+
+    /**
      * 数据ID
      */
-    String pid;
+    private String pid;
 
     /**
      * 标志位
      */
-    int opt_flag;
+    private int opt_flag;
 
     /**
      * 数据签名开始位置
      */
-    int sign_data_pos;
+    private int sign_data_pos;
 
     /**
      * 数据加密开始的位置
      */
-    int mask_data_pos;
+    private int mask_data_pos;
 
     /**
      * 字节序
@@ -189,10 +192,10 @@ public class DopDecode {
         byte char_4 = this.buffer[this.read_pos++];
         long result;
         if (ByteOrder.LITTLE_ENDIAN == this.order) {
-            result = (((long)char_4 & 0xff) << 24) | (long)((char_3 & 0xff) << 16) |
-                    (long)((char_2 & 0xff) << 8) | (long)(char_1 & 0xff);
+            result = (((long) char_4 & 0xff) << 24) | (long) ((char_3 & 0xff) << 16) |
+                    (long) ((char_2 & 0xff) << 8) | (long) (char_1 & 0xff);
         } else {
-            result = (((long)char_1 & 0xff) << 24) | ((char_2 & 0xff) << 16) |
+            result = (((long) char_1 & 0xff) << 24) | ((char_2 & 0xff) << 16) |
                     ((char_3 & 0xff) << 8) | (char_4 & 0xff);
         }
         return result;
@@ -207,7 +210,7 @@ public class DopDecode {
         System.out.println(l_1);
         System.out.println(l_2);
         if (ByteOrder.LITTLE_ENDIAN == this.order) {
-            return (l_2 << 32) | l_1; 
+            return (l_2 << 32) | l_1;
         } else {
             return (l_1 << 32) | l_2;
         }
@@ -248,5 +251,117 @@ public class DopDecode {
         System.arraycopy(this.buffer, this.read_pos, result, 0, size);
         this.read_pos += size;
         return result;
+    }
+
+    /**
+     * 读出一个长度
+     */
+    private long readLength() {
+        short flag = this.readUnsignedByte();
+        //长度小于252 直接表示
+        if (flag < 0xfc) {
+            return flag;
+        } //长度小于65535
+        else if (0xfc == flag) {
+            return this.readUnsignedShort();
+        } //长度小于4gb
+        else if (0xfe == flag) {
+            return this.readUnsignedInt();
+        } //更长
+        else {
+            return this.readBigInt();
+        }
+    }
+
+    /**
+     * 读字符串
+     */
+    public String readString() {
+        long len = this.readLength();
+        if (0 == len) {
+            return "";
+        }
+        //@todo long support
+        byte[] str_byte = this.readByteArray((int) len);
+        if (null == str_byte) {
+            return "";
+        }
+        return new String(str_byte);
+    }
+
+    /**
+     * 解出头信息
+     */
+    private void unpackHead() {
+        if (this.is_unpack_head) {
+            return;
+        }
+        this.is_unpack_head = true;
+        this.opt_flag = this.readByte();
+        if (0 != (this.opt_flag & DopEncode.OPTION_ENDIAN)) {
+            this.order = ByteOrder.BIG_ENDIAN;
+        }
+        long total_len = this.readLength();
+        if (this.max_pos - this.read_pos != total_len) {
+            this.error_code = ERROR_SIZE;
+            return;
+        }
+        this.sign_data_pos = this.read_pos;
+        if (0 != (this.opt_flag & DopEncode.OPTION_PID)) {
+            this.pid = this.readString();
+        }
+        this.mask_data_pos = this.read_pos;
+    }
+
+    /**
+     * 数据是否加密
+     */
+    public boolean isMask() {
+        if (!this.is_unpack_head) {
+            this.unpackHead();
+        }
+        return (this.opt_flag & DopEncode.OPTION_MASK) > 0;
+    }
+
+    /**
+     * 获取PID
+     */
+    public String getPid() {
+        return null == this.pid ? "" : this.pid;
+    }
+
+    /**
+     * 数据签名校验
+     */
+    private boolean checkSignCode() {
+        //如果剩余数据不够签名串，表示数据出错了
+        if (this.max_pos - this.read_pos < DopEncode.SIGN_CODE_LEN) {
+            this.error_code = ERROR_DATA;
+            return false;
+        }
+        int sign_code_pos = this.max_pos - DopEncode.SIGN_CODE_LEN;
+        byte[] sign_code_byte = new byte[DopEncode.SIGN_CODE_LEN];
+        System.arraycopy(this.buffer, sign_code_pos, sign_code_byte, 0, DopEncode.SIGN_CODE_LEN);
+        String sign_code = DopEncode.signCode(this.buffer, this.sign_data_pos, sign_code_pos - this.sign_data_pos);
+        if (!sign_code.equals(new String(sign_code_byte))) {
+            this.error_code = ERROR_SIGN_CODE;
+            return false;
+        }
+        this.max_pos -= DopEncode.SIGN_CODE_LEN;
+        this.opt_flag ^= DopEncode.OPTION_SIGN;
+        return true;
+    }
+
+    /**
+     * 数据解密
+     */
+    private boolean unmack(String mask_key) {
+        DopEncode.doMask(this.buffer, this.mask_data_pos, mask_key);
+        this.opt_flag ^= DopEncode.OPTION_MASK;
+        if (!this.checkSignCode()){
+            this.error_code = ERROR_MASK;
+            return false;
+        }
+        return true;
     }
 }

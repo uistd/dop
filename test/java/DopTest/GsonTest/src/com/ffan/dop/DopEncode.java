@@ -8,11 +8,12 @@ import java.security.NoSuchAlgorithmException;
  * Dop二进制打包
  */
 public class DopEncode {
-    public static final int OPTION_PID = 0x1;
-    public static final int OPTION_SIGN = 0x2;
-    public static final int OPTION_MASK = 0x4;
-    public static final int SIGN_CODE_LEN = 8;
-    public static final int MIN_MASK_KEY_LEN = 8;
+    static final int OPTION_PID = 0x1;
+    static final int OPTION_SIGN = 0x2;
+    static final int OPTION_MASK = 0x4;
+    static final int OPTION_ENDIAN = 0x8;
+    static final int SIGN_CODE_LEN = 8;
+    static final int MIN_MASK_KEY_LEN = 8;
 
     /**
      * byte buffer
@@ -49,14 +50,14 @@ public class DopEncode {
      *
      * @param size 初始分析内存大小
      */
-    public DopEncode(int size) {
+    DopEncode(int size) {
         this.resize(size);
     }
 
     /**
      * 构造函数
      */
-    public DopEncode() {
+    DopEncode() {
         this.resize(1024);
     }
 
@@ -89,7 +90,7 @@ public class DopEncode {
     /**
      * 写入一个 char
      */
-    public void writeByte(short value) {
+    void writeByte(short value) {
         this.sizeCheck(1);
         this.buffer[this.write_pos++] = (byte) (value & 0xff);
     }
@@ -97,7 +98,7 @@ public class DopEncode {
     /**
      * 写入一个 char
      */
-    public void writeByte(byte value) {
+    void writeByte(byte value) {
         this.sizeCheck(1);
         this.buffer[this.write_pos++] = value;
     }
@@ -105,7 +106,7 @@ public class DopEncode {
     /**
      * 写入一个short
      */
-    public void writeShort(short value) {
+    void writeShort(short value) {
         this.sizeCheck(2);
         this.buffer[this.write_pos++] = (byte) (value & 0xff);
         this.buffer[this.write_pos++] = (byte) ((value >> 8) & 0xff);
@@ -114,14 +115,14 @@ public class DopEncode {
     /**
      * 写入一个short 可写入无符号 16位 int
      */
-    public void writeShort(int value) {
+    void writeShort(int value) {
         this.writeShort((short) (value & 0xffff));
     }
 
     /**
      * 写入一个int值
      */
-    public void writeInt(int value) {
+    void writeInt(int value) {
         this.sizeCheck(4);
         this.buffer[this.write_pos++] = (byte) (value & 0xff);
         this.buffer[this.write_pos++] = (byte) ((value >> 8) & 0xff);
@@ -132,14 +133,14 @@ public class DopEncode {
     /**
      * 写入一个int值（可写入32位无符号数）
      */
-    public void writeInt(long value) {
+    void writeInt(long value) {
         this.writeInt((int) (value & 0xffffffffL));
     }
 
     /**
      * 写入64位int
      */
-    public void writeBigInt(long value) {
+    void writeBigInt(long value) {
         this.writeInt((int) (value & 0xffffffffL));
         this.writeInt((int) ((value >> 32) & 0xffffffffL));
     }
@@ -147,7 +148,7 @@ public class DopEncode {
     /**
      * 写入float
      */
-    public void writeFloat(float value) {
+    void writeFloat(float value) {
         byte[] byte_arr = new byte[4];
         ByteBuffer buf = ByteBuffer.wrap(byte_arr);
         buf.putFloat(value);
@@ -157,7 +158,7 @@ public class DopEncode {
     /**
      * 写入double
      */
-    public void writeDouble(double value) {
+    void writeDouble(double value) {
         byte[] byte_arr = new byte[8];
         ByteBuffer buf = ByteBuffer.wrap(byte_arr);
         buf.putDouble(value);
@@ -176,7 +177,7 @@ public class DopEncode {
     /**
      * 写入长度
      */
-    public void writeLength(long length) {
+    void writeLength(long length) {
         //如果长度小于252 表示真实的长度
         if (length < 0xfc) {
             this.writeByte((short) length);
@@ -199,17 +200,16 @@ public class DopEncode {
     /**
      * 写入字符串
      */
-    public void writeString(String str) {
-        int len = str.length();
-        this.writeLength(len);
+    void writeString(String str) {
         byte[] str_byte = str.getBytes();
+        this.writeLength(str_byte.length);
         this.writeByteArray(str_byte);
     }
 
     /**
      * 写入数据ID
      */
-    public void writePid(String pid) {
+    void writePid(String pid) {
         this.opt_flag |= DopEncode.OPTION_PID;
         this.writeString(pid);
         this.mask_beg_pos = this.write_pos;
@@ -218,7 +218,7 @@ public class DopEncode {
     /**
      * 设置数据加密
      */
-    public void mask(String mask_key) {
+    void mask(String mask_key) {
         this.mask_key = mask_key;
         this.opt_flag |= OPTION_MASK;
         this.sign();
@@ -227,7 +227,7 @@ public class DopEncode {
     /**
      * 设置数据签名
      */
-    public void sign() {
+    void sign() {
         this.opt_flag |= OPTION_SIGN;
     }
 
@@ -236,14 +236,13 @@ public class DopEncode {
      *
      * @return byte[]
      */
-    public byte[] pack() {
+    byte[] pack() {
         if (0 != (this.opt_flag & OPTION_SIGN)) {
             String signCode = signCode(this.buffer, 0, this.write_pos);
             this.sizeCheck(SIGN_CODE_LEN);
             System.arraycopy(signCode.getBytes(), 0, this.buffer, this.write_pos, SIGN_CODE_LEN);
             this.write_pos += SIGN_CODE_LEN;
         }
-
         if (0 != (this.opt_flag & OPTION_MASK)) {
             doMask(this.buffer, this.mask_beg_pos, this.mask_key);
         }
@@ -261,7 +260,7 @@ public class DopEncode {
     /**
      * 获取byte[]
      */
-    public byte[] getBuffer() {
+    byte[] getBuffer() {
         byte[] result = new byte[this.write_pos];
         System.arraycopy(this.buffer, 0, result, 0, this.write_pos);
         return result;
@@ -270,7 +269,7 @@ public class DopEncode {
     /**
      * 生成数据签名
      */
-    public static String signCode(byte[] byte_arr, int begin, int length) {
+    static String signCode(byte[] byte_arr, int begin, int length) {
         String md5_str;
         //需要复制一份新的出来
         if (length != byte_arr.length) {
@@ -286,7 +285,7 @@ public class DopEncode {
     /**
      * 数据加密
      */
-    private void doMask(byte[] byte_arr, int begin_pos, String mask_key) {
+   static void doMask(byte[] byte_arr, int begin_pos, String mask_key) {
         byte[] mask_key_arr = fixMaskKey(mask_key).getBytes();
         int pos = 0, key_ken = mask_key_arr.length;
         for (int i = begin_pos, len = byte_arr.length; i < len; ++i) {

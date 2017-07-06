@@ -103,6 +103,11 @@ public class GsonTest {
 		encode.writeFloat(123743.13F);
 		encode.writeDouble(9293892.929394);
 		
+		encode.writeString("www.ffan.com");
+		encode.writeString("www.飞sss凡.com");
+		encode.mask("www.ffan.com");
+		encode.pack();
+		
 		byte[] pack_re = encode.getBuffer();
 		DopDecode decode = new DopDecode(pack_re);
 		byte re_1 = decode.readByte();
@@ -116,6 +121,8 @@ public class GsonTest {
 		
 		float re_8 = decode.readFloat();
 		double re_9 = decode.readDouble();
+		String re_10 = decode.readString();
+		String re_11 = decode.readString();
 		
 		System.out.println(re_1);
 		System.out.println(re_2);
@@ -126,6 +133,8 @@ public class GsonTest {
 		System.out.println(re_7);
 		System.out.println(re_8);
     	System.out.println(re_9);
+    	System.out.println(re_10);
+    	System.out.println(re_11);
     	
     	System.out.println("end");
     }
