@@ -2,6 +2,7 @@
 
 namespace ffan\dop\build;
 
+use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Struct;
 
 /**
@@ -49,7 +50,9 @@ abstract class PackerBase
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    abstract public function buildPackMethod($struct, $code_buf);
+    public function buildPackMethod($struct, $code_buf) {
+        
+    }
 
     /**
      * 数据反序列化
@@ -57,7 +60,9 @@ abstract class PackerBase
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    abstract public function buildUnpackMethod($struct, $code_buf);
+    public function buildUnpackMethod($struct, $code_buf) {
+        
+    }
 
     /**
      * 生成通用代码（加载时）
@@ -110,5 +115,32 @@ abstract class PackerBase
     public static function varName($var, $type)
     {
         return $type . '_' . (string)$var;
+    }
+
+    /**
+     * 注释
+     * @param int $type
+     * @return string
+     */
+    protected function typeComment($type)
+    {
+        static $comment_arr = array(
+            ItemType::STRING => 'string',
+            ItemType::BINARY => 'binary',
+            ItemType::ARR => 'list',
+            ItemType::MAP => 'map',
+            ItemType::STRUCT => 'struct',
+            ItemType::FLOAT => 'float',
+            ItemType::DOUBLE => 'double',
+            ItemType::BOOL => 'bool',
+            0x12 => 'int8',
+            0x92 => 'unsigned int8',
+            0x22 => 'int16',
+            0xa2 => 'unsigned int16',
+            0x42 => 'int32',
+            0xc2 => 'unsigned int32',
+            0x82 => 'int64',
+        );
+        return isset($comment_arr[$type]) ? $comment_arr[$type] : '';
     }
 }

@@ -20,6 +20,11 @@ use ffan\dop\protocol\StructItem;
 class GsonPack extends PackerBase
 {
     /**
+     * @var Coder
+     */
+    protected $coder;
+    
+    /**
      * 数据序列化
      * @param Struct $struct 结构体
      * @param CodeBuf $code_buf 生成的代码缓存
@@ -215,11 +220,10 @@ class GsonPack extends PackerBase
             /** @var MapItem $item */
             $key_item = $item->getKeyItem();
             $value_item = $item->getValueItem();
-            //这里的Map<Int, Stint> 要替换为Entry<Int, String>
-            $for_type = substr(Coder::varType($item), 3);
+            $for_type = $this->coder->getMapIteratorType($item);
             $for_var_name = self::varName($tmp_index++, 'item');
             $code_buf->pushStr('writer.beginObject();');
-            $code_buf->pushStr('for (Map.Entry' . $for_type . ' ' . $for_var_name . ' : ' . $value_name . '.entrySet()) {');
+            $code_buf->pushStr('for (' . $for_type . ' ' . $for_var_name . ' : ' . $value_name . '.entrySet()) {');
             $code_buf->indent();
             $key_var_name = self::varName($tmp_index++, 'key');
             $value_var_name = self::varName($tmp_index++, 'value');

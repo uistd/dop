@@ -161,8 +161,10 @@ class Coder extends CoderBase
             /** @var StructItem $item */
             $struct = $item->getStruct();
             $package = $struct->getNamespace();
-            $use_name_space = $this->joinNameSpace($package, $struct->getClassName());
-            $import_buf->pushUniqueStr('import ' . $use_name_space . ';');
+            if ($package !== $name_space) {
+                $use_name_space = $this->joinNameSpace($package, $struct->getClassName());
+                $import_buf->pushUniqueStr('import ' . $use_name_space . ';');
+            }
         } elseif (ItemType::ARR === $type) {
             $type_str = self::varType($item);
             $import_buf->pushUniqueStr('import java.util.List;');
@@ -210,8 +212,11 @@ class Coder extends CoderBase
      */
     public function joinNameSpace($ns, $class_name = '', $separator = '.')
     {
-        $ns = $this->pathToNs($ns);
-        $result = $this->getConfig('package', 'dop') . $ns;
+        $ns = trim($this->pathToNs($ns), ' .');
+        $result = $this->getConfig('package', 'com.ffan.dop');
+        if (!empty($ns)) {
+            $result .= '.'. $ns;
+        }
         if ($class_name) {
             $result .= '.' . $class_name;
         }
@@ -233,5 +238,15 @@ class Coder extends CoderBase
             $file = $folder->touch($path, $file_name);
         }
         return $file;
+    }
+
+    /**
+     * 获取map 迭代器的类型
+     * @param Item $item
+     * @return string
+     */
+    public function getMapIteratorType(Item $item) {
+        $for_type = substr(self::varType($item), 3);
+        return 'Map.Entry'. $for_type;
     }
 }

@@ -1,38 +1,45 @@
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ByteTest {
-    public static void main(String[] var0) throws NoSuchAlgorithmException {
-        ByteBuffer test = ByteBuffer.allocate(1024);
-        test.order(ByteOrder.LITTLE_ENDIAN);
-        test.putShort((short) 0x1234);
-        test.putShort((short) 65534);
-
-        test.putInt(0x12345678);
-        test.putInt(0xffffffff);
-        
-        test.putChar((char)0x12);
-        test.putChar((char)0xff);
-        test.putChar((char)-127);
-        test.putChar((char)254);
-        
-        byte[] arr = new byte[3];
-        arr[0] = 0x1;
-        arr[1] = 0x2;
-        arr[2] = 0x3;
-        
-        byte[] arr2 = new byte[6];
-        System.arraycopy(arr, 0, arr2, 0, 3);
-
-        byte[] arr3 = new byte[10];
-        for (int i = 0; i < 10; ++i) {
-            arr3[i] = (byte) (190 + i);
+    public static void main(String[] var0){
+        BasicTest test = new BasicTest();
+        if (null == test.byte_arr) {
+            System.out.println("null");
         }
-        String base64_str = Base64.getEncoder().encodeToString(arr3);
-        System.out.println(base64_str);
-        System.out.println("ok");    
+        if (null == test.test_map) {
+            System.out.println("null");
+        }
+        if (null == test.test_object) {
+            System.out.println("null");
+        }
+        if (null == test.test_str) {
+            System.out.println("null");
+        }
+        if (null == test.list_test) {
+            System.out.println("null");
+        }
+        test.list_test = new ArrayList<Integer>();
+        test.list_test.add(null);
+        test.list_test.add(null);
+        test.list_test.add(null);
+        test.list_test.add(null);
+        if (null != test.list_test) {
+            System.out.println("array not null");
+        }
+        System.out.println(test.list_test.get(0));
+        System.out.println(test.list_test.get(1));
+        System.out.println(test.list_test.get(2));
+        
+        test.test_map = new HashMap<>();
+        test.test_map.put(null, null);
+        test.test_map.put(null, null);
+        test.test_map.put(null, null);
+        System.out.println("Map test");
+        for (Map.Entry<Integer, Integer> item : test.test_map.entrySet()) {
+            System.out.println(item.getKey());
+            System.out.println(item.getValue());
+        }
     }
 }

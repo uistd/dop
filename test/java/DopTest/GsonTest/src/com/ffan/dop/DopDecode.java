@@ -239,6 +239,9 @@ public class DopDecode {
      * 读出一个byte[]
      */
     private byte[] readByteArray(int size) {
+        if (size <= 0) {
+            return new byte[0];
+        }
         if (!this.sizeCheck(size)) {
             return null;
         }
@@ -273,11 +276,10 @@ public class DopDecode {
      * 读字符串
      */
     public String readString() {
-        long len = this.readLength();
-        if (0 == len) {
+        int len = this.readLength();
+        if (len <= 0) {
             return "";
         }
-        //@todo long support
         byte[] str_byte = this.readByteArray((int) len);
         if (null == str_byte) {
             return "";

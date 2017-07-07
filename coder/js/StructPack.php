@@ -120,31 +120,4 @@ class StructPack extends PackerBase
                 break;
         }
     }
-
-    /**
-     * 注释
-     * @param int $type
-     * @return string
-     */
-    private function typeComment($type)
-    {
-        static $comment_arr = array(
-            ItemType::STRING => 'string',
-            ItemType::BINARY => 'binary',
-            ItemType::ARR => 'list',
-            ItemType::MAP => 'map',
-            ItemType::BOOL => 'bool',
-            ItemType::STRUCT => 'struct',
-            ItemType::FLOAT => 'float',
-            ItemType::DOUBLE => 'double',
-            0x12 => 'int8',
-            0x92 => 'unsigned int8',
-            0x22 => 'int16',
-            0xa2 => 'unsigned int16',
-            0x42 => 'int32',
-            0xc2 => 'unsigned int32',
-            0x82 => 'int64',
-        );
-        return isset($comment_arr[$type]) ? $comment_arr[$type] : '';
-    }
 }

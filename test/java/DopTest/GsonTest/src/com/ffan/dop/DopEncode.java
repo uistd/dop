@@ -208,6 +208,20 @@ public class DopEncode {
     }
 
     /**
+     * 写入一个byte[]，带长度写入判断
+     */
+    public void writeByteArray(byte[] byte_arr, boolean write_len) {
+        if (write_len) {
+            this.writeLength(byte_arr.length);
+        }
+        if (!this.sizeCheck(byte_arr.length)) {
+            return;
+        }
+        System.arraycopy(byte_arr, 0, this.buffer, this.write_pos, byte_arr.length);
+        this.write_pos += byte_arr.length;
+    }
+
+    /**
      * 写入长度
      */
     public void writeLength(int length) {
