@@ -11,7 +11,7 @@ class DoubleItem extends Item {
      */
     DoubleItem(double value) {
         this.value = value;
-        this.type = TYPE_DOUBLE;
+        this.type = ItemType.DOUBLE_TYPE;
     }
 
     /**

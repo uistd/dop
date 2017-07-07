@@ -6,16 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 abstract class Item {
-    static final int TYPE_STRING = 1;
-    static final int TYPE_INT = 2;
-    static final int TYPE_FLOAT = 3;
-    static final int TYPE_BINARY = 4;
-    static final int TYPE_ARR = 5;
-    static final int TYPE_STRUCT = 6;
-    static final int TYPE_MAP = 7;
-    static final int TYPE_DOUBLE = 8;
-    static final int TYPE_BOOL = 9;
-
     /**
      * 名称
      */
@@ -24,7 +14,7 @@ abstract class Item {
     /**
      * 类型
      */
-    byte type;
+    protected byte type;
     
     /**
      * 获取类型

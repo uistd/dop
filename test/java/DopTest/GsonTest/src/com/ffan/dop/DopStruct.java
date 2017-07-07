@@ -17,20 +17,9 @@ class DopStruct {
     }
 
     /**
-     * 获取list
-     */
-    public Item getItemArray(String name) {
-       Item item = this.get(name);
-       if (Item.TYPE_ARR != item.type) {
-           return null;
-       }
-       return item;
-    }
-
-    /**
      * 加入一项
      */
-    public void addItem(String name, Item item) {
+    void addItem(String name, Item item) {
        this.item_list.put(name, item); 
     }
 }

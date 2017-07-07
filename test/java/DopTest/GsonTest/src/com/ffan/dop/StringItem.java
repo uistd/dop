@@ -11,7 +11,7 @@ class StringItem extends Item {
      */
     StringItem(String value) {
         this.value = value;
-        this.type = TYPE_STRING;
+        this.type = ItemType.STRING_TYPE;
     }
 
     /**

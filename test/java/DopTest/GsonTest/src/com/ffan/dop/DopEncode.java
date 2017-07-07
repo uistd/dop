@@ -1,5 +1,6 @@
 package com.ffan.dop;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -8,12 +9,18 @@ import java.security.NoSuchAlgorithmException;
  * Dop二进制打包
  */
 public class DopEncode {
+    //数据头标志位
     static final int OPTION_PID = 0x1;
     static final int OPTION_SIGN = 0x2;
     static final int OPTION_MASK = 0x4;
     static final int OPTION_ENDIAN = 0x8;
+    //数据签名长度
     static final int SIGN_CODE_LEN = 8;
+    //数据加密密钥最小长度
     static final int MIN_MASK_KEY_LEN = 8;
+
+    //错误码
+    static final int ERROR_TOO_BIG_DATA = 1;
 
     /**
      * byte buffer
@@ -46,6 +53,11 @@ public class DopEncode {
     private String mask_key;
 
     /**
+     * 是否出错
+     */
+    private int error_code = 0;
+
+    /**
      * 构造函数
      *
      * @param size 初始分析内存大小
@@ -57,7 +69,7 @@ public class DopEncode {
     /**
      * 构造函数
      */
-    DopEncode() {
+    public DopEncode() {
         this.resize(1024);
     }
 
@@ -80,34 +92,51 @@ public class DopEncode {
      *
      * @param need_size 需要的空间
      */
-    private void sizeCheck(int need_size) {
+    private boolean sizeCheck(int need_size) {
         if (this.max_size - this.write_pos >= need_size) {
-            return;
+            return true;
+        }
+        long new_size = this.max_size * 2;
+        //一个 byte[] 最大长度是 0x7fffffff
+        if (new_size > Integer.MAX_VALUE) {
+            new_size = Integer.MAX_VALUE;
+        }
+        //数据太大，无法支持
+        if (new_size - this.write_pos < need_size) {
+            this.error_code = ERROR_TOO_BIG_DATA;
+            return false;
         }
         this.resize(this.max_size * 2);
+        return true;
     }
 
     /**
      * 写入一个 char
      */
-    void writeByte(short value) {
-        this.sizeCheck(1);
+    public void writeByte(short value) {
+        if (!this.sizeCheck(1)) {
+            return;
+        }
         this.buffer[this.write_pos++] = (byte) (value & 0xff);
     }
 
     /**
      * 写入一个 char
      */
-    void writeByte(byte value) {
-        this.sizeCheck(1);
+    public void writeByte(byte value) {
+        if (!this.sizeCheck(1)) {
+            return;
+        }
         this.buffer[this.write_pos++] = value;
     }
 
     /**
      * 写入一个short
      */
-    void writeShort(short value) {
-        this.sizeCheck(2);
+    public void writeShort(short value) {
+        if (!this.sizeCheck(2)) {
+            return;
+        }
         this.buffer[this.write_pos++] = (byte) (value & 0xff);
         this.buffer[this.write_pos++] = (byte) ((value >> 8) & 0xff);
     }
@@ -115,15 +144,17 @@ public class DopEncode {
     /**
      * 写入一个short 可写入无符号 16位 int
      */
-    void writeShort(int value) {
+    public void writeShort(int value) {
         this.writeShort((short) (value & 0xffff));
     }
 
     /**
      * 写入一个int值
      */
-    void writeInt(int value) {
-        this.sizeCheck(4);
+    public void writeInt(int value) {
+        if (!this.sizeCheck(4)) {
+            return;
+        }
         this.buffer[this.write_pos++] = (byte) (value & 0xff);
         this.buffer[this.write_pos++] = (byte) ((value >> 8) & 0xff);
         this.buffer[this.write_pos++] = (byte) ((value >> 16) & 0xff);
@@ -133,14 +164,14 @@ public class DopEncode {
     /**
      * 写入一个int值（可写入32位无符号数）
      */
-    void writeInt(long value) {
+    public void writeInt(long value) {
         this.writeInt((int) (value & 0xffffffffL));
     }
 
     /**
      * 写入64位int
      */
-    void writeBigInt(long value) {
+    public void writeBigInt(long value) {
         this.writeInt((int) (value & 0xffffffffL));
         this.writeInt((int) ((value >> 32) & 0xffffffffL));
     }
@@ -148,7 +179,7 @@ public class DopEncode {
     /**
      * 写入float
      */
-    void writeFloat(float value) {
+    public void writeFloat(float value) {
         byte[] byte_arr = new byte[4];
         ByteBuffer buf = ByteBuffer.wrap(byte_arr);
         buf.putFloat(value);
@@ -158,7 +189,7 @@ public class DopEncode {
     /**
      * 写入double
      */
-    void writeDouble(double value) {
+    public void writeDouble(double value) {
         byte[] byte_arr = new byte[8];
         ByteBuffer buf = ByteBuffer.wrap(byte_arr);
         buf.putDouble(value);
@@ -168,8 +199,10 @@ public class DopEncode {
     /**
      * 写入一个byte[]
      */
-    private void writeByteArray(byte[] byte_arr) {
-        this.sizeCheck(byte_arr.length);
+    public void writeByteArray(byte[] byte_arr) {
+        if (!this.sizeCheck(byte_arr.length)) {
+            return;
+        }
         System.arraycopy(byte_arr, 0, this.buffer, this.write_pos, byte_arr.length);
         this.write_pos += byte_arr.length;
     }
@@ -177,7 +210,7 @@ public class DopEncode {
     /**
      * 写入长度
      */
-    void writeLength(long length) {
+    public void writeLength(int length) {
         //如果长度小于252 表示真实的长度
         if (length < 0xfc) {
             this.writeByte((short) length);
@@ -185,22 +218,17 @@ public class DopEncode {
         //如果长度小于等于65535，先写入 0xfc，后面再写入两位表示字符串长度
         else if (length < 0xffff) {
             this.writeByte((short) 0xfc);
-            this.writeShort((int) length);
-        }
-        //如果长度小于等于4GB，先写入 0xfe，后面再写入两位表示字符串长度
-        else if (length <= 0xffffffffL) {
+            this.writeShort(length);
+        } else {
             this.writeByte((short) 0xfe);
             this.writeInt(length);
-        } else {
-            this.writeByte((short) 0xff);
-            this.writeBigInt(length);
         }
     }
 
     /**
      * 写入字符串
      */
-    void writeString(String str) {
+    public void writeString(String str) {
         byte[] str_byte = str.getBytes();
         this.writeLength(str_byte.length);
         this.writeByteArray(str_byte);
@@ -209,7 +237,7 @@ public class DopEncode {
     /**
      * 写入数据ID
      */
-    void writePid(String pid) {
+    public void writePid(String pid) {
         this.opt_flag |= DopEncode.OPTION_PID;
         this.writeString(pid);
         this.mask_beg_pos = this.write_pos;
@@ -218,7 +246,7 @@ public class DopEncode {
     /**
      * 设置数据加密
      */
-    void mask(String mask_key) {
+    public void mask(String mask_key) {
         this.mask_key = mask_key;
         this.opt_flag |= OPTION_MASK;
         this.sign();
@@ -227,27 +255,27 @@ public class DopEncode {
     /**
      * 设置数据签名
      */
-    void sign() {
+    public void sign() {
         this.opt_flag |= OPTION_SIGN;
     }
 
     /**
      * 返回打包好的数据
-     *
      * @return byte[]
      */
-    byte[] pack() {
+    public byte[] pack() {
         if (0 != (this.opt_flag & OPTION_SIGN)) {
             String signCode = signCode(this.buffer, 0, this.write_pos);
-            this.sizeCheck(SIGN_CODE_LEN);
-            System.arraycopy(signCode.getBytes(), 0, this.buffer, this.write_pos, SIGN_CODE_LEN);
-            this.write_pos += SIGN_CODE_LEN;
+            this.writeByteArray(signCode.getBytes());
         }
         if (0 != (this.opt_flag & OPTION_MASK)) {
             doMask(this.buffer, this.mask_beg_pos, this.mask_key);
         }
         int current_len = this.write_pos;
         this.writeLength(this.write_pos);
+        if (this.error_code > 0) {
+            return new byte[0];
+        }
         //+1，因为第1位是标志位
         byte[] result = new byte[this.write_pos + 1];
         result[0] = this.opt_flag;
@@ -260,7 +288,7 @@ public class DopEncode {
     /**
      * 获取byte[]
      */
-    byte[] getBuffer() {
+    public byte[] getBuffer() {
         byte[] result = new byte[this.write_pos];
         System.arraycopy(this.buffer, 0, result, 0, this.write_pos);
         return result;
@@ -285,7 +313,7 @@ public class DopEncode {
     /**
      * 数据加密
      */
-   static void doMask(byte[] byte_arr, int begin_pos, String mask_key) {
+    static void doMask(byte[] byte_arr, int begin_pos, String mask_key) {
         byte[] mask_key_arr = fixMaskKey(mask_key).getBytes();
         int pos = 0, key_ken = mask_key_arr.length;
         for (int i = begin_pos, len = byte_arr.length; i < len; ++i) {
@@ -333,6 +361,28 @@ public class DopEncode {
             return new String(hex_chars);
         } catch (NoSuchAlgorithmException e) {
             return "NO_MD5_ALGORITHM";
+        }
+    }
+
+    /**
+     * 获取错误代码
+     */
+    public int getErrorCode() {
+        return this.error_code;
+    }
+
+    /**
+     * 获取错误消息
+     */
+    public String getErrorMessage() {
+        if (0 == this.error_code) {
+            return "success";
+        }
+        switch (this.error_code) {
+            case ERROR_TOO_BIG_DATA:
+                return "Dop binary does not support more than 2GB data";
+            default:
+                return "Unknown error";
         }
     }
 }

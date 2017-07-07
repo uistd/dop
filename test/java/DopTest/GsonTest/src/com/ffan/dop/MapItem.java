@@ -7,13 +7,14 @@ class MapItem extends Item {
     /**
      * 所有项
      */
-    private Map<Item, Item> items = new HashMap<Item, Item>();
+    private Map<Item, Item> items;
 
     /**
      * 构造函数
      */
-    MapItem() {
-        this.type = TYPE_MAP;
+    MapItem(int size) {
+        this.type = ItemType.MAP_TYPE;
+        this.items = new HashMap<Item, Item>(size);
     }
     
     /**

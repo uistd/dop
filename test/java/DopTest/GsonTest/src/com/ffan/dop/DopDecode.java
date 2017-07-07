@@ -3,6 +3,8 @@ package com.ffan.dop;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 解码数据
@@ -13,7 +15,7 @@ public class DopDecode {
      */
     private static final int ERROR_SIZE = 1;
     private static final int ERROR_SIGN_CODE = 2;
-    private static final int ERROR_DATA = 3;
+    public static final int ERROR_DATA = 3;
     private static final int ERROR_MASK = 4;
 
     /**
@@ -64,7 +66,7 @@ public class DopDecode {
     /**
      * 字节序
      */
-    private ByteOrder order = ByteOrder.LITTLE_ENDIAN;
+    private ByteOrder byte_order = ByteOrder.LITTLE_ENDIAN;
 
     /**
      * 构造函数
@@ -81,13 +83,6 @@ public class DopDecode {
         byte[] byte_arr = Base64.getDecoder().decode(base64_str);
         this.buffer = byte_arr;
         this.max_pos = byte_arr.length;
-    }
-
-    /**
-     * 设置字节序
-     */
-    private void setOrder(ByteOrder order) {
-        this.order = order;
     }
 
     /**
@@ -131,7 +126,7 @@ public class DopDecode {
         byte char_1 = this.buffer[this.read_pos++];
         byte char_2 = this.buffer[this.read_pos++];
         short result;
-        if (ByteOrder.LITTLE_ENDIAN == this.order) {
+        if (ByteOrder.LITTLE_ENDIAN == this.byte_order) {
             result = (short) (((char_2 & 0xff) << 8) | (char_1 & 0xff));
         } else {
             result = (short) (((char_1 & 0xff) << 8) | (char_2 & 0xff));
@@ -149,7 +144,7 @@ public class DopDecode {
         byte char_1 = this.buffer[this.read_pos++];
         byte char_2 = this.buffer[this.read_pos++];
         int result;
-        if (ByteOrder.LITTLE_ENDIAN == this.order) {
+        if (ByteOrder.LITTLE_ENDIAN == this.byte_order) {
             result = ((char_2 & 0xff) << 8) | (char_1 & 0xff);
         } else {
             result = ((char_1 & 0xff) << 8) | (char_2 & 0xff);
@@ -169,7 +164,7 @@ public class DopDecode {
         byte char_3 = this.buffer[this.read_pos++];
         byte char_4 = this.buffer[this.read_pos++];
         int result;
-        if (ByteOrder.LITTLE_ENDIAN == this.order) {
+        if (ByteOrder.LITTLE_ENDIAN == this.byte_order) {
             result = ((char_4 & 0xff) << 24) | ((char_3 & 0xff) << 16) |
                     ((char_2 & 0xff) << 8) | (char_1 & 0xff);
         } else {
@@ -191,7 +186,7 @@ public class DopDecode {
         byte char_3 = this.buffer[this.read_pos++];
         byte char_4 = this.buffer[this.read_pos++];
         long result;
-        if (ByteOrder.LITTLE_ENDIAN == this.order) {
+        if (ByteOrder.LITTLE_ENDIAN == this.byte_order) {
             result = (((long) char_4 & 0xff) << 24) | (long) ((char_3 & 0xff) << 16) |
                     (long) ((char_2 & 0xff) << 8) | (long) (char_1 & 0xff);
         } else {
@@ -209,7 +204,7 @@ public class DopDecode {
         long l_2 = this.readUnsignedInt();
         System.out.println(l_1);
         System.out.println(l_2);
-        if (ByteOrder.LITTLE_ENDIAN == this.order) {
+        if (ByteOrder.LITTLE_ENDIAN == this.byte_order) {
             return (l_2 << 32) | l_1;
         } else {
             return (l_1 << 32) | l_2;
@@ -256,7 +251,7 @@ public class DopDecode {
     /**
      * 读出一个长度
      */
-    private long readLength() {
+    private int readLength() {
         short flag = this.readUnsignedByte();
         //长度小于252 直接表示
         if (flag < 0xfc) {
@@ -265,11 +260,12 @@ public class DopDecode {
         else if (0xfc == flag) {
             return this.readUnsignedShort();
         } //长度小于4gb
-        else if (0xfe == flag) {
-            return this.readUnsignedInt();
-        } //更长
         else {
-            return this.readBigInt();
+            int len = this.readInt();
+            if (len < 0) {
+                len = 0;
+            }
+            return len;
         }
     }
 
@@ -299,7 +295,7 @@ public class DopDecode {
         this.is_unpack_head = true;
         this.opt_flag = this.readByte();
         if (0 != (this.opt_flag & DopEncode.OPTION_ENDIAN)) {
-            this.order = ByteOrder.BIG_ENDIAN;
+            this.byte_order = ByteOrder.BIG_ENDIAN;
         }
         long total_len = this.readLength();
         if (this.max_pos - this.read_pos != total_len) {
@@ -355,13 +351,199 @@ public class DopDecode {
     /**
      * 数据解密
      */
-    private boolean unmack(String mask_key) {
+    private boolean unmask(String mask_key) {
         DopEncode.doMask(this.buffer, this.mask_data_pos, mask_key);
         this.opt_flag ^= DopEncode.OPTION_MASK;
-        if (!this.checkSignCode()){
+        if (!this.checkSignCode()) {
             this.error_code = ERROR_MASK;
             return false;
         }
         return true;
+    }
+
+    /**
+     * 解出数据
+     */
+    private DopStruct unpack() {
+        if (0 != (this.opt_flag & DopEncode.OPTION_SIGN) && !this.checkSignCode()) {
+            return null;
+        }
+        Map<String, DopProtocol> dop_protocol = this.readProtocol(this.readLength());
+        if (null == dop_protocol) {
+            return null;
+        }
+        DopStruct result = this.readProtocolData(dop_protocol);
+        if (this.error_code > 0) {
+            return null;
+        }
+        return result;
+    }
+
+    /**
+     * 读出协议
+     */
+    private Map<String, DopProtocol> readProtocol(int length) {
+        int end_pos = this.read_pos + length;
+        if (end_pos > this.max_pos) {
+            return null;
+        }
+        Map<String, DopProtocol> result = new HashMap<String, DopProtocol>();
+        while (0 == this.error_code && this.read_pos < end_pos) {
+            String name = this.readString();
+            DopProtocol item = this.readIProtocolItem();
+            result.put(name, item);
+        }
+        if (this.error_code > 0) {
+            return null;
+        }
+        return result;
+    }
+
+    /**
+     * 读出协议类型
+     */
+    private DopProtocol readIProtocolItem() {
+        byte type = this.readByte();
+        DopProtocol item = new DopProtocol();
+        item.type = type;
+        switch (type) {
+            case ItemType.ARR_TYPE:
+                item.value_item = this.readIProtocolItem();
+                break;
+            case ItemType.MAP_TYPE:
+                item.key_item = this.readIProtocolItem();
+                item.value_item = this.readIProtocolItem();
+                break;
+            case ItemType.STRUCT_TYPE:
+                int sub_protocol_len = this.readLength();
+                item.struct = this.readProtocol(sub_protocol_len);
+            case ItemType.INT_TYPE_CHAR:
+            case ItemType.INT_TYPE_U_CHAR:
+            case ItemType.INT_TYPE_SHORT:
+            case ItemType.INT_TYPE_U_SHORT:
+            case ItemType.INT_TYPE_INT:
+            case ItemType.INT_TYPE_U_INT:
+            case ItemType.INT_TYPE_BIG_INT:
+                item.int_type = type;
+                item.type = ItemType.INT_TYPE;
+                break;
+        }
+        return item;
+    }
+
+    /**
+     * 读出数据
+     */
+    private DopStruct readProtocolData(Map<String, DopProtocol> protocol_list) {
+        DopStruct result = new DopStruct();
+        for (Map.Entry<String, DopProtocol> item : protocol_list.entrySet()) {
+            String name = item.getKey();
+            DopProtocol protocol = item.getValue();
+            Item value = this.readItemData(protocol, true);
+            if (this.error_code > 0 || null == value) {
+                break;
+            }
+            result.addItem(name, value);
+        }
+        return result;
+    }
+
+    /**
+     * 读出一个值
+     */
+    private Item readItemData(DopProtocol protocol, boolean is_property) {
+        byte type = protocol.type;
+        switch (type) {
+            case ItemType.INT_TYPE:
+                return new IntItem(this.readIntItem(protocol.int_type));
+            case ItemType.STRING_TYPE:
+                return new StringItem(this.readString());
+            case ItemType.ARR_TYPE:
+                int array_size = this.readLength();
+                ArrayItem result = new ArrayItem(array_size);
+                DopProtocol sub_item = protocol.value_item;
+                for (int i = 0; i < array_size; ++i) {
+                    if (this.error_code > 0) {
+                        break;
+                    }
+                    result.add(this.readItemData(sub_item, false));
+                }
+                return result;
+            case ItemType.MAP_TYPE:
+                int map_size = this.readLength();
+                MapItem map_result = new MapItem(map_size);
+                DopProtocol key_item = protocol.key_item;
+                DopProtocol value_item = protocol.value_item;
+                for (int i = 0; i < map_size; ++i) {
+                    if (this.error_code > 0) {
+                        break;
+                    }
+                    map_result.add(this.readItemData(key_item, false), this.readItemData(value_item, false));
+                }
+                return map_result;
+            case ItemType.STRUCT_TYPE:
+                //如果是属性，要先读出一个标志位，判断是否为NULL
+                if (is_property) {
+                    short flag = this.readUnsignedByte();
+                    if (0xff != flag) {
+                        return new NullItem();
+                    }
+                }
+                DopStruct sub_struct = this.readProtocolData(protocol.struct);
+                return new StructItem(sub_struct);
+            case ItemType.BINARY_TYPE:
+                int len = this.readLength();
+                byte[] byte_arr = this.readByteArray(len);
+                return new BinaryItem(byte_arr);
+            case ItemType.FLOAT_TYPE:
+                return new FloatItem(this.readFloat());
+            case ItemType.DOUBLE_TYPE:
+                return new DoubleItem(this.readDouble());
+            case ItemType.BOOL_TYPE:
+                boolean value = 0 != this.readByte();
+                return new BoolItem(value);
+        }
+        return null;
+    }
+
+    /**
+     * 读出int的值
+     */
+    private long readIntItem(byte int_type) {
+        long result = 0;
+        switch (int_type) {
+            case ItemType.INT_TYPE_CHAR:
+                result = this.readByte();
+                break;
+            case ItemType.INT_TYPE_U_CHAR:
+                result = this.readUnsignedByte();
+                break;
+            case ItemType.INT_TYPE_SHORT:
+                result = this.readShort();
+                break;
+            case ItemType.INT_TYPE_U_SHORT:
+                result = this.readUnsignedShort();
+                break;
+            case ItemType.INT_TYPE_INT:
+                result = this.readInt();
+                break;
+            case ItemType.INT_TYPE_U_INT:
+                result = this.readUnsignedInt();
+                break;
+            case ItemType.INT_TYPE_BIG_INT:
+                result = this.readBigInt();
+                break;
+        }
+        return result;
+    }
+
+    /**
+     * 解出数据
+     */
+    public DopStruct unpack(String mask_key) {
+        if (this.isMask() && !this.unmask(mask_key)) {
+            return null;
+        }
+        return this.unpack();
     }
 }

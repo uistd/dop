@@ -11,7 +11,7 @@ class FloatItem extends Item {
      */
     FloatItem(float value) {
         this.value = value;
-        this.type = TYPE_FLOAT;
+        this.type = ItemType.FLOAT_TYPE;
     }
 
     /**

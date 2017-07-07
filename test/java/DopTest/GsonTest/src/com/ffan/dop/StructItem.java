@@ -11,7 +11,7 @@ class StructItem extends Item{
      */
     StructItem(DopStruct value) {
         this.value = value;
-        this.type = TYPE_STRUCT;
+        this.type = ItemType.STRUCT_TYPE;
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.ffan.dop;
 
 class IntItem extends Item {
-    
     /**
      * 值
      */
@@ -12,7 +11,7 @@ class IntItem extends Item {
      */
     IntItem(long value) {
         this.value = value;
-        this.type = TYPE_INT;
+        this.type = ItemType.INT_TYPE;
     }
 
     /**

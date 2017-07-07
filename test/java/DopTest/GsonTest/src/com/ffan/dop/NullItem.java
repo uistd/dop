@@ -1,44 +1,38 @@
 package com.ffan.dop;
 
-class BoolItem extends Item {
-    /**
-     * 值
-     */
-    private boolean value;
-
+class NullItem extends Item {
     /**
      * 构造函数
      */
-    BoolItem(boolean value) {
-        this.value = value;
-        this.type = ItemType.BOOL_TYPE;
+    NullItem() {
+        this.type = 0;
     }
 
     /**
      * 获取值int
      */
     long getValueInt() {
-        return this.value ? 1 : 0;
+        return 0;
     }
 
     /**
      * 获取值bool
      */
     boolean getValueBool() {
-        return this.value;
+        return false;
     }
 
     /**
      * 获取值 string
      */
     String getValueString() {
-        return this.value ? "true" : "false";
+        return "null";
     }
 
     /**
      * 获取值 double
      */
     double getValueDouble() {
-        return this.value ? 1.0 : 0.0;
+        return 0.0;
     }
 }

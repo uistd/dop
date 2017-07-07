@@ -13,7 +13,7 @@ class BinaryItem extends Item {
      */
     BinaryItem(byte[] value) {
         this.value = value;
-        this.type = TYPE_BINARY;
+        this.type = ItemType.BINARY_TYPE;
     }
 
     /**

@@ -7,19 +7,20 @@ class ArrayItem extends Item {
     /**
      * 所有项
      */
-    private List<Item> items = new ArrayList<Item>();
+    private List<Item> items;
 
     /**
      * 构造函数
      */
-    ArrayItem() {
-        this.type = TYPE_ARR;
+    ArrayItem(int size) {
+        this.type = ItemType.ARR_TYPE;
+        this.items = new ArrayList<Item>(size);
     }
     
     /**
      * 获取值
      */
-    public void add(Item value) {
+    void add(Item value) {
         this.items.add(value);
     }
 
