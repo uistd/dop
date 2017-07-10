@@ -11,28 +11,28 @@ class NullItem extends Item {
     /**
      * 获取值int
      */
-    long getValueInt() {
+    public long getValueInt() {
         return 0;
     }
 
     /**
      * 获取值bool
      */
-    boolean getValueBool() {
+    public boolean getValueBool() {
         return false;
     }
 
     /**
      * 获取值 string
      */
-    String getValueString() {
+    public String getValueString() {
         return "null";
     }
 
     /**
      * 获取值 double
      */
-    double getValueDouble() {
+    public double getValueDouble() {
         return 0.0;
     }
 }

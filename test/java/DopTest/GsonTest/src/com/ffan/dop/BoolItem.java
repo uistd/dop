@@ -17,28 +17,28 @@ class BoolItem extends Item {
     /**
      * 获取值int
      */
-    long getValueInt() {
+    public long getValueInt() {
         return this.value ? 1 : 0;
     }
 
     /**
      * 获取值bool
      */
-    boolean getValueBool() {
+    public boolean getValueBool() {
         return this.value;
     }
 
     /**
      * 获取值 string
      */
-    String getValueString() {
+    public String getValueString() {
         return this.value ? "true" : "false";
     }
 
     /**
      * 获取值 double
      */
-    double getValueDouble() {
+    public double getValueDouble() {
         return this.value ? 1.0 : 0.0;
     }
 }

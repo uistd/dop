@@ -220,7 +220,7 @@ class Coder extends CoderBase
         if ($class_name) {
             $result .= '.' . $class_name;
         }
-        return $result;
+        return $result .';';
     }
 
     /**

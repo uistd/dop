@@ -17,28 +17,28 @@ class IntItem extends Item {
     /**
      * 获取值int
      */
-    long getValueInt() {
+    public long getValueInt() {
         return value;
     }
 
     /**
      * 获取值bool
      */
-    boolean getValueBool() {
+    public boolean getValueBool() {
         return 0 != value;
     }
 
     /**
      * 获取值 string
      */
-    String getValueString() {
+    public String getValueString() {
         return String.valueOf(value);
     }
 
     /**
      * 获取值 double
      */
-    double getValueDouble() {
+    public double getValueDouble() {
         return (double) value;
     }
 }

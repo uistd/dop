@@ -17,28 +17,28 @@ class DoubleItem extends Item {
     /**
      * 获取值 String
      */
-    String getValueString() {
+    public String getValueString() {
         return String.valueOf(this.value);
     }
 
     /**
      * 获取值 int
      */
-    long getValueInt() {
+    public long getValueInt() {
         return Math.round(this.value);
     }
 
     /**
      * 获取值double
      */
-    double getValueDouble() {
+    public double getValueDouble() {
         return this.value;
     }
 
     /**
      * 获取值 bool
      */
-    boolean getValueBool() {
+    public boolean getValueBool() {
         return 0 != this.getValueInt();
     }
 }

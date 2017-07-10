@@ -6,31 +6,37 @@ use ffan\dop\demo\data\TestData;
 use ffan\dop\demo\data\TestDataStruct;
 
 $data = new TestData();
-
+$data->binary = '';
 $data->int8 = 0x7f;
 $data->uint8 = 0xff;
 $data->int16 = 0x7fff;
 $data->uint16 = 0xffff;
-$data->int = 0x7fffffff;
+$data->int32 = 0x7fffffff;
 $data->uint = 0xffffffff;
-$data->int64 = 0xffffffff;
-$data->float = 100.1;
-$data->double = 1000.1001010;
+$data->int64 = 0xfffffffffff;
+$data->float32 = 100.1;
+$data->double64 = 1000.1001010;
 $data->string = 'This is DOP test';
-$data->binary = 'This is binary string';
-$data->list = array(1,2,3,4,5);
-$data->map = array(1 => 'test1', 2 => 'test2', 3 => 'test3');
+$data->list = array("this", "many");
+$data->list_list = [[20, 10, 40]];
+$data->map = array(1 => 'this is one', 2 => 'this is two', 10 => 'this is ten');
 $data->struct = new TestDataStruct();
 $data->struct->first_name = 'Li';
 $data->struct->last_name = 'Gang';
 $data->struct->gender = 1;
 $data->test_arr = new TestArr();
 $data->test_arr->name = 'bluebird';
-$data->test_arr->age = 20;
+$data->test_arr->age = 30;
 $data->test_arr->mobile = '18018684626';
+$data->struct = new TestDataStruct();
+$data->struct->first_name = "huang";
+$data->struct->last_name = "shunzhao";
+$data->struct->gender = 1;
+
 $bin_data = $data->binaryEncode();
 echo 'pack result:'. md5($bin_data) . ' strlen:'. strlen($bin_data), PHP_EOL;
-/**$js_bin = base64_decode('APxJAboEaW50OBIFdWludDiSBWludDE2IgZ1aW50MTaiA2ludEIEdWludMIFaW50NjSCBnN0cmluZwEFZmxvYXQDBmRvdWJsZQgGYmluYXJ5BARsaXN0BQVCA21hcAdCAQtudWxsX3N0cnVjdAYKCG5vX3ZhbHVlQgZzdHJ1Y3QGHwpmaXJzdF9uYW1lAQlsYXN0X25hbWUBBmdlbmRlchIIdGVzdF9hcnIGEwRuYW1lAQZtb2JpbGUBA2FnZUJ///9///////9//////wAAAAD/////EFRoaXMgaXMgRE9QIHRlc3QzM8hCYMrAAc1Aj0AVVGhpcyBpcyBiaW5hcnkgc3RyaW5nAAMBAAAABXRlc3QxAgAAAAV0ZXN0MgMAAAAFdGVzdDMA/wJMaQRHYW5nAf8IYmx1ZWJpcmQLMTgwMTg2ODQ2MjYUAAAA');
+/**
+$js_bin = base64_decode('APx/AdMEaW50OBIFdWludDiSBWludDE2IgZ1aW50MTaiBWludDMyQgR1aW50wgVpbnQ2NIIGc3RyaW5nAQdmbG9hdDMyAwhkb3VibGU2NAgGYmluYXJ5BAVpc19vawkEbGlzdAUBCWxpc3RfbGlzdAUFQgNtYXAHQgELbnVsbF9zdHJ1Y3QGCghub192YWx1ZUIGc3RydWN0Bh8KZmlyc3RfbmFtZQEJbGFzdF9uYW1lAQZnZW5kZXISCHRlc3RfYXJyBhMEbmFtZQEGbW9iaWxlAQNhZ2VCf///f///////f////////////w8AABBUaGlzIGlzIERPUCB0ZXN0MzPIQmDKwAHNQI9AAAACBHRoaXMEbWFueQEDFAAAAAoAAAAoAAAAAwEAAAALdGhpcyBpcyBvbmUCAAAAC3RoaXMgaXMgdHdvCgAAAAt0aGlzIGlzIHRlbgD/BWh1YW5nCHNodW56aGFvAf8IYmx1ZWJpcmQLMTgwMTg2ODQ2MjYeAAAA');
 for ($i = 0; $i < strlen($js_bin); ++$i) {
     if ($js_bin{$i} !== $bin_data{$i}) {
         echo $i, ' ', ord($js_bin{$i}), ':', ord($bin_data{$i}), PHP_EOL;

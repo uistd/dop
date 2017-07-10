@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-abstract class Item {
+public abstract class Item {
     /**
      * 名称
      */
@@ -26,63 +26,63 @@ abstract class Item {
     /**
      * 获取int
      */
-    long getValueInt() {
+    public long getValueInt() {
         return 0;
     }
 
     /**
      * 获取值String
      */
-    String getValueString() {
+    public String getValueString() {
         return "";
     }
 
     /**
      * 获取值Float
      */
-    float getValueFloat() {
+    public float getValueFloat() {
        return (float) this.getValueDouble(); 
     }
 
     /**
      * 获取值 double
      */
-    double getValueDouble() {
+    public double getValueDouble() {
         return 0.0;
     }
 
     /**
      * 获取值 byte
      */
-    byte[] getValueByte() {
+    public byte[] getValueByte() {
         return new byte[0];
     }
 
     /**
      * 获取值 bool
      */
-    boolean getValueBool() {
+    public boolean getValueBool() {
         return false;
     }
     
     /**
      * 获取值Map
      */
-    Map<Item, Item> getValueMap() {
+    public Map<Item, Item> getValueMap() {
         return new HashMap<Item, Item>();
     }
 
     /**
      * 获取值List
      */
-    List<Item> getValueArray() {
+    public List<Item> getValueArray() {
         return new ArrayList<Item>();
     }
 
     /**
      * 获取值 struct
      */
-    DopStruct getValueStruct() {
+    public DopStruct getValueStruct() {
         return new DopStruct();
     }
 }

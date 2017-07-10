@@ -38,14 +38,12 @@ class GsonPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 转成JSON字符串');
         if ($struct->isSubStruct()) {
-            $code_buf->pushStr(' * @param JsonWriter writer');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public void gsonWrite(JsonWriter writer) throws IOException {');
             $code_buf->indent();
             $this->writePropertyLoop($code_buf, $struct);
         } else {
             $this->pushImportCode('import java.io.StringWriter;');
-            $code_buf->pushStr(' * @return String');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public String gsonWrite() {');
             $code_buf->indent();
@@ -113,14 +111,12 @@ class GsonPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * JSON字符串解析');
         if ($struct->isSubStruct()) {
-            $code_buf->pushStr(' * @param reader');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public void gsonRead(JsonReader reader) throws IOException {');
             $code_buf->indent();
             $this->readPropertyLoop($code_buf, $struct);
         } else {
             $this->pushImportCode('import java.io.StringReader;');
-            $code_buf->pushStr(' * @param json_str');
             $code_buf->pushStr(' */');
             $code_buf->pushStr('public Boolean gsonRead(String json_str) {');
             $code_buf->indent();

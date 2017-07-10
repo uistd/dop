@@ -21,7 +21,7 @@ class StructPack extends PackerBase
      * @var Coder
      */
     protected $coder;
-    
+
     /**
      * 通用代码
      */
@@ -38,17 +38,15 @@ class StructPack extends PackerBase
     public function buildPackMethod($struct, $code_buf)
     {
         $import_str = $this->coder->joinNameSpace('', 'DopEncode');
-        $this->pushImportCode('import '. $import_str);
+        $this->pushImportCode('import ' . $import_str);
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('byte[] binaryStruct() {');
+        $access_type = $struct->isSubStruct() ? 'public' : 'private';
+        $code_buf->pushStr($access_type . ' static byte[] binaryStruct() {');
         $code_buf->indent();
-        $fun_str = 'static DopEncode protocol_encoder = new DopEncode();';
-        if ($struct->isPublic()) {
-            $fun_str .= 'public '. $fun_str;
-        }
+        $fun_str = 'DopEncode protocol_encoder = new DopEncode();';
         $code_buf->pushStr($fun_str);
         $all_item = $struct->getAllExtendItem();
         /**
@@ -71,8 +69,8 @@ class StructPack extends PackerBase
     private function writeItemType($code_buf, $item)
     {
         $bin_type = $item->getBinaryType();
-        $code_buf->pushStr('//'. $this->typeComment($bin_type));
-        $code_buf->pushStr('protocol_encoder.writeUnsignedByte(0x' . dechex($bin_type) . ');');
+        $code_buf->pushStr('//' . $this->typeComment($bin_type));
+        $code_buf->pushStr('protocol_encoder.writeByte((byte) 0x' . dechex($bin_type) . ');');
         $type = $item->getType();
         switch ($type) {
             case ItemType::ARR:
@@ -90,7 +88,7 @@ class StructPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $class_name = $item->getStructName();
-                $code_buf->pushStr('protocol_encoder.writeByteArray('.$class_name.'.binaryStruct(), true);');
+                $code_buf->pushStr('protocol_encoder.writeByteArray(' . $class_name . '.binaryStruct(), true);');
                 break;
         }
     }

@@ -17,28 +17,28 @@ class StringItem extends Item {
     /**
      * 获取值 String
      */
-    String getValueString() {
+    public String getValueString() {
         return this.value;
     }
 
     /**
      * 获取值 int
      */
-    long getValueInt() {
+    public long getValueInt() {
         return Long.parseLong(this.value);
     }
 
     /**
      * 获取值double
      */
-    double getValueDouble() {
+    public double getValueDouble() {
         return Double.valueOf(this.value);
     }
 
     /**
      * 获取值 bool
      */
-    boolean getValueBool() {
+    public boolean getValueBool() {
         if (value.length() <= 5) {
             String tmp_value = this.value.toLowerCase();
             if (tmp_value.equals("true")) {
@@ -54,7 +54,7 @@ class StringItem extends Item {
     /**
      * 获取值 byte[]
      */
-    byte[] getValueByte() {
+    public byte[] getValueByte() {
         return this.value.getBytes();
     }
 }

@@ -3,7 +3,7 @@ package com.ffan.dop;
 import java.util.HashMap;
 import java.util.Map;
 
-class DopStruct {
+public class DopStruct {
     /**
      * 所有的项
      */

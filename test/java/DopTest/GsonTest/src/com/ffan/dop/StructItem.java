@@ -17,7 +17,7 @@ class StructItem extends Item{
     /**
      * 获取值 Struct
      */
-    DopStruct getValueStruct() {
+    public DopStruct getValueStruct() {
         return this.value;
     }
 }

@@ -2,6 +2,7 @@ package com.ffan.dop;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -182,6 +183,7 @@ public class DopEncode {
     public void writeFloat(float value) {
         byte[] byte_arr = new byte[4];
         ByteBuffer buf = ByteBuffer.wrap(byte_arr);
+        buf.order(ByteOrder.LITTLE_ENDIAN);
         buf.putFloat(value);
         this.writeByteArray(byte_arr);
     }
@@ -192,6 +194,7 @@ public class DopEncode {
     public void writeDouble(double value) {
         byte[] byte_arr = new byte[8];
         ByteBuffer buf = ByteBuffer.wrap(byte_arr);
+        buf.order(ByteOrder.LITTLE_ENDIAN);
         buf.putDouble(value);
         this.writeByteArray(byte_arr);
     }
@@ -211,10 +214,14 @@ public class DopEncode {
      * 写入一个byte[]，带长度写入判断
      */
     public void writeByteArray(byte[] byte_arr, boolean write_len) {
+        int length = byte_arr.length;
         if (write_len) {
-            this.writeLength(byte_arr.length);
+            this.writeLength(length);
         }
-        if (!this.sizeCheck(byte_arr.length)) {
+        if (0 == length) {
+            return;
+        }
+        if (!this.sizeCheck(length)) {
             return;
         }
         System.arraycopy(byte_arr, 0, this.buffer, this.write_pos, byte_arr.length);
@@ -362,7 +369,7 @@ public class DopEncode {
      *
      * @return hex string
      */
-    private static String md5(byte[] byte_arr) {
+    public static String md5(byte[] byte_arr) {
         try {
             MessageDigest msgDigest = MessageDigest.getInstance("MD5");
             byte[] dig_arr = msgDigest.digest(byte_arr);

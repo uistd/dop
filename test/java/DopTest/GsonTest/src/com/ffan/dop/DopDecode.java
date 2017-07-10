@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -202,8 +203,6 @@ public class DopDecode {
     public long readBigInt() {
         long l_1 = this.readUnsignedInt();
         long l_2 = this.readUnsignedInt();
-        System.out.println(l_1);
-        System.out.println(l_2);
         if (ByteOrder.LITTLE_ENDIAN == this.byte_order) {
             return (l_2 << 32) | l_1;
         } else {
@@ -220,6 +219,7 @@ public class DopDecode {
             return 0.0F;
         }
         ByteBuffer buf = ByteBuffer.wrap(tmp_byte);
+        buf.order(this.byte_order);
         return buf.getFloat();
     }
 
@@ -232,6 +232,7 @@ public class DopDecode {
             return 0.0;
         }
         ByteBuffer buf = ByteBuffer.wrap(tmp_byte);
+        buf.order(this.byte_order);
         return buf.getDouble();
     }
 
@@ -366,7 +367,10 @@ public class DopDecode {
     /**
      * 解出数据
      */
-    private DopStruct unpack() {
+    public DopStruct unpack() {
+        if (!this.is_unpack_head) {
+            this.unpackHead();
+        }
         if (0 != (this.opt_flag & DopEncode.OPTION_SIGN) && !this.checkSignCode()) {
             return null;
         }
@@ -382,6 +386,16 @@ public class DopDecode {
     }
 
     /**
+     * 解出数据
+     */
+    public DopStruct unpack(String mask_key) {
+        if (this.isMask() && !this.unmask(mask_key)) {
+            return null;
+        }
+        return this.unpack();
+    }
+
+    /**
      * 读出协议
      */
     private Map<String, DopProtocol> readProtocol(int length) {
@@ -389,7 +403,7 @@ public class DopDecode {
         if (end_pos > this.max_pos) {
             return null;
         }
-        Map<String, DopProtocol> result = new HashMap<String, DopProtocol>();
+        Map<String, DopProtocol> result = new LinkedHashMap<String, DopProtocol>();
         while (0 == this.error_code && this.read_pos < end_pos) {
             String name = this.readString();
             DopProtocol item = this.readIProtocolItem();
@@ -540,12 +554,30 @@ public class DopDecode {
     }
 
     /**
-     * 解出数据
+     * 错误代码
      */
-    public DopStruct unpack(String mask_key) {
-        if (this.isMask() && !this.unmask(mask_key)) {
-            return null;
+    public int getErrorCode() {
+        return this.error_code; 
+    }
+
+    /**
+     * 获取错误消息
+     */
+    public String getErrorMessage() {
+        if (0 == this.error_code) {
+            return "success";
         }
-        return this.unpack();
+        switch (this.error_code) {
+            case ERROR_DATA:
+                return "Binary data error";
+            case ERROR_MASK:
+                return "Data is encrypted";
+            case ERROR_SIGN_CODE:
+                return "Data signature verification failed";
+            case ERROR_SIZE:
+                return "Lack of data";
+            default:
+                return "Unknown error";
+        }
     }
 }

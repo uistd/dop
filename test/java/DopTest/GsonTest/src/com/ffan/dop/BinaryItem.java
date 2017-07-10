@@ -19,14 +19,14 @@ class BinaryItem extends Item {
     /**
      * 获取值 byte
      */
-    byte[] getValueByte() {
+    public byte[] getValueByte() {
         return  this.value;
     }
 
     /**
      * 获取值 string
      */
-    String getValueString() {
+    public String getValueString() {
         return Base64.getEncoder().encodeToString(this.value);
     }
 }
