@@ -10,3 +10,7 @@ test/java/com/
 test/java/.settings/
 test/java/DopTest/GsonTest/src/com/ffan/dop/demo/
 *.iml
+*.o
+*.exe
+*.depend
+*.layout
