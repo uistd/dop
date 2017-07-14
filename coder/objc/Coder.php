@@ -7,7 +7,6 @@ use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\StrBuf;
 use ffan\dop\Exception;
-use ffan\dop\protocol\IntItem;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -101,16 +100,15 @@ class Coder extends CoderBase
         $class_file = $this->getClassFileBuf($struct, 'm');
         $this->loadTpl($head_file, 'tpl/header.h');
         $this->loadTpl($class_file, 'tpl/class.m');
-        $head_file->pushToBuf('class_name', $main_class_name);
-        $class_file->pushToBuf('class_name', $main_class_name);
+        $head_file->setVariableValue('class_name', $main_class_name);
+        $class_file->setVariableValue('class_name', $main_class_name);
 
         $class_import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $class_method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
-        $class_property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
 
-        $head_import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
-        $head_method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
-        $head_property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
+        $head_import_buf = $head_file->getBuf(FileBuf::IMPORT_BUF);
+        $head_method_buf = $head_file->getBuf(FileBuf::METHOD_BUF);
+        $head_property_buf = $head_file->getBuf(FileBuf::PROPERTY_BUF);
 
 
         $item_list = $struct->getAllExtendItem();
@@ -123,7 +121,7 @@ class Coder extends CoderBase
          */
         foreach ($item_list as $name => $item) {
             if (!$is_first_property) {
-                $class_property_buf->emptyLine();
+                $head_property_buf->emptyLine();
             } else {
                 $is_first_property = false;
             }
@@ -132,12 +130,12 @@ class Coder extends CoderBase
             $item_type = self::varType($item);
             $tmp_node = $item->getNote();
             if (!empty($tmp_node)) {
-                $class_property_buf->pushStr('/**');
-                $class_property_buf->pushStr(' * ' . $tmp_node);
-                $class_property_buf->pushStr(' */');
+                $head_property_buf->pushStr('/**');
+                $head_property_buf->pushStr(' * ' . $tmp_node);
+                $head_property_buf->pushStr(' */');
             }
             $property_line_buf = new StrBuf();
-            $class_property_buf->insertBuf($property_line_buf);
+            $head_property_buf->insertBuf($property_line_buf);
             $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item_type) . ') ' . self::varType($item) .' ' . $name);
             if ($item->hasDefault()) {
                 $property_line_buf->pushStr(' = ' . $item->getDefault());
@@ -164,10 +162,10 @@ class Coder extends CoderBase
             $import_buf->pushUniqueStr('#import "'.$path . $class_name .'"');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
-            $this->makeImportCode($item->getItem(), $base_path, $import_buf);
+            $this->makeClassImportCode($item->getItem(), $base_path, $import_buf);
         } elseif (ItemType::MAP === $type) {
             /** @var MapItem $item */
-            $this->makeImportCode($item->getValueItem(), $base_path, $import_buf);
+            $this->makeClassImportCode($item->getValueItem(), $base_path, $import_buf);
         }
     }
 
@@ -235,13 +233,13 @@ class Coder extends CoderBase
     {
         $folder = $this->getFolder();
         $path = $struct->getNamespace();
-        $file = $struct->getFile();
-        $file_name = ucfirst($file) . $struct->getClassName() . '.'. $extend;
-        $file = $folder->getFile($path, $file_name);
-        if (null === $file) {
-            $file = $folder->touch($path, $file_name);
+        $class_name = $this->makeClassName($struct);
+        $file_name = $class_name .'.'. $extend;
+        $class_name = $folder->getFile($path, $file_name);
+        if (null === $class_name) {
+            $class_name = $folder->touch($path, $file_name);
         }
-        return $file;
+        return $class_name;
     }
 
     /**
@@ -251,7 +249,7 @@ class Coder extends CoderBase
      */
     public function makeClassName($struct)
     {
-        return ucfirst($struct->getFile()) . $struct->getClassName();
+        return ucfirst(basename($struct->getFile(), '.xml')) . $struct->getClassName();
     }
 
     /**
