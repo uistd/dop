@@ -507,4 +507,22 @@ abstract class CoderBase extends ConfigBase
         }
         return $result;
     }
+
+    /**
+     * 获取Manager实例
+     * @return Manager
+     */
+    public function getManager()
+    {
+        return $this->manager;
+    }
+
+    /**
+     * 获取生成选项
+     * @return BuildOption
+     */
+    public function getBuildOption()
+    {
+        return $this->build_opt;
+    }
 }

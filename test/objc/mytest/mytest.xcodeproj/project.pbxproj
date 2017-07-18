@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		E2B8918A0753A941C36ABE30 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89FFF243DBE216488534F /* main.m */; };
+		E2B8927D80E9E931E170566E /* JsonTest.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8983FBD7F8FE9F0022AE1 /* JsonTest.m */; };
+		E2B898CBFD03F7FB4C7B4771 /* TestBin.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8921EC562F030AB40D0BA /* TestBin.m */; };
+		E2B89A209FD55F29E67B36F7 /* TestData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B898906566841087FFA48B /* TestData.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,7 +26,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E2B8921EC562F030AB40D0BA /* TestBin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestBin.m; sourceTree = "<group>"; };
+		E2B8983FBD7F8FE9F0022AE1 /* JsonTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JsonTest.m; sourceTree = "<group>"; };
+		E2B898906566841087FFA48B /* TestData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestData.m; sourceTree = "<group>"; };
 		E2B898E5DDF08F9CA322B0DF /* mytest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mytest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2B899C7014E25C9714E53C9 /* TestBin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestBin.h; sourceTree = "<group>"; };
+		E2B899ED5FB914CB00379E49 /* JsonTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JsonTest.h; sourceTree = "<group>"; };
+		E2B89EDD43EE1D7A892D3B3E /* TestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestData.h; sourceTree = "<group>"; };
 		E2B89FFF243DBE216488534F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -42,6 +51,12 @@
 			isa = PBXGroup;
 			children = (
 				E2B89FFF243DBE216488534F /* main.m */,
+				E2B898906566841087FFA48B /* TestData.m */,
+				E2B89EDD43EE1D7A892D3B3E /* TestData.h */,
+				E2B8921EC562F030AB40D0BA /* TestBin.m */,
+				E2B899C7014E25C9714E53C9 /* TestBin.h */,
+				E2B8983FBD7F8FE9F0022AE1 /* JsonTest.m */,
+				E2B899ED5FB914CB00379E49 /* JsonTest.h */,
 			);
 			path = mytest;
 			sourceTree = "<group>";
@@ -113,6 +128,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2B8918A0753A941C36ABE30 /* main.m in Sources */,
+				E2B89A209FD55F29E67B36F7 /* TestData.m in Sources */,
+				E2B898CBFD03F7FB4C7B4771 /* TestBin.m in Sources */,
+				E2B8927D80E9E931E170566E /* JsonTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
