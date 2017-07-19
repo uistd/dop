@@ -1,4 +1,4 @@
 {{IMPORT_CODE_BUF}}
-@implementation AppContext
+@implementation {{$class_name}}
 {{METHOD_CODE_BUF}}
 @end

@@ -24,7 +24,7 @@
         <struct name="null_struct">
             <int name="no_value"/>
         </struct>
-        <struct name="struct">
+        <struct name="test_struct">
             <string name="first_name"/>
             <string name="last_name"/>
             <int8 name="gender"/>

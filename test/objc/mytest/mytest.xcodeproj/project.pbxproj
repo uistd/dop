@@ -7,10 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E2B8918A0753A941C36ABE30 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89FFF243DBE216488534F /* main.m */; };
-		E2B8927D80E9E931E170566E /* JsonTest.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8983FBD7F8FE9F0022AE1 /* JsonTest.m */; };
-		E2B898CBFD03F7FB4C7B4771 /* TestBin.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8921EC562F030AB40D0BA /* TestBin.m */; };
-		E2B89A209FD55F29E67B36F7 /* TestData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B898906566841087FFA48B /* TestData.m */; };
+		E2B89048DCDE381AD3E626A9 /* MathRequestAdd.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B893C15772B1B807ABBE47 /* MathRequestAdd.m */; };
+		E2B89049F794D944E8EB40A9 /* TestData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B897C6241EC790C2A2584A /* TestData.m */; };
+		E2B890FCE18D1ECBF2F1D020 /* DataTestDataNullStruct.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89C1A7EC3AA63393E7800 /* DataTestDataNullStruct.m */; };
+		E2B890FFB03BC607A92E8E3A /* DataTestDataStruct.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B891A10135E42FFA5244AC /* DataTestDataStruct.m */; };
+		E2B891EDC030E5ED681AEABD /* RoleRequestDemoData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89CA320E4424A8C83C620 /* RoleRequestDemoData.m */; };
+		E2B891F4A74665BD5978627A /* RoleResponseDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B894F395B62A0B2270412F /* RoleResponseDemoRole.m */; };
+		E2B892337B9813BC34677C16 /* RoleRequestDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B890C0FCF7C72D93CD5CAD /* RoleRequestDemoRole.m */; };
+		E2B89242A228676071F611B6 /* RoleResponseDemoData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8905D2B86DB6900759944 /* RoleResponseDemoData.m */; };
+		E2B893076EA8865AE9E474BF /* DataSimpleData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89F2693629594EC274551 /* DataSimpleData.m */; };
+		E2B8939C612226E08BF95FCD /* DataTestArr.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89EA58DEC311989817892 /* DataTestArr.m */; };
+		E2B89421E1A6AD1CAF4F078B /* RolePutRequestDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89557724C1FF89382E922 /* RolePutRequestDemoRole.m */; };
+		E2B8948FEB1DD22C8E17F86B /* DOPUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B898F4704EBCB79808CC2D /* DOPUtils.m */; };
+		E2B895234F15309EAA1FD28E /* RolePutResponseDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89614C8B97F16A6567BA0 /* RolePutResponseDemoRole.m */; };
+		E2B89532C9B2E5FB919BEF32 /* RolePostResponseNewRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B898C9040F83BA48BBE39B /* RolePostResponseNewRole.m */; };
+		E2B8958CB6B6CF4C8D934D30 /* DataTestData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89026398F50468041F13E /* DataTestData.m */; };
+		E2B895C4D2EB97485AE1974E /* RolePutResponseDemoRoleDataMapDemo.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8962FE83FA201811BF225 /* RolePutResponseDemoRoleDataMapDemo.m */; };
+		E2B895E1727B45D1FD61B248 /* MathMathTest.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8997673D42D18D2CC6D61 /* MathMathTest.m */; };
+		E2B897565191EE10E055E7CC /* JsonTest.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B892D29030D1CACC2B3068 /* JsonTest.m */; };
+		E2B897C0ACBCF6592DA42463 /* RoleDeleteRequestDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8965C996F5CAD3B9BE1E3 /* RoleDeleteRequestDemoRole.m */; };
+		E2B8992D5B0D7BE061A118A9 /* MathMathTestTestArr.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89D347EC1F58E9060B0AB /* MathMathTestTestArr.m */; };
+		E2B899ABF57B42494449F9C6 /* TestBin.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89ADF92FD8C76F66B6892 /* TestBin.m */; };
+		E2B89A098B369575F8E86652 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8983D1307764628BF60DB /* main.m */; };
+		E2B89A68151F7135C0A856F7 /* MathResponseAdd.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89B17C5EB3E73732DA964 /* MathResponseAdd.m */; };
+		E2B89B3BA8008ECCF47D4B78 /* RoleRoleInfoChildren.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89398D95ECA87264978B7 /* RoleRoleInfoChildren.m */; };
+		E2B89B632655A5B410D1F7B5 /* RolePostRequestDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89F2C5BC3AC053C310283 /* RolePostRequestDemoRole.m */; };
+		E2B89E521E7563F9C38E4B7D /* RoleDeleteResponseDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89BD50F1D1F1A2E1094A1 /* RoleDeleteResponseDemoRole.m */; };
+		E2B89EFC799CDA9F08BCF8B4 /* RolePostRequestNewRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8920A4BE7302C24950F57 /* RolePostRequestNewRole.m */; };
+		E2B89F4B72B6E6152B3B2E24 /* RoleRoleInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B893CDB025E2752B258977 /* RoleRoleInfo.m */; };
+		E2B89F626F190E2455176996 /* RolePostResponseDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89ACF11D04D6AA32427C4 /* RolePostResponseDemoRole.m */; };
+		E2B89F8F93681EFAE1759FE3 /* RolePutResponseDemoRoleDataMap.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89166F8BA8A9716950609 /* RolePutResponseDemoRoleDataMap.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,14 +52,66 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E2B8921EC562F030AB40D0BA /* TestBin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestBin.m; sourceTree = "<group>"; };
-		E2B8983FBD7F8FE9F0022AE1 /* JsonTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JsonTest.m; sourceTree = "<group>"; };
-		E2B898906566841087FFA48B /* TestData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestData.m; sourceTree = "<group>"; };
+		E2B89026398F50468041F13E /* DataTestData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataTestData.m; sourceTree = "<group>"; };
+		E2B89051DA918426DFAF55F3 /* RolePostRequestNewRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePostRequestNewRole.h; sourceTree = "<group>"; };
+		E2B8905D2B86DB6900759944 /* RoleResponseDemoData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleResponseDemoData.m; sourceTree = "<group>"; };
+		E2B890C0FCF7C72D93CD5CAD /* RoleRequestDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleRequestDemoRole.m; sourceTree = "<group>"; };
+		E2B89121255C04A037421AF5 /* DataTestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataTestData.h; sourceTree = "<group>"; };
+		E2B8913CF4ED1050200C3F79 /* RoleResponseDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleResponseDemoRole.h; sourceTree = "<group>"; };
+		E2B89166F8BA8A9716950609 /* RolePutResponseDemoRoleDataMap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePutResponseDemoRoleDataMap.m; sourceTree = "<group>"; };
+		E2B891A10135E42FFA5244AC /* DataTestDataStruct.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataTestDataStruct.m; sourceTree = "<group>"; };
+		E2B8920A4BE7302C24950F57 /* RolePostRequestNewRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePostRequestNewRole.m; sourceTree = "<group>"; };
+		E2B892D29030D1CACC2B3068 /* JsonTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JsonTest.m; sourceTree = "<group>"; };
+		E2B8933B132EDF92AD524B2E /* RoleRequestDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleRequestDemoRole.h; sourceTree = "<group>"; };
+		E2B8936B3AE9D7BD69893EF2 /* RoleResponseDemoData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleResponseDemoData.h; sourceTree = "<group>"; };
+		E2B89398D95ECA87264978B7 /* RoleRoleInfoChildren.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleRoleInfoChildren.m; sourceTree = "<group>"; };
+		E2B893C15772B1B807ABBE47 /* MathRequestAdd.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MathRequestAdd.m; sourceTree = "<group>"; };
+		E2B893CDB025E2752B258977 /* RoleRoleInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleRoleInfo.m; sourceTree = "<group>"; };
+		E2B8945BBD571E72A44F15ED /* TestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestData.h; sourceTree = "<group>"; };
+		E2B8949513AEF0326AF45E0A /* RolePutResponseDemoRoleDataMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePutResponseDemoRoleDataMap.h; sourceTree = "<group>"; };
+		E2B8949EE488850A3F9D1FE5 /* DataSimpleData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataSimpleData.h; sourceTree = "<group>"; };
+		E2B894F395B62A0B2270412F /* RoleResponseDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleResponseDemoRole.m; sourceTree = "<group>"; };
+		E2B89557724C1FF89382E922 /* RolePutRequestDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePutRequestDemoRole.m; sourceTree = "<group>"; };
+		E2B8957647432110500B549A /* RolePutResponseDemoRoleDataMapDemo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePutResponseDemoRoleDataMapDemo.h; sourceTree = "<group>"; };
+		E2B8958ECD046F80AFD014FE /* MathMathTestTestArr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MathMathTestTestArr.h; sourceTree = "<group>"; };
+		E2B895BCEB751041C2DA483B /* RoleRoleInfoChildren.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleRoleInfoChildren.h; sourceTree = "<group>"; };
+		E2B89614C8B97F16A6567BA0 /* RolePutResponseDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePutResponseDemoRole.m; sourceTree = "<group>"; };
+		E2B8962FE83FA201811BF225 /* RolePutResponseDemoRoleDataMapDemo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePutResponseDemoRoleDataMapDemo.m; sourceTree = "<group>"; };
+		E2B89656729ED3C1E6424E76 /* TestBin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestBin.h; sourceTree = "<group>"; };
+		E2B8965C996F5CAD3B9BE1E3 /* RoleDeleteRequestDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleDeleteRequestDemoRole.m; sourceTree = "<group>"; };
+		E2B8965E0F2BABF063739A77 /* DataTestDataNullStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataTestDataNullStruct.h; sourceTree = "<group>"; };
+		E2B89696BEB7AB4AD26C723F /* MathMathTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MathMathTest.h; sourceTree = "<group>"; };
+		E2B896A09BC3A77C9C225F40 /* RoleDeleteRequestDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleDeleteRequestDemoRole.h; sourceTree = "<group>"; };
+		E2B8971600BA7ADA599FCF0B /* MathResponseAdd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MathResponseAdd.h; sourceTree = "<group>"; };
+		E2B897335935EEA3E0AD23F6 /* MathRequestAdd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MathRequestAdd.h; sourceTree = "<group>"; };
+		E2B897C6241EC790C2A2584A /* TestData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestData.m; sourceTree = "<group>"; };
+		E2B8983D1307764628BF60DB /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		E2B89893814C63BC44C3E2BB /* RolePostResponseDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePostResponseDemoRole.h; sourceTree = "<group>"; };
+		E2B898C9040F83BA48BBE39B /* RolePostResponseNewRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePostResponseNewRole.m; sourceTree = "<group>"; };
 		E2B898E5DDF08F9CA322B0DF /* mytest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mytest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2B899C7014E25C9714E53C9 /* TestBin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestBin.h; sourceTree = "<group>"; };
-		E2B899ED5FB914CB00379E49 /* JsonTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JsonTest.h; sourceTree = "<group>"; };
-		E2B89EDD43EE1D7A892D3B3E /* TestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestData.h; sourceTree = "<group>"; };
-		E2B89FFF243DBE216488534F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		E2B898F4704EBCB79808CC2D /* DOPUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPUtils.m; sourceTree = "<group>"; };
+		E2B89967ABA8E4105D3FE6FF /* RolePutRequestDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePutRequestDemoRole.h; sourceTree = "<group>"; };
+		E2B8997673D42D18D2CC6D61 /* MathMathTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MathMathTest.m; sourceTree = "<group>"; };
+		E2B899F7EF4377176634D844 /* RoleDeleteResponseDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleDeleteResponseDemoRole.h; sourceTree = "<group>"; };
+		E2B89ACAC56CEC2B1C5980E7 /* RolePostRequestDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePostRequestDemoRole.h; sourceTree = "<group>"; };
+		E2B89ACF11D04D6AA32427C4 /* RolePostResponseDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePostResponseDemoRole.m; sourceTree = "<group>"; };
+		E2B89ADF92FD8C76F66B6892 /* TestBin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestBin.m; sourceTree = "<group>"; };
+		E2B89B17C5EB3E73732DA964 /* MathResponseAdd.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MathResponseAdd.m; sourceTree = "<group>"; };
+		E2B89B1C790B10B1BB1058B2 /* RolePutResponseDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePutResponseDemoRole.h; sourceTree = "<group>"; };
+		E2B89B90A9DC2D26EF254E83 /* DOPUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPUtils.h; sourceTree = "<group>"; };
+		E2B89BC6BFA3C87B183410B2 /* RoleRoleInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleRoleInfo.h; sourceTree = "<group>"; };
+		E2B89BD50F1D1F1A2E1094A1 /* RoleDeleteResponseDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleDeleteResponseDemoRole.m; sourceTree = "<group>"; };
+		E2B89C1A7EC3AA63393E7800 /* DataTestDataNullStruct.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataTestDataNullStruct.m; sourceTree = "<group>"; };
+		E2B89C9BE22ADCEE8638DE2F /* RoleRequestDemoData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoleRequestDemoData.h; sourceTree = "<group>"; };
+		E2B89CA320E4424A8C83C620 /* RoleRequestDemoData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoleRequestDemoData.m; sourceTree = "<group>"; };
+		E2B89D347EC1F58E9060B0AB /* MathMathTestTestArr.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MathMathTestTestArr.m; sourceTree = "<group>"; };
+		E2B89D3796A4A38669D3020E /* JsonTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JsonTest.h; sourceTree = "<group>"; };
+		E2B89D55C730A8242C049A0C /* DataTestArr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataTestArr.h; sourceTree = "<group>"; };
+		E2B89DC21ADFDB76E89D9C4D /* RolePostResponseNewRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RolePostResponseNewRole.h; sourceTree = "<group>"; };
+		E2B89EA58DEC311989817892 /* DataTestArr.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataTestArr.m; sourceTree = "<group>"; };
+		E2B89ECA38A4DF7C8F04C0D6 /* DataTestDataStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataTestDataStruct.h; sourceTree = "<group>"; };
+		E2B89F2693629594EC274551 /* DataSimpleData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataSimpleData.m; sourceTree = "<group>"; };
+		E2B89F2C5BC3AC053C310283 /* RolePostRequestDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RolePostRequestDemoRole.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,18 +125,93 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		E2B89A93BBF1EA9200C24097 /* mytest */ = {
+		E2B890B272B0297E5A056DFD /* dop */ = {
 			isa = PBXGroup;
 			children = (
-				E2B89FFF243DBE216488534F /* main.m */,
-				E2B898906566841087FFA48B /* TestData.m */,
-				E2B89EDD43EE1D7A892D3B3E /* TestData.h */,
-				E2B8921EC562F030AB40D0BA /* TestBin.m */,
-				E2B899C7014E25C9714E53C9 /* TestBin.h */,
-				E2B8983FBD7F8FE9F0022AE1 /* JsonTest.m */,
-				E2B899ED5FB914CB00379E49 /* JsonTest.h */,
+				E2B898F4704EBCB79808CC2D /* DOPUtils.m */,
+				E2B89B90A9DC2D26EF254E83 /* DOPUtils.h */,
+			);
+			path = dop;
+			sourceTree = "<group>";
+		};
+		E2B890C8A9543429AAE86A26 /* role */ = {
+			isa = PBXGroup;
+			children = (
+				E2B89BC6BFA3C87B183410B2 /* RoleRoleInfo.h */,
+				E2B893CDB025E2752B258977 /* RoleRoleInfo.m */,
+				E2B89C9BE22ADCEE8638DE2F /* RoleRequestDemoData.h */,
+				E2B89CA320E4424A8C83C620 /* RoleRequestDemoData.m */,
+				E2B8933B132EDF92AD524B2E /* RoleRequestDemoRole.h */,
+				E2B890C0FCF7C72D93CD5CAD /* RoleRequestDemoRole.m */,
+				E2B8936B3AE9D7BD69893EF2 /* RoleResponseDemoData.h */,
+				E2B8905D2B86DB6900759944 /* RoleResponseDemoData.m */,
+				E2B8913CF4ED1050200C3F79 /* RoleResponseDemoRole.h */,
+				E2B894F395B62A0B2270412F /* RoleResponseDemoRole.m */,
+				E2B895BCEB751041C2DA483B /* RoleRoleInfoChildren.h */,
+				E2B89398D95ECA87264978B7 /* RoleRoleInfoChildren.m */,
+				E2B89051DA918426DFAF55F3 /* RolePostRequestNewRole.h */,
+				E2B8920A4BE7302C24950F57 /* RolePostRequestNewRole.m */,
+				E2B89967ABA8E4105D3FE6FF /* RolePutRequestDemoRole.h */,
+				E2B89557724C1FF89382E922 /* RolePutRequestDemoRole.m */,
+				E2B89ACAC56CEC2B1C5980E7 /* RolePostRequestDemoRole.h */,
+				E2B89F2C5BC3AC053C310283 /* RolePostRequestDemoRole.m */,
+				E2B89DC21ADFDB76E89D9C4D /* RolePostResponseNewRole.h */,
+				E2B898C9040F83BA48BBE39B /* RolePostResponseNewRole.m */,
+				E2B89B1C790B10B1BB1058B2 /* RolePutResponseDemoRole.h */,
+				E2B89614C8B97F16A6567BA0 /* RolePutResponseDemoRole.m */,
+				E2B89893814C63BC44C3E2BB /* RolePostResponseDemoRole.h */,
+				E2B89ACF11D04D6AA32427C4 /* RolePostResponseDemoRole.m */,
+				E2B896A09BC3A77C9C225F40 /* RoleDeleteRequestDemoRole.h */,
+				E2B8965C996F5CAD3B9BE1E3 /* RoleDeleteRequestDemoRole.m */,
+				E2B899F7EF4377176634D844 /* RoleDeleteResponseDemoRole.h */,
+				E2B89BD50F1D1F1A2E1094A1 /* RoleDeleteResponseDemoRole.m */,
+				E2B8949513AEF0326AF45E0A /* RolePutResponseDemoRoleDataMap.h */,
+				E2B89166F8BA8A9716950609 /* RolePutResponseDemoRoleDataMap.m */,
+				E2B8957647432110500B549A /* RolePutResponseDemoRoleDataMapDemo.h */,
+				E2B8962FE83FA201811BF225 /* RolePutResponseDemoRoleDataMapDemo.m */,
+			);
+			path = role;
+			sourceTree = "<group>";
+		};
+		E2B8963FFE0521E59398652A /* ffan */ = {
+			isa = PBXGroup;
+			children = (
+				E2B890B272B0297E5A056DFD /* dop */,
+			);
+			path = ffan;
+			sourceTree = "<group>";
+		};
+		E2B89B1BFDC70009E2E03E46 /* mytest */ = {
+			isa = PBXGroup;
+			children = (
+				E2B8983D1307764628BF60DB /* main.m */,
+				E2B897C6241EC790C2A2584A /* TestData.m */,
+				E2B8945BBD571E72A44F15ED /* TestData.h */,
+				E2B89ADF92FD8C76F66B6892 /* TestBin.m */,
+				E2B89656729ED3C1E6424E76 /* TestBin.h */,
+				E2B892D29030D1CACC2B3068 /* JsonTest.m */,
+				E2B89D3796A4A38669D3020E /* JsonTest.h */,
+				E2B8963FFE0521E59398652A /* ffan */,
+				E2B89EB0C0751594C3DC1CCF /* demo */,
 			);
 			path = mytest;
+			sourceTree = "<group>";
+		};
+		E2B89D0B7DA8E4F0D2C70483 /* data */ = {
+			isa = PBXGroup;
+			children = (
+				E2B89D55C730A8242C049A0C /* DataTestArr.h */,
+				E2B89EA58DEC311989817892 /* DataTestArr.m */,
+				E2B89121255C04A037421AF5 /* DataTestData.h */,
+				E2B89026398F50468041F13E /* DataTestData.m */,
+				E2B8949EE488850A3F9D1FE5 /* DataSimpleData.h */,
+				E2B89F2693629594EC274551 /* DataSimpleData.m */,
+				E2B89ECA38A4DF7C8F04C0D6 /* DataTestDataStruct.h */,
+				E2B891A10135E42FFA5244AC /* DataTestDataStruct.m */,
+				E2B8965E0F2BABF063739A77 /* DataTestDataNullStruct.h */,
+				E2B89C1A7EC3AA63393E7800 /* DataTestDataNullStruct.m */,
+			);
+			path = data;
 			sourceTree = "<group>";
 		};
 		E2B89DB3B4680BF61CB7DAF4 /* Products */ = {
@@ -73,8 +226,34 @@
 			isa = PBXGroup;
 			children = (
 				E2B89DB3B4680BF61CB7DAF4 /* Products */,
-				E2B89A93BBF1EA9200C24097 /* mytest */,
+				E2B89B1BFDC70009E2E03E46 /* mytest */,
 			);
+			sourceTree = "<group>";
+		};
+		E2B89EB0C0751594C3DC1CCF /* demo */ = {
+			isa = PBXGroup;
+			children = (
+				E2B89D0B7DA8E4F0D2C70483 /* data */,
+				E2B89F231D5E615457231063 /* math */,
+				E2B890C8A9543429AAE86A26 /* role */,
+			);
+			name = demo;
+			path = ffan/demo;
+			sourceTree = "<group>";
+		};
+		E2B89F231D5E615457231063 /* math */ = {
+			isa = PBXGroup;
+			children = (
+				E2B89696BEB7AB4AD26C723F /* MathMathTest.h */,
+				E2B8997673D42D18D2CC6D61 /* MathMathTest.m */,
+				E2B897335935EEA3E0AD23F6 /* MathRequestAdd.h */,
+				E2B893C15772B1B807ABBE47 /* MathRequestAdd.m */,
+				E2B8971600BA7ADA599FCF0B /* MathResponseAdd.h */,
+				E2B89B17C5EB3E73732DA964 /* MathResponseAdd.m */,
+				E2B8958ECD046F80AFD014FE /* MathMathTestTestArr.h */,
+				E2B89D347EC1F58E9060B0AB /* MathMathTestTestArr.m */,
+			);
+			path = math;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -127,10 +306,36 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2B8918A0753A941C36ABE30 /* main.m in Sources */,
-				E2B89A209FD55F29E67B36F7 /* TestData.m in Sources */,
-				E2B898CBFD03F7FB4C7B4771 /* TestBin.m in Sources */,
-				E2B8927D80E9E931E170566E /* JsonTest.m in Sources */,
+				E2B89A098B369575F8E86652 /* main.m in Sources */,
+				E2B89049F794D944E8EB40A9 /* TestData.m in Sources */,
+				E2B899ABF57B42494449F9C6 /* TestBin.m in Sources */,
+				E2B897565191EE10E055E7CC /* JsonTest.m in Sources */,
+				E2B8948FEB1DD22C8E17F86B /* DOPUtils.m in Sources */,
+				E2B8939C612226E08BF95FCD /* DataTestArr.m in Sources */,
+				E2B8958CB6B6CF4C8D934D30 /* DataTestData.m in Sources */,
+				E2B893076EA8865AE9E474BF /* DataSimpleData.m in Sources */,
+				E2B890FFB03BC607A92E8E3A /* DataTestDataStruct.m in Sources */,
+				E2B890FCE18D1ECBF2F1D020 /* DataTestDataNullStruct.m in Sources */,
+				E2B895E1727B45D1FD61B248 /* MathMathTest.m in Sources */,
+				E2B89048DCDE381AD3E626A9 /* MathRequestAdd.m in Sources */,
+				E2B89A68151F7135C0A856F7 /* MathResponseAdd.m in Sources */,
+				E2B8992D5B0D7BE061A118A9 /* MathMathTestTestArr.m in Sources */,
+				E2B89F4B72B6E6152B3B2E24 /* RoleRoleInfo.m in Sources */,
+				E2B891EDC030E5ED681AEABD /* RoleRequestDemoData.m in Sources */,
+				E2B892337B9813BC34677C16 /* RoleRequestDemoRole.m in Sources */,
+				E2B89242A228676071F611B6 /* RoleResponseDemoData.m in Sources */,
+				E2B891F4A74665BD5978627A /* RoleResponseDemoRole.m in Sources */,
+				E2B89B3BA8008ECCF47D4B78 /* RoleRoleInfoChildren.m in Sources */,
+				E2B89EFC799CDA9F08BCF8B4 /* RolePostRequestNewRole.m in Sources */,
+				E2B89421E1A6AD1CAF4F078B /* RolePutRequestDemoRole.m in Sources */,
+				E2B89B632655A5B410D1F7B5 /* RolePostRequestDemoRole.m in Sources */,
+				E2B89532C9B2E5FB919BEF32 /* RolePostResponseNewRole.m in Sources */,
+				E2B895234F15309EAA1FD28E /* RolePutResponseDemoRole.m in Sources */,
+				E2B89F626F190E2455176996 /* RolePostResponseDemoRole.m in Sources */,
+				E2B897C0ACBCF6592DA42463 /* RoleDeleteRequestDemoRole.m in Sources */,
+				E2B89E521E7563F9C38E4B7D /* RoleDeleteResponseDemoRole.m in Sources */,
+				E2B89F8F93681EFAE1759FE3 /* RolePutResponseDemoRoleDataMap.m in Sources */,
+				E2B895C4D2EB97485AE1974E /* RolePutResponseDemoRoleDataMapDemo.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

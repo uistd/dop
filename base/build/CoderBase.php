@@ -525,4 +525,14 @@ abstract class CoderBase extends ConfigBase
     {
         return $this->build_opt;
     }
+
+
+    /**
+     * 是否忽略null值
+     * @return bool
+     */
+    public function isJsonIgnoreNull()
+    {
+        return $this->getConfigBool("json_ignore_null", true);
+    }
 }

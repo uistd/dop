@@ -33,7 +33,8 @@ int main(int argc, const char * argv[]) {
         NSLog(@"%@", [bin dumpToHex]);
 
         JsonTest *json_test = [[JsonTest alloc] init];
-        [json_test toJsonStr];
+        NSString *json_str = [json_test toJsonStr];
+        [json_test parseJson:json_str];
     }
     return 0;
 

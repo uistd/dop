@@ -30,7 +30,7 @@ class HeadJsonPack extends PackerBase
         $code_buf->pushStr(' * json encode');
         $code_buf->pushStr(' */');
         if ($struct->isSubStruct()) {
-            $code_buf->pushStr('- (BOOL)jsonDecode:(NSMutableDictionary*)json_dict;');
+            $code_buf->pushStr('- (void)jsonDecode:(NSDictionary*)json_dict;');
         } else {
             $code_buf->pushStr('- (BOOL)jsonDecode:(NSString*)json_str;');
         }

@@ -39,14 +39,12 @@ class Coder extends CoderBase
      */
     public function codeByStruct($struct)
     {
-        $main_class_name = $struct->getClassName($struct);
+        $main_class_name = HeadCoder::makeClassName($struct);
         $class_file = $this->getClassFileBuf($struct, 'm');
         $this->loadTpl($class_file, 'tpl/class.m');
         $class_file->setVariableValue('class_name', $main_class_name);
-
         $class_import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
-        $class_method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
-
+        $class_import_buf->pushUniqueStr('#import "'. HeadCoder::makeClassName($struct) .'.h"');
         $item_list = $struct->getAllExtendItem();
 
         $name_space = $struct->getNamespace();
@@ -57,7 +55,7 @@ class Coder extends CoderBase
         foreach ($item_list as $name => $item) {
             $this->makeClassImportCode($item, $name_space, $class_import_buf);
         }
-        //$this->packMethodCode($class_file, $struct);
+        $this->packMethodCode($class_file, $struct);
     }
 
     /**
@@ -73,8 +71,8 @@ class Coder extends CoderBase
             /** @var StructItem $item */
             $struct = $item->getStruct();
             $class_name = HeadCoder::makeClassName($struct);
-            $path = self::relativePath($struct->getNamespace(), $base_path). $class_name;
-            $import_buf->pushUniqueStr('#import "'.$path . $class_name .'"');
+            $path = self::relativePath($struct->getNamespace(), $base_path);
+            $import_buf->pushUniqueStr('#import "'.$path . $class_name .'.h"');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
             $this->makeClassImportCode($item->getItem(), $base_path, $import_buf);

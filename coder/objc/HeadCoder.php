@@ -54,7 +54,7 @@ class HeadCoder extends CoderBase
                 break;
             case ItemType::STRUCT;
                 /** @var StructItem $item */
-                $str = $item->getStructName() . '*';
+                $str = self::makeClassName($item->getStruct()) . '*';
                 break;
             case ItemType::MAP;
                 /** @var MapItem $item */
@@ -122,9 +122,8 @@ class HeadCoder extends CoderBase
         $this->loadTpl($head_file, 'tpl/header.h');
 
         $head_import_buf = $head_file->getBuf(FileBuf::IMPORT_BUF);
-        $head_method_buf = $head_file->getBuf(FileBuf::METHOD_BUF);
         $head_property_buf = $head_file->getBuf(FileBuf::PROPERTY_BUF);
-
+        $head_file->setVariableValue('class_name', self::makeClassName($struct));
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
@@ -146,11 +145,7 @@ class HeadCoder extends CoderBase
             }
             $property_line_buf = new StrBuf();
             $head_property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item->getType()) . ') ' . self::varType($item) . ' ' . $name);
-            if ($item->hasDefault()) {
-                $property_line_buf->pushStr(' = ' . $item->getDefault());
-            }
-            $property_line_buf->pushStr(';');
+            $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item->getType()) . ') ' . self::varType($item) . ' ' . $name .';');
         }
         $this->packMethodCode($head_file, $struct);
     }
@@ -167,7 +162,7 @@ class HeadCoder extends CoderBase
             /** @var StructItem $item */
             $struct = $item->getStruct();
             $class_name = self::makeClassName($struct);
-            $import_buf->pushUniqueStr('@class ' . $class_name . '"');
+            $import_buf->pushUniqueStr('@class ' . $class_name . ';');
         }
     }
 

@@ -9,6 +9,7 @@
 
 -(void) print
 {
+    //NSNumber *number = [NSNumber numberWithInt:20];
     NSLog (@" %i %i %@", self.uint, self.int64, self.string);
 }
 

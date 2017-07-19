@@ -8,4 +8,5 @@
 
 @interface JsonTest : NSObject
 - (NSString *)toJsonStr;
+- (BOOL)parseJson:(NSString *) json_str;
 @end
