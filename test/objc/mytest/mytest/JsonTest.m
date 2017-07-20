@@ -13,7 +13,6 @@
 - (NSString *)toJsonStr {
 
     NSMutableArray *test = [NSMutableArray new];
-    NSMutableArray<NSNumber *> *test_int;
     [test addObject:@"hahaha"];
     [test addObject:@"12"];
 
@@ -32,9 +31,6 @@
     [arr addObject:[NSNull new]];
     [request setObject:arr forKey:@"arr"];
     [request setObject:test forKey:@"test"];
-    [request enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
-        NSLog(@"value for key %@ is %@", key, value);
-    }];
     NSData *json_data = [NSJSONSerialization dataWithJSONObject:request options:kNilOptions error:nil];
     NSString *json_str = [[NSString alloc] initWithData:json_data encoding:NSUTF8StringEncoding];
     NSLog(@"result %@", json_str);

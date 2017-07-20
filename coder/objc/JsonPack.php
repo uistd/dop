@@ -63,8 +63,8 @@ class JsonPack extends PackerBase
             $code_buf->pushStr('return result;');
         } else {
             $code_buf->pushStr('NSError *error = nil;');
-            $code_buf->pushStr('NSData *json_data = [NSJSONSerialization dataWithJSONObject:result options:kNilOptions error:&error];');
-            $code_buf->pushStr('if (nil != error) {');
+            $code_buf->pushStr('NSData *json_data = [NSJSONSerialization dataWithJSONObject:result options:0 error:&error];');
+            $code_buf->pushStr('if (nil != error || nil == json_data) {');
             $code_buf->pushIndent('return @"";');
             $code_buf->pushStr('}');
             $code_buf->pushStr('NSString *json_str = [[NSString alloc] initWithData:json_data encoding:NSUTF8StringEncoding];');
@@ -104,7 +104,7 @@ class JsonPack extends PackerBase
                 } else {
                     $this->is_null_require = true;
                     $code_buf->pushStr('if (nil == self.' . $name . ') {');
-                    $code_buf->pushIndent('[result setObject:nil_object forKey:@"' . $name . '"];');
+                    $code_buf->pushIndent('result[@"' . $name . '"] = nil_object;');
                     $code_buf->pushStr('} else {')->indent();
                 }
                 $this->packItemValue($code_buf, 'self.' . $name, '@"' . $name . '"', $item);
@@ -123,6 +123,7 @@ class JsonPack extends PackerBase
      */
     public function buildUnpackMethod($struct, $code_buf)
     {
+        $this->pushImportCode('#import "FFANDOPUtils.h"');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * JSON 解析');
@@ -135,12 +136,15 @@ class JsonPack extends PackerBase
             $code_buf->pushStr('{')->indent();
             $code_buf->pushStr('NSData* json_data = [json_str dataUsingEncoding:NSUTF8StringEncoding];');
             $code_buf->pushStr('NSError *error;');
-            $code_buf->pushStr('NSDictionary *json_dict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];');
+            $code_buf->pushStr('NSDictionary *json_dict = [NSJSONSerialization JSONObjectWithData:json_data options:NSJSONReadingAllowFragments error:&error];');
             $code_buf->pushStr('if (nil == json_dict) {');
             $code_buf->pushIndent('return NO;');
             $code_buf->pushStr('}');
         }
         $this->readPropertyLoop($code_buf, $struct);
+        if (!$struct->isSubStruct()) {
+            $code_buf->pushStr('return YES;');
+        }
         $code_buf->backIndent()->pushStr('}');
     }
 
@@ -150,7 +154,6 @@ class JsonPack extends PackerBase
      */
     private function readPropertyLoop($code_buf, $struct)
     {
-        $code_buf->pushStr('id pointer;');
         $all_item = $struct->getAllExtendItem();
         $tmp_index = 0;
         /**
@@ -160,7 +163,7 @@ class JsonPack extends PackerBase
         foreach ($all_item as $name => $item) {
             $item_type = $item->getType();
             $ns_type = self::nsTypeName($item_type);
-            $value = '[DOPUtils jsonRead' . $ns_type . ':[json valueForKey:@"' . $name . '"]]';
+            $value = '[FFANDOPUtils jsonRead' . $ns_type . ':[json_dict valueForKey:@"' . $name . '"]]';
             $this->unpackItemValue($code_buf, 'self.' . $name, $value, $item, $tmp_index);
         }
     }
@@ -212,7 +215,7 @@ class JsonPack extends PackerBase
         switch ($item_type) {
             case ItemType::INT:
                 /** @var IntItem $item */
-                $code = '[NSNumber '.self::nsNumberCode($item).':'. $value_name .']';
+                $code = '@(' . $value_name . ')';
                 break;
             case ItemType::STRING:
                 $code = $value_name;
@@ -221,13 +224,13 @@ class JsonPack extends PackerBase
                 $code = '[' . $value_name . ' base64EncodedStringWithOptions:0]';
                 break;
             case ItemType::BOOL:
-                $code = '[NSNumber numberWithBool:' . $value_name . ']';
+                $code = '@(' . $value_name . ')';
                 break;
             case ItemType::DOUBLE:
-                $code = '[NSNumber numberWithDouble:' . $value_name . ']';
+                $code = '@(' . $value_name . ')';
                 break;
             case ItemType::FLOAT:
-                $code = '[NSNumber numberWithFloat:' . $value_name . ']';
+                $code = '@(' . $value_name . ')';
                 break;
             case ItemType::STRUCT:
                 $code = '[' . $value_name . ' jsonEncode]';
@@ -239,35 +242,30 @@ class JsonPack extends PackerBase
             default:
                 throw new Exception('Unknown type');
         }
-        $code_buf->push('[result setObject:' . $code . ' forKey:' . $name . '];');
+        $code_buf->push('result[' . $name . '] = ' . $code . ';');
     }
 
     /**
      * 生成int to nsNumber转换代码
      * @param IntItem $item
-     * @param bool $is_pack
      * @return string
      */
-    private static function nsNumberCode($item, $is_pack = true)
+    private static function nsNumberCode($item)
     {
         $byte = $item->getByte();
         if (1 === $byte) {
-            $code = 'Char';
+            $code = 'char';
         } elseif (2 === $byte) {
-            $code = 'Short';
+            $code = 'short';
         } elseif (4 === $byte) {
-            $code = 'Int';
+            $code = 'int';
         } else {
-            $code = 'LongLong';
+            $code = 'longLong';
         }
         if ($item->isUnsigned()) {
-            $code = 'Unsigned' . $code;
+            $code = 'unsigned' . ucfirst($code);
         }
-        if ($is_pack) {
-            return 'numberWith' . $code;
-        } else {
             return $code . 'Value';
-        }
     }
 
     /**
@@ -276,71 +274,76 @@ class JsonPack extends PackerBase
      * @param string $var_name 值变量名
      * @param string $value 值
      * @param Item $item 节点对象
-     * @param int $tmp_index
+     * @param int $tmp_index 深度
+     * @param int $depth
      */
-    private function unpackItemValue($code_buf, $var_name, $value, $item, &$tmp_index)
+    private function unpackItemValue($code_buf, $var_name, $value, $item, &$tmp_index, $depth = 0)
     {
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::STRING:
             case ItemType::BINARY:
-                $code_buf->pushStr($var_name . " = " . $value);
+                $code_buf->pushStr($var_name . " = " . $value . ';');
                 break;
             case ItemType::INT:
-                /** @var IntItem $item */
-                $func_name = self::nsNumberCode($item, false);
-                $code_buf->pushStr($var_name . ' = [' . $value . ' ' . $func_name . '];');
+                if (0 == $depth) {
+                    /** @var IntItem $item */
+                    $func_name = self::nsNumberCode($item);
+                    $code_buf->pushStr($var_name . ' = [' . $value . ' ' . $func_name . '];');
+                } else {
+                    $code_buf->pushStr($var_name . ' = ' . $value . ';');
+                }
                 break;
             case ItemType::BOOL:
-                $code_buf->pushStr($var_name . ' = [' . $var_name . ' boolValue];');
+                $code_buf->pushStr($var_name . ' = [' . $value . ' boolValue];');
                 break;
             case ItemType::FLOAT:
-                $code_buf->pushStr($var_name . ' = [' . $var_name . ' floatValue];');
+                $code_buf->pushStr($var_name . ' = [' . $value . ' floatValue];');
                 break;
             case ItemType::DOUBLE:
-                $code_buf->pushStr($var_name . ' = [' . $var_name . ' doubleValue];');
+                $code_buf->pushStr($var_name . ' = [' . $value . ' doubleValue];');
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $sub_struct = $item->getStruct();
-                $class_name = HeadCoder::makeClassName($sub_struct);
+                $class_name = $this->coder->makeClassName($sub_struct);
                 $code_buf->pushStr($var_name . ' = [' . $class_name . ' new];');
                 $code_buf->pushStr('[' . $var_name . ' jsonDecode:' . $value . '];');
                 break;
             case ItemType::ARR:
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
-                $code_buf->pushStr($var_name . ' = [NSArray new];');
+                $code_buf->pushStr($var_name . ' = [NSMutableArray new];');
                 $for_var = self::varName($tmp_index++, 'id');
                 $for_value = self::varName($tmp_index++, 'tmp');
                 $code_buf->pushStr('for (id ' . $for_var . ' in ' . $value . ') {');
-                $var_type = HeadCoder::varType($sub_item, true);
-                $code_buf->indent()->pushStr($var_type . '*' . $for_value . ';');
+                $var_type = $this->coder->varType($sub_item, true, false);
+                $code_buf->indent()->pushStr($var_type . ' ' . $for_value . ';');
                 $ns_type = self::nsTypeName($sub_item->getType());
-                $this->unpackItemValue($code_buf, $for_value, '[DOPUtils jsonRead' . $ns_type . ':' . $for_var . ']', $sub_item, $tmp_index);
+                $this->unpackItemValue($code_buf, $for_value, '[FFANDOPUtils jsonRead' . $ns_type . ':' . $for_var . ']', $sub_item, $tmp_index, $depth + 1);
                 $code_buf->pushStr('[' . $var_name . ' addObject:' . $for_value . '];');
-                $code_buf->pushStr('}');
+                $code_buf->backIndent()->pushStr('}');
                 break;
             case ItemType::MAP:
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
-                $code_buf->pushStr($var_name . ' = [NSDictionary new];');
+                $code_buf->pushStr($var_name . ' = [NSMutableDictionary new];');
                 $for_key_var = self::varName($tmp_index++, 'key');
                 $for_value_var = self::varName($tmp_index++, 'value');
                 $for_key_name = self::varName($tmp_index++, 'tmp_key');
                 $for_value_name = self::varName($tmp_index++, 'tmp_value');
                 $code_buf->pushStr('[' . $value . ' enumerateKeysAndObjectsUsingBlock:^(id ' . $for_key_var . ', id ' . $for_value_var . ', BOOL *stop) {');
                 $code_buf->indent();
-                $key_type = HeadCoder::varType($key_item, true);
-                $value_type = HeadCoder::varType($value_item, true);
+                $key_type = $this->coder->varType($key_item, true, false);
+                $value_type = $this->coder->varType($value_item, true, false);
                 $key_ns_type = self::nsTypeName($key_item->getType());
                 $value_ns_type = self::nsTypeName($value_item->getType());
-                $code_buf->pushStr($key_type . '* ' . $for_key_name . ' = [DOPUtils jsonRead' . $key_ns_type . ':' . $for_key_var . '];');
-                $code_buf->pushStr($value_type . '* ' . $for_value_name .';');
-                $this->unpackItemValue($code_buf, $for_value_name, '[DOPUtils jsonRead'.$value_ns_type.':'.$for_value_var.']', $value_item, $tmp_index);
-                $code_buf->pushStr('[' . $var_name . ' setObject:' . $for_value_name . ' forKey:'. $for_key_name .'];');
-                $code_buf->pushStr('}];')->backIndent();
+                $code_buf->pushStr($key_type . ' ' . $for_key_name . ' = [FFANDOPUtils jsonRead' . $key_ns_type . ':' . $for_key_var . '];');
+                $code_buf->pushStr($value_type . ' ' . $for_value_name . ';');
+                $this->unpackItemValue($code_buf, $for_value_name, '[FFANDOPUtils jsonRead' . $value_ns_type . ':' . $for_value_var . ']', $value_item, $tmp_index, $depth + 1);
+                $code_buf->pushStr($var_name . '['. $for_key_name .'] = ' . $for_value_name . ';');
+                $code_buf->backIndent()->pushStr('}];');
                 break;
         }
     }

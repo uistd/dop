@@ -7,11 +7,8 @@ use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\StrBuf;
 use ffan\dop\Exception;
-use ffan\dop\protocol\IntItem;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\StructItem;
 
@@ -22,74 +19,12 @@ use ffan\dop\protocol\StructItem;
 class HeadCoder extends CoderBase
 {
     /**
-     * 变量类型
-     * @param Item $item
-     * @param bool $is_object 是否是对象
-     * @return string
+     * @var Coder
      */
-    public static function varType(Item $item, $is_object = false)
-    {
-        $type = $item->getType();
-        $str = '';
-        switch ($type) {
-            case ItemType::BINARY:
-                $str = 'NSMutableData*';
-                break;
-            case ItemType::STRING:
-                $str = 'NSString*';
-                break;
-            case ItemType::FLOAT:
-                if ($is_object) {
-                    $str = 'NSNumber*';
-                } else {
-                    $str = 'float';
-                }
-                break;
-            case ItemType::DOUBLE:
-                if ($is_object) {
-                    $str = 'NSNumber*';
-                } else {
-                    $str = 'double';
-                }
-                break;
-            case ItemType::STRUCT;
-                /** @var StructItem $item */
-                $str = self::makeClassName($item->getStruct()) . '*';
-                break;
-            case ItemType::MAP;
-                /** @var MapItem $item */
-                $key_item = $item->getKeyItem();
-                $value_item = $item->getValueItem();
-                $str = 'NSMutableDictionary <' . self::varType($key_item, true) . ', ' . self::varType($value_item, true) . '>*';
-                break;
-            case ItemType::ARR:
-                /** @var ListItem $item */
-                $sub_item = $item->getItem();
-                $str = 'NSMutableArray <' . self::varType($sub_item, true) . '>*';
-                break;
-            case ItemType::INT:
-                if ($is_object) {
-                    $str = 'NSNumber*';
-                } else {
-                    /** @var IntItem $item */
-                    $byte = $item->getByte();
-                    $length = $byte * 8;
-                    $str = 'int' . $length;
-                    if ($item->isUnsigned()) {
-                        $str = 'u' . $str;
-                    }
-                    $str .= '_t';
-                }
-                break;
-            case ItemType::BOOL:
-                $str = 'BOOL';
-                break;
-        }
-        return $str;
-    }
+    protected $parent;
 
     /**
-     * 返回@property 类型
+     * 返回 property 类型
      * @param int $type
      * @return string
      */
@@ -123,7 +58,7 @@ class HeadCoder extends CoderBase
 
         $head_import_buf = $head_file->getBuf(FileBuf::IMPORT_BUF);
         $head_property_buf = $head_file->getBuf(FileBuf::PROPERTY_BUF);
-        $head_file->setVariableValue('class_name', self::makeClassName($struct));
+        $head_file->setVariableValue('class_name', $this->parent->makeClassName($struct));
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
@@ -145,7 +80,7 @@ class HeadCoder extends CoderBase
             }
             $property_line_buf = new StrBuf();
             $head_property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item->getType()) . ') ' . self::varType($item) . ' ' . $name .';');
+            $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item->getType()) . ') ' . $this->parent->varType($item) . ' ' . $name .';');
         }
         $this->packMethodCode($head_file, $struct);
     }
@@ -161,8 +96,14 @@ class HeadCoder extends CoderBase
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
-            $class_name = self::makeClassName($struct);
+            $class_name = $this->parent->makeClassName($struct);
             $import_buf->pushUniqueStr('@class ' . $class_name . ';');
+        } elseif (ItemType::ARR === $type) {
+            /** @var ListItem $item */
+            $this->makeHeaderImportCode($item->getItem(), $import_buf);
+        } elseif (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $this->makeHeaderImportCode($item->getValueItem(), $import_buf);
         }
     }
 
@@ -175,23 +116,13 @@ class HeadCoder extends CoderBase
     {
         $folder = $this->getFolder();
         $path = $struct->getNamespace();
-        $class_name = self::makeClassName($struct);
+        $class_name = $this->parent->makeClassName($struct);
         $file_name = $class_name . '.h';
         $class_name = $folder->getFile($path, $file_name);
         if (null === $class_name) {
             $class_name = $folder->touch($path, $file_name);
         }
         return $class_name;
-    }
-
-    /**
-     * 生成类名
-     * @param Struct $struct
-     * @return string
-     */
-    public static function makeClassName($struct)
-    {
-        return ucfirst(basename($struct->getFile(), '.xml')) . $struct->getClassName();
     }
 
     /**

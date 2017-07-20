@@ -6,7 +6,7 @@ use ffan\dop\demo\data\TestData;
 use ffan\dop\demo\data\TestDataStruct;
 
 $data = new TestData();
-$data->binary = '';
+$data->binary = pack('l', 100);
 $data->int8 = 0x7f;
 $data->uint8 = 0xff;
 $data->int16 = 0x7fff;
@@ -17,6 +17,7 @@ $data->int64 = 0xfffffffffff;
 $data->float32 = 100.1;
 $data->double64 = 1000.1001010;
 $data->string = 'This is DOP test';
+$data->is_ok = true;
 $data->list = array("this", "many");
 $data->list_list = [[20, 10, 40]];
 $data->map = array(1 => 'this is one', 2 => 'this is two', 10 => 'this is ten');

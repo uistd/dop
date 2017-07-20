@@ -5,7 +5,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface DOPUtils : NSObject
+@interface FFANDOPUtils : NSObject
 
 /**
  * 读出number
@@ -20,7 +20,7 @@
 /**
  * 读出二进制
  */
-+ (NSData *)jsonReadData:(id)pointer;
++ (NSMutableData *)jsonReadData:(id)pointer;
 
 /**
  * 读出map

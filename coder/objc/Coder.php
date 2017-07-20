@@ -6,6 +6,7 @@ use ffan\dop\build\CodeBuf;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\FileBuf;
 use ffan\dop\Exception;
+use ffan\dop\protocol\IntItem;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -21,12 +22,88 @@ class Coder extends CoderBase
 {
 
     /**
+     * 变量类型
+     * @param Item $item
+     * @param bool $is_object 是否是对象
+     * @param bool $is_property
+     * @return string
+     */
+    public function varType(Item $item, $is_object = false, $is_property = true)
+    {
+        $type = $item->getType();
+        $str = '';
+        switch ($type) {
+            case ItemType::BINARY:
+                $str = 'NSMutableData*';
+                break;
+            case ItemType::STRING:
+                $str = 'NSString*';
+                break;
+            case ItemType::FLOAT:
+                if ($is_object) {
+                    $str = 'NSNumber*';
+                } else {
+                    $str = 'float';
+                }
+                break;
+            case ItemType::DOUBLE:
+                if ($is_object) {
+                    $str = 'NSNumber*';
+                } else {
+                    $str = 'double';
+                }
+                break;
+            case ItemType::STRUCT;
+                /** @var StructItem $item */
+                $str = $this->makeClassName($item->getStruct()) . '*';
+                break;
+            case ItemType::MAP;
+                if ($is_property) {
+                    /** @var MapItem $item */
+                    $key_item = $item->getKeyItem();
+                    $value_item = $item->getValueItem();
+                    $str = 'NSMutableDictionary <' . $this->varType($key_item, true) . ', ' . $this->varType($value_item, true) . '>*';
+                } else {
+                    $str = 'NSMutableDictionary *';
+                }
+                break;
+            case ItemType::ARR:
+                if ($is_property) {
+                    /** @var ListItem $item */
+                    $sub_item = $item->getItem();
+                    $str = 'NSMutableArray <' . $this->varType($sub_item, true) . '>*';
+                } else {
+                    $str = 'NSMutableArray *';
+                }
+                break;
+            case ItemType::INT:
+                if ($is_object) {
+                    $str = 'NSNumber*';
+                } else {
+                    /** @var IntItem $item */
+                    $byte = $item->getByte();
+                    $length = $byte * 8;
+                    $str = 'int' . $length;
+                    if ($item->isUnsigned()) {
+                        $str = 'u' . $str;
+                    }
+                    $str .= '_t';
+                }
+                break;
+            case ItemType::BOOL:
+                $str = 'BOOL';
+                break;
+        }
+        return $str;
+    }
+
+    /**
      * 生成代码
      */
     public function build()
     {
         //先生成header代码
-        $head_coder = new HeadCoder($this->getManager(), $this->getBuildOption());
+        $head_coder = new HeadCoder($this->getManager(), $this->getBuildOption(), $this);
         $head_coder->build();
         parent::build();
     }
@@ -39,12 +116,12 @@ class Coder extends CoderBase
      */
     public function codeByStruct($struct)
     {
-        $main_class_name = HeadCoder::makeClassName($struct);
+        $main_class_name = $this->makeClassName($struct);
         $class_file = $this->getClassFileBuf($struct, 'm');
         $this->loadTpl($class_file, 'tpl/class.m');
         $class_file->setVariableValue('class_name', $main_class_name);
         $class_import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
-        $class_import_buf->pushUniqueStr('#import "'. HeadCoder::makeClassName($struct) .'.h"');
+        $class_import_buf->pushUniqueStr('#import "'. $this->makeClassName($struct) .'.h"');
         $item_list = $struct->getAllExtendItem();
 
         $name_space = $struct->getNamespace();
@@ -70,9 +147,8 @@ class Coder extends CoderBase
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
-            $class_name = HeadCoder::makeClassName($struct);
-            $path = self::relativePath($struct->getNamespace(), $base_path);
-            $import_buf->pushUniqueStr('#import "'.$path . $class_name .'.h"');
+            $class_name = $this->makeClassName($struct);
+            $import_buf->pushUniqueStr('#import "'. $class_name .'.h"');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
             $this->makeClassImportCode($item->getItem(), $base_path, $import_buf);
@@ -92,12 +168,27 @@ class Coder extends CoderBase
     {
         $folder = $this->getFolder();
         $path = $struct->getNamespace();
-        $class_name = HeadCoder::makeClassName($struct);
+        $class_name = $this->makeClassName($struct);
         $file_name = $class_name .'.'. $extend;
         $class_name = $folder->getFile($path, $file_name);
         if (null === $class_name) {
             $class_name = $folder->touch($path, $file_name);
         }
+        return $class_name;
+    }
+
+    /**
+     * 生成类名
+     * @param Struct $struct
+     * @return string
+     */
+    public function makeClassName($struct)
+    {
+        $class_prefix = $this->getConfigString('class_prefix');
+        if (empty($class_prefix) || !preg_match('/^[a-zA-Z][a-zA-Z\d]*$/', $class_prefix)) {
+            $class_prefix = 'APP';
+        }
+        $class_name = $class_prefix . ucfirst(basename($struct->getFile(), '.xml')) . $struct->getClassName();
         return $class_name;
     }
 }

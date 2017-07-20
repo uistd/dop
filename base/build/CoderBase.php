@@ -50,17 +50,24 @@ abstract class CoderBase extends ConfigBase
     private $packer_list;
 
     /**
+     * @var CoderBase
+     */
+    protected $parent;
+
+    /**
      * CoderBase constructor.
      * @param Manager $manager
      * @param BuildOption $build_opt
+     * @param CoderBase $parent 父级coder
      */
-    public function __construct(Manager $manager, BuildOption $build_opt)
+    public function __construct(Manager $manager, BuildOption $build_opt, CoderBase $parent = null)
     {
         $this->manager = $manager;
         $this->build_opt = $build_opt;
         $this->coder_name = $build_opt->getCoderName();
         $this->build_base_path = $build_opt->build_path;
         $this->initConfig($build_opt->getSectionConf());
+        $this->parent = $parent;
     }
 
     /**
