@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\coder\java;
+namespace ffan\dop\coder\objc;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\PackerBase;
@@ -13,7 +13,7 @@ use ffan\dop\protocol\StructItem;
 
 /**
  * Class StructPack
- * @package ffan\dop\coder\java
+ * @package ffan\dop\coder\objc
  */
 class StructPack extends PackerBase
 {
@@ -30,16 +30,14 @@ class StructPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        $import_str = $this->coder->joinNameSpace('', 'DopEncode');
-        $this->pushImportCode('import ' . $import_str);
+        $this->pushImportCode('#import "FFANDOPEncode.h"');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
         $code_buf->pushStr(' */');
-        $access_type = $struct->isSubStruct() ? 'public' : 'private';
-        $code_buf->pushStr($access_type . ' static byte[] binaryStruct() {');
+        $code_buf->pushStr('+ (NSData*) binaryStruct {');
         $code_buf->indent();
-        $fun_str = 'DopEncode protocol_encoder = new DopEncode();';
+        $fun_str = 'FFANDOPEncode *protocol_encoder = [FFANDOPEncode new];';
         $code_buf->pushStr($fun_str);
         $all_item = $struct->getAllExtendItem();
         /**
@@ -47,10 +45,10 @@ class StructPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            $code_buf->pushStr('protocol_encoder.writeString("' . $name . '");');
+            $code_buf->pushStr('[protocol_encoder writeString: @"' . $name . '"];');
             $this->writeItemType($code_buf, $item);
         }
-        $code_buf->pushStr('return protocol_encoder.getBuffer();');
+        $code_buf->pushStr('return [protocol_encoder getData];');
         $code_buf->backIndent()->pushStr('}');
     }
 
@@ -63,7 +61,7 @@ class StructPack extends PackerBase
     {
         $bin_type = $item->getBinaryType();
         $code_buf->pushStr('//' . $this->typeComment($bin_type));
-        $code_buf->pushStr('protocol_encoder.writeByte((byte) 0x' . dechex($bin_type) . ');');
+        $code_buf->pushStr('[protocol_encoder writeUnsignedChar:0x' . dechex($bin_type) . '];');
         $type = $item->getType();
         switch ($type) {
             case ItemType::ARR:
@@ -80,8 +78,8 @@ class StructPack extends PackerBase
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
-                $class_name = $item->getStructName();
-                $code_buf->pushStr('protocol_encoder.writeByteArray(' . $class_name . '.binaryStruct(), true);');
+                $class_name = $this->coder->makeClassName($item->getStruct());
+                $code_buf->pushStr('[protocol_encoder writeData:[' . $class_name . ' binaryStruct] with_length:YES];');
                 break;
         }
     }

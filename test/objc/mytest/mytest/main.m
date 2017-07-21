@@ -13,6 +13,7 @@
 #import "DOPDataTestData.h"
 #import "DOPDataTestDataTestStruct.h"
 #import "DOPDataTestArr.h"
+#import "FFANDOPEncode.h"
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -85,6 +86,16 @@ int main(int argc, const char * argv[]) {
         DOPDataTestData *new_test = [DOPDataTestData new];
         BOOL re = [new_test jsonDecode:test_json];
         NSLog(@"json decode result:%d", re);
+
+        NSString *sign_code = [FFANDOPEncode makeSignCode:test.binary length:test.binary.length];
+        NSLog(@"Sign code: %@", sign_code);
+
+        FFANDOPEncode *encoder = [FFANDOPEncode new];
+        [encoder writeUnsignedChar:0x77];
+        [encoder writeString:@"This is test string"];
+        [encoder writeInt32:0x7ffffff];
+        [encoder writeInt64:0x7ffffffffffffff];
+        [encoder pack];
     }
     return 0;
 

@@ -173,7 +173,7 @@ class JsonPack extends PackerBase
      * @param int $item_type
      * @return string
      */
-    private static function nsTypeName($item_type)
+    public static function nsTypeName($item_type)
     {
         switch ($item_type) {
             case ItemType::INT:
@@ -196,7 +196,7 @@ class JsonPack extends PackerBase
                 $type_name = 'Array';
                 break;
             default:
-                $type_name = 'NSNull';
+                $type_name = 'Null';
         }
         return $type_name;
     }
@@ -247,25 +247,36 @@ class JsonPack extends PackerBase
 
     /**
      * 生成int to nsNumber转换代码
-     * @param IntItem $item
+     * @param Item $item
      * @return string
      */
-    private static function nsNumberCode($item)
+    public static function nsNumberCode($item)
     {
-        $byte = $item->getByte();
-        if (1 === $byte) {
-            $code = 'char';
-        } elseif (2 === $byte) {
-            $code = 'short';
-        } elseif (4 === $byte) {
-            $code = 'int';
+        $item_type = $item->getType();
+        if (ItemType::INT === $item_type) {
+            $byte = $item->getByte();
+            if (1 === $byte) {
+                $code = 'char';
+            } elseif (2 === $byte) {
+                $code = 'short';
+            } elseif (4 === $byte) {
+                $code = 'int';
+            } else {
+                $code = 'longLong';
+            }
+            if ($item->isUnsigned()) {
+                $code = 'unsigned' . ucfirst($code);
+            }
+        } elseif (ItemType::FLOAT === $item_type) {
+            $code = 'float';
+        } elseif (ItemType::DOUBLE === $item_type) {
+            $code = 'double';
+        } elseif (ItemType::BOOL) {
+            $code = 'bool';
         } else {
-            $code = 'longLong';
+            return null;
         }
-        if ($item->isUnsigned()) {
-            $code = 'unsigned' . ucfirst($code);
-        }
-            return $code . 'Value';
+        return $code . 'Value';
     }
 
     /**
@@ -286,22 +297,15 @@ class JsonPack extends PackerBase
                 $code_buf->pushStr($var_name . " = " . $value . ';');
                 break;
             case ItemType::INT:
+            case ItemType::BOOL:
+            case ItemType::FLOAT:
+            case ItemType::DOUBLE:
                 if (0 == $depth) {
-                    /** @var IntItem $item */
                     $func_name = self::nsNumberCode($item);
                     $code_buf->pushStr($var_name . ' = [' . $value . ' ' . $func_name . '];');
                 } else {
                     $code_buf->pushStr($var_name . ' = ' . $value . ';');
                 }
-                break;
-            case ItemType::BOOL:
-                $code_buf->pushStr($var_name . ' = [' . $value . ' boolValue];');
-                break;
-            case ItemType::FLOAT:
-                $code_buf->pushStr($var_name . ' = [' . $value . ' floatValue];');
-                break;
-            case ItemType::DOUBLE:
-                $code_buf->pushStr($var_name . ' = [' . $value . ' doubleValue];');
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
