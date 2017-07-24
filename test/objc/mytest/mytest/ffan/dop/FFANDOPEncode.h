@@ -18,7 +18,7 @@
 @interface FFANDOPEncode : NSObject {
 @private
     NSMutableData *buffer;
-    char opt_flag;
+    uint8_t opt_flag;
     size_t mask_beg_pos;
     NSString *mask_key;
     int error_code;
@@ -69,12 +69,12 @@
 /**
  * 生成签名串
  */
-+ (NSString *)makeSignCode:(NSData *)data length:(size_t)len;
++ (NSString *)makeSignCode:(NSData *)data offset:(size_t)offset length:(size_t)len;
 
 /**
  * 数据加密
  */
-+ (void)maskData:(NSMutableData *)data begin_pos:(size_t)beg_pos mask_key:(NSString *) mask_key;
++ (void)maskData:(NSData *)data begin_pos:(size_t)beg_pos mask_key:(NSString *) mask_key;
 
 /**
  * 获取错误码

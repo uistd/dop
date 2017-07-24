@@ -51,24 +51,6 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('- (void)binaryPack:(FFANDOPEncode *) result {');
             $code_buf->indent();
         } else {
-            $code_buf->pushStr('- (NSData *)doPack:(BOOL)pid is_sign:(BOOL)sign mask_key:(NSString *)mask_key{}');
-            $code_buf->emptyLine();
-            $code_buf->pushStr('- (NSData *)binaryEncode {');
-            $code_buf->pushIndent('return [self doPack:NO, is_sign:NO, mask_key:nil);');
-            $code_buf->pushStr('}');
-            $code_buf->emptyLine();
-            $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid {');
-            $code_buf->pushIndent('return [self doPack(pid, is_sign:NO, mask_key:nil];');
-            $code_buf->pushStr('}');
-            $code_buf->emptyLine();
-            $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid is_sign:(BOOL)is_sign {');
-            $code_buf->pushIndent('return [self doPack(pid, is_sign:is_sign, mask_key:null];');
-            $code_buf->pushStr('}');
-            $code_buf->emptyLine();
-            $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid mask_key:(NSString *)mask_key {');
-            $code_buf->pushIndent('return [self doPack(pid, is_sign:YES mask_key:mask_key];');
-            $code_buf->pushStr('}');
-            $code_buf->emptyLine();
             $code_buf->pushStr('- (NSData *)doPack:(BOOL)pid is_sign:(BOOL)sign mask_key:(NSString *)mask_key {');
             $code_buf->indent();
             $code_buf->pushStr('FFANDOPEncode *result = [FFANDOPEncode new];');
@@ -79,7 +61,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('if (sign) {');
             $code_buf->pushIndent('[result sign];');
             $code_buf->pushStr('}');
-            $code_buf->pushStr('if (null != mask_key && mask_key.length() > 0) {');
+            $code_buf->pushStr('if (nil != mask_key && [mask_key length] > 0) {');
             $code_buf->pushIndent('[result mask:mask_key];');
             $code_buf->pushStr('}');
             //打包进去协议
@@ -117,8 +99,27 @@ class BinaryPack extends PackerBase
         }
         if (!$struct->isSubStruct()) {
             $code_buf->pushStr('return [result pack];');
+            $code_buf->backIndent()->pushStr('}');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (NSData *)binaryEncode {');
+            $code_buf->pushIndent('return [self doPack:NO is_sign:NO mask_key:nil];');
+            $code_buf->pushStr('}');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid {');
+            $code_buf->pushIndent('return [self doPack:pid is_sign:NO mask_key:nil];');
+            $code_buf->pushStr('}');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid is_sign:(BOOL)is_sign {');
+            $code_buf->pushIndent('return [self doPack:pid is_sign:is_sign mask_key:uil];');
+            $code_buf->pushStr('}');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid mask_key:(NSString *)mask_key {');
+            $code_buf->pushIndent('return [self doPack:pid is_sign:YES mask_key:mask_key];');
+            $code_buf->pushStr('}');
+        } else {
+            $code_buf->backIndent()->pushStr('}');
         }
-        $code_buf->backIndent()->pushStr('}');
+
     }
 
     /**
@@ -129,7 +130,48 @@ class BinaryPack extends PackerBase
      */
     public function buildUnpackMethod($struct, $code_buf)
     {
-
+        $code_buf->pushStr('/**');
+        $code_buf->pushStr(' * 二进制解包');
+        $code_buf->pushStr(' */');
+        if (!$struct->isSubStruct()) {
+            $this->pushImportCode('#import "FFANDOPDecode.h"');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (int)binaryDecode:(NSData *)data {')->indent();
+            $code_buf->pushStr('DopDecode decoder = new DopDecode(data);');
+            $code_buf->pushStr('DopStruct dop_struct = decoder.unpack();');
+            $code_buf->pushStr('if (null == dop_struct || decoder.getErrorCode() > 0) {');
+            $code_buf->pushIndent('return decoder.getErrorCode();');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('this.readDopStruct(dop_struct);');
+            $code_buf->pushStr('return 0;');
+            $code_buf->backIndent()->pushStr('}');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (int)binaryDecode:(NSData *)data mask_key:(NSString*)mask_key {')->indent();
+            $code_buf->pushStr('DopDecode decoder = new DopDecode(data);');
+            $code_buf->pushStr('DopStruct dop_struct = decoder.unpack(mask_key);');
+            $code_buf->pushStr('if (null == dop_struct || decoder.getErrorCode() > 0) {');
+            $code_buf->pushIndent('return decoder.getErrorCode();');
+            $code_buf->pushStr('}');
+            $code_buf->pushStr('this.readDopStruct(dop_struct);');
+            $code_buf->pushStr('return 0;');
+            $code_buf->backIndent()->pushStr('}');
+        }
+        $all_item = $struct->getAllExtendItem();
+        $code_buf->emptyLine();
+        $code_buf->pushStr('-(void) readDopStruct:(NSDictionary *)dop_struct) {');
+        $code_buf->indent();
+        $tmp_index = 0;
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item as $name => $item) {
+            $code_buf->pushStr('Item ' . $name . ' = dop_struct.get("' . $name . '");');
+            $code_buf->pushStr('if (null != ' . $name . ') {')->indent();
+            $this->unpackItemValue($code_buf, 'this.' . $name, $name, $item, $tmp_index, true);
+            $code_buf->backIndent()->pushStr('}');
+        }
+        $code_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -138,7 +180,7 @@ class BinaryPack extends PackerBase
      * @param string $var_name 变量名
      * @param string $result_name 结果数组
      * @param Item $item 节点对象
-     * @param $tmp_index
+     * @param int $tmp_index
      */
     private function packItemValue($code_buf, $var_name, $result_name, $item, &$tmp_index = 0)
     {
@@ -162,7 +204,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('[' . $result_name . ' ' . $func_name . ':' . $var_name . '];');
                 break;
             case ItemType::BOOL:
-                $code_buf->pushStr('[' . $result_name . ' writeChar: (' . $var_name . ' ? 1 : 0));');
+                $code_buf->pushStr('[' . $result_name . ' writeChar: (' . $var_name . ' ? 1 : 0)];');
                 break;
             case ItemType::STRUCT:
                 $code_buf->pushStr('[' . $var_name . ' binaryPack:' . $result_name . ']];');
@@ -183,7 +225,7 @@ class BinaryPack extends PackerBase
                 $code_buf->indent();
                 /** @var IntItem $item */
                 $class_name = $this->nsClassName($sub_item);
-                $code_buf->pushStr('if (!(' . $for_var_name . ' isKindOfClass [' . $class_name . ' class])){');
+                $code_buf->pushStr('if (![' . $for_var_name . ' isKindOfClass:[' . $class_name . ' class]]){');
                 $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
                 $for_var_name = self::objectChangeToBasic($sub_item, '(' . $class_name . ' *)' . $for_var_name);
@@ -192,39 +234,39 @@ class BinaryPack extends PackerBase
                 $code_buf->backIndent();
                 $code_buf->pushStr('}');
                 $code_buf->pushStr('[' . $result_name . ' writeLength:' . $len_var_name . '];');
-                $code_buf->pushStr('[' . $result_name . ' writeData:[' . $buffer_name . '.getData with_length:NO]];');
+                $code_buf->pushStr('[' . $result_name . ' writeData:[' . $buffer_name . ' getData] with_length:NO];');
                 break;
             case ItemType::MAP:
                 //临时buffer
                 $buffer_name = self::varName($tmp_index++, 'map_buf');
                 //长度变量
                 $len_var_name = self::varName($tmp_index++, 'len');
-                //循环变量
-                $for_var_name = self::varName($tmp_index++, 'item');
-                //stop
-                $stop_var_name = self::varName($tmp_index++, 'stop');
+                //Enumerator
+                $enumerator_name = self::varName($tmp_index++, 'enumerator');
                 //循环键名
                 $key_var_name = self::varName($tmp_index++, 'key');
                 $value_var_name = self::varName($tmp_index++, 'value');
                 $code_buf->pushStr('int ' . $len_var_name . ' = 0;');
+                $code_buf->pushStr('NSEnumerator *' . $enumerator_name . ' = ['. $var_name .'keyEnumerator];');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
                 $code_buf->pushStr('FFANDOPEncode *' . $buffer_name . ' = [FFANDOPEncode new];');
-                $code_buf->pushStr('[' . $var_name . ' enumerateKeysAndObjectsUsingBlock:^(id ' . $for_var_name . ', id ' . $value_var_name . ', BOOL *' . $stop_var_name . ') {');
+                $code_buf->pushStr('for (id ' . $key_var_name . ' in ' . $enumerator_name . '){');
                 $code_buf->indent();
+                $code_buf->pushStr('id '. $value_var_name .' = ['. $var_name .' objectForKey:'. $key_var_name .'];');
                 $key_class_type = $this->nsClassName($key_item);
                 $value_class_type = $this->nsClassName($value_item);
-                $code_buf->pushStr('if (' . $for_var_name . ' isKindOfClass[' . $key_class_type . ' class] && ' . $value_class_type . ' isKindOfClass[' . $value_var_name . ' class]) {')->indent();
-                $for_var_name = self::objectChangeToBasic($key_item, '(' . $key_class_type . ' *)' . $for_var_name);
+                $code_buf->pushStr('if ([' . $key_var_name . ' isKindOfClass:[' . $key_class_type . ' class]] && [' . $value_var_name . ' isKindOfClass:[' . $value_var_name . ' class]]) {')->indent();
+                $key_var_name = self::objectChangeToBasic($key_item, '(' . $key_class_type . ' *)' . $key_var_name);
                 $value_var_name = self::objectChangeToBasic($value_item, '(' . $value_class_type . ' *)' . $value_var_name);
-                self::packItemValue($code_buf, $for_var_name, $buffer_name, $key_item, $tmp_index);
+                self::packItemValue($code_buf, $key_var_name, $buffer_name, $key_item, $tmp_index);
                 self::packItemValue($code_buf, $value_var_name, $buffer_name, $value_item, $tmp_index);
                 $code_buf->pushStr('++' . $len_var_name . ';');
                 $code_buf->backIndent()->pushStr('}');
                 $code_buf->backIndent()->pushStr('}');
                 $code_buf->pushStr('[' . $result_name . ' writeLength:' . $len_var_name . '];');
-                $code_buf->pushStr('[' . $result_name . ' writeData:[' . $buffer_name . ' getData with_length:NO]];');
+                $code_buf->pushStr('[' . $result_name . ' writeData:[' . $buffer_name . ' getData] with_length:NO];');
                 break;
         }
     }
@@ -302,9 +344,9 @@ class BinaryPack extends PackerBase
             0x12 => 'Char',
             0x92 => 'UnsignedChar',
             0x22 => 'Int16',
-            0xa2 => 'Uint16',
+            0xa2 => 'UInt16',
             0x42 => 'Int32',
-            0xc2 => 'Uint32',
+            0xc2 => 'UInt32',
             0x82 => 'Int64',
         );
         if (!isset($func_arr[$bin_type])) {

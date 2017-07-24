@@ -149,7 +149,7 @@
  */
 - (NSData *)pack {
     if (opt_flag & DOP_OPTION_SIGN) {
-        NSString *sign_code = [FFANDOPEncode makeSignCode:buffer length:buffer.length];
+        NSString *sign_code = [FFANDOPEncode makeSignCode:buffer offset:0 length:buffer.length];
         NSData *bytes = [sign_code dataUsingEncoding:NSASCIIStringEncoding];
         [self writeBytes:bytes];
     }
@@ -173,9 +173,13 @@
 /**
  * 生成签名串
  */
-+ (NSString *)makeSignCode:(NSData *)data length:(size_t)len {
++ (NSString *)makeSignCode:(NSData *)data offset:(size_t)offset length:(size_t)len {
     unsigned char hex[16];
-    CC_MD5(data.bytes, (CC_LONG)len, hex);
+    Byte *raw_data = data.bytes;
+    if (offset > 0) {
+        raw_data += offset;
+    }
+    CC_MD5(raw_data, (CC_LONG)len, hex);
     return [NSString stringWithFormat: @"%02x%02x%02x%02x%02x%02x%02x%02x",
                     hex[0], hex[1], hex[2], hex[3], hex[4], hex[5], hex[6], hex[7]];
 }
@@ -183,7 +187,7 @@
 /**
  * 数据加密
  */
-+ (void)maskData:(NSMutableData *)data begin_pos:(size_t)beg_pos mask_key:(NSString *)mask_key {
++ (void)maskData:(NSData *)data begin_pos:(size_t)beg_pos mask_key:(NSString *)mask_key {
     Byte *raw_data = [data bytes];
     //如果mask_key太短了，就md5一下
     if (mask_key.length < DOP_MIN_MASK_KEY_LEN) {

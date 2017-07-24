@@ -34,8 +34,10 @@
 		E2B89DD56BA299C00BC52BD5 /* DOPRoleRequestDemoData.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89C546E71A65CD964A48C /* DOPRoleRequestDemoData.m */; };
 		E2B89DF357D574A6F8F7D9CA /* DOPMathMathTestTestArr.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89659DBB7C7DFE4D0BED2 /* DOPMathMathTestTestArr.m */; };
 		E2B89E1B82A8C0DA32B0F383 /* DOPRolePostRequestDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89FA541348CB5DDDEFF90 /* DOPRolePostRequestDemoRole.m */; };
+		E2B89E472AF2713E14ABF2DC /* FFANDOPDecode.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B890AAC5F7B027F5D3399E /* FFANDOPDecode.m */; };
 		E2B89EAC169E105FF81F7B69 /* DOPDataTestArr.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89DC6243A9EE99B43B77E /* DOPDataTestArr.m */; };
 		E2B89EC20C769F2D3D169D63 /* DOPRoleDeleteResponseDemoRole.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89F2A3A1EC77120AD55AB /* DOPRoleDeleteResponseDemoRole.m */; };
+		E2B89EC67B27178E649CA98D /* FFANDOPProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89AA0378D43658AF6FD17 /* FFANDOPProtocol.m */; };
 		E2B89EEFBB029BEF19A9B12A /* DOPRolePutResponseDemoRoleDataMapDemo.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B8970A1CD21A96FDA38F1C /* DOPRolePutResponseDemoRoleDataMapDemo.m */; };
 		E2B89F08B3D3C862C7E5258B /* FFANDOPEncode.m in Sources */ = {isa = PBXBuildFile; fileRef = E2B89E4F9C8E61177FBE2657 /* FFANDOPEncode.m */; };
 /* End PBXBuildFile section */
@@ -57,6 +59,7 @@
 		E2B8901A22EFDF33D78B6FC2 /* DOPRolePostResponseDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRolePostResponseDemoRole.h; sourceTree = "<group>"; };
 		E2B89022903C46A20711A33C /* DOPRolePostRequestDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRolePostRequestDemoRole.h; sourceTree = "<group>"; };
 		E2B8909F721F70F1C4B3BF73 /* DOPDataSimpleData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPDataSimpleData.h; sourceTree = "<group>"; };
+		E2B890AAC5F7B027F5D3399E /* FFANDOPDecode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFANDOPDecode.m; sourceTree = "<group>"; };
 		E2B890C89810EF7C7D27B735 /* DOPMathMathTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPMathMathTest.h; sourceTree = "<group>"; };
 		E2B89160EBFB2129D7E2DE87 /* DOPRoleRoleInfoChildren.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRoleRoleInfoChildren.h; sourceTree = "<group>"; };
 		E2B8917CCC4E995DCF4070BA /* DOPDataTestDataTestStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPDataTestDataTestStruct.h; sourceTree = "<group>"; };
@@ -65,6 +68,7 @@
 		E2B892D29030D1CACC2B3068 /* JsonTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JsonTest.m; sourceTree = "<group>"; };
 		E2B8934DDFA89BEDECD687AC /* DOPRolePostResponseNewRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRolePostResponseNewRole.h; sourceTree = "<group>"; };
 		E2B8936D2EE74492570E623F /* DOPRolePutResponseDemoRoleDataMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRolePutResponseDemoRoleDataMap.h; sourceTree = "<group>"; };
+		E2B8937B8348EAF7212820B9 /* FFANDOPProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFANDOPProtocol.h; sourceTree = "<group>"; };
 		E2B8938D83B7AF9C47D35545 /* DOPRoleRequestDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRoleRequestDemoRole.h; sourceTree = "<group>"; };
 		E2B893985DFA95AC689E2601 /* DOPRoleResponseDemoData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPRoleResponseDemoData.m; sourceTree = "<group>"; };
 		E2B893DE43F95A8C190FC7E9 /* DOPRolePostResponseNewRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPRolePostResponseNewRole.m; sourceTree = "<group>"; };
@@ -91,6 +95,7 @@
 		E2B898C727F96FD1C333FAE1 /* DOPDataTestArr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPDataTestArr.h; sourceTree = "<group>"; };
 		E2B898E5DDF08F9CA322B0DF /* mytest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mytest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2B898F4704EBCB79808CC2D /* FFANDOPUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFANDOPUtils.m; sourceTree = "<group>"; };
+		E2B89AA0378D43658AF6FD17 /* FFANDOPProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFANDOPProtocol.m; sourceTree = "<group>"; };
 		E2B89ADF92FD8C76F66B6892 /* TestBin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestBin.m; sourceTree = "<group>"; };
 		E2B89AEC01E7C6F8AEB772CC /* DOPRolePutResponseDemoRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPRolePutResponseDemoRole.h; sourceTree = "<group>"; };
 		E2B89B15776F131129A3442B /* DOPMathRequestAdd.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPMathRequestAdd.m; sourceTree = "<group>"; };
@@ -101,6 +106,7 @@
 		E2B89C060EA664F577670578 /* DOPMathRequestAdd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOPMathRequestAdd.h; sourceTree = "<group>"; };
 		E2B89C2080E4751901D2BF4B /* DOPRoleRoleInfoChildren.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPRoleRoleInfoChildren.m; sourceTree = "<group>"; };
 		E2B89C546E71A65CD964A48C /* DOPRoleRequestDemoData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPRoleRequestDemoData.m; sourceTree = "<group>"; };
+		E2B89CEE440F64BD7257F986 /* FFANDOPDecode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFANDOPDecode.h; sourceTree = "<group>"; };
 		E2B89CF9D5332E86D22F5BDB /* DOPDataTestDataNullStruct.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPDataTestDataNullStruct.m; sourceTree = "<group>"; };
 		E2B89D3796A4A38669D3020E /* JsonTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JsonTest.h; sourceTree = "<group>"; };
 		E2B89DA12FA026BFBB43BB21 /* DOPRolePostResponseDemoRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOPRolePostResponseDemoRole.m; sourceTree = "<group>"; };
@@ -145,6 +151,10 @@
 				E2B89B90A9DC2D26EF254E83 /* FFANDOPUtils.h */,
 				E2B89E4F9C8E61177FBE2657 /* FFANDOPEncode.m */,
 				E2B896D0C6A7E2D9E680A276 /* FFANDOPEncode.h */,
+				E2B890AAC5F7B027F5D3399E /* FFANDOPDecode.m */,
+				E2B89CEE440F64BD7257F986 /* FFANDOPDecode.h */,
+				E2B89AA0378D43658AF6FD17 /* FFANDOPProtocol.m */,
+				E2B8937B8348EAF7212820B9 /* FFANDOPProtocol.h */,
 			);
 			path = dop;
 			sourceTree = "<group>";
@@ -341,6 +351,8 @@
 				E2B896DC53B07E0994D73DC8 /* DOPRolePutResponseDemoRoleDataMap.m in Sources */,
 				E2B89EEFBB029BEF19A9B12A /* DOPRolePutResponseDemoRoleDataMapDemo.m in Sources */,
 				E2B89F08B3D3C862C7E5258B /* FFANDOPEncode.m in Sources */,
+				E2B89E472AF2713E14ABF2DC /* FFANDOPDecode.m in Sources */,
+				E2B89EC67B27178E649CA98D /* FFANDOPProtocol.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

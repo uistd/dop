@@ -300,7 +300,7 @@ public class DopDecode {
         if (0 != (this.opt_flag & DopEncode.OPTION_ENDIAN)) {
             this.byte_order = ByteOrder.BIG_ENDIAN;
         }
-        long total_len = this.readLength();
+        int total_len = this.readLength();
         if (this.max_pos - this.read_pos != total_len) {
             this.error_code = ERROR_SIZE;
             return;
@@ -371,6 +371,10 @@ public class DopDecode {
         if (!this.is_unpack_head) {
             this.unpackHead();
         }
+        if (this.isMask()) {
+            error_code = ERROR_MASK;
+            return null;
+        }
         if (0 != (this.opt_flag & DopEncode.OPTION_SIGN) && !this.checkSignCode()) {
             return null;
         }
@@ -401,6 +405,7 @@ public class DopDecode {
     private Map<String, DopProtocol> readProtocol(int length) {
         int end_pos = this.read_pos + length;
         if (end_pos > this.max_pos) {
+            error_code = ERROR_DATA;
             return null;
         }
         Map<String, DopProtocol> result = new LinkedHashMap<String, DopProtocol>();
