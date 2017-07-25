@@ -33,7 +33,8 @@
     if (![super init]) {
         return nil;
     }
-    buffer = data.bytes;
+    raw_data = data;
+    buffer = (char *) data.bytes;
     max_read_pos = data.length;
     return self;
 }
@@ -269,8 +270,8 @@
     if ((opt_flag & DOP_OPTION_SIGN) > 0 && ![self checkSignCode]) {
         return nil;
     }
-    NSDictionary *dop_protocol = [self read_protocol:[self readLength]];
-    if (nil == dop_protocol) {
+    NSArray *dop_protocol = [self read_protocol:[self readLength]];
+    if (nil == dop_protocol || error_code > 0) {
         return nil;
     }
     return [self read_protocol_data:dop_protocol];
@@ -286,16 +287,18 @@
 /**
  * 读出一组协议
  */
-- (NSDictionary *)read_protocol:(size_t)length {
+- (NSArray *)read_protocol:(size_t)length {
     size_t end_pos = read_pos + length;
     if (end_pos > max_read_pos) {
         error_code = DOP_ERROR_DATA;
         return nil;
     }
-    NSMutableDictionary *result = [NSMutableDictionary new];
+    NSMutableArray *result = [NSMutableArray new];
     while (0 == error_code && read_pos < end_pos) {
         NSString *name = [self readString];
-        result[name] = [self read_protocol_item];
+        FFANDOPProtocol *item = [self read_protocol_item];
+        item.name = name;
+        [result addObject:item];
     }
     if (error_code > 0) {
         return nil;
@@ -323,6 +326,12 @@
             item.sub_struct = [self read_protocol:len];
             break;
         }
+        case DOP_PROTOCOL_TYPE_STRING:
+        case DOP_PROTOCOL_TYPE_FLOAT:
+        case DOP_PROTOCOL_TYPE_DOUBLE:
+        case DOP_PROTOCOL_TYPE_BINARY:
+        case DOP_PROTOCOL_TYPE_BOOL:
+            break;
         case DOP_INT_TYPE_CHAR:
         case DOP_INT_TYPE_U_CHAR:
         case DOP_INT_TYPE_SHORT:
@@ -342,13 +351,11 @@
 /**
  * 读object
  */
-- (NSDictionary *)read_protocol_data:(NSDictionary *)protocol_list {
+- (NSDictionary *)read_protocol_data:(NSArray *)protocol_list {
     NSMutableDictionary *result = [NSMutableDictionary new];
-    NSEnumerator *keys_enum = [protocol_list keyEnumerator];
-    for (NSString *key in keys_enum) {
-        FFANDOPProtocol *item = [protocol_list valueForKey:key];
+    for (FFANDOPProtocol *item in protocol_list) {
         NSObject *value = [self read_item_data:item is_property:YES];
-        result[key] = value;
+        result[item.name] = value;
     }
     return result;
 }
@@ -384,6 +391,9 @@
             NSMutableArray *arr = [NSMutableArray new];
             uint32_t arr_size = [self readLength];
             for (uint32_t i = 0; i < arr_size; ++i) {
+                if (error_code > 0) {
+                    break;
+                }
                 [arr addObject:[self read_item_data:item.value_item is_property:NO]];
             }
             return arr;
@@ -393,13 +403,17 @@
             uint32_t arr_size = [self readLength];
             for (uint32_t i = 0; i < arr_size; ++i) {
                 NSObject *key = [self read_item_data:item.key_item is_property:NO];
-                map[key] = [self read_item_data:item.value_item is_property:NO];
+                NSObject *value = [self read_item_data:item.value_item is_property:NO];
+                if (error_code > 0) {
+                    break;
+                }
+                map[(id)key] = value;
             }
             return map;
         }
         default:
             error_code = DOP_ERROR_DATA;
-            return [NSNull new];
+            return @0;
     }
 }
 
@@ -407,37 +421,28 @@
  * 读出int值
  */
 - (NSNumber *)read_int_item_data:(uint8_t)int_type {
-    NSNumber *result = [NSNumber new];
     switch (int_type) {
         case DOP_INT_TYPE_CHAR:
-            [result initWithChar:[self readInt8]];
-            break;
+            return @([self readInt8]);
         case DOP_INT_TYPE_U_CHAR:
-            [result initWithUnsignedChar:[self readUInt8]];
-            break;
+            return @([self readUInt8]);
         case DOP_INT_TYPE_SHORT:
-            [result initWithShort:[self readInt16]];
-            break;
+            return @([self readInt16]);
         case DOP_INT_TYPE_U_SHORT:
-            [result initWithUnsignedShort:[self readUInt16]];
-            break;
+            return @([self readUInt16]);
         case DOP_INT_TYPE_INT:
-            [result initWithInt:[self readInt32]];
-            break;
+            return @([self readInt32]);
         case DOP_INT_TYPE_U_INT:
-            [result initWithUnsignedInt:[self readUInt32]];
-            break;
+            return @([self readUInt32]);
         case DOP_INT_TYPE_BIG_INT:
-            [result initWithLongLong:[self readInt64]];
-            break;
+            return @([self readInt64]);
         case 0:
             //bool值，特殊处理
-            [result initWithBool:[self readInt8]];
-            break;
+            return [[NSNumber alloc] initWithBool:[self readInt8]];
         default:
             error_code = DOP_ERROR_DATA;
     }
-    return result;
+    return @0;
 }
 
 /**

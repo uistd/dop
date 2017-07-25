@@ -35,7 +35,7 @@ class DictionaryPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * Dictionary 解析');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('- (void)dictionaryDecode:(NSDictionary*) dict_map {');
+        $code_buf->pushStr('- (void)dictionaryDecode:(NSDictionary*) dict_map {')->indent();
         $all_item = $struct->getAllExtendItem();
         $tmp_index = 0;
         /**

@@ -45,6 +45,7 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制打包');
         $code_buf->pushStr(' */');
+        $this->pushImportCode('#import "FFANDOPUtils.h"');
         //如果是子 struct
         if ($struct->isSubStruct()) {
             $code_buf->pushStr('- (void)binaryPack:(FFANDOPEncode *) result {');
@@ -237,10 +238,10 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('for (id ' . $key_var_name . ' in ' . $enumerator_name . '){');
                 $code_buf->indent();
                 $code_buf->pushStr('id '. $value_var_name .' = ['. $var_name .' objectForKey:'. $key_var_name .'];');
-                $key_class_type = $this->nsClassName($key_item);
                 $value_class_type = $this->nsClassName($value_item);
-                $code_buf->pushStr('if ([' . $key_var_name . ' isKindOfClass:[' . $key_class_type . ' class]] && [' . $value_var_name . ' isKindOfClass:[' . $value_var_name . ' class]]) {')->indent();
-                $key_var_name = self::objectChangeToBasic($key_item, '(' . $key_class_type . ' *)' . $key_var_name);
+                $code_buf->pushStr('if ([' . $value_var_name . ' isKindOfClass:[' . $value_var_name . ' class]]) {')->indent();
+                $key_ns_type = DictionaryPack::nsTypeName($key_item->getType());
+                $key_var_name = self::objectChangeToBasic($key_item, '[FFANDOPUtils idTo'. $key_ns_type .':'.$key_var_name.']');
                 $value_var_name = self::objectChangeToBasic($value_item, '(' . $value_class_type . ' *)' . $value_var_name);
                 self::packItemValue($code_buf, $key_var_name, $buffer_name, $key_item, $tmp_index);
                 self::packItemValue($code_buf, $value_var_name, $buffer_name, $value_item, $tmp_index);

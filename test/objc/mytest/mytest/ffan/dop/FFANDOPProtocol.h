@@ -32,13 +32,18 @@
 @property (nonatomic, assign)uint8_t type;
 
 /**
+ * 键名
+ */
+@property (nonatomic, copy)NSString *name;
+
+/**
  * Map 或者 LIST 的值
  */
 @property (nonatomic, retain)FFANDOPProtocol *value_item;
 
 @property (nonatomic, retain)FFANDOPProtocol *key_item;
 
-@property (nonatomic, retain)NSDictionary *sub_struct;
+@property (nonatomic, retain)NSArray *sub_struct;
 
 @property (nonatomic, assign)uint8_t int_type;
 

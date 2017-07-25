@@ -32,4 +32,9 @@
  */
 + (NSArray *)idToArray:(id)pointer;
 
+/**
+ * md5加密hex输出
+ */
++ (NSString *)md5Hex:(unsigned char *)bytes length:(size_t)length;
+
 @end

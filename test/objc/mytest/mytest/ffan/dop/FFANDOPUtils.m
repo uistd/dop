@@ -4,7 +4,7 @@
 //
 
 #import "FFANDOPUtils.h"
-
+#import <CommonCrypto/CommonDigest.h>
 
 @implementation FFANDOPUtils {
 
@@ -54,13 +54,13 @@
 + (NSMutableData *)idToData:(id)pointer {
     NSData *def = [NSData new];
     if (nil == pointer) {
-        return def;
+        return [def mutableCopy];
     }
     if ([pointer isKindOfClass:[NSString class]]) {
-        NSData *data = [[NSData alloc] initWithBase64EncodedString:(NSString *) pointer options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        NSMutableData *data = [[NSMutableData alloc] initWithBase64EncodedString:(NSString *) pointer options:NSDataBase64DecodingIgnoreUnknownCharacters];
         return data;
     }
-    return def;
+    return [def mutableCopy];
 }
 
 /**
@@ -105,4 +105,14 @@
     return def;
 }
 
+/**
+ * md5加密hex输出
+ */
++ (NSString *)md5Hex:(unsigned char *)bytes length:(size_t)length {
+    unsigned char hex[16];
+    CC_MD5(bytes, (CC_LONG)length, hex);
+    return [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                    hex[0], hex[1], hex[2], hex[3], hex[4], hex[5], hex[6], hex[7], hex[8],
+                    hex[9], hex[10], hex[11], hex[12], hex[13], hex[14], hex[15]];
+}
 @end

@@ -48,4 +48,23 @@ class HeadBinaryPack extends PackerBase
             $code_buf->emptyLine();
         }
     }
+
+    /**
+     * 数据反序列化
+     * @param Struct $struct 结构体
+     * @param CodeBuf $code_buf 生成的代码缓存
+     * @return void
+     */
+    public function buildUnpackMethod($struct, $code_buf)
+    {
+        if (!$struct->isSubStruct()) {
+            $code_buf->emptyLine();
+            $code_buf->pushStr('/**');
+            $code_buf->pushStr(' * 二进制解包');
+            $code_buf->pushStr(' */');
+            $code_buf->pushStr('- (int)binaryDecode:(NSData *)data;');
+            $code_buf->emptyLine();
+            $code_buf->pushStr('- (int)binaryDecode:(NSData *)data mask_key:(NSString*)mask_key;');
+        }
+    }
 }

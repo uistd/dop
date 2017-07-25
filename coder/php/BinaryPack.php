@@ -280,7 +280,7 @@ class BinaryPack extends PackerBase
             0xa2 => 'Short',
             0x42 => 'Int',
             0xc2 => 'Int',
-            0x82 => 'Bigint',
+            0x82 => 'BigInt',
         );
         if (!isset($func_arr[$bin_type])) {
             throw new Exception('Error int type:' . $bin_type);

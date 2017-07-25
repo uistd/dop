@@ -14,6 +14,7 @@
 #import "DOPDataTestDataTestStruct.h"
 #import "DOPDataTestArr.h"
 #import "FFANDOPEncode.h"
+#import "FFANDOPUtils.h"
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -91,11 +92,37 @@ int main(int argc, const char * argv[]) {
         NSLog(@"Sign code: %@", sign_code);
 
         FFANDOPEncode *encoder = [FFANDOPEncode new];
-        [encoder writeUnsignedChar:0x77];
-        [encoder writeString:@"This is test string"];
-        [encoder writeInt32:0x7ffffff];
         [encoder writeInt64:0x7ffffffffffffff];
         [encoder pack];
+        TestBin *bin2 = [[TestBin alloc] init];
+        [bin2 writeInt64:0x7fffffffffffffff];
+        NSLog(@"%@", [bin2 dumpToHex]);
+
+
+        NSData *bin_data_1 = [test binaryEncode];
+        NSLog(@"length: %@ md5:%@", @(bin_data_1.length), [FFANDOPUtils md5Hex:(unsigned char*)bin_data_1.bytes length:bin_data_1.length]);
+
+        DOPDataTestData *new_test_data = [DOPDataTestData new];
+        int re_1 = [new_test_data binaryDecode:bin_data_1];
+        NSLog(@"Binary decode result:%d", re_1);
+
+        NSData *bin_data_2 = [test binaryEncode:YES];
+        NSLog(@"length: %@ md5:%@", @(bin_data_2.length), [FFANDOPUtils md5Hex:(unsigned char*)bin_data_2.bytes length:bin_data_2.length]);
+
+        int re_2 = [new_test_data binaryDecode:bin_data_2];
+        NSLog(@"Binary decode result:%d", re_2);
+
+        NSData *bin_data_3 = [test binaryEncode:YES is_sign:YES];
+        NSLog(@"length: %@ md5:%@", @(bin_data_3.length), [FFANDOPUtils md5Hex:(unsigned char*)bin_data_3.bytes length:bin_data_3.length]);
+
+        int re_3 = [new_test_data binaryDecode:bin_data_3];
+        NSLog(@"Binary decode result:%d", re_3);
+
+        NSData *bin_data_4 = [test binaryEncode:YES mask_key:@"www.ffan.com"];
+        NSLog(@"length: %@ md5:%@", @(bin_data_4.length), [FFANDOPUtils md5Hex:(unsigned char*)bin_data_4.bytes length:bin_data_4.length]);
+
+        int re_4 = [new_test_data binaryDecode:bin_data_1 mask_key:@"www.ffan.com"];
+        NSLog(@"Binary decode result:%d", re_4);
     }
     return 0;
 

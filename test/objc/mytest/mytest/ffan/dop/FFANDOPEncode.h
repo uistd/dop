@@ -59,6 +59,8 @@
 
 - (void)sign;
 
+- (uint32_t)getSize;
+
 - (NSData *)pack;
 
 /**

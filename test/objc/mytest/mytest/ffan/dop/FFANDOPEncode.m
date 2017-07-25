@@ -4,8 +4,7 @@
 //
 
 #import "FFANDOPEncode.h"
-#import <CommonCrypto/CommonDigest.h>
-
+#import "FFANDOPUtils.h"
 
 @implementation FFANDOPEncode
 
@@ -21,8 +20,7 @@
 /**
  * 写入一个NSData
  */
-- (void)writeData:(NSData *)data with_length:(BOOL)with_len
-{
+- (void)writeData:(NSData *)data with_length:(BOOL)with_len {
     if (with_len) {
         [self writeLength:data.length];
     }
@@ -67,14 +65,12 @@
     [self writeBytes:(const char *) &value length:sizeof(uint32_t)];
 }
 
-- (void)writeFloat:(float)value
-{
-    [self writeBytes:(const char *)&value length:sizeof(float)];
+- (void)writeFloat:(float)value {
+    [self writeBytes:(const char *) &value length:sizeof(float)];
 }
 
-- (void)writeDouble:(double)value
-{
-    [self writeBytes:(const char *)&value length:sizeof(double)];
+- (void)writeDouble:(double)value {
+    [self writeBytes:(const char *) &value length:sizeof(double)];
 }
 
 - (NSString *)encode {
@@ -98,14 +94,13 @@
     //如果长度小于252 表示真实的长度
     if (length < 0xfc) {
         [self writeUnsignedChar:(uint8_t) length];
-    }
-        //如果长度小于等于65535，先写入 0xfc，后面再写入两位表示字符串长度
+    }//如果长度小于等于65535，先写入 0xfc，后面再写入两位表示字符串长度
     else if (length < 0xffff) {
         [self writeUnsignedChar:(uint8_t) 0xfc];
         [self writeUInt16:(uint16_t) length];
     } else {
         [self writeUnsignedChar:(uint8_t) 0xfe];
-        [self writeUInt32:(uint32_t)length];
+        [self writeUInt32:(uint32_t) length];
     }
 }
 
@@ -114,6 +109,7 @@
  */
 - (void)writeString:(NSString *)str {
     NSData *bytes = [str dataUsingEncoding:NSUTF8StringEncoding];
+    //NSLog(@"bytes len:%@", @(bytes.length));
     [self writeLength:bytes.length];
     [self writeBytes:bytes];
 }
@@ -150,6 +146,7 @@
 - (NSData *)pack {
     if (opt_flag & DOP_OPTION_SIGN) {
         NSString *sign_code = [FFANDOPEncode makeSignCode:buffer offset:0 length:buffer.length];
+        NSLog(@"Sign code: %@", sign_code);
         NSData *bytes = [sign_code dataUsingEncoding:NSASCIIStringEncoding];
         [self writeBytes:bytes];
     }
@@ -179,9 +176,8 @@
     if (offset > 0) {
         raw_data += offset;
     }
-    CC_MD5(raw_data, (CC_LONG)len, hex);
-    return [NSString stringWithFormat: @"%02x%02x%02x%02x%02x%02x%02x%02x",
-                    hex[0], hex[1], hex[2], hex[3], hex[4], hex[5], hex[6], hex[7]];
+    NSString *md5_str = [FFANDOPUtils md5Hex:raw_data length:len];
+    return [md5_str substringToIndex:DOP_SIGN_CODE_LEN];
 }
 
 /**
@@ -191,11 +187,8 @@
     Byte *raw_data = [data bytes];
     //如果mask_key太短了，就md5一下
     if (mask_key.length < DOP_MIN_MASK_KEY_LEN) {
-        unsigned char hex[16];
         NSData *mask_data = [mask_key dataUsingEncoding:NSUTF8StringEncoding];
-        CC_MD5(mask_data.bytes, (CC_LONG)mask_data.length, hex);
-        mask_key = [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-        hex[0], hex[1], hex[2], hex[3], hex[4], hex[5], hex[6], hex[7], hex[8], hex[9], hex[10], hex[11], hex[12], hex[13], hex[14], hex[15]];
+        mask_key = [FFANDOPUtils md5Hex:mask_data.bytes length:mask_data.length];
     }
     NSData *mask_data = [mask_key dataUsingEncoding:NSASCIIStringEncoding];
     Byte *mask_byte = [mask_data bytes];
@@ -209,13 +202,16 @@
 /**
  * 返回二进制数据
  */
-- (NSData *)getData
-{
+- (NSData *)getData {
     return buffer;
 }
 
 - (int)getErrorCode {
     return error_code;
+}
+
+- (uint32_t)getSize {
+    return buffer.length;
 }
 
 @end
