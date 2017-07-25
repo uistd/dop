@@ -15,7 +15,7 @@ typedef struct dop_protocol_item_s dop_protocol_item_t;
 @interface FFANDOPDecode : NSObject {
 @private
     NSData *raw_data;
-    Byte *buffer;
+    char *buffer;
     size_t read_pos;
     size_t max_read_pos;
     int error_code;
@@ -52,10 +52,5 @@ typedef struct dop_protocol_item_s dop_protocol_item_t;
 /**
  * 获取错误码
  */
-- (id)getErrorCode;
-
-/**
- * 获取错误消息
- */
-- (NSString *)getErrorMessage;
+- (int)getErrorCode;
 @end

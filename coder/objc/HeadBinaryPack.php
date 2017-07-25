@@ -4,14 +4,7 @@ namespace ffan\dop\coder\objc;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\PackerBase;
-use ffan\dop\Exception;
-use ffan\dop\protocol\IntItem;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
 
 /**
  * Class HeadBinaryPack
@@ -20,9 +13,13 @@ use ffan\dop\protocol\StructItem;
 class HeadBinaryPack extends PackerBase
 {
     /**
-     * @var Coder
+     * 获取依赖的packer
+     * @return null|array
      */
-    protected $coder;
+    public function getRequirePacker()
+    {
+        return array('struct', 'dictionary');
+    }
 
     /**
      * 数据序列化
@@ -38,8 +35,8 @@ class HeadBinaryPack extends PackerBase
         $code_buf->pushStr(' */');
         //如果是子 struct
         if ($struct->isSubStruct()) {
+            $this->pushImportCode('@class FFANDOPEncode;');
             $code_buf->pushStr('- (void)binaryPack:(FFANDOPEncode *) result;');
-            $code_buf->indent();
         } else {
             $code_buf->pushStr('- (NSData *)binaryEncode;');
             $code_buf->emptyLine();

@@ -10,26 +10,26 @@
 /**
  * 读出number
  */
-+ (NSNumber *)jsonReadNumber:(id)pointer;
++ (NSNumber *)idToNumber:(id)pointer;
 
 /**
  * 读出string
  */
-+ (NSString *)jsonReadString:(id)pointer;
++ (NSString *)idToString:(id)pointer;
 
 /**
  * 读出二进制
  */
-+ (NSMutableData *)jsonReadData:(id)pointer;
++ (NSMutableData *)idToData:(id)pointer;
 
 /**
  * 读出map
  */
-+ (NSDictionary *)jsonReadDictionary:(id)pointer;
++ (NSDictionary *)idToDictionary:(id)pointer;
 
 /**
  * 读出array
  */
-+ (NSArray *)jsonReadArray:(id)pointer;
++ (NSArray *)idToArray:(id)pointer;
 
 @end

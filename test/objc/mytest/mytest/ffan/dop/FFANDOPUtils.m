@@ -13,7 +13,7 @@
 /**
  * 读出number
  */
-+ (NSNumber *)jsonReadNumber:(id)pointer {
++ (NSNumber *)idToNumber:(id)pointer {
     NSNumber *def = @0;
     if (nil == pointer) {
         return def;
@@ -32,7 +32,7 @@
 /**
  * 读出string
  */
-+ (NSString *)jsonReadString:(id)pointer {
++ (NSString *)idToString:(id)pointer {
     NSString *def = @"";
     if (nil == pointer) {
         return def;
@@ -51,7 +51,7 @@
 /**
  * 读出二进制
  */
-+ (NSMutableData *)jsonReadData:(id)pointer {
++ (NSMutableData *)idToData:(id)pointer {
     NSData *def = [NSData new];
     if (nil == pointer) {
         return def;
@@ -66,7 +66,7 @@
 /**
  * 读出map
  */
-+ (NSDictionary *)jsonReadDictionary:(id)pointer {
++ (NSDictionary *)idToDictionary:(id)pointer {
     NSDictionary *def = [NSDictionary new];
     if (nil == pointer) {
         return def;
@@ -86,7 +86,7 @@
     return def;
 }
 
-+ (NSArray *)jsonReadArray:(id)pointer {
++ (NSArray *)idToArray:(id)pointer {
     NSArray *def = [NSArray new];
     if (nil == pointer) {
         return def;
@@ -100,6 +100,7 @@
         for (NSObject *object in enumeratorValue) {
             [result addObject:object];
         }
+        return result;
     }
     return def;
 }

@@ -87,7 +87,7 @@ int main(int argc, const char * argv[]) {
         BOOL re = [new_test jsonDecode:test_json];
         NSLog(@"json decode result:%d", re);
 
-        NSString *sign_code = [FFANDOPEncode makeSignCode:test.binary length:test.binary.length];
+        NSString *sign_code = [FFANDOPEncode makeSignCode:test.binary offset:0 length:test.binary.length];
         NSLog(@"Sign code: %@", sign_code);
 
         FFANDOPEncode *encoder = [FFANDOPEncode new];

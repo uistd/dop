@@ -30,7 +30,6 @@ class HeadStructPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        $this->pushImportCode('#import "FFANDOPEncode.h"');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');

@@ -10,6 +10,15 @@ use ffan\dop\build\PackerBase;
  */
 class HeadJsonPack extends PackerBase
 {
+    /**
+     * 获取依赖的packer
+     * @return null|array
+     */
+    public function getRequirePacker()
+    {
+        return array('dictionary');
+    }
+
     public function buildPackMethod($struct, $code_buf)
     {
         $code_buf->emptyLine();
@@ -29,9 +38,7 @@ class HeadJsonPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * json encode');
         $code_buf->pushStr(' */');
-        if ($struct->isSubStruct()) {
-            $code_buf->pushStr('- (void)jsonDecode:(NSDictionary*)json_dict;');
-        } else {
+        if (!$struct->isSubStruct()) {
             $code_buf->pushStr('- (BOOL)jsonDecode:(NSString*)json_str;');
         }
     }

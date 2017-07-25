@@ -30,8 +30,7 @@ class BinaryPack extends PackerBase
      */
     public function getRequirePacker()
     {
-        //依赖 struct 打包 和 数组 解包方法
-        return array('struct');
+        return array('struct', 'dictionary');
     }
 
     /**
@@ -66,7 +65,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('}');
             //打包进去协议
             $class_name = $this->coder->makeClassName($struct);
-            $code_buf->pushStr('[result writeData:[' . $class_name . ' binaryStruct] with_length:YES]];');
+            $code_buf->pushStr('[result writeData:[' . $class_name . ' binaryStruct] with_length:YES];');
         }
         $all_item = $struct->getAllExtendItem();
         $null_check_arr = array(
@@ -90,7 +89,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('} else {')->indent();
             }
             if (ItemType::STRUCT === $item_type) {
-                $code_buf->pushIndent('[result writeUnsignedChar:0xff];');
+                $code_buf->pushStr('[result writeUnsignedChar:0xff];');
             }
             $this->packItemValue($code_buf, 'self.' . $name, 'result', $item, $tmp_index);
             if ($is_null_check) {
@@ -110,7 +109,7 @@ class BinaryPack extends PackerBase
             $code_buf->pushStr('}');
             $code_buf->emptyLine();
             $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid is_sign:(BOOL)is_sign {');
-            $code_buf->pushIndent('return [self doPack:pid is_sign:is_sign mask_key:uil];');
+            $code_buf->pushIndent('return [self doPack:pid is_sign:is_sign mask_key:nil];');
             $code_buf->pushStr('}');
             $code_buf->emptyLine();
             $code_buf->pushStr('- (NSData *)binaryEncode:(BOOL)pid mask_key:(NSString *)mask_key {');
@@ -135,43 +134,26 @@ class BinaryPack extends PackerBase
         $code_buf->pushStr(' */');
         if (!$struct->isSubStruct()) {
             $this->pushImportCode('#import "FFANDOPDecode.h"');
-            $code_buf->emptyLine();
             $code_buf->pushStr('- (int)binaryDecode:(NSData *)data {')->indent();
-            $code_buf->pushStr('DopDecode decoder = new DopDecode(data);');
-            $code_buf->pushStr('DopStruct dop_struct = decoder.unpack();');
-            $code_buf->pushStr('if (null == dop_struct || decoder.getErrorCode() > 0) {');
-            $code_buf->pushIndent('return decoder.getErrorCode();');
+            $code_buf->pushStr('FFANDOPDecode *decoder = [[FFANDOPDecode alloc] initWithData:data];');
+            $code_buf->pushStr('NSDictionary *dop_struct = [decoder unpack];');
+            $code_buf->pushStr('if ([decoder getErrorCode] > 0) {');
+            $code_buf->pushIndent('return [decoder getErrorCode];');
             $code_buf->pushStr('}');
-            $code_buf->pushStr('this.readDopStruct(dop_struct);');
+            $code_buf->pushStr('[self dictionaryDecode:dop_struct];');
             $code_buf->pushStr('return 0;');
             $code_buf->backIndent()->pushStr('}');
             $code_buf->emptyLine();
             $code_buf->pushStr('- (int)binaryDecode:(NSData *)data mask_key:(NSString*)mask_key {')->indent();
-            $code_buf->pushStr('DopDecode decoder = new DopDecode(data);');
-            $code_buf->pushStr('DopStruct dop_struct = decoder.unpack(mask_key);');
-            $code_buf->pushStr('if (null == dop_struct || decoder.getErrorCode() > 0) {');
-            $code_buf->pushIndent('return decoder.getErrorCode();');
+            $code_buf->pushStr('FFANDOPDecode *decoder = [[FFANDOPDecode alloc] initWithData:data];');
+            $code_buf->pushStr('NSDictionary *dop_struct = [decoder unpack:mask_key];');
+            $code_buf->pushStr('if ([decoder getErrorCode] > 0) {');
+            $code_buf->pushIndent('return [decoder getErrorCode];');
             $code_buf->pushStr('}');
-            $code_buf->pushStr('this.readDopStruct(dop_struct);');
+            $code_buf->pushStr('[self dictionaryDecode:dop_struct];');
             $code_buf->pushStr('return 0;');
             $code_buf->backIndent()->pushStr('}');
         }
-        $all_item = $struct->getAllExtendItem();
-        $code_buf->emptyLine();
-        $code_buf->pushStr('-(void) readDopStruct:(NSDictionary *)dop_struct) {');
-        $code_buf->indent();
-        $tmp_index = 0;
-        /**
-         * @var string $name
-         * @var Item $item
-         */
-        foreach ($all_item as $name => $item) {
-            $code_buf->pushStr('Item ' . $name . ' = dop_struct.get("' . $name . '");');
-            $code_buf->pushStr('if (null != ' . $name . ') {')->indent();
-            $this->unpackItemValue($code_buf, 'this.' . $name, $name, $item, $tmp_index, true);
-            $code_buf->backIndent()->pushStr('}');
-        }
-        $code_buf->backIndent()->pushStr('}');
     }
 
     /**
@@ -207,7 +189,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('[' . $result_name . ' writeChar: (' . $var_name . ' ? 1 : 0)];');
                 break;
             case ItemType::STRUCT:
-                $code_buf->pushStr('[' . $var_name . ' binaryPack:' . $result_name . ']];');
+                $code_buf->pushStr('[' . $var_name . ' binaryPack:' . $result_name . '];');
                 break;
             case ItemType::ARR:
                 /** @var ListItem $item */
@@ -247,7 +229,7 @@ class BinaryPack extends PackerBase
                 $key_var_name = self::varName($tmp_index++, 'key');
                 $value_var_name = self::varName($tmp_index++, 'value');
                 $code_buf->pushStr('int ' . $len_var_name . ' = 0;');
-                $code_buf->pushStr('NSEnumerator *' . $enumerator_name . ' = ['. $var_name .'keyEnumerator];');
+                $code_buf->pushStr('NSEnumerator *' . $enumerator_name . ' = ['. $var_name .' keyEnumerator];');
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
@@ -327,7 +309,7 @@ class BinaryPack extends PackerBase
         if (!isset($change_arr[$item_type])) {
             return $code;
         }
-        $number_code = JsonPack::nsNumberCode($item);
+        $number_code = DictionaryPack::nsNumberCode($item);
         return '[' . $code . ' ' . $number_code . ']';
     }
 

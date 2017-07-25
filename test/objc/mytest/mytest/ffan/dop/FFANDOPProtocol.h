@@ -40,6 +40,6 @@
 
 @property (nonatomic, retain)NSDictionary *sub_struct;
 
-@property (nonatomic, assign)int int_type;
+@property (nonatomic, assign)uint8_t int_type;
 
 @end

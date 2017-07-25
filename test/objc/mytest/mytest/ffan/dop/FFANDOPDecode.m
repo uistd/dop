@@ -7,20 +7,27 @@
 #import "FFANDOPEncode.h"
 #import "FFANDOPProtocol.h"
 
-@interface FFANDOPEncode()
+@interface FFANDOPEncode ()
 - (void)unpackHead;
+
 - (BOOL)sizeCheck;
+
 - (BOOL)checkSignCode;
+
 - (BOOL)unmack:(NSString *)mask_key;
+
 - (NSDictionary *)read_protocol:(size_t)length;
+
 - (FFANDOPProtocol *)read_protocol_item;
+
 - (NSDictionary *)read_protocol_data:(NSDictionary *)protocol_list;
+
 - (NSObject *)read_item_data:(FFANDOPProtocol *)item is_property:(BOOL)is_property;
+
 - (NSNumber *)read_int_item_data:(uint8_t)int_type;
 @end
 
-@implementation FFANDOPDecode {
-}
+@implementation FFANDOPDecode
 
 - (id)initWithData:(NSData *)data {
     if (![super init]) {
@@ -43,7 +50,7 @@
     if (![self sizeCheck:1]) {
         return 0;
     }
-    return (uint8_t)buffer[read_pos++];
+    return (uint8_t) buffer[read_pos++];
 }
 
 - (int8_t)readInt8 {
@@ -59,9 +66,9 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(int16_t);
-    int16_t result = *(int16_t *)tmp;
+    int16_t result = *(int16_t *) tmp;
     if (is_big_endian) {
-        result = NTOHS(result);
+        NTOHS(result);
     }
     return result;
 }
@@ -72,9 +79,9 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(uint16_t);
-    uint16_t result = *(uint16_t *)tmp;
+    uint16_t result = *(uint16_t *) tmp;
     if (is_big_endian) {
-        result = NTOHS(result);
+        NTOHS(result);
     }
     return result;
 }
@@ -85,9 +92,9 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(int32_t);
-    int32_t result = *(int32_t *)tmp;
+    int32_t result = *(int32_t *) tmp;
     if (is_big_endian) {
-        result = NTOHL(result);
+        NTOHL(result);
     }
     return result;
 }
@@ -98,9 +105,9 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(uint32_t);
-    uint32_t result = *(uint32_t *)tmp;
+    uint32_t result = *(uint32_t *) tmp;
     if (is_big_endian) {
-        result = NTOHL(result);
+        NTOHL(result);
     }
     return result;
 }
@@ -111,9 +118,9 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(int64_t);
-    int64_t result = *(int64_t *)tmp;
+    int64_t result = *(int64_t *) tmp;
     if (is_big_endian) {
-        result = NTOHLL(result);
+        NTOHLL(result);
     }
     return result;
 }
@@ -124,7 +131,7 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(float);
-    float result = *(float *)tmp;
+    float result = *(float *) tmp;
     return result;
 }
 
@@ -134,7 +141,7 @@
     }
     char *tmp = buffer + read_pos;
     read_pos += sizeof(double);
-    double result = *(double *)tmp;
+    double result = *(double *) tmp;
     return result;
 }
 
@@ -151,15 +158,28 @@
 /**
  * 读出数据长度
  */
-- (uint32_t) readLength {
+- (uint32_t)readLength {
     uint8_t flag = [self readUInt8];
     if (flag < 0xfc) {
         return flag;
-    } else if(0xfc == flag) {
+    } else if (0xfc == flag) {
         return [self readUInt16];
     } else {
         return [self readUInt32];
     }
+}
+
+/**
+ * 读出二进制串
+ */
+- (NSData *)readBytes {
+    uint32_t length = [self readLength];
+    if (error_code > 0 || 0 == length || ![self sizeCheck:length]) {
+        return [NSData new];
+    }
+    NSData *result = [raw_data subdataWithRange:NSMakeRange(read_pos, length)];
+    read_pos += length;
+    return result;
 }
 
 - (void)unpackHead {
@@ -197,8 +217,7 @@
 /**
  * 获取数据ID
  */
-- (NSString *)getPid
-{
+- (NSString *)getPid {
     if (nil == pid) {
         return @"";
     }
@@ -250,11 +269,11 @@
     if ((opt_flag & DOP_OPTION_SIGN) > 0 && ![self checkSignCode]) {
         return nil;
     }
-    FFANDOPProtocol *dop_protocol = [self read_protocol:[self readLength]];
+    NSDictionary *dop_protocol = [self read_protocol:[self readLength]];
     if (nil == dop_protocol) {
         return nil;
     }
-
+    return [self read_protocol_data:dop_protocol];
 }
 
 - (NSDictionary *)unpack:(NSString *)mask_key {
@@ -291,7 +310,7 @@
     uint8_t type = [self readUInt8];
     FFANDOPProtocol *item = [FFANDOPProtocol new];
     item.type = type;
-    switch(type) {
+    switch (type) {
         case DOP_PROTOCOL_TYPE_ARRAY:
             item.value_item = [self read_protocol_item];
             break;
@@ -314,6 +333,8 @@
             item.int_type = type;
             item.type = DOP_PROTOCOL_TYPE_INT;
             break;
+        default:
+            error_code = DOP_ERROR_DATA;
     }
     return item;
 }
@@ -322,12 +343,14 @@
  * 读object
  */
 - (NSDictionary *)read_protocol_data:(NSDictionary *)protocol_list {
-    NSDictionary *result = [NSMutableDictionary new];
+    NSMutableDictionary *result = [NSMutableDictionary new];
     NSEnumerator *keys_enum = [protocol_list keyEnumerator];
     for (NSString *key in keys_enum) {
         FFANDOPProtocol *item = [protocol_list valueForKey:key];
-        //NSObject *value =
+        NSObject *value = [self read_item_data:item is_property:YES];
+        result[key] = value;
     }
+    return result;
 }
 
 /**
@@ -337,20 +360,91 @@
     uint8_t type = item.type;
     switch (type) {
         case DOP_PROTOCOL_TYPE_INT:
-
-            break;
+            return [self read_int_item_data:item.int_type];
         case DOP_PROTOCOL_TYPE_STRING:
             return [self readString];
+        case DOP_PROTOCOL_TYPE_BOOL:
+            return [self read_int_item_data:0];
         case DOP_PROTOCOL_TYPE_FLOAT:
             return [[NSNumber alloc] initWithFloat:[self readFloat]];
         case DOP_PROTOCOL_TYPE_DOUBLE:
             return [[NSNumber alloc] initWithDouble:[self readDouble]];
-
+        case DOP_PROTOCOL_TYPE_BINARY:
+            return [self readBytes];
+        case DOP_PROTOCOL_TYPE_STRUCT:
+            //如果是属性，要先读出一个标志位，判断是否为NULL
+            if (is_property) {
+                uint8_t flag = [self readUInt8];
+                if (0xff != flag) {
+                    return [NSNull new];
+                }
+            }
+            return [self read_protocol_data:item.sub_struct];
+        case DOP_PROTOCOL_TYPE_ARRAY: {
+            NSMutableArray *arr = [NSMutableArray new];
+            uint32_t arr_size = [self readLength];
+            for (uint32_t i = 0; i < arr_size; ++i) {
+                [arr addObject:[self read_item_data:item.value_item is_property:NO]];
+            }
+            return arr;
+        }
+        case DOP_PROTOCOL_TYPE_MAP: {
+            NSMutableDictionary *map = [NSMutableDictionary new];
+            uint32_t arr_size = [self readLength];
+            for (uint32_t i = 0; i < arr_size; ++i) {
+                NSObject *key = [self read_item_data:item.key_item is_property:NO];
+                map[key] = [self read_item_data:item.value_item is_property:NO];
+            }
+            return map;
+        }
+        default:
+            error_code = DOP_ERROR_DATA;
+            return [NSNull new];
     }
 }
 
+/**
+ * 读出int值
+ */
 - (NSNumber *)read_int_item_data:(uint8_t)int_type {
+    NSNumber *result = [NSNumber new];
+    switch (int_type) {
+        case DOP_INT_TYPE_CHAR:
+            [result initWithChar:[self readInt8]];
+            break;
+        case DOP_INT_TYPE_U_CHAR:
+            [result initWithUnsignedChar:[self readUInt8]];
+            break;
+        case DOP_INT_TYPE_SHORT:
+            [result initWithShort:[self readInt16]];
+            break;
+        case DOP_INT_TYPE_U_SHORT:
+            [result initWithUnsignedShort:[self readUInt16]];
+            break;
+        case DOP_INT_TYPE_INT:
+            [result initWithInt:[self readInt32]];
+            break;
+        case DOP_INT_TYPE_U_INT:
+            [result initWithUnsignedInt:[self readUInt32]];
+            break;
+        case DOP_INT_TYPE_BIG_INT:
+            [result initWithLongLong:[self readInt64]];
+            break;
+        case 0:
+            //bool值，特殊处理
+            [result initWithBool:[self readInt8]];
+            break;
+        default:
+            error_code = DOP_ERROR_DATA;
+    }
+    return result;
+}
 
+/**
+ * 获取错误码
+ */
+- (int)getErrorCode {
+    return error_code;
 }
 
 @end
