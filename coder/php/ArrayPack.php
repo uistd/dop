@@ -60,7 +60,7 @@ class ArrayPack extends PackerBase
         $code_buf->pushStr(' * 对象初始化');
         $code_buf->pushStr(' * @param array $data');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('public function arrayUnpack($data)');
+        $code_buf->pushStr('public function arrayUnpack(array $data)');
         $code_buf->pushStr('{');
         $code_buf->indent();
         $all_item = $struct->getAllExtendItem();

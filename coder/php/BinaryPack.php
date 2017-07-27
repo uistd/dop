@@ -3,7 +3,6 @@
 namespace ffan\dop\coder\php;
 
 use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\Exception;
 use ffan\dop\protocol\IntItem;
@@ -43,6 +42,7 @@ class BinaryPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
+        $this->pushImportCode('use ffan\\dop\\DopEncode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制打包');
@@ -126,11 +126,7 @@ class BinaryPack extends PackerBase
         if ($struct->isSubStruct()) {
             return;
         }
-        $class_file = $this->coder->getClassFileBuf($struct);
-        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
-        if ($use_buf) {
-            $use_buf->pushUniqueStr('use '. $this->coder->joinNameSpace('', 'DopDecode') .';');
-        }
+        $this->pushImportCode('use ffan\\dop\\DopDecode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制解包');

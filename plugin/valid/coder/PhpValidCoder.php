@@ -6,7 +6,6 @@ use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\PluginCoderBase;
 use ffan\dop\build\StrBuf;
-use ffan\dop\coder\php\Coder;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Struct;
@@ -28,14 +27,6 @@ class PhpValidCoder extends PluginCoderBase
      */
     public function buildCode()
     {
-        //加入autoload
-        $build_path = $this->plugin->getBuildPath();
-        $namespace = $this->plugin->getNameSpace();
-        $folder = $this->coder->getFolder();
-        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $namespace . "' => '$build_path',");
-        //生成公共文件
-        $base_class_file = $folder->touch($build_path, 'DopValidator.php');
-        $this->plugin->loadTpl($base_class_file, 'tpl/DopValidator.tpl', array('namespace' => $namespace));
         //方法生成到每个类中
         $this->coder->structIterator([$this, 'validateCode']);
     }

@@ -83,14 +83,18 @@ class Coder extends CoderBase
             throw new Exception('Can not found class name buf');
         }
         $class_name_buf->pushStr($main_class_name);
+        $extend_class = $this->getConfig('extend_class');
+        if ($extend_class) {
+            $class_name_buf->pushStr(' extends ' . $extend_class);
+        }
         //模板中的变量处理
         $class_file->setVariableValue('namespace', $this->joinNameSpace($name_space));
-        $class_file->setVariableValue('struct_node', ' '. $struct->getNote());
+        $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
 
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
-        if (!$method_buf || !$property_buf || !$use_buf ) {
+        if (!$method_buf || !$property_buf || !$use_buf) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
         $item_list = $struct->getAllExtendItem();
@@ -163,9 +167,6 @@ class Coder extends CoderBase
     {
         $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
         $this->loadTpl($main_buf, 'tpl/dop.tpl');
-        $folder = $this->getFolder();
-        $name_space = $this->joinNameSpace('');
-        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => ''," );
     }
 
     /**
@@ -179,7 +180,7 @@ class Coder extends CoderBase
         if (!$autoload_buf) {
             return;
         }
-        $autoload_buf->pushStr("'" . $this->joinNameSpace($xml_file) . "' => '" . $xml_file . "',");
+        $autoload_buf->pushStr("'" . $this->joinNameSpace($xml_file) . "' => \$dop_file_dir . '" . $xml_file . "',");
     }
 
     /**
@@ -214,7 +215,7 @@ class Coder extends CoderBase
     {
         $folder = $this->getFolder();
         $path = $struct->getNamespace();
-        $file_name = $struct->getClassName() .'.php';
+        $file_name = $struct->getClassName() . '.php';
         $file = $folder->getFile($path, $file_name);
         if (null === $file) {
             $file = $folder->touch($path, $file_name);

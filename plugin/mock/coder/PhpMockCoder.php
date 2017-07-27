@@ -7,7 +7,6 @@ use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\build\PluginCoderBase;
 use ffan\dop\build\StrBuf;
-use ffan\dop\coder\php\Coder;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
@@ -28,19 +27,8 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function buildCode()
     {
-        $build_path = $this->plugin->getBuildPath();
-        $folder = $this->coder->getFolder();
-        $name_space = $this->plugin->getNameSpace();
-        //在autoload中加入映射
-        $folder->writeToFile('', Coder::MAIN_FILE, 'autoload', "'" . $name_space . "' => '$build_path'," );
         //按xml文件生成代码
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
-        //生成公共文件
-        $base_class_file = $folder->touch($build_path, 'DopMock.php');
-        $tpl_data = array(
-            'namespace' => $name_space
-        );
-        $this->plugin->loadTpl($base_class_file, 'tpl/DopMock.tpl', $tpl_data);
     }
 
     /**
@@ -130,6 +118,7 @@ class PhpMockCoder extends PluginCoderBase
             case ItemType::ARR:
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
+                /** @var MockRule $sub_mock_rule */
                 $sub_mock_rule = $sub_item->getPluginData($plugin_name);
                 $for_var_name = PackerBase::varName($depth, 'i');
                 $len_var_name = PackerBase::varName($depth, 'len');
@@ -151,7 +140,9 @@ class PhpMockCoder extends PluginCoderBase
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
+                /** @var MockRule $key_mock_rule */
                 $key_mock_rule = $key_item->getPluginData($plugin_name);
+                /** @var MockRule $value_mock_rule */
                 $value_mock_rule = $value_item->getPluginData($plugin_name);
                 $for_var_name = PackerBase::varName($depth, 'i');
                 $len_var_name = PackerBase::varName($depth, 'len');

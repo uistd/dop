@@ -3,7 +3,6 @@
 namespace ffan\dop\coder\php;
 
 use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
@@ -22,20 +21,6 @@ class StructPack extends PackerBase
      * @var Coder
      */
     protected $coder;
-    
-    /**
-     * 通用代码
-     */
-    public function onLoad()
-    {
-        $folder = $this->coder->getFolder();
-        $dop_encode = $folder->touch('', 'DopEncode.php');
-        $dop_decode = $folder->touch('', 'DopDecode.php');
-        $namespace = $this->coder->joinNameSpace('');
-        $tpl_data = array('namespace' => $namespace);
-        $this->coder->loadTpl($dop_encode, 'tpl/DopEncode.tpl', $tpl_data);
-        $this->coder->loadTpl($dop_decode, 'tpl/DopDecode.tpl', $tpl_data);
-    }
 
     /**
      * 数据序列化
@@ -45,7 +30,7 @@ class StructPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        $this->buildUseCode($struct);
+        $this->pushImportCode('use ffan\\dop\\DopEncode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');
@@ -66,30 +51,6 @@ class StructPack extends PackerBase
         }
         $code_buf->pushStr('return $byte_array->dump();');
         $code_buf->backIndent()->pushStr('}');
-    }
-
-    /**
-     * 数据反序列化
-     * @param Struct $struct 结构体
-     * @param CodeBuf $code_buf 生成的代码缓存
-     * @return void
-     */
-    public function buildUnpackMethod($struct, $code_buf)
-    {
-        $this->buildUseCode($struct);
-    }
-
-    /**
-     * 将use ffan\dop\BinaryBuffer写入
-     * @param Struct $struct
-     */
-    private function buildUseCode($struct)
-    {
-        $class_file = $this->coder->getClassFileBuf($struct);
-        $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
-        if ($use_buf) {
-            $use_buf->pushUniqueStr('use '. $this->coder->joinNameSpace('', 'DopEncode') .';');
-        }
     }
 
     /**
