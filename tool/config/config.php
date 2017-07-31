@@ -8,4 +8,5 @@ return array(
         'url' => 'http://gitlab.ffan.biz/dop/demo.git'
     ),
     'runtime_path' => dirname(dirname(__DIR__)) . '/test/runtime',
+    'env' => 'dev'
 );

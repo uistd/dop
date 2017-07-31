@@ -137,7 +137,7 @@ class BuildOption
             $build_path = FFanUtils::joinPath($this->section_conf['root_path'], $build_path);
         }
         //代码生成目录
-        $this->build_path = FFanUtils::fixWithRootPath($build_path);
+        $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
         $this->coder_name = $section_conf['coder'];
