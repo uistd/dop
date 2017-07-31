@@ -31,8 +31,8 @@ class StructPack extends PackerBase
         $folder = $this->coder->getFolder();
         $dop_encode = $folder->touch('', 'DopEncode.js');
         $dop_decode = $folder->touch('', 'DopDecode.js');
-        $this->coder->loadTpl($dop_encode, 'tpl/DopEncode.js');
-        $this->coder->loadTpl($dop_decode, 'tpl/DopDecode.js');
+        $this->coder->loadTpl($dop_encode, 'views/DopEncode.js');
+        $this->coder->loadTpl($dop_decode, 'views/DopDecode.js');
     }
 
     /**

@@ -97,6 +97,12 @@ class BuildOption
             'code_side' => 'server',
             'utf8_bom' => false
         );
+        //将Public config append to section_conf
+        foreach ($public_conf as $name => $value) {
+            if (!isset($section_conf[$name])) {
+                $section_conf[$name] = $value;
+            }
+        }
         //修正缺失的配置项
         foreach ($default_config as $name => $value) {
             if (!isset($section_conf[$name])) {
@@ -126,8 +132,12 @@ class BuildOption
      */
     public function init($section_conf)
     {
+        $build_path = $section_conf['build_path'];
+        if (isset($this->section_conf['root_path'])) {
+            $build_path = FFanUtils::joinPath($this->section_conf['root_path'], $build_path);
+        }
         //代码生成目录
-        $this->build_path = FFanUtils::fixWithRootPath($section_conf['build_path']);
+        $this->build_path = FFanUtils::fixWithRootPath($build_path);
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
         $this->coder_name = $section_conf['coder'];

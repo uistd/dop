@@ -118,7 +118,7 @@ class Coder extends CoderBase
     {
         $main_class_name = $this->makeClassName($struct);
         $class_file = $this->getClassFileBuf($struct, 'm');
-        $this->loadTpl($class_file, 'tpl/class.m');
+        $this->loadTpl($class_file, 'views/class.m');
         $class_file->setVariableValue('class_name', $main_class_name);
         $class_import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $class_import_buf->pushUniqueStr('#import "'. $this->makeClassName($struct) .'.h"');

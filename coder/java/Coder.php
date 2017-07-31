@@ -101,7 +101,7 @@ class Coder extends CoderBase
         $main_class_name = $struct->getClassName();
         $name_space = $struct->getNamespace();
         $class_file = $this->getClassFileBuf($struct);
-        $this->loadTpl($class_file, 'tpl/class.java');
+        $this->loadTpl($class_file, 'views/class.java');
         $class_name_buf = $class_file->getBuf('java_class');
         if (null === $class_name_buf) {
             throw new Exception('Can not found class name buf');

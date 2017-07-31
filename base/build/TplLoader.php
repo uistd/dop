@@ -337,7 +337,7 @@ class TplLoader
         else {
             $flag = '::';
             $flag_pos = strpos($tag_content, $flag);
-            $err_msg = $this->errorMsg('Unknown tpl tag:' . self::LEFT_TAG . $tag_content . self::RIGHT_TAG);
+            $err_msg = $this->errorMsg('Unknown views tag:' . self::LEFT_TAG . $tag_content . self::RIGHT_TAG);
             if (false === $flag_pos) {
                 throw new Exception($err_msg);
             }

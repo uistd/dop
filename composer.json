@@ -16,7 +16,8 @@
   "require": {
     "php": ">=5.5.0",
     "ffan/php/utils": "*",
-    "ffan/php/tpl": "*"
+    "ffan/php/tpl": "*",
+    "ffan/php/git": "*"
   },
   "autoload": {
     "psr-4": {
