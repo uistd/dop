@@ -95,7 +95,8 @@ class BuildOption
             'namespace' => 'ffan\dop',
             'protocol_type' => 'action',
             'code_side' => 'server',
-            'utf8_bom' => false
+            'utf8_bom' => false,
+            'packer' => ''
         );
         //将Public config append to section_conf
         foreach ($public_conf as $name => $value) {

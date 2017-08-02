@@ -17,7 +17,8 @@
     "php": ">=5.5.0",
     "ffan/php/utils": "*",
     "ffan/php/tpl": "*",
-    "ffan/php/git": "*"
+    "ffan/php/git": "*",
+    "ffan/php/cache": "*"
   },
   "autoload": {
     "psr-4": {

@@ -46,7 +46,7 @@ class Coder extends CoderBase
     {
         $folder = $this->getFolder();
         $dop_file = $folder->touch('', 'dop.js');
-        $this->loadTpl($dop_file, 'views/dop.js');
+        $this->loadTpl($dop_file, 'tpl/dop.js');
     }
 
     /**

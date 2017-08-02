@@ -54,7 +54,7 @@ class HeadCoder extends CoderBase
     public function codeByStruct($struct)
     {
         $head_file = $this->getClassFileBuf($struct);
-        $this->loadTpl($head_file, 'views/header.h');
+        $this->loadTpl($head_file, 'tpl/header.h');
 
         $head_import_buf = $head_file->getBuf(FileBuf::IMPORT_BUF);
         $head_property_buf = $head_file->getBuf(FileBuf::PROPERTY_BUF);

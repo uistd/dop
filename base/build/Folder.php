@@ -35,6 +35,9 @@ class Folder
     public function __construct($base_dir, Manager $manager)
     {
         $this->base_dir = FFanUtils::fixWithRootPath($base_dir);
+        if (is_dir($this->base_dir)) {
+            FFanUtils::delDir($this->base_dir);
+        }
         $this->manager = $manager;
     }
 

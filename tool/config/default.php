@@ -1,18 +1,31 @@
 <?php
 return array(
+    'title' => 'DEMO',
     'protocol' => array(
         'git' => 'demo',
         'path' => 'protocol'
     ),
     'build' => array(
-        'php' => array(
-            'path' => 'php'
+        'main' => array(
+            'git' => 'demo',
+            'title' => 'PHP server class json'
         ),
-        'java' => array(
-            'path' => 'java',
+        'java_class' => array(
+            'git' => 'demo',
+            'title' => 'JAVA server class'
+
+        ),
+        'android' => array(
+            'git' => 'demo',
+            'title' => 'Android client class gson'
         ),
         'objc' => array(
-            'objc' => 'objc'
+            'git' => 'demo',
+            'title' => 'IOS client class json'
+        ),
+        'js' => array(
+            'git' => 'demo',
+            'title' => 'JS client class json binary'
         )
     )
 );
