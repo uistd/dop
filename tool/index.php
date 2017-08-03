@@ -4,8 +4,7 @@ require_once '../vendor/autoload.php';
 use ffan\php\git\Git;
 use ffan\php\git\GitRepo;
 use ffan\php\utils\Utils;
-
-//use ffan\php\cache\CacheFactory;
+use ffan\php\cache\CacheFactory;
 
 $config = require('config/config.php');
 ffan\php\utils\Config::init($config);
@@ -29,12 +28,75 @@ function action_main()
 }
 
 /**
+ * 显示分支列表
+ * @param string $project
+ */
+function action_branch($project)
+{
+    $branch_list = get_branch_list($project, !empty($_GET['is_force']));
+    view('branch', array(
+        'project' => $project,
+        'branch_list' => $branch_list
+    ));
+}
+
+/**
+ * 获取分支列表
+ * @param string $project
+ * @param bool $is_force 是否强制从远程获取
+ * @return array
+ */
+function get_branch_list($project, $is_force = false)
+{
+    $branch_list = null;
+    $cache_key = $project .'_branch';
+    //尝试从缓存获取分支列表
+    if (!$is_force) {
+        $cache_obj = CacheFactory::get('file');
+        $branch_list  = $cache_obj->get($cache_key);
+    }
+    if (!$branch_list) {
+        $conf_arr = get_config($project);
+        $git_instance = get_git_instance($conf_arr['protocol']['git']);
+        $branch_re = $git_instance->run('branch -r');
+        $branch_list = explode(PHP_EOL, trim($branch_re['result']));
+        //移除第一行
+        array_shift($branch_list);
+        foreach ($branch_list as &$each_str) {
+            $each_str = trim($each_str);
+        }
+        $cache_obj = CacheFactory::get('file');
+        $cache_obj->set($cache_key, $branch_list);
+    }
+    return $branch_list;
+}
+
+/**
  * 获取项目配置列表
  * @param string $project
  */
 function action_build_list($project)
 {
+    $branch = isset($_GET['branch']) ? $_GET['branch'] : '';
+    if (empty($branch)) {
+        show_error('缺少branch 参数');
+    }
+    $branch_list = get_branch_list($project);
+    if (!in_array($branch, $branch_list)) {
+        show_error('远程没有找到指定的分支:'. $branch);
+    }
     $conf_arr = get_config($project);
+    $git_instance = get_git_instance($conf_arr['protocol']['git']);
+    $local_branch_list = $git_instance->getLocalBranch();
+    $local_branch = str_replace('origin/', '', $branch);
+    //如果当前使用的分支,不是要生成代码的分支
+    if ($local_branch_list['use'] !== $local_branch) {
+        //如果
+        if (!in_array($local_branch, $local_branch_list['branch'])) {
+
+        }
+    }
+    return;
     view('build_list', array(
         'project' => $project,
         'build_list' => $conf_arr['build']

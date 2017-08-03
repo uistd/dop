@@ -29,7 +29,7 @@
                 <ul class="nav nav-pills">
                     {{foreach $config_list as $name => $each_conf}}
                         <li>
-                            <a href="index.php?a=build_list&project={{$name}}">{{$each_conf['title']}}</a>
+                            <a href="index.php?a=branch&project={{$name}}">{{$each_conf['title']}}</a>
                         </li>
                     {{/foreach}}
                 </ul>
