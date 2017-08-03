@@ -9,6 +9,9 @@
     <script src="https://admin.ffan.com/Public/js/jquery-2.1.0.min.js"></script>
 </head>
 <style>
+    .list-group-item {
+        cursor:pointer;
+    }
     #main_body{
         width:90%;
         margin: 20px auto;

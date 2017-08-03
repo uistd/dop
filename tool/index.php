@@ -5,6 +5,10 @@ use ffan\php\git\Git;
 use ffan\php\git\GitRepo;
 use ffan\php\utils\Utils;
 use ffan\php\cache\CacheFactory;
+use ffan\dop\build\BuildOption;
+
+ini_set('max_execution_time', 0);
+ini_set('memory_limit','1024M');
 
 $config = require('config/config.php');
 ffan\php\utils\Config::init($config);
@@ -33,10 +37,14 @@ function action_main()
  */
 function action_branch($project)
 {
+    $result_msg = array();
+    $conf_arr = get_config($project);
+    get_git_instance($conf_arr['protocol']['git'], $result_msg);
     $branch_list = get_branch_list($project, !empty($_GET['is_force']));
     view('branch', array(
         'project' => $project,
-        'branch_list' => $branch_list
+        'branch_list' => $branch_list,
+        'result_msg' => join(PHP_EOL, $result_msg)
     ));
 }
 
@@ -81,26 +89,79 @@ function action_build_list($project)
     if (empty($branch)) {
         show_error('缺少branch 参数');
     }
+    $result_msg = array();
+    $conf_arr = get_config($project);
+    $git_instance = get_git_instance($conf_arr['protocol']['git'], $result_msg);
+    branch_check($project, $branch);
+    if (!empty($_GET['is_force'])) {
+        $git_instance->pull();
+    }
+    $ini_path = Utils::joinPath($git_instance->getRepoPath(), $conf_arr['protocol']['path']);
+    $ini_file = Utils::joinFilePath($ini_path, 'build.ini');
+    if (!is_file($ini_file)) {
+        show_error('没有找到 '. $ini_file);
+    }
+    $build_conf = parse_ini_file($ini_file, true);
+    $build_list = array();
+    $public_conf = array();
+    foreach ($build_conf as $key => $each_build) {
+        if ('public' === $key) {
+            $public_conf = $each_build;
+            continue;
+        }
+        if (0 !== strpos($key, 'build')) {
+            continue;
+        }
+        $key = str_replace('build:', '', $key);
+        if (empty($key)) {
+            $key = 'main';
+        }
+        $build_opt = new BuildOption($key, $each_build, $public_conf);
+        $side = [];
+        if ($build_opt->hasBuildSide(BuildOption::SIDE_SERVER)) {
+            $side[] = 'server';
+        }
+        if ($build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
+            $side[] = 'client';
+        }
+        $build_list[$key] = array(
+            'coder' => $build_opt->getCoderName(),
+            'packer' => join(', ', $build_opt->getPacker()),
+            'side' => join(', ', $side),
+            'note' => $build_opt->getNote()
+        );
+    }
+    view('build_list', array(
+        'project' => $project,
+        'build_list' => $build_list,
+        'branch' => $branch,
+        'result_msg' => join(PHP_EOL, $result_msg)
+    ));
+}
+
+/**
+ * 分支检查
+ * @param string $project
+ * @param string $branch
+ */
+function branch_check($project, $branch)
+{
+    $conf_arr = get_config($project);
+    $git_instance = get_git_instance($conf_arr['protocol']['git']);
     $branch_list = get_branch_list($project);
     if (!in_array($branch, $branch_list)) {
         show_error('远程没有找到指定的分支:'. $branch);
     }
-    $conf_arr = get_config($project);
-    $git_instance = get_git_instance($conf_arr['protocol']['git']);
     $local_branch_list = $git_instance->getLocalBranch();
     $local_branch = str_replace('origin/', '', $branch);
     //如果当前使用的分支,不是要生成代码的分支
     if ($local_branch_list['use'] !== $local_branch) {
         //如果
         if (!in_array($local_branch, $local_branch_list['branch'])) {
-
+            $git_instance->fetch($local_branch);
         }
+        $git_instance->checkout($local_branch);
     }
-    return;
-    view('build_list', array(
-        'project' => $project,
-        'build_list' => $conf_arr['build']
-    ));
 }
 
 /**
@@ -109,30 +170,23 @@ function action_build_list($project)
  */
 function action_build($project)
 {
-    $conf_arr = get_config($project);
-    $build_name = isset($_GET['build_name']) ? $_GET['build_name'] : 'main';
-    if (!isset($conf_arr['build'][$build_name])) {
-        show_error('没有配置:' . $build_name);
+    $branch = isset($_GET['branch']) ? $_GET['branch'] : '';
+    if (empty($branch)) {
+        show_error('缺少branch 参数');
     }
+    $conf_arr = get_config($project);
+    $build_name = isset($_GET['build']) ? $_GET['build'] : 'main';
     $protocol_conf = $conf_arr['protocol'];
     $result_msg = array();
-    get_git_instance($protocol_conf['git'], $result_msg);
-    build_protocol($project, $build_name, $result_msg);
-    view("result", array('msg' => join(PHP_EOL, $result_msg)));
-}
-
-/**
- * 生成协议
- * @param string $project
- * @param string $build_name
- * @param array $result_msg
- */
-function build_protocol($project, $build_name, array &$result_msg = [])
-{
-    $conf_arr = get_config($project);
-
-    $git_instance = get_git_instance($conf_arr['build'][$build_name]['git']);
-    $git_instance->status(true);
+    $git_instance = get_git_instance($protocol_conf['git'], $result_msg);
+    branch_check($project, $branch);
+    $git_instance->pull();
+    $status_re = $git_instance->status(true);
+    $status_msg = trim($status_re['result']);
+    //当前分支不为空,重置分支
+    if (!empty($status_msg)) {
+        $git_instance->run('reset --hard '. $branch);
+    }
     $base_path = Utils::joinPath($git_instance->getRepoPath(), $conf_arr['protocol']['path']);
     $manager = new ffan\dop\Manager($base_path);
     $result_msg[] = 'build ' . $build_name;
@@ -150,6 +204,24 @@ function build_protocol($project, $build_name, array &$result_msg = [])
         $git_instance->commit('Dop tool generate code at:' . date('Y-m-d H:i:s', time()));
         $git_instance->push();
     }
+
+    build_protocol($project, $build_name, $result_msg);
+    view("result", array('msg' => join(PHP_EOL, $result_msg)));
+}
+
+/**
+ * 生成协议
+ * @param string $project
+ * @param string $build_name
+ * @param array $result_msg
+ */
+function build_protocol($project, $build_name, array &$result_msg = [])
+{
+    $conf_arr = get_config($project);
+    $git_instance = get_git_instance($conf_arr['protocol']['git']);
+
+
+
 }
 
 /**
@@ -169,8 +241,8 @@ function get_config($project)
     }
     /** @noinspection PhpIncludeInspection */
     $conf = require($config_file);
-    if (!isset($conf['protocol']) || !isset($conf['build'])) {
-        show_error('配置文件中必须包括 protocol 和 build 配置');
+    if (!isset($conf['protocol'])) {
+        show_error('配置文件中必须包括 protocol 配置');
     }
     if (!isset($conf['protocol']['path'])) {
         $conf['protocol']['path'] = 'protocol';
@@ -247,7 +319,7 @@ function get_all_build()
         /** @noinspection PhpIncludeInspection */
         $tmp_conf = require($full_file);
         //如果有设置这3项内容的
-        if (!isset($tmp_conf['protocol']) || !isset($tmp_conf['build'])) {
+        if (!isset($tmp_conf['protocol'])) {
             continue;
         }
         if (!isset($tmp_conf['title'])) {

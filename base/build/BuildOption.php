@@ -74,6 +74,11 @@ class BuildOption
     private $section_conf;
 
     /**
+     * @var string 说明
+     */
+    private $note;
+
+    /**
      * @var int 生成文件选项
      */
     private $file_option = 0;
@@ -210,7 +215,7 @@ class BuildOption
      * @param string $code_side
      * @return int
      */
-    public function parseCodeSide($code_side)
+    private function parseCodeSide($code_side)
     {
         $result = 0;
         $arr = FFanstr::split($code_side, ',');
@@ -270,6 +275,15 @@ class BuildOption
     public function getCoderName()
     {
         return $this->coder_name;
+    }
+
+    /**
+     * 获取说明(主要给工具使用)
+     * @return string
+     */
+    public function getNote()
+    {
+        return is_string($this->note) ? $this->note : '';
     }
 
     /**
