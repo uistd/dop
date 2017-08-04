@@ -112,10 +112,11 @@ function action_build_list($project)
         if (0 !== strpos($key, 'build')) {
             continue;
         }
-        $key = str_replace('build:', '', $key);
+        $key = str_replace('build', '', $key);
         if (empty($key)) {
             $key = 'main';
         }
+        $key = trim($key, ':');
         $build_opt = new BuildOption($key, $each_build, $public_conf);
         $side = [];
         if ($build_opt->hasBuildSide(BuildOption::SIDE_SERVER)) {
@@ -197,31 +198,15 @@ function action_build($project)
     $result_msg[] = $manager->getBuildLog();
     if ($re) {
         $git_re = $git_instance->status(true);
-        if (empty($git_re['result'])) {
-            return;
+        if (!empty($git_re['result'])) {
+            $git_instance->add();
+            $git_instance->commit('Dop tool generate code');
+            $git_instance->push();
+        } else {
+            $result_msg[] = 'Nothing to commit';
         }
-        $git_instance->add();
-        $git_instance->commit('Dop tool generate code at:' . date('Y-m-d H:i:s', time()));
-        $git_instance->push();
     }
-
-    build_protocol($project, $build_name, $result_msg);
     view("result", array('msg' => join(PHP_EOL, $result_msg)));
-}
-
-/**
- * 生成协议
- * @param string $project
- * @param string $build_name
- * @param array $result_msg
- */
-function build_protocol($project, $build_name, array &$result_msg = [])
-{
-    $conf_arr = get_config($project);
-    $git_instance = get_git_instance($conf_arr['protocol']['git']);
-
-
-
 }
 
 /**

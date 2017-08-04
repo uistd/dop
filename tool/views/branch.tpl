@@ -23,8 +23,9 @@
 <script>
     list_event();
     $('#next_button').click(function () {
+        disable_btn($(this));
         var item = $('.list-group-item.active');
-        if (0 === item.length) {
+        if (0 === item.length || $(this).hasClass('btn-disable')) {
             return;
         }
         var project = item.data('project');

@@ -30,8 +30,9 @@
 <script>
     list_event();
     $('#build_btn').click(function () {
+        disable_btn($(this));
         var item = $('.list-group-item.active');
-        if (0 === item.length) {
+        if (0 === item.length || $(this).hasClass('btn-disable')) {
             return;
         }
         var project = '{{$project}}';
