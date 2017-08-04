@@ -14,6 +14,7 @@ use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\StructItem;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class Coder
@@ -139,11 +140,22 @@ class Coder extends CoderBase
             }
             $property_line_buf = new StrBuf();
             $property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr('public ' . $item_type . ' ' . $name);
+            $property_line_buf->pushStr($item_type . ' ' . $name);
             if ($item->hasDefault()) {
                 $property_line_buf->pushStr(' = ' . $item->getDefault());
             }
             $property_line_buf->pushStr(';');
+
+            $method_buf->emptyLine();
+            $p_name = FFanStr::camelName($name);
+            $method_buf->pushStr('public function get'.$p_name .' {');
+            $method_buf->pushIndent('return this.'. $name.';');
+            $method_buf->pushStr('}');
+            $method_buf->emptyLine();
+            $method_buf->pushStr('public function set'. $p_name .'('.$item_type.' '.$name.') {');
+            $method_buf->pushIndent('this.'. $name .' = '. $name. ';');
+            $method_buf->pushStr('}');
+
         }
         $this->packMethodCode($class_file, $struct);
     }
