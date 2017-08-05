@@ -199,8 +199,14 @@ class Protocol
             if (!$action->hasAttribute('name')) {
                 throw new Exception('Action must have name attribute');
             }
-            $name = FFanStr::camelName(trim($action->getAttribute('name')));
-            $this->parseAction($name, $action);
+            //action 的name支持 /aa/bb 的格式
+            $name = $action->getAttribute('name');
+            $tmp_name = str_replace('/', '_', trim($name));
+            if ($tmp_name !== $name) {
+                $action->setAttribute('name', $tmp_name);
+            }
+            $tmp_name = FFanStr::camelName($tmp_name);
+            $this->parseAction($tmp_name, $action);
         }
     }
 

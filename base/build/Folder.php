@@ -4,6 +4,7 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\dop\Manager;
+use ffan\php\utils\Debug;
 use ffan\php\utils\Utils as FFanUtils;
 
 /**
