@@ -10,6 +10,12 @@ return array(
         'email' => 'huangshunzhao@wanda.cn'
     ),
 
+    'ffan-git:pangu_dop' => array(
+        'url' => 'ssh://git@gitlab.ffan.biz:8022/dop/pangu.git',
+        'username' => 'doptool',
+        'email' => '18844626@qq.com'
+    ),
+
     'runtime_path' => dirname(dirname(__DIR__)) . '/test/runtime',
     'env' => 'dev'
 );
