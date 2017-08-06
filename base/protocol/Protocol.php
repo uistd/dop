@@ -169,11 +169,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             //默认是公共的struct
-            $is_public = true;
-            if ($struct->hasAttribute('public') && false === (bool)$struct->getAttribute('public')) {
-                $is_public = false;
-            }
-            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_STRUCT, false);
+            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false);
         }
     }
 
@@ -491,7 +487,13 @@ class Protocol
         if (null === $type_node) {
             throw new Exception('List下必须包括一个指定list类型的节点');
         }
-        //$name .= 'List';
+        if ($type_node->hasAttribute('name')) {
+            $tmp_name = trim($type_node->getAttribute('name'));
+            if (!empty($tmp_name)) {
+                $this->checkName($tmp_name);
+                $name .= FFanStr::camelName($tmp_name);
+            }
+        }
         return $this->makeItemObject($name, $type_node);
     }
 
