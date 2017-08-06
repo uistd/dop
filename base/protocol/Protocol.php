@@ -255,18 +255,19 @@ class Protocol
             }
             $class_name = $action_name;
             $node_name = strtolower($node->nodeName);
+            $build_opt = $this->manager->getCurrentBuildOpt();
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
                     throw new Exception('Only one request node allowed');
                 }
                 $type = Struct::TYPE_REQUEST;
-                $node_name = 'In';
+                $node_name = $build_opt->getConfig('request_class_suffix', 'request');
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
                 $type = Struct::TYPE_RESPONSE;
-                $node_name = 'Out';
+                $node_name = $build_opt->getConfig('response_class_suffix', 'response');
             } else {
                 throw new Exception('Unknown node:' . $node_name);
             }
@@ -280,7 +281,7 @@ class Protocol
                 }
                 $node_name = ucfirst($method) . $node_name;
             }*/
-            $class_name = $this->joinName($node_name, $class_name);
+            $class_name = $this->joinName(FFanStr::camelName($node_name), $class_name);
             $this->current_struct_type = $type;
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($class_name, $node, false, $type);

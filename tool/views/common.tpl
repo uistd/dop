@@ -15,6 +15,6 @@
 
     function disable_btn(btn)
     {
-        btn.html('loading..').removeClass('btn-primary').addClass('btn-disable');
+        btn.html('loading..').removeClass('btn-primary');
     }
 </script>

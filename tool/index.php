@@ -161,7 +161,6 @@ function branch_check($project, $branch)
         if (!in_array($local_branch, $local_branch_list['branch'])) {
             $git_instance->fetch($local_branch);
         }
-        $git_instance->checkout($local_branch);
     }
 }
 

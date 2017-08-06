@@ -101,7 +101,9 @@ class BuildOption
             'protocol_type' => 'action',
             'code_side' => 'server',
             'utf8_bom' => false,
-            'packer' => ''
+            'packer' => '',
+            'request_class_suffix' => 'Request',
+            'response_class_suffix' => 'Response'
         );
         //将Public config append to section_conf
         foreach ($public_conf as $name => $value) {
@@ -150,6 +152,17 @@ class BuildOption
         $this->build_side = $this->parseCodeSide($section_conf['code_side']);
         $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
         $this->parsePacker($section_conf['packer']);
+    }
+
+    /**
+     * 获取配置
+     * @param string $name
+     * @param null $default 默认值
+     * @return string|null
+     */
+    public function getConfig($name, $default = null)
+    {
+        return isset($this->section_conf[$name]) ? $this->section_conf[$name] : $default;
     }
 
     /**

@@ -108,9 +108,7 @@ class Coder extends CoderBase
             throw new Exception('Can not found class name buf');
         }
         $class_name_buf->pushStr($main_class_name);
-        //模板中的变量处理
-        $class_file->setVariableValue('package', $this->joinNameSpace($name_space));
-        $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
+        $struct_type = $struct->getType();
 
         $import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
@@ -118,6 +116,27 @@ class Coder extends CoderBase
         if (!$method_buf || !$property_buf || !$import_buf) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
+
+        if (Struct::TYPE_REQUEST === $struct_type) {
+            $extend = $this->getConfigString('request_class_extends');
+            if (!empty($extend)) {
+                $class_name_buf->pushStr(' extends '. $extend);
+            }
+            $implement = $this->getConfigString('request_class_implements');
+            if (!empty($implement)) {
+                $class_name_buf->pushStr(' implements '. $implement);
+            }
+            $imports = $this->getConfigString('request_class_import');
+            if (!empty($imports)) {
+                $imports = FFanStr::split($imports, ',');
+                foreach ($imports as $imp_item) {
+                    $import_buf->pushStr($imp_item);
+                }
+            }
+        }
+        //模板中的变量处理
+        $class_file->setVariableValue('package', $this->joinNameSpace($name_space));
+        $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
