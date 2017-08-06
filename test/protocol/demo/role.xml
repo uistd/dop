@@ -63,7 +63,7 @@
             </struct>
         </list>
     </struct>
-    <action name="demo_role">
+    <action name="get_demo_role">
         <request>
             <int name="role_id">
                 <plugin_valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>
@@ -73,7 +73,7 @@
             <struct name="data" extend="role_info"/>
         </response>
     </action>
-    <action name="demo_role" method="post">
+    <action name="post_demo_role">
         <request>
             <string name="role_ids">
                 <plugin_valid require="1" error-msg="role_ids参数错误" format="mobile"/>
@@ -86,7 +86,7 @@
             </list>
         </response>
     </action>
-    <action name="new_role" method="post">
+    <action name="new_role">
         <request>
             <list name="roles">
                 <struct extend="role_info"/>
@@ -96,7 +96,7 @@
             <int name="re_code"/>
         </response>
     </action>
-    <action name="demo_role" method="delete">
+    <action name="del_demo_role">
         <request>
             <int name="role_id">
                 <plugin_mock value="10"/>
@@ -115,7 +115,7 @@
             <int name="re_code"/>
         </response>
     </action>
-    <action name="demo_role" method="put">
+    <action name="put_demo_role">
         <request>
             <string name="role_ids">
                 <plugin_valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>

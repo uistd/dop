@@ -260,15 +260,18 @@ class Protocol
                     throw new Exception('Only one request node allowed');
                 }
                 $type = Struct::TYPE_REQUEST;
+                $node_name = 'In';
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
                 $type = Struct::TYPE_RESPONSE;
+                $node_name = 'Out';
             } else {
                 throw new Exception('Unknown node:' . $node_name);
             }
-            $node_name = ucfirst($node_name);
+            /**
+             * 移除动 method 支持，暂时感觉没有必要
             if ($action->hasAttribute('method')) {
                 $method = trim($action->getAttribute('method'));
                 if (!in_array(strtoupper($method), self::$http_method_list)) {
@@ -276,8 +279,8 @@ class Protocol
                     throw new Exception($err_msg);
                 }
                 $node_name = ucfirst($method) . $node_name;
-            }
-            $class_name = $this->joinName($class_name, $node_name);
+            }*/
+            $class_name = $this->joinName($node_name, $class_name);
             $this->current_struct_type = $type;
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($class_name, $node, false, $type);

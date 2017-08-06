@@ -26,7 +26,7 @@ class FixPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 数据修正');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('function fixGsonResult() {')->indent();
+        $code_buf->pushStr('public void fixGsonResult() {')->indent();
         $all_item = $struct->getAllExtendItem();
         /**
          * @var string $name
