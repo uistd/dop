@@ -79,7 +79,7 @@ class Struct
      * @var array 所有item包括继承的
      */
     private $all_extend_item;
-    
+
     /**
      * @var bool 是否是从缓存加载的
      */
@@ -98,7 +98,7 @@ class Struct
         if (!is_string($namespace) || '/' !== $namespace[0]) {
             throw new \InvalidArgumentException('namespace error');
         }
-        $this->file = $file;
+        $this->file = str_replace('.xml', '', $file);
         $this->namespace = $namespace;
         $this->className = $name;
         $this->is_public = (bool)$is_public;
@@ -153,11 +153,16 @@ class Struct
 
     /**
      * 获取所在的文件
+     * @param bool $with_extend
      * @return string
      */
-    public function getFile()
+    public function getFile($with_extend = true)
     {
-        return $this->file;
+        $result = $this->file;
+        if ($with_extend) {
+            $result .= '.xml';
+        }
+        return $result;
     }
 
     /**

@@ -23,6 +23,11 @@ use ffan\php\utils\Str as FFanStr;
 class PhpMockCoder extends PluginCoderBase
 {
     /**
+     * @var string 当前正在使用的协议文件
+     */
+    private $current_file;
+
+    /**
      * 生成插件 PHP 代码
      */
     public function buildCode()
@@ -32,14 +37,25 @@ class PhpMockCoder extends PluginCoderBase
     }
 
     /**
+     * 根据文件名生成类名
+     * @param string $file_name
+     * @return string
+     */
+    private function fileNameToClassName($file_name)
+    {
+        return FFanStr::camelName('mock_' . str_replace('/', '_', $file_name));
+    }
+
+    /**
      * 按xml文件生成代码
      * @param string $file_name xml协议文件名
      * @param array $struct_list 该文件下的协议列表
      */
     public function mockCode($file_name, $struct_list)
     {
+        $this->current_file = $file_name;
         $build_path = $this->plugin->getBuildPath();
-        $class_name = FFanStr::camelName('mock_' . str_replace('/', '_', $file_name));
+        $class_name = $this->fileNameToClassName($file_name);
         $main_buf = $this->coder->getFolder()->touch($build_path, $class_name . '.php');
         $main_buf->pushStr('<?php');
         $main_buf->emptyLine();
@@ -134,7 +150,14 @@ class PhpMockCoder extends PluginCoderBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $func_name = 'mock' . $item->getStructName();
-                $mock_buf->pushStr($mock_item . ' = self::' . $func_name . '();');
+                $sub_struct = $item->getStruct();
+                $sub_file = $sub_struct->getFile(false);
+                if ($sub_file !== $this->current_file) {
+                    $mock_class_name = $this->fileNameToClassName($sub_file);
+                } else {
+                    $mock_class_name = 'self';
+                }
+                $mock_buf->pushStr($mock_item . ' = ' . $mock_class_name . '::' . $func_name . '();');
                 break;
             case ItemType::MAP:
                 /** @var MapItem $item */
