@@ -20,7 +20,6 @@ use ffan\dop\protocol\StructItem;
  */
 class Coder extends CoderBase
 {
-
     /**
      * 变量类型
      * @param Item $item

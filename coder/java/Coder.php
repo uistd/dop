@@ -158,7 +158,7 @@ class Coder extends CoderBase
 
         }
         $this->packMethodCode($class_file, $struct);
-        $this->makeClassName($class_name_buf, $class_file);
+        $this->fixClassName($class_name_buf, $class_file);
     }
 
     /**

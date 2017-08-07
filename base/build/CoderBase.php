@@ -615,7 +615,7 @@ abstract class CoderBase extends ConfigBase
      * @param StrBuf $class_name_buf
      * @param FileBuf $file_buf
      */
-    protected function makeClassName($class_name_buf, $file_buf)
+    protected function fixClassName($class_name_buf, $file_buf)
     {
         /** @var StrBuf $extend_buf */
         $extend_buf = $file_buf->getBuf(FileBuf::EXTENDS_BUF);
