@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
     <struct name="result" public="true">
-        <int name="status" note="状态码"/>
-        <string name="message" note="消息"/>
+        <int name="status" note="状态码">
+            <plugin_mock value="200"/>
+        </int>
+        <string name="message" note="消息">
+            <plugin_mock value="success"/>
+        </string>
         <int name="data" note="数据"/>
     </struct>
 </protocol>

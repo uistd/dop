@@ -83,10 +83,6 @@ class Coder extends CoderBase
             throw new Exception('Can not found class name buf');
         }
         $class_name_buf->pushStr($main_class_name);
-        $extend_class = $this->getConfig('extend_class');
-        if ($extend_class) {
-            $class_name_buf->pushStr(' extends ' . $extend_class);
-        }
         //模板中的变量处理
         $class_file->setVariableValue('namespace', $this->joinNameSpace($name_space));
         $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
@@ -97,6 +93,7 @@ class Coder extends CoderBase
         if (!$method_buf || !$property_buf || !$use_buf) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
+        $this->readClassConfig($class_file, $struct);
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
@@ -129,6 +126,7 @@ class Coder extends CoderBase
             $property_line_buf->pushStr(';');
         }
         $this->packMethodCode($class_file, $struct);
+        $this->fixClassName($class_name_buf, $class_file);
     }
 
     /**

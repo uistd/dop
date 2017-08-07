@@ -74,7 +74,7 @@ class Plugin extends PluginBase
         }
         //固定值
         if (!$find_flag && $node->hasAttribute('value')) {
-            $fixed_value = $this->read($node, '');
+            $fixed_value = $this->read($node, 'value');
             $mock_rule->fixed_value = self::fixValue($item_type, $fixed_value);
             $find_flag = true;
             $mock_rule->mock_type = MockRule::MOCK_FIXED;
