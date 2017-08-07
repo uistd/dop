@@ -108,32 +108,13 @@ class Coder extends CoderBase
             throw new Exception('Can not found class name buf');
         }
         $class_name_buf->pushStr($main_class_name);
-        $struct_type = $struct->getType();
-
         $import_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
         $property_buf = $class_file->getBuf(FileBuf::PROPERTY_BUF);
         if (!$method_buf || !$property_buf || !$import_buf) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
-
-        if (Struct::TYPE_REQUEST === $struct_type) {
-            $extend = $this->getConfigString('request_class_extends');
-            if (!empty($extend)) {
-                $class_name_buf->pushStr(' extends '. $extend);
-            }
-            $implement = $this->getConfigString('request_class_implements');
-            if (!empty($implement)) {
-                $class_name_buf->pushStr(' implements '. $implement);
-            }
-            $imports = $this->getConfigString('request_class_import');
-            if (!empty($imports)) {
-                $imports = FFanStr::split($imports, ',');
-                foreach ($imports as $imp_item) {
-                    $import_buf->pushStr($imp_item);
-                }
-            }
-        }
+        $this->readClassConfig($class_file, $struct);
         //模板中的变量处理
         $class_file->setVariableValue('package', $this->joinNameSpace($name_space));
         $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
@@ -167,16 +148,17 @@ class Coder extends CoderBase
 
             $method_buf->emptyLine();
             $p_name = FFanStr::camelName($name);
-            $method_buf->pushStr('public function get'.$p_name .' {');
+            $method_buf->pushStr('public '. $item_type .' get'.$p_name .' {');
             $method_buf->pushIndent('return this.'. $name.';');
             $method_buf->pushStr('}');
             $method_buf->emptyLine();
-            $method_buf->pushStr('public function set'. $p_name .'('.$item_type.' '.$name.') {');
+            $method_buf->pushStr('public void set'. $p_name .'('.$item_type.' '.$name.') {');
             $method_buf->pushIndent('this.'. $name .' = '. $name. ';');
             $method_buf->pushStr('}');
 
         }
         $this->packMethodCode($class_file, $struct);
+        $this->makeClassName($class_name_buf, $class_file);
     }
 
     /**

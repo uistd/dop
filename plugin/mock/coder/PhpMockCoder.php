@@ -23,10 +23,24 @@ use ffan\php\utils\Str as FFanStr;
 class PhpMockCoder extends PluginCoderBase
 {
     /**
+     * @var CodeBuf
+     */
+    private $autoload_buf;
+
+    /**
      * 生成插件 PHP 代码
      */
     public function buildCode()
     {
+        $folder = $this->coder->getFolder();
+        $include_file = $folder->touch($this->plugin->getBuildPath(), 'include.php');
+        $this->plugin->loadTpl($include_file, 'tpl/include.tpl');
+        $autoload_buf = $include_file->getBuf('autoload');
+        if (!$autoload_buf) {
+            throw new Exception('autoload buf mission');
+        }
+        $this->autoload_buf = $autoload_buf;
+
         //按xml文件生成代码
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
     }
@@ -57,6 +71,7 @@ class PhpMockCoder extends PluginCoderBase
         foreach ($struct_list as $struct) {
             $this->buildStructCode($struct, $main_buf);
         }
+        $this->autoload_buf->pushStr("'" . $this->plugin->getNameSpace(). '\\'. $class_name . "' => \$mock_file_dir,");
     }
 
     /**

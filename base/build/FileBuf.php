@@ -17,6 +17,9 @@ class FileBuf extends CodeBuf
     const METHOD_BUF = 'method';
     const HEADER_BUF = 'header';
     const IMPORT_BUF = 'import';
+    const EXTENDS_BUF = 'extends';
+    const IMPLEMENT_BUF = 'implements';
+    const CLASS_NAME_BUF = 'class_name';
 
     /**
      * @var array
