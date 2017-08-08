@@ -32,6 +32,15 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function buildCode()
     {
+        $folder = $this->coder->getFolder();
+        $include_file = $folder->touch($this->plugin->getBuildPath(), 'include.php');
+        $this->plugin->loadTpl($include_file, 'tpl/include.tpl');
+        $autoload_buf = $include_file->getBuf('autoload');
+        if (!$autoload_buf) {
+            throw new Exception('autoload buf mission');
+        }
+        $this->autoload_buf = $autoload_buf;
+
         //按xml文件生成代码
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
     }
@@ -59,11 +68,12 @@ class PhpMockCoder extends PluginCoderBase
         $main_buf = $this->coder->getFolder()->touch($build_path, $class_name . '.php');
         $main_buf->pushStr('<?php');
         $main_buf->emptyLine();
-        $main_buf->pushStr('namespace ' . $this->plugin->getNameSpace() . ';');
+        $class_ns = $this->makeClassNs($file_name);
+        $main_buf->pushStr('namespace ' . $class_ns . ';');
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
         $main_buf->emptyLine();
-        $main_buf->pushStr('class ' . $class_name . ' extends DopMock');
+        $main_buf->pushStr('class ' . $class_name . ' extends \ffan\dop\DopMock');
         $main_buf->pushStr('{');
         $main_buf->indent();
         $main_buf->touchBuf(FileBuf::METHOD_BUF);
@@ -73,6 +83,23 @@ class PhpMockCoder extends PluginCoderBase
         foreach ($struct_list as $struct) {
             $this->buildStructCode($struct, $main_buf);
         }
+        $this->autoload_buf->pushStr("'" . $class_ns . "' => \$mock_file_dir,");
+    }
+
+    /**
+     * 生成namespace
+     * @param string $file_name
+     * @return string
+     */
+    private function makeClassNs($file_name)
+    {
+        $ns = $this->plugin->getNameSpace();
+        $pos = strpos($file_name, '/');
+        if (false !== $pos) {
+            $file_name = substr($file_name, 0, $pos);
+        }
+        $ns .= '\\' . $file_name;
+        return $ns;
     }
 
     /**

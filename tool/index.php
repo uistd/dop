@@ -140,6 +140,52 @@ function action_build_list($project)
     ));
 }
 
+function action_test()
+{
+    $data='{  
+     "button":[  
+     {      
+          "type":"click",  
+          "name":"今日歌曲",  
+          "key":"V1001_TODAY_MUSIC"  
+      },  
+      {  
+           "type":"click",  
+           "name":"歌手简介",  
+           "key":"V1001_TODAY_SINGER"  
+      },  
+      {  
+           "name":"菜单",  
+           "sub_button":[  
+            {  
+               "type":"click",  
+               "name":"hello word",  
+               "key":"V1001_HELLO_WORLD"  
+            },  
+            {  
+               "type":"click",  
+               "name":"赞一下我们",  
+               "key":"V1001_GOOD"  
+            }]  
+       }]  
+ }';
+
+    $ch = curl_init('http://dop.ffan.com/index.php?a=test_2'); //请求的URL地址
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);//$data JSON类型字符串
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Content-Length: ' . strlen($data)));
+    $data = curl_exec($ch);
+    print_r($data);
+}
+
+function action_test_2()
+{
+    print_r($_REQUEST);
+    print_r($_SERVER);
+    var_dump(json_decode(file_get_contents("php://input"), true));
+}
+
 /**
  * 分支检查
  * @param string $project
@@ -161,7 +207,6 @@ function branch_check($project, $branch)
         if (!in_array($local_branch, $local_branch_list['branch'])) {
             $git_instance->fetch($local_branch);
         }
-        $git_instance->checkout($local_branch);
     }
 }
 

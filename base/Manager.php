@@ -113,6 +113,11 @@ class Manager
     private $folder_list;
 
     /**
+     * @var BuildOption 当前的build_opt
+     */
+    private $current_build_opt;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
@@ -283,12 +288,13 @@ class Manager
         }
         $section_config = $this->build_section[$name];
         $build_opt = new BuildOption($section, $section_config, $this->config);
+        $this->current_build_opt = $build_opt;
         $this->build_message = '';
         $result = true;
         try {
-            if (!$this->init_protocol_flag) {
+            //if (!$this->init_protocol_flag) {
                 $this->initProtocol();
-            }
+            //}
             $coder_class = $this->getCoderClass($build_opt->getCoderName());
             /** @var CoderBase $coder */
             $this->current_coder = $coder = new $coder_class($this, $build_opt);
@@ -348,22 +354,23 @@ class Manager
     {
         $this->init_protocol_flag = true;
         $file_list = $this->getAllFileList();
-        $use_flag = $this->isCacheProtocol();
-        if ($use_flag) {
-            $this->initCache();
-            $build_list = $this->filterCacheFile($file_list);
-        } else {
+        //@暂时取消缓存支持
+        //$use_flag = $this->isCacheProtocol();
+        //if ($use_flag) {
+        //    $this->initCache();
+        //   $build_list = $this->filterCacheFile($file_list);
+        //} else {
             $build_list = $file_list;
-        }
+        //}
         $this->build_file_list = $build_list;
         //解析文件
         foreach ($build_list as $xml_file => $v) {
             $this->parseFile($xml_file);
         }
         //从缓存中将struct补全
-        if ($use_flag) {
-            $this->loadStructFromCache($build_list, $file_list);
-        }
+        //if ($use_flag) {
+        //    $this->loadStructFromCache($build_list, $file_list);
+        //}
         /** @var Struct $struct */
         foreach ($this->struct_list as $struct) {
             $file = $struct->getFile();
@@ -372,13 +379,14 @@ class Manager
                 $struct->setCacheFlag(true);
             }
         }
-        //保存缓存文件
+        /*
+         * 保存缓存文件
         if ($use_flag) {
             $this->setCache('require_map', $this->require_map);
             $this->setCache('build_time', $file_list);
             $this->setCache('struct_list', $this->struct_list);
             $this->saveCache();
-        }
+        }*/
         Exception::setAppendMsg('Build files');
     }
 
@@ -868,5 +876,14 @@ class Manager
             $this->folder_list[$path] = $dop_folder;
         }
         return $this->folder_list[$path];
+    }
+
+    /**
+     * 获取当前的build opt
+     * @return BuildOption
+     */
+    public function getCurrentBuildOpt()
+    {
+        return $this->current_build_opt;
     }
 }

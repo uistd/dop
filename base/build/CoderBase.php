@@ -55,6 +55,26 @@ abstract class CoderBase extends ConfigBase
     protected $parent;
 
     /**
+     * @var string extends 关键字
+     */
+    protected $extends_flag = ' extends ';
+
+    /**
+     * @var string implements 关键字
+     */
+    protected $implements_flag = ' implements ';
+
+    /**
+     * @var string 多个 extends 的连接字符串
+     */
+    protected $extends_join_char = ',';
+
+    /**
+     * @var string 多个 implements 的连接字符串
+     */
+    protected $implements_join_char = ',';
+
+    /**
      * CoderBase constructor.
      * @param Manager $manager
      * @param BuildOption $build_opt
@@ -262,7 +282,7 @@ abstract class CoderBase extends ConfigBase
         $this->getAllPackerObject($packer_list, $this->packer_list);
         return $this->packer_list;
     }
-    
+
     /**
      * 是否存在某个packer
      * @param $packer_name
@@ -471,7 +491,7 @@ abstract class CoderBase extends ConfigBase
         $tpl_loader = TplLoader::getInstance($tpl_file);
         $tpl_loader->execute($file_buf, $data);
     }
-    
+
     /**
      * 返回两个路径之间的相对引用路径
      * @param string $path 引用的类路径
@@ -510,7 +530,7 @@ abstract class CoderBase extends ConfigBase
             $result = $relative_path;
         }
         if ('.' !== $result[0]) {
-            $result = './'. $result;
+            $result = './' . $result;
         }
         return $result;
     }
@@ -541,5 +561,73 @@ abstract class CoderBase extends ConfigBase
     public function isJsonIgnoreNull()
     {
         return $this->getConfigBool("json_ignore_null", true);
+    }
+
+    /**
+     * 读取类文件配置
+     * @param FileBuf $file_buf
+     * @param Struct $struct
+     */
+    protected function readClassConfig($file_buf, $struct)
+    {
+        $extends_buf = new StrBuf();
+        $file_buf->setBuf(FileBuf::EXTENDS_BUF, $extends_buf);
+        $implements_buf = new StrBuf();
+        $file_buf->setBuf(FileBuf::IMPLEMENT_BUF, $implements_buf);
+        $struct_type = $struct->getType();
+        if (Struct::TYPE_REQUEST === $struct_type) {
+            $conf_name = 'request';
+        } elseif (Struct::TYPE_RESPONSE === $struct_type) {
+            $conf_name = 'response';
+        } elseif (Struct::TYPE_DATA === $struct_type) {
+            $conf_name = 'data';
+        } else {
+            return;
+        }
+        $extends = $this->getConfigString($conf_name . '_class_extends');
+        if (!empty($extends)) {
+            $extends = FFanStr::split($extends, ',');
+            foreach ($extends as $item) {
+                $extends_buf->pushStr($item);
+            }
+        }
+        $implement = $this->getConfigString($conf_name . '_class_implements');
+        if (!empty($implement)) {
+            $implement = FFanStr::split($implement, ',');
+            foreach ($implement as $item) {
+                $implements_buf->pushStr($item);
+            }
+        }
+        $imports = $this->getConfigString($conf_name . '_class_import');
+        if (!empty($imports)) {
+            $imports = FFanStr::split($imports, '|');
+            $import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
+            if ($import_buf) {
+                foreach ($imports as $str) {
+                    $import_buf->pushStr($str);
+                }
+            }
+        }
+    }
+
+    /**
+     * class name 生成
+     * @param StrBuf $class_name_buf
+     * @param FileBuf $file_buf
+     */
+    protected function fixClassName($class_name_buf, $file_buf)
+    {
+        /** @var StrBuf $extend_buf */
+        $extend_buf = $file_buf->getBuf(FileBuf::EXTENDS_BUF);
+        if ($extend_buf && !$extend_buf->isEmpty()) {
+            $extend_buf->setJoinStr($this->extends_join_char);
+            $class_name_buf->pushStr( $this->extends_flag. $extend_buf->dump());
+        }
+        /** @var StrBuf $implement_buf */
+        $implement_buf = $file_buf->getBuf(FileBuf::IMPLEMENT_BUF);
+        if ($implement_buf && !$implement_buf->isEmpty()) {
+            $implement_buf->setJoinStr($this->implements_join_char);
+            $class_name_buf->pushStr($this->implements_flag . $implement_buf->dump());
+        }
     }
 }

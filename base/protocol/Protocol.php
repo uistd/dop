@@ -169,11 +169,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             //默认是公共的struct
-            $is_public = true;
-            if ($struct->hasAttribute('public') && false === (bool)$struct->getAttribute('public')) {
-                $is_public = false;
-            }
-            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_STRUCT, false);
+            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false);
         }
     }
 
@@ -259,20 +255,24 @@ class Protocol
             }
             $class_name = $action_name;
             $node_name = strtolower($node->nodeName);
+            $build_opt = $this->manager->getCurrentBuildOpt();
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
                     throw new Exception('Only one request node allowed');
                 }
                 $type = Struct::TYPE_REQUEST;
+                $node_name = $build_opt->getConfig('request_class_suffix', 'request');
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
                 $type = Struct::TYPE_RESPONSE;
+                $node_name = $build_opt->getConfig('response_class_suffix', 'response');
             } else {
                 throw new Exception('Unknown node:' . $node_name);
             }
-            $node_name = ucfirst($node_name);
+            /**
+             * 移除动 method 支持，暂时感觉没有必要
             if ($action->hasAttribute('method')) {
                 $method = trim($action->getAttribute('method'));
                 if (!in_array(strtoupper($method), self::$http_method_list)) {
@@ -280,8 +280,8 @@ class Protocol
                     throw new Exception($err_msg);
                 }
                 $node_name = ucfirst($method) . $node_name;
-            }
-            $class_name = $this->joinName($class_name, $node_name);
+            }*/
+            $class_name = $this->joinName(FFanStr::camelName($node_name), $class_name);
             $this->current_struct_type = $type;
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($class_name, $node, false, $type);
@@ -491,7 +491,13 @@ class Protocol
         if (null === $type_node) {
             throw new Exception('List下必须包括一个指定list类型的节点');
         }
-        //$name .= 'List';
+        if ($type_node->hasAttribute('name')) {
+            $tmp_name = trim($type_node->getAttribute('name'));
+            if (!empty($tmp_name)) {
+                $this->checkName($tmp_name);
+                $name .= FFanStr::camelName($tmp_name);
+            }
+        }
         return $this->makeItemObject($name, $type_node);
     }
 
