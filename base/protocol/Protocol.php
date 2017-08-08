@@ -311,6 +311,7 @@ class Protocol
             $item_arr[$item_name] = $item;
         }
         $extend_struct = null;
+        $build_opt = $this->manager->getCurrentBuildOpt();
         //继承关系
         if ($struct->hasAttribute('extend')) {
             if (!$allow_extend) {
@@ -318,6 +319,10 @@ class Protocol
             }
             $struct_name = trim($struct->getAttribute('extend'));
             $struct_name = $this->getFullName($struct_name);
+            $conf_suffix = $build_opt->getConfig('struct_class_suffix');
+            if (!empty($conf_suffix)) {
+                $struct_name .= FFanStr::camelName($conf_suffix);
+            }
             $extend_struct = $this->manager->loadRequireStruct($struct_name, $this->xml_file_name);
             if (null === $extend_struct) {
                 throw new Exception('无法找到Struct ' . $struct_name);
@@ -335,7 +340,6 @@ class Protocol
                 throw new Exception('Empty struct');
             }
         }
-        $build_opt = $this->manager->getCurrentBuildOpt();
         $class_name_suffix = $build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
         if (!empty($parent_node_name) && Struct::TYPE_STRUCT === $type) {
             $class_name = $parent_node_name. $class_name;
