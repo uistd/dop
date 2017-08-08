@@ -1,16 +1,14 @@
 {{include file="head.tpl"}}
 
 <div class="panel panel-default">
-    <div class="panel-heading">请选择分支 【<a href="index.php?a=branch&project={{$project}}&is_force=1">刷新分支</a>】</div>
+    <div class="panel-heading">请选择sss分支 【<a href="index.php?a=branch&project={{$project}}&is_force=1">刷新分支</a>】</div>
     <div class="panel-body">
         <div class="list-group">
-            {{$i = 0}}
             {{foreach $branch_list as $branch}}
-                <a class="list-group-item{{if 0 === $i}} active{{/if}}" data-project="{{$project}}"
+                <a class="list-group-item" data-project="{{$project}}"
                    data-branch="{{$branch}}">
                     {{$branch}}
                 </a>
-                {{$i++}}
             {{/foreach}}
         </div>
         <div class="panel-footer">

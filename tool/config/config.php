@@ -16,6 +16,12 @@ return array(
         'email' => '18844626@qq.com'
     ),
 
+    'ffan-git:pangu_uis' => array(
+        'url' => 'ssh://git@gitlab.ffan.biz:8022/uis/pangu.git',
+        'username' => 'doptool',
+        'email' => '18844626@qq.com'
+    ),
+
     'runtime_path' => dirname(dirname(__DIR__)) . '/test/runtime',
     'env' => 'dev'
 );

@@ -8,7 +8,7 @@ use ffan\php\cache\CacheFactory;
 use ffan\dop\build\BuildOption;
 
 ini_set('max_execution_time', 0);
-ini_set('memory_limit','1024M');
+ini_set('memory_limit', '1024M');
 
 $config = require('config/config.php');
 ffan\php\utils\Config::init($config);
@@ -58,11 +58,11 @@ function action_branch($project)
 function get_branch_list($git_conf, $is_force = false)
 {
     $branch_list = null;
-    $cache_key = $git_conf .'_branch';
+    $cache_key = $git_conf . '_branch';
     //尝试从缓存获取分支列表
     if (!$is_force) {
         $cache_obj = CacheFactory::get('file');
-        $branch_list  = $cache_obj->get($cache_key);
+        $branch_list = $cache_obj->get($cache_key);
     }
     if (!$branch_list) {
         $git_instance = get_git_instance($git_conf);
@@ -99,7 +99,7 @@ function action_build_list($project)
     $ini_path = Utils::joinPath($git_instance->getRepoPath(), $conf_arr['protocol']['path']);
     $ini_file = Utils::joinFilePath($ini_path, 'build.ini');
     if (!is_file($ini_file)) {
-        show_error('没有找到 '. $ini_file);
+        show_error('没有找到 ' . $ini_file);
     }
     $build_conf = parse_ini_file($ini_file, true);
     $build_list = array();
@@ -129,7 +129,8 @@ function action_build_list($project)
             'coder' => $build_opt->getCoderName(),
             'packer' => join(', ', $build_opt->getPacker()),
             'side' => join(', ', $side),
-            'note' => $build_opt->getNote()
+            'note' => $build_opt->getNote(),
+            'next_step' => has_push_select_step($conf_arr, $key)
         );
     }
     view('build_list', array(
@@ -138,6 +139,35 @@ function action_build_list($project)
         'branch' => $branch,
         'result_msg' => join(PHP_EOL, $result_msg)
     ));
+}
+
+/**
+ * 代码生成好后的推送分支列表
+ */
+function action_push_list($project)
+{
+    $branch = isset($_GET['branch']) ? $_GET['branch'] : '';
+    if (empty($branch)) {
+        show_error('缺少branch 参数');
+    }
+    $conf_arr = get_config($project);
+    $result_msg = array();
+    $build_name = isset($_GET['build']) ? $_GET['build'] : 'main';
+    if (!has_push_select_step($conf_arr, $build_name)) {
+        show_error('没有推送git 配置');
+    }
+    $push_set = $conf_arr['push'][$build_name];
+    get_git_instance($push_set['git'], $result_msg);
+    if (empty($_GET['push_branch'])) {
+        $view_set = array(
+            'project' => $project,
+            'build_name' => $build_name,
+            'branch' => $branch,
+            'push_branch_list' => get_branch_list($push_set['git'], !empty($_GET['is_force'])),
+            'result_msg' => join(PHP_EOL, $result_msg)
+        );
+        view('push_branch_list', $view_set);
+    }
 }
 
 /**
@@ -152,7 +182,7 @@ function branch_check($project, $branch)
     $git_instance = get_git_instance($git_conf);
     $branch_list = get_branch_list($git_conf);
     if (!in_array($branch, $branch_list)) {
-        show_error('远程没有找到指定的分支:'. $branch);
+        show_error('远程没有找到指定的分支:' . $branch);
     }
     $local_branch_list = $git_instance->getLocalBranch();
     $local_branch = str_replace('origin/', '', $branch);
@@ -166,6 +196,21 @@ function branch_check($project, $branch)
 }
 
 /**
+ * 是否存在 选择 push 代码分支选择
+ * @param array $conf_arr
+ * @param string $build_name
+ * @return bool
+ */
+function has_push_select_step($conf_arr, $build_name)
+{
+    if (!isset($conf_arr['push'][$build_name])) {
+        return false;
+    }
+    $conf_arr = $conf_arr['push'][$build_name];
+    return isset($conf_arr['git'], $conf_arr['path']);
+}
+
+/**
  * 代码生成
  * @param string $project
  */
@@ -176,9 +221,20 @@ function action_build($project)
         show_error('缺少branch 参数');
     }
     $conf_arr = get_config($project);
+    $result_msg = array();
     $build_name = isset($_GET['build']) ? $_GET['build'] : 'main';
-    if (isset($conf_arr['push'][$build_name])) {
+    if (has_push_select_step($conf_arr, $build_name)) {
         $push_set = $conf_arr['push'][$build_name];
+        $push_git = get_git_instance($push_set['git'], $result_msg);
+        if (empty($_GET['push_branch'])) {
+            $view_set = array(
+                'project' => $project,
+                'build_name' => $build_name,
+                'build_branch' => $branch,
+                'push_branch' => get_branch_list($push_set['git'], !empty($_GET['is_force']))
+            );
+            view('push_branch_list', $view_set);
+        }
     }
     $protocol_conf = $conf_arr['protocol'];
     $result_msg = array();
@@ -189,7 +245,7 @@ function action_build($project)
     $status_msg = trim($status_re['result']);
     //当前分支不为空,重置分支
     if (!empty($status_msg)) {
-        $git_instance->run('reset --hard '. $branch);
+        $git_instance->run('reset --hard ' . $branch);
     }
     $base_path = Utils::joinPath($git_instance->getRepoPath(), $conf_arr['protocol']['path']);
     $manager = new ffan\dop\Manager($base_path);
