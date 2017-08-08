@@ -4,5 +4,11 @@ return array(
     'protocol' => array(
         'git' => 'pangu_dop',
         'path' => 'protocol'
+    ),
+    'push' => array(
+        'main' => array(
+            'git' => 'pangu_uis',
+            'path' => 'protocol'
+        )
     )
 );
