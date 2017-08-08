@@ -169,7 +169,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             //默认是公共的struct
-            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false, '');
+            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false);
         }
     }
 
@@ -232,7 +232,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             $is_public = true === (bool)$struct->getAttribute('public');
-            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false, '');
+            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false);
         }
     }
 
@@ -269,10 +269,10 @@ class Protocol
             } else {
                 throw new Exception('Unknown node:' . $node_name);
             }
-            //$class_name = $this->joinName(FFanStr::camelName($node_name), $class_name);
             $this->current_struct_type = $type;
+            $name = FFanStr::camelName($class_name);
             /** @var \DOMElement $node */
-            $struct = $this->parseStruct($class_name, $node, false, $type, true, $action_name);
+            $struct = $this->parseStruct($name, $node, false, $type);
             $struct->addReferType($type);
         }
     }
@@ -284,11 +284,10 @@ class Protocol
      * @param bool $is_public 是否可以被extend
      * @param int $type 类型
      * @param bool $allow_extend 是否允许extend其它struct
-     * @param string $parent_node_name 上级节点名称
      * @return Struct
      * @throws Exception
      */
-    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true, $parent_node_name = '')
+    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
     {
         $node_list = $struct->childNodes;
         $item_arr = array();
@@ -304,7 +303,7 @@ class Protocol
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
-            $item = $this->makeItemObject(FFanStr::camelName($item_name), $node, $parent_node_name);
+            $item = $this->makeItemObject(FFanStr::camelName($item_name), $node);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }
@@ -341,9 +340,6 @@ class Protocol
             }
         }
         $class_name_suffix = $build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
-        if (!empty($parent_node_name) && Struct::TYPE_STRUCT === $type) {
-            $class_name = $parent_node_name. $class_name;
-        }
         $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
         $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file_name, $type, $is_public);
         //如果有注释
@@ -364,11 +360,10 @@ class Protocol
      * 生成item对象
      * @param string $name
      * @param \DOMNode $dom_node 节点
-     * @param string $parent_class_name
      * @return Item
      * @throws Exception
      */
-    private function makeItemObject($name, $dom_node, $parent_class_name = '')
+    private function makeItemObject($name, $dom_node)
     {
         $type = ItemType::getType($dom_node->nodeName);
         if (null === $type) {
@@ -386,18 +381,18 @@ class Protocol
                 break;
             case ItemType::ARR:
                 $item_obj = new ListItem($name, $this->manager);
-                $list_item = $this->parseList($name, $dom_node, $parent_class_name);
+                $list_item = $this->parseList($name, $dom_node);
                 $item_obj->setItem($list_item);
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->manager);
-                $struct_obj = $this->parsePrivateStruct($name, $dom_node, $parent_class_name);
+                $struct_obj = $this->parsePrivateStruct($name, $dom_node);
                 $item_obj->setStruct($struct_obj);
                 $struct_obj->addReferType($this->current_struct_type);
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->manager);
-                $this->parseMap($name, $dom_node, $item_obj, $parent_class_name);
+                $this->parseMap($name, $dom_node, $item_obj);
                 break;
             case ItemType::INT:
                 $item_obj = new IntItem($name, $this->manager);
@@ -467,11 +462,10 @@ class Protocol
      * 解析list
      * @param string $name
      * @param \DOMNode $item 节点
-     * @param string $parent_class_name
      * @return Item
      * @throws Exception
      */
-    private function parseList($name, \DOMNode $item, $parent_class_name)
+    private function parseList($name, \DOMNode $item)
     {
         $item_list = $item->childNodes;
         $type_node = null;
@@ -496,10 +490,10 @@ class Protocol
             $tmp_name = trim($type_node->getAttribute('name'));
             if (!empty($tmp_name)) {
                 $this->checkName($tmp_name);
-                $name .= FFanStr::camelName($tmp_name);
+                $name = FFanStr::camelName($tmp_name);
             }
         }
-        return $this->makeItemObject($name, $type_node, $parent_class_name);
+        return $this->makeItemObject($name, $type_node);
     }
 
     /**
@@ -507,10 +501,9 @@ class Protocol
      * @param string $name
      * @param \DOMNode $item 节点
      * @param MapItem $item_obj
-     * @param string $parent_class_name
      * @throws Exception
      */
-    private function parseMap($name, \DOMNode $item, MapItem $item_obj, $parent_class_name)
+    private function parseMap($name, \DOMNode $item, MapItem $item_obj)
     {
         $item_list = $item->childNodes;
         $key_node = null;
@@ -534,10 +527,10 @@ class Protocol
                     $tmp_name = trim($tmp_node->getAttribute('name'));
                     if (!empty($tmp_name)) {
                         $this->checkName($tmp_name);
-                        $name .= FFanStr::camelName($tmp_name);
+                        $name = FFanStr::camelName($tmp_name);
                     }
                 }
-                $value_item = $this->makeItemObject($name, $value_node, $parent_class_name);
+                $value_item = $this->makeItemObject($name, $value_node);
                 $item_obj->setValueItem($value_item);
             } else {
                 throw new Exception('Map下只能有两个节点');
@@ -613,14 +606,13 @@ class Protocol
      * 解析私有的struct
      * @param string $name
      * @param \DOMNode $item 节点
-     * @param string $parent_class_name
      * @return Struct
      */
-    private function parsePrivateStruct($name, \DOMNode $item, $parent_class_name)
+    private function parsePrivateStruct($name, \DOMNode $item)
     {
         //如果是引用其它Struct，加载其它Struct
         /** @var \DOMElement $item */
-        $struct = $this->parseStruct($name, $item, false, Struct::TYPE_STRUCT, true, $parent_class_name);
+        $struct = $this->parseStruct($name, $item, false);
         return $struct;
     }
 
