@@ -170,7 +170,7 @@ class PhpMockCoder extends PluginCoderBase
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
                 $mock_buf->indent();
-                $this->buildItemCode($mock_buf, '$' . $result_var_name, $sub_mock_rule, $sub_item, $depth + 1);
+                $this->buildItemCode($mock_buf, '$' . $result_var_name.'[]', $sub_mock_rule, $sub_item, $depth + 1);
                 $mock_buf->backIndent()->pushStr('}');
                 $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;

@@ -66,7 +66,7 @@ class Protocol
     /**
      * @var array 允许的方法
      */
-    private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
+    //private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
 
     /**
      * @var Manager
@@ -169,7 +169,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             //默认是公共的struct
-            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false);
+            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false, '');
         }
     }
 
@@ -232,7 +232,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             $is_public = true === (bool)$struct->getAttribute('public');
-            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false);
+            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false, '');
         }
     }
 
@@ -255,36 +255,24 @@ class Protocol
             }
             $class_name = $action_name;
             $node_name = strtolower($node->nodeName);
-            $build_opt = $this->manager->getCurrentBuildOpt();
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
                     throw new Exception('Only one request node allowed');
                 }
                 $type = Struct::TYPE_REQUEST;
-                $node_name = $build_opt->getConfig('request_class_suffix', 'request');
+                //$node_name = $build_opt->getConfig('request_class_suffix', 'request');
             } elseif (self::RESPONSE_NODE === $node_name) {
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
                 $type = Struct::TYPE_RESPONSE;
-                $node_name = $build_opt->getConfig('response_class_suffix', 'response');
             } else {
                 throw new Exception('Unknown node:' . $node_name);
             }
-            /**
-             * 移除动 method 支持，暂时感觉没有必要
-            if ($action->hasAttribute('method')) {
-                $method = trim($action->getAttribute('method'));
-                if (!in_array(strtoupper($method), self::$http_method_list)) {
-                    $err_msg = $method . ' is not support http method type';
-                    throw new Exception($err_msg);
-                }
-                $node_name = ucfirst($method) . $node_name;
-            }*/
-            $class_name = $this->joinName(FFanStr::camelName($node_name), $class_name);
+            //$class_name = $this->joinName(FFanStr::camelName($node_name), $class_name);
             $this->current_struct_type = $type;
             /** @var \DOMElement $node */
-            $struct = $this->parseStruct($class_name, $node, false, $type);
+            $struct = $this->parseStruct($class_name, $node, false, $type, true, $action_name);
             $struct->addReferType($type);
         }
     }
@@ -296,10 +284,11 @@ class Protocol
      * @param bool $is_public 是否可以被extend
      * @param int $type 类型
      * @param bool $allow_extend 是否允许extend其它struct
+     * @param string $parent_node_name 上级节点名称
      * @return Struct
      * @throws Exception
      */
-    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
+    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true, $parent_node_name = '')
     {
         $node_list = $struct->childNodes;
         $item_arr = array();
@@ -315,7 +304,7 @@ class Protocol
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
-            $item = $this->makeItemObject($class_name . FFanStr::camelName($item_name), $node);
+            $item = $this->makeItemObject(FFanStr::camelName($item_name), $node, $parent_node_name);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }
@@ -346,7 +335,13 @@ class Protocol
                 throw new Exception('Empty struct');
             }
         }
-        $struct_obj = new Struct($this->namespace, $class_name, $this->xml_file_name, $type, $is_public);
+        $build_opt = $this->manager->getCurrentBuildOpt();
+        $class_name_suffix = $build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
+        if (!empty($parent_node_name) && Struct::TYPE_STRUCT === $type) {
+            $class_name = $parent_node_name. $class_name;
+        }
+        $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
+        $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file_name, $type, $is_public);
         //如果有注释
         if ($struct->hasAttribute('note')) {
             $struct_obj->setNote($struct->getAttribute('note'));
@@ -365,10 +360,11 @@ class Protocol
      * 生成item对象
      * @param string $name
      * @param \DOMNode $dom_node 节点
+     * @param string $parent_class_name
      * @return Item
      * @throws Exception
      */
-    private function makeItemObject($name, $dom_node)
+    private function makeItemObject($name, $dom_node, $parent_class_name = '')
     {
         $type = ItemType::getType($dom_node->nodeName);
         if (null === $type) {
@@ -386,18 +382,18 @@ class Protocol
                 break;
             case ItemType::ARR:
                 $item_obj = new ListItem($name, $this->manager);
-                $list_item = $this->parseList($name, $dom_node);
+                $list_item = $this->parseList($name, $dom_node, $parent_class_name);
                 $item_obj->setItem($list_item);
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->manager);
-                $struct_obj = $this->parsePrivateStruct($name, $dom_node);
+                $struct_obj = $this->parsePrivateStruct($name, $dom_node, $parent_class_name);
                 $item_obj->setStruct($struct_obj);
                 $struct_obj->addReferType($this->current_struct_type);
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->manager);
-                $this->parseMap($name, $dom_node, $item_obj);
+                $this->parseMap($name, $dom_node, $item_obj, $parent_class_name);
                 break;
             case ItemType::INT:
                 $item_obj = new IntItem($name, $this->manager);
@@ -467,10 +463,11 @@ class Protocol
      * 解析list
      * @param string $name
      * @param \DOMNode $item 节点
+     * @param string $parent_class_name
      * @return Item
      * @throws Exception
      */
-    private function parseList($name, \DOMNode $item)
+    private function parseList($name, \DOMNode $item, $parent_class_name)
     {
         $item_list = $item->childNodes;
         $type_node = null;
@@ -498,7 +495,7 @@ class Protocol
                 $name .= FFanStr::camelName($tmp_name);
             }
         }
-        return $this->makeItemObject($name, $type_node);
+        return $this->makeItemObject($name, $type_node, $parent_class_name);
     }
 
     /**
@@ -506,9 +503,10 @@ class Protocol
      * @param string $name
      * @param \DOMNode $item 节点
      * @param MapItem $item_obj
+     * @param string $parent_class_name
      * @throws Exception
      */
-    private function parseMap($name, \DOMNode $item, MapItem $item_obj)
+    private function parseMap($name, \DOMNode $item, MapItem $item_obj, $parent_class_name)
     {
         $item_list = $item->childNodes;
         $key_node = null;
@@ -528,8 +526,14 @@ class Protocol
                 $item_obj->setKeyItem($key_item);
             } elseif (null === $value_node) {
                 $value_node = $tmp_node;
-                $name .= 'Map';
-                $value_item = $this->makeItemObject($name, $value_node);
+                if ($tmp_node->hasAttribute('name')) {
+                    $tmp_name = trim($tmp_node->getAttribute('name'));
+                    if (!empty($tmp_name)) {
+                        $this->checkName($tmp_name);
+                        $name .= FFanStr::camelName($tmp_name);
+                    }
+                }
+                $value_item = $this->makeItemObject($name, $value_node, $parent_class_name);
                 $item_obj->setValueItem($value_item);
             } else {
                 throw new Exception('Map下只能有两个节点');
@@ -605,14 +609,14 @@ class Protocol
      * 解析私有的struct
      * @param string $name
      * @param \DOMNode $item 节点
+     * @param string $parent_class_name
      * @return Struct
-     * @throws Exception
      */
-    private function parsePrivateStruct($name, \DOMNode $item)
+    private function parsePrivateStruct($name, \DOMNode $item, $parent_class_name)
     {
         //如果是引用其它Struct，加载其它Struct
         /** @var \DOMElement $item */
-        $struct = $this->parseStruct($name, $item);
+        $struct = $this->parseStruct($name, $item, false, Struct::TYPE_STRUCT, true, $parent_class_name);
         return $struct;
     }
 

@@ -232,6 +232,25 @@ class Struct
     }
 
     /**
+     * 获取类型的名称
+     * @param string $type
+     * @return string
+     */
+    public static function getTypeName($type)
+    {
+        switch ($type) {
+            case self::TYPE_REQUEST:
+                return 'request';
+            case self::TYPE_RESPONSE:
+                return 'response';
+            case self::TYPE_DATA:
+                return 'data';
+            default:
+                return 'struct';
+        }
+    }
+
+    /**
      * 获取类名
      * @return string
      */
