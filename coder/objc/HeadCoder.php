@@ -97,7 +97,7 @@ class HeadCoder extends CoderBase
             /** @var StructItem $item */
             $struct = $item->getStruct();
             $class_name = $this->parent->makeClassName($struct);
-            $import_buf->pushUniqueStr('#import "' . $class_name . '.h";');
+            $import_buf->pushUniqueStr('#import "' . $class_name . '.h"');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
             $this->makeHeaderImportCode($item->getItem(), $import_buf);
