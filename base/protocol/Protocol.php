@@ -299,7 +299,12 @@ class Protocol
             $this->setLineNumber($node->getLineNo());
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
-                throw new Exception('Attribute `name` required!');
+                //如果 是struct 并且指定了 extend, 就不需要名字
+                if ('struct' === $node->tagName && $node->hasAttribute('extend')) {
+                    $node->setAttribute('name',$node->hasAttribute('extend'));
+                } else {
+                    throw new Exception('Attribute `name` required!');
+                }
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);

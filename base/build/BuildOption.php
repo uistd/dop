@@ -31,7 +31,7 @@ class BuildOption
     /**
      * @var string 生成文件目录
      */
-    public $build_path;
+    private $build_path;
 
     /**
      * @var int 指定编译哪一侧的协议
@@ -185,6 +185,15 @@ class BuildOption
     public function hasBuildProtocol($type)
     {
         return ($type & $this->build_protocol) > 0;
+    }
+
+    /**
+     * 获取build_path
+     * @return string
+     */
+    public function getBuildPath()
+    {
+        return $this->build_path;
     }
 
     /**

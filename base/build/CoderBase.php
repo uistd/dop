@@ -85,7 +85,7 @@ abstract class CoderBase extends ConfigBase
         $this->manager = $manager;
         $this->build_opt = $build_opt;
         $this->coder_name = $build_opt->getCoderName();
-        $this->build_base_path = $build_opt->build_path;
+        $this->build_base_path = $build_opt->getBuildPath();
         $this->initConfig($build_opt->getSectionConf());
         $this->parent = $parent;
     }

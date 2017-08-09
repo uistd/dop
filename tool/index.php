@@ -6,6 +6,7 @@ use ffan\php\git\GitRepo;
 use ffan\php\utils\Utils;
 use ffan\php\cache\CacheFactory;
 use ffan\dop\build\BuildOption;
+use ffan\php\utils\str as FFanStr;
 
 ini_set('max_execution_time', 0);
 ini_set('memory_limit', '1024M');
@@ -92,7 +93,7 @@ function action_build_list($project)
     $result_msg = array();
     $conf_arr = get_config($project);
     $git_instance = get_git_instance($conf_arr['protocol']['git'], $result_msg);
-    branch_check($project, $branch);
+    branch_check($conf_arr['protocol']['git'], $branch);
     if (!empty($_GET['is_force'])) {
         $git_instance->pull();
     }
@@ -172,13 +173,11 @@ function action_push_list($project)
 
 /**
  * 分支检查
- * @param string $project
+ * @param string $git_conf
  * @param string $branch
  */
-function branch_check($project, $branch)
+function branch_check($git_conf, $branch)
 {
-    $conf_arr = get_config($project);
-    $git_conf = $conf_arr['protocol']['git'];
     $git_instance = get_git_instance($git_conf);
     $branch_list = get_branch_list($git_conf);
     if (!in_array($branch, $branch_list)) {
@@ -192,6 +191,11 @@ function branch_check($project, $branch)
         if (!in_array($local_branch, $local_branch_list['branch'])) {
             $git_instance->fetch($local_branch);
         }
+    }
+    $git_instance->pull();
+    //当前分支不为空,重置分支
+    if (!empty($git_instance->getChangeFiles())) {
+        $git_instance->run('reset --hard ' . $branch);
     }
 }
 
@@ -232,14 +236,7 @@ function action_build($project)
     $protocol_conf = $conf_arr['protocol'];
     $result_msg = array();
     $git_instance = get_git_instance($protocol_conf['git'], $result_msg);
-    branch_check($project, $branch);
-    $git_instance->pull();
-    $status_re = $git_instance->status(true);
-    $status_msg = trim($status_re['result']);
-    //当前分支不为空,重置分支
-    if (!empty($status_msg)) {
-        $git_instance->run('reset --hard ' . $branch);
-    }
+    branch_check($conf_arr['protocol']['git'], $branch);
     $base_path = Utils::joinPath($git_instance->getRepoPath(), $conf_arr['protocol']['path']);
     $manager = new ffan\dop\Manager($base_path);
     $result_msg[] = 'build ' . $build_name;
@@ -249,31 +246,49 @@ function action_build($project)
     $result_msg[] = $build_re;
     $result_msg[] = $manager->getBuildLog();
     if ($re) {
-        $push_branch = '';
         //如果 配置了push 仓库
         if (!empty($push_branch)) {
             $push_conf = $conf_arr['push'][$build_name];
-            $push_git = get_git_instance($push_conf['git']);
+            $push_git = get_git_instance($push_conf['git'], $result_msg);
+            branch_check($push_conf['git'], $push_branch);
             $push_code_path = Utils::joinPath($push_git->getRepoPath(), $push_conf['path']);
             if (is_dir($push_code_path)) {
                 if (!is_writable($push_code_path)) {
-                    show_error($push_code_path .' 无写入权限');
+                    show_error($push_code_path . ' 无写入权限');
                 }
                 Utils::delDir($push_code_path);
             }
-
-        } else {
-            $git_re = $git_instance->status(true);
-            if (!empty($git_re['result'])) {
-                $git_instance->add();
-                $git_instance->commit('Dop tool generate code');
-                $git_instance->push();
-            } else {
-                $result_msg[] = 'Nothing to commit';
+            $build_path = $manager->getCurrentBuildOpt()->getBuildPath();
+            $result_msg[] = 'copy ' . $build_path . ' ' . $push_code_path;
+            $push_git->pull();
+            $copy_re = Utils::copyDir($build_path, $push_code_path);
+            if (!$copy_re) {
+                show_error('文件夹拷贝失败 from ' . $build_path . ' to ' . $push_code_path);
             }
-            view("result", array('msg' => join(PHP_EOL, $result_msg)));
+            $result_msg[] = push_build_code($push_git);
         }
+        $result_msg[] = push_build_code($git_instance);
     }
+    view("result", array('msg' => join(PHP_EOL, $result_msg)));
+}
+
+/**
+ * 代码提交(如果需要)
+ * @param GitRepo $git_instance
+ * @return string
+ */
+function push_build_code($git_instance)
+{
+    $files = $git_instance->getChangeFiles();
+    if (empty($files)) {
+        return 'Nothing to commit';
+    }
+    foreach ($files as $each_file) {
+        $git_instance->add($each_file);
+    }
+    $git_instance->commit('Dop tool generate code');
+    $git_instance->push();
+    return 'finish';
 }
 
 /**
