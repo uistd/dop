@@ -35,7 +35,7 @@ class HeadBinaryPack extends PackerBase
         $code_buf->pushStr(' */');
         //如果是子 struct
         if ($struct->isSubStruct()) {
-            $this->pushImportCode('@class FFANDOPEncode;');
+            $this->pushImportCode('#import "FFANDOPEncode.h";');
             $code_buf->pushStr('- (void)binaryPack:(FFANDOPEncode *) result;');
         } else {
             $code_buf->pushStr('- (NSData *)binaryEncode;');
