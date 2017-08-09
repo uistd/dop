@@ -1,7 +1,6 @@
 <script>
     function list_event(callback) {
         $('.list-group-item').click(function () {
-            console.log(this);
             var target_node = this;
             $('.list-group-item').each(function (i, item) {
                 var $item = $(item);

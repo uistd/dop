@@ -29,8 +29,11 @@
         }
         var project = '{{$project}}';
         var branch = '{{$branch}}';
-        var build_name = item.data('name');
-        var url = 'index.php?a=build&project=' + project + "&branch=" + branch + '&build=' + build_name;
+        var build_name = {{$build_name}};
+        var push_branch = item.data('push-branch');
+        console.log(branch);
+        die();
+        var url = 'index.php?a=build&project=' + project + "&branch=" + branch + '&build=' + build_name + '&push_branch=' + push_branch;
         window.location.href = url;
     });
 </script>

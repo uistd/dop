@@ -45,7 +45,7 @@
         var branch = '{{$branch}}';
         var build_name = item.data('name'), action_name;
         if (item.data('next-step')) {
-            action_name = 'push_list';
+            action_name = 'push _list';
         } else {
             action_name = 'build';
         }
