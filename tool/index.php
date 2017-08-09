@@ -221,19 +221,12 @@ function action_build($project)
         show_error('缺少branch 参数');
     }
     $conf_arr = get_config($project);
-    $result_msg = array();
+    $push_branch = '';
     $build_name = isset($_GET['build']) ? $_GET['build'] : 'main';
     if (has_push_select_step($conf_arr, $build_name)) {
-        $push_set = $conf_arr['push'][$build_name];
-        $push_git = get_git_instance($push_set['git'], $result_msg);
-        if (empty($_GET['push_branch'])) {
-            $view_set = array(
-                'project' => $project,
-                'build_name' => $build_name,
-                'build_branch' => $branch,
-                'push_branch' => get_branch_list($push_set['git'], !empty($_GET['is_force']))
-            );
-            view('push_branch_list', $view_set);
+        $push_branch = isset($_GET['push_branch']) ? trim($_GET['push_branch']) : '';
+        if (empty($push_branch)) {
+            show_error('请选择需要提交的分支');
         }
     }
     $protocol_conf = $conf_arr['protocol'];
@@ -256,9 +249,18 @@ function action_build($project)
     $result_msg[] = $build_re;
     $result_msg[] = $manager->getBuildLog();
     if ($re) {
+        $push_branch = '';
         //如果 配置了push 仓库
-        if (isset($conf_arr['push'][$build_name], $conf_arr['push'][$build_name]['git'])) {
-            $push_git = get_git_instance($conf_arr['push'][$build_name]['git']);
+        if (!empty($push_branch)) {
+            $push_conf = $conf_arr['push'][$build_name];
+            $push_git = get_git_instance($push_conf['git']);
+            $push_code_path = Utils::joinPath($push_git->getRepoPath(), $push_conf['path']);
+            if (is_dir($push_code_path)) {
+                if (!is_writable($push_code_path)) {
+                    show_error($push_code_path .' 无写入权限');
+                }
+                Utils::delDir($push_code_path);
+            }
 
         } else {
             $git_re = $git_instance->status(true);
@@ -269,6 +271,7 @@ function action_build($project)
             } else {
                 $result_msg[] = 'Nothing to commit';
             }
+            view("result", array('msg' => join(PHP_EOL, $result_msg)));
         }
     }
 }
