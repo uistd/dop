@@ -301,7 +301,7 @@ class Protocol
             if (!$node->hasAttribute('name')) {
                 //如果 是struct 并且指定了 extend, 就不需要名字
                 if ('struct' === $node->tagName && $node->hasAttribute('extend')) {
-                    $node->setAttribute('name',$node->hasAttribute('extend'));
+                    $node->setAttribute('name',$node->getAttribute('extend'));
                 } else {
                     throw new Exception('Attribute `name` required!');
                 }
