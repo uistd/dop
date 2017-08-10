@@ -158,7 +158,8 @@ class PhpMockCoder extends PluginCoderBase
             if ('.' === $struct_file) {
                 $struct_file = $full_file;
             }
-            if ($struct_file !== $base_ns) {
+            if ($struct_file !== $base_ns && '.' !== $base_ns) {
+                echo $struct_file, ' => ', $base_ns, PHP_EOL;
                 $import_ns = $this->makeClassNs($struct_file);
                 $import_class = $this->fileNameToClassName($struct_file);
                 $use_buf->pushUniqueStr('use '. $import_ns .'\\'.$import_class.';');

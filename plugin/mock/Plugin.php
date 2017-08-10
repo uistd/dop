@@ -51,7 +51,7 @@ class Plugin extends PluginBase
         //在指定的列表里随机
         $attr_enum = 'enum';
         if (!$find_flag && $node->hasAttribute($attr_enum)) {
-            $enum_set = FFanStr::split($this->read($node, 'enum'), '|');
+            $enum_set = FFanStr::split($this->read($node, 'enum'), ',');
             if (empty($enum_set)) {
                 throw new Exception($attr_enum . ' 属性填写出错');
             }
