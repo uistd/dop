@@ -293,7 +293,7 @@ class PhpMockCoder extends PluginCoderBase
                 //指定范围随机
                 case MockRule::MOCK_RANGE:
                     //ARR和MAP 表示是长度
-                    if (ItemType::INT === $item_type || ItemType::ARR === $item_type || ItemType::MAP === $item_type) {
+                    if (ItemType::INT === $item_type || ItemType::ARR === $item_type || ItemType::MAP === $item_type ||ItemType::BOOL === $item_type) {
                         $mock_buf->pushStr($mock_item . ' = mt_rand(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
                     } elseif (ItemType::FLOAT === $item_type || ItemType::DOUBLE === $item_type) {
                         $mock_buf->pushStr($mock_item . ' = self::floatRangeMock(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
