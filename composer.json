@@ -15,10 +15,7 @@
   ],
   "require": {
     "php": ">=5.5.0",
-    "ffan/php/utils": "*",
-    "ffan/php/tpl": "*",
-    "ffan/php/git": "*",
-    "ffan/php/cache": "*"
+    "ffan/php-utils": "*"
   },
   "autoload": {
     "psr-4": {
