@@ -153,8 +153,19 @@ class Protocol
             return;
         }
         $this->query_step |= self::QUERY_STEP_STRUCT;
+        $this->queryModel('struct');
+        $this->queryModel('model');
+    }
+
+    /**
+     * 解析model
+     * @param string $tag_name
+     * @throws Exception
+     */
+    private function queryModel($tag_name)
+    {
         $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/struct');
+        $node_list = $path_handle->query('/protocol/'. $tag_name);
         if (null === $node_list) {
             return;
         }
@@ -278,6 +289,16 @@ class Protocol
     }
 
     /**
+     * 是否为struct
+     * @param string $name
+     * @return bool
+     */
+    private function isStruct($name)
+    {
+        return 'model' === $name || 'struct' === $name;
+    }
+
+    /**
      * 解析struct
      * @param string $class_name 上级类名
      * @param \DomElement $struct
@@ -300,15 +321,17 @@ class Protocol
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
                 //如果 是struct 并且指定了 extend, 就不需要名字
-                if ('struct' === $node->tagName && $node->hasAttribute('extend')) {
-                    $node->setAttribute('name',$node->getAttribute('extend'));
+                if ($this->isStruct($node->tagName) && $node->hasAttribute('extend')) {
+                    $extend = basename($node->getAttribute('extend'));
+                    $node->setAttribute('name', $extend);
                 } else {
                     throw new Exception('Attribute `name` required!');
                 }
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
-            $item = $this->makeItemObject(FFanStr::camelName($item_name), $node);
+            $item_name = FFanStr::camelName($item_name, false);
+            $item = $this->makeItemObject($item_name, $node);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }

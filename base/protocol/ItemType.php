@@ -78,6 +78,7 @@ class ItemType
         'int64' => self::INT,
         'list' => self::ARR,
         'struct' => self::STRUCT,
+        'model' => self::STRUCT,
         'map' => self::MAP,
         'double' => self::DOUBLE,
         'bool' => self::BOOL

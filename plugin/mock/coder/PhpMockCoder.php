@@ -81,7 +81,7 @@ class PhpMockCoder extends PluginCoderBase
         $main_buf->emptyLine();
         /** @var Struct $struct */
         foreach ($struct_list as $struct) {
-            $this->buildStructCode($struct, $main_buf);
+            $this->buildStructCode($struct, $main_buf, $file_name);
         }
         $this->autoload_buf->pushStr("'" . $class_ns . "' => \$mock_file_dir,");
     }
@@ -105,12 +105,13 @@ class PhpMockCoder extends PluginCoderBase
     /**
      * 生成每个struct的代码
      * @param Struct $struct
-     * @param FileBuf $file
+     * @param FileBuf $file_buf
+     * @param string $file_name 所在文件名
      */
-    private function buildStructCode($struct, $file)
+    private function buildStructCode($struct, $file_buf, $file_name)
     {
-        $import_buf = $file->getBuf(FileBuf::IMPORT_BUF);
-        $mock_buf = $file->getBuf(FileBuf::METHOD_BUF);
+        $import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
+        $mock_buf = $file_buf->getBuf(FileBuf::METHOD_BUF);
         $mock_buf->emptyLine();
         $class_name = $struct->getClassName();
         $mock_buf->pushStr('/**');
@@ -121,14 +122,16 @@ class PhpMockCoder extends PluginCoderBase
         $mock_buf->pushStr('{');
         $mock_buf->indent();
         $use_ns = $this->coder->joinNameSpace($struct->getNamespace());
-        $import_buf->pushStr('use ' . $use_ns . '\\' . $class_name . ';');
+        $import_buf->pushUniqueStr('use ' . $use_ns . '\\' . $class_name . ';');
         $mock_buf->pushStr('$data = new ' . $class_name . '();');
         $all_item = $struct->getAllExtendItem();
+        $base_ns = dirname($file_name);
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
+            $this->makeImportCode($item, $base_ns, $import_buf);
             /** @var MockRule $mock_rule */
             $mock_rule = $item->getPluginData($this->plugin->getPluginName());
             Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
@@ -136,6 +139,37 @@ class PhpMockCoder extends PluginCoderBase
         }
         $mock_buf->pushStr('return $data;');
         $mock_buf->backIndent()->pushStr('}');
+    }
+
+    /**
+     * 生成引用相关的代码
+     * @param Item $item
+     * @param string $base_ns 基准命名空间
+     * @param CodeBuf $use_buf
+     */
+    private function makeImportCode($item, $base_ns, $use_buf)
+    {
+        $type = $item->getType();
+        if (ItemType::STRUCT === $type) {
+            /** @var StructItem $item */
+            $struct = $item->getStruct();
+            $full_file = $struct->getFile(false);
+            $struct_file = dirname($full_file);
+            if ('.' === $struct_file) {
+                $struct_file = $full_file;
+            }
+            if ($struct_file !== $base_ns) {
+                $import_ns = $this->makeClassNs($struct_file);
+                $import_class = $this->fileNameToClassName($struct_file);
+                $use_buf->pushUniqueStr('use '. $import_ns .'\\'.$import_class.';');
+            }
+        } elseif (ItemType::ARR === $type) {
+            /** @var ListItem $item */
+            $this->makeImportCode($item->getItem(), $base_ns, $use_buf);
+        } elseif (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $this->makeImportCode($item->getValueItem(), $base_ns, $use_buf);
+        }
     }
 
     /**
