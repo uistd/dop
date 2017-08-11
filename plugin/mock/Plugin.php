@@ -3,13 +3,11 @@
 namespace ffan\dop\plugin\mock;
 
 use ffan\dop\build\PluginBase;
-use ffan\dop\build\PluginRule;
-use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\MapItem;
-use ffan\php\utils\Str as FFanStr;
+use ffan\dop\protocol\Protocol;
 
 /**
  * Class Plugin
@@ -26,29 +24,38 @@ class Plugin extends PluginBase
      * 初始化
      * @param \DOMElement $node
      * @param Item $item
-     * @throws Exception
+     * @param Protocol $parser 解析器
      */
-    public function init(\DOMElement $node, Item $item)
+    public function init(Protocol $parser, \DOMElement $node, Item $item)
     {
         if (!self::isSupport($item)) {
             return;
         }
-        //$mock_rule = new MockRule();
-        //$find_flag = false;
-        $item_type = $item->getType();
         $mock_rule = null;
         //在一个范围内 mock
         if ($node->hasAttribute('range')) {
-            $mock_rule = new RuleRange($node, $item_type);
+            $mock_rule = new RuleRange();
         } elseif ($node->hasAttribute('enum')) {
-            $mock_rule = new RuleEnum($node);
+            $mock_rule = new RuleEnum();
         } elseif ($node->hasAttribute('value')) {
-            $mock_rule = new RuleFixed($node, $item_type);
+            $mock_rule = new RuleFixed();
         } elseif ($node->hasAttribute('type')) {
-            $mock_rule = new RuleType($node, $item_type);
+            $mock_rule = new RuleType();
+        } elseif ($node->hasAttribute('begin')) {
+            $mock_rule = new RuleIncrease();
+        } elseif ($node->hasAttribute('pair')) {
+            $mock_rule = new RulePair();
+        } elseif ($node->hasAttribute('use')) {
+            $mock_rule = new RuleUse();
         }
         if (null !== $mock_rule) {
-            $item->addPluginData($this->plugin_name, $mock_rule);
+            $error_code = $mock_rule->init($parser, $node, $item);
+            if (0 !== $error_code) {
+                $this->manager->buildLogError($mock_rule->getErrorMsg($error_code));
+                unset($mock_rule);
+            } else {
+                $item->addPluginData($this->plugin_name, $mock_rule);
+            }
         }
     }
 

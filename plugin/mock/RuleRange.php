@@ -3,6 +3,8 @@
 namespace ffan\dop\plugin\mock;
 
 use ffan\dop\build\PluginRule;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\Protocol;
 
 /**
  * @package ffan\dop
@@ -23,12 +25,14 @@ class RuleRange extends PluginRule
 
     /**
      * 解析规则
+     * @param Protocol $parser
      * @param \DOMElement $node
-     * @param int $item_type
+     * @param Item $item
+     * @return int error_code
      */
-    function init($node, $item_type = 0)
+    function init(Protocol $parser, $node, $item)
     {
-        list($min, $max) = $this->readSplitSet($node, 'range');
+        list($min, $max) = self::readSplitSet($node, 'range');
         $min = (int)$min;
         $max = (int)$max;
         if ($max < $min) {
@@ -36,5 +40,6 @@ class RuleRange extends PluginRule
         }
         $this->range_min = $min;
         $this->range_max = $max;
+        return 0;
     }
 }

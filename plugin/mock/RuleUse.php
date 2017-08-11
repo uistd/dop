@@ -4,35 +4,33 @@ namespace ffan\dop\plugin\mock;
 
 use ffan\dop\build\PluginRule;
 use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Protocol;
 
 /**
  * @package ffan\dop
  */
-class RuleIncrease extends PluginRule
+class RuleUse extends PluginRule
 {
     /**
      * @var array
      */
     protected static $error_msg = array(
-        1 => '只有 int 类型 才支持 自增长',
+        1 => '未找到配对的字段设置'
     );
-
     /**
      * @var int 类型
      */
-    protected $type = MockType::MOCK_INCREASE;
+    protected $type = MockType::MOCK_USE;
 
     /**
-     * @var int 开始
+     * @var string 使用的字段名
      */
-    public $begin = 1;
+    public $use_item;
 
     /**
-     * @var int 步长
+     * @var string 使用的类名
      */
-    public $step = 1;
+    public $use_class;
 
     /**
      * 解析规则
@@ -43,11 +41,12 @@ class RuleIncrease extends PluginRule
      */
     function init(Protocol $parser, $node, $item)
     {
-        if (ItemType::INT !== $item->getType()) {
+        $use_str = self::read($node, 'use');
+        if (empty($use_str)) {
             return 1;
         }
-        $this->begin = self::readInt($node, 'begin', 1);
-        $this->step = self::readInt($node, 'step', 1);
+        $this->use_item = $parser->fixItemName(basename($use_str));
+        $this->use_class = $parser->getFullName(dirname($use_str));
         return 0;
     }
 }

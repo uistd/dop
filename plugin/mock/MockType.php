@@ -31,4 +31,14 @@ class MockType
      * 自增类型
      */
     const MOCK_INCREASE = 5;
+
+    /**
+     * 配对
+     */
+    const MOCK_PAIR = 6;
+
+    /**
+     * 直接使用其它对象的某个字段
+     */
+    const MOCK_USE = 7;
 }

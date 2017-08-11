@@ -190,6 +190,16 @@ class Struct
     }
 
     /**
+     * 获取一项
+     * @param string $name
+     * @return Item|null
+     */
+    public function getItem($name)
+    {
+        return isset($this->item_list[$name]) ? $this->item_list[$name] : null;
+    }
+
+    /**
      * 设置继承
      * @param Struct $parent_struct
      * @throws Exception

@@ -299,6 +299,16 @@ class Protocol
     }
 
     /**
+     * 修正字段名
+     * @param string $item_name
+     * @return string
+     */
+    public function fixItemName($item_name)
+    {
+        return FFanStr::camelName($item_name, false);
+    }
+
+    /**
      * 解析struct
      * @param string $class_name 上级类名
      * @param \DomElement $struct
@@ -330,7 +340,7 @@ class Protocol
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
-            $item_name = FFanStr::camelName($item_name, false);
+            $item_name = $this->fixItemName($item_name);
             $item = $this->makeItemObject($item_name, $node);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
@@ -472,7 +482,7 @@ class Protocol
             if (!$plugin) {
                 continue;
             }
-            $plugin->init($tmp_node, $item);
+            $plugin->init($this, $tmp_node, $item);
         }
     }
 
@@ -608,7 +618,7 @@ class Protocol
      * @return string
      * @throws Exception
      */
-    private function getFullName($struct_name)
+    public function getFullName($struct_name)
     {
         if (empty($struct_name)) {
             throw new Exception('struct name error');
