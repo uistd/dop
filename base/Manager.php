@@ -213,8 +213,9 @@ class Manager
      */
     public function loadRequireStruct($class_name, $current_xml)
     {
-        if ($this->hasStruct($class_name)) {
-            return $this->struct_list[$class_name];
+        $tmp_struct = $this->getStruct($class_name);
+        if (null !== $tmp_struct) {
+            return $tmp_struct;
         }
         //类名
         $struct_name = basename($class_name);
@@ -228,10 +229,7 @@ class Manager
         $this->setRequireRelation($xml_file, $current_xml);
         $xml_protocol = $this->loadXmlProtocol($xml_file);
         $xml_protocol->queryStruct();
-        if ($this->hasStruct($class_name)) {
-            return $this->struct_list[$class_name];
-        }
-        return null;
+        return $this->getStruct($class_name);
     }
 
     /**
@@ -436,7 +434,7 @@ class Manager
          */
         foreach ($cache_struct as $name => $tmp_struct) {
             //已经有了
-            if ($this->hasStruct($name)) {
+            if (null !== $this->getStruct($name)) {
                 continue;
             }
             $file = $tmp_struct->getFile();
@@ -603,13 +601,13 @@ class Manager
     }
 
     /**
-     * 是否存在某个Struct
-     * @param string $fullName
-     * @return bool
+     * 获取struct
+     * @param string $full_name
+     * @return Struct|null
      */
-    public function hasStruct($fullName)
+    public function getStruct($full_name)
     {
-        return isset($this->struct_list[$fullName]);
+        return isset($this->struct_list[$full_name]) ? $this->struct_list[$full_name] : null;
     }
 
     /**

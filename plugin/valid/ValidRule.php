@@ -2,11 +2,15 @@
 
 namespace ffan\dop\plugin\valid;
 
+use ffan\dop\build\PluginRule;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\Protocol;
+
 /**
  * Class ValidRule 数据有效规则
  * @package ffan\dop
  */
-class ValidRule
+class ValidRule extends PluginRule
 {
     /**
      * 字符串长度计算方式：按实际占用字节数
@@ -133,5 +137,17 @@ class ValidRule
     public static function isBuildInType($type)
     {
         return isset(self::$build_in_type[$type]);
+    }
+
+    /**
+     * 解析规则
+     * @param Protocol $parser
+     * @param \DOMElement $node
+     * @param Item $item
+     * @return int error_code
+     */
+    function init(Protocol $parser, $node, $item)
+    {
+        return 0;
     }
 }

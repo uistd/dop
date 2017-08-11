@@ -2,17 +2,33 @@
 
 namespace ffan\dop\build;
 
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\Protocol;
+
 /**
  * Class PluginRule 插件规则
  * @package ffan\dop\build
  */
 abstract class PluginRule {
+
+    /**
+     * @var array 错误消息设置
+     */
+    protected static $error_msg;
+
+    /**
+     * @var int 类型
+     */
+    protected $type;
+
     /**
      * 解析规则
+     * @param Protocol $parser
      * @param \DOMElement $node
-     * @param int $item_type
+     * @param Item $item
+     * @return int error_code
      */
-    abstract function init($node, $item_type = 0);
+    abstract function init(Protocol $parser, $node, $item);
 
     /**
      * 获取类型
@@ -30,9 +46,9 @@ abstract class PluginRule {
      * @param bool $is_int
      * @return array|null
      */
-    protected function readSplitSet($node, $name, $is_int = true)
+    public static function readSplitSet($node, $name, $is_int = true)
     {
-        $set_str = $this->read($node, $name);
+        $set_str = self::read($node, $name);
         $min = null;
         $max = null;
         if (0 === strlen($set_str)) {
@@ -61,7 +77,6 @@ abstract class PluginRule {
             }
         }
         if ($min !== null && $max !== null && $max < $min) {
-            $this->manager->buildLogError('v-length:' . $set_str . ' 无效');
             $max = $min = null;
         }
         return [$min, $max];
@@ -74,24 +89,49 @@ abstract class PluginRule {
      * @param bool $default 默认值
      * @return bool
      */
-    protected function readBool($node, $name, $default = false)
+    public static function readBool($node, $name, $default = false)
     {
-        $set_str = $this->read($node, $name, $default);
+        $set_str = self::read($node, $name, $default);
         return (bool)$set_str;
     }
 
     /**
      * 读取插件属性
      * @param \DOMElement $node
-     * @param string $attr_name 规则名
-     * @param null $default
+     * @param string $attr_name 属性名
+     * @param null $default 默认值
      * @return mixed
      */
-    protected function read($node, $attr_name, $default = null)
+    public static function read($node, $attr_name, $default = null)
     {
         if (!$node->hasAttribute($attr_name)) {
             return $default;
         }
         return trim($node->getAttribute($attr_name));
+    }
+
+    /**
+     * 读取一个int值
+     * @param \DOMElement $node
+     * @param string $attr_name
+     * @param int $default 默认值
+     * @return int
+     */
+    public static function readInt($node, $attr_name, $default = 0)
+    {
+        if (!$node->hasAttribute($attr_name)) {
+            return $default;
+        }
+        return (int)trim($node->getAttribute($attr_name));
+    }
+
+    /**
+     * 获取错误数据
+     * @param $error_code
+     * @return string
+     */
+    public function getErrorMsg($error_code)
+    {
+        return isset(static::$error_msg[$error_code]) ? static::$error_msg[$error_code] : 'Unknown error';
     }
 }

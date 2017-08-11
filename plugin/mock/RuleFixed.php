@@ -3,6 +3,8 @@
 namespace ffan\dop\plugin\mock;
 
 use ffan\dop\build\PluginRule;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\Protocol;
 
 /**
  * @package ffan\dop
@@ -18,12 +20,16 @@ class RuleFixed extends PluginRule
 
     /**
      * 解析规则
+     * @param Protocol $parser
      * @param \DOMElement $node
-     * @param int $item_type
+     * @param Item $item
+     * @return int error_code
      */
-    function init($node, $item_type = 0)
+    function init(Protocol $parser, $node, $item)
     {
-        $fixed_value = $this->read($node, 'value');
+        $item_type = $item->getType();
+        $fixed_value = self::read($node, 'value');
         $this->fixed_value = Plugin::fixValue($item_type, $fixed_value);
+        return 0;
     }
 }

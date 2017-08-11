@@ -3,7 +3,8 @@
 namespace ffan\dop\plugin\mock;
 
 use ffan\dop\build\PluginRule;
-use ffan\dop\Exception;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\Protocol;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -11,6 +12,16 @@ use ffan\php\utils\Str as FFanStr;
  */
 class RuleEnum extends PluginRule
 {
+    /**
+     * @var array 错误消息
+     */
+    protected static $error_msg = array(
+        1 => 'enum 属性填写出错'
+    );
+
+    /**
+     * @var int 类型
+     */
     protected $type = MockType::MOCK_ENUM;
 
     /**
@@ -25,20 +36,23 @@ class RuleEnum extends PluginRule
 
     /**
      * 解析规则
+     * @param Protocol $parser
      * @param \DOMElement $node
-     * @param int $item_type
-     * @throws Exception
+     * @param Item $item
+     * @return int error_code
      */
-    function init($node, $item_type = 0)
+    function init(Protocol $parser, $node, $item)
     {
-        $enum_set = FFanStr::split($this->read($node, 'enum'), ',');
+        $item_type = $item->getType();
+        $enum_set = FFanStr::split(self::read($node, 'enum'), ',');
         if (empty($enum_set)) {
-            throw new Exception('enum 属性填写出错');
+            return 1;
         }
         foreach ($enum_set as $i => $each_value) {
             $enum_set[$i] = Plugin::fixValue($item_type, $each_value);
         }
         $this->enum_set = $enum_set;
         $this->enum_size = count($enum_set);
+        return 0;
     }
 }

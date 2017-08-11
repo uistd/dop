@@ -10,10 +10,14 @@
         <uint8 name="uint8"/>
         <int16 name="int16"/>
         <uint16 name="uint16"/>
-        <int name="int32"/>
+        <int name="int32">
+            <plugin_mock begin="1" step="2"/>
+        </int>
         <uint name="uint"/>
         <int64 name="int64"/>
-        <string name="string"/>
+        <string name="string">
+            <plugin_mock pair="int32" map="1:2, 3:4, 5:6"/>
+        </string>
         <float name="float32"/>
         <double name="double64"/>
         <binary name="binary"/>
@@ -25,8 +29,12 @@
             <int name="no_value"/>
         </struct>
         <struct name="test_struct">
-            <string name="first_name"/>
-            <string name="last_name"/>
+            <string name="first_name">
+                <plugin_mock range="10, 20"/>
+            </string>
+            <string name="last_name">
+                <plugin_mock use="test_struct/first_name"/>
+            </string>
             <int8 name="gender"/>
         </struct>
         <struct name="test_arr" extend="test_arr"/>

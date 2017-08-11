@@ -2,6 +2,7 @@
 
 namespace ffan\dop\protocol;
 
+use ffan\dop\build\PluginRule;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 
@@ -104,17 +105,17 @@ abstract class Item
     /**
      * 添加插件数据
      * @param string $plugin_name
-     * @param object $data
+     * @param PluginRule $rule
      */
-    public function addPluginData($plugin_name, $data)
+    public function addPluginData($plugin_name, PluginRule $rule)
     {
-        $this->plugin_data_arr[$plugin_name] = $data;
+        $this->plugin_data_arr[$plugin_name] = $rule;
     }
 
     /**
-     * 获取插件数据
+     * 获取插件Rule
      * @param string $plugin_name
-     * @return Object
+     * @return PluginRule|null
      */
     public function getPluginData($plugin_name)
     {

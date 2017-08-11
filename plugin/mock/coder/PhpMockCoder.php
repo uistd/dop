@@ -6,6 +6,7 @@ use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
 use ffan\dop\build\PluginCoderBase;
+use ffan\dop\build\PluginRule;
 use ffan\dop\build\StrBuf;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
@@ -26,6 +27,11 @@ class PhpMockCoder extends PluginCoderBase
      * @var string 当前正在使用的协议文件
      */
     private $current_file;
+
+    /**
+     * @var FileBuf
+     */
+    private $autoload_buf;
 
     /**
      * 生成插件 PHP 代码
@@ -132,13 +138,36 @@ class PhpMockCoder extends PluginCoderBase
          */
         foreach ($all_item as $name => $item) {
             $this->makeImportCode($item, $base_ns, $import_buf);
-            /** @var MockRule $mock_rule */
             $mock_rule = $item->getPluginData($this->plugin->getPluginName());
+            if (null !== $mock_rule && MockType::MOCK_USE === $mock_rule->getType()) {
+                /** @var RuleUse $mock_rule */
+                $mock_rule = $this->getUseMockRule($mock_rule);
+            }
             Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }
         $mock_buf->pushStr('return $data;');
         $mock_buf->backIndent()->pushStr('}');
+    }
+
+    /**
+     * 获取引用的mock
+     * @param RuleUse $use_rule
+     * @return null
+     * @internal param RuleUse $use_name
+     */
+    private function getUseMockRule($use_rule)
+    {
+        $manager = $this->coder->getManager();
+        $struct =$manager->getStruct($use_rule->use_class);
+        if (null === $struct) {
+            return null;
+        }
+        $item = $struct->getItem($use_rule->use_item);
+        if (null === $item) {
+            return null;
+        }
+        return $item->getPluginData($this->plugin->getPluginName());
     }
 
     /**
@@ -159,10 +188,9 @@ class PhpMockCoder extends PluginCoderBase
                 $struct_file = $full_file;
             }
             if ($struct_file !== $base_ns && '.' !== $base_ns) {
-                echo $struct_file, ' => ', $base_ns, PHP_EOL;
                 $import_ns = $this->makeClassNs($struct_file);
                 $import_class = $this->fileNameToClassName($struct_file);
-                $use_buf->pushUniqueStr('use '. $import_ns .'\\'.$import_class.';');
+                $use_buf->pushUniqueStr('use ' . $import_ns . '\\' . $import_class . ';');
             }
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
@@ -177,7 +205,7 @@ class PhpMockCoder extends PluginCoderBase
      * 生成mock单项的代码
      * @param CodeBuf $mock_buf
      * @param string $mock_item
-     * @param MockRule $mock_rule
+     * @param PluginRule $mock_rule
      * @param Item $item
      * @param int $depth
      */
@@ -196,7 +224,7 @@ class PhpMockCoder extends PluginCoderBase
             case ItemType::ARR:
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
-                /** @var MockRule $sub_mock_rule */
+                /** @var PluginRule $sub_mock_rule */
                 $sub_mock_rule = $sub_item->getPluginData($plugin_name);
                 $for_var_name = PackerBase::varName($depth, 'i');
                 $len_var_name = PackerBase::varName($depth, 'len');
@@ -205,7 +233,7 @@ class PhpMockCoder extends PluginCoderBase
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
                 $mock_buf->indent();
-                $this->buildItemCode($mock_buf, '$' . $result_var_name.'[]', $sub_mock_rule, $sub_item, $depth + 1);
+                $this->buildItemCode($mock_buf, '$' . $result_var_name . '[]', $sub_mock_rule, $sub_item, $depth + 1);
                 $mock_buf->backIndent()->pushStr('}');
                 $mock_buf->pushStr($mock_item . ' = $' . $result_var_name . ';');
                 break;
@@ -225,9 +253,9 @@ class PhpMockCoder extends PluginCoderBase
                 /** @var MapItem $item */
                 $key_item = $item->getKeyItem();
                 $value_item = $item->getValueItem();
-                /** @var MockRule $key_mock_rule */
+                /** @var PluginRule $key_mock_rule */
                 $key_mock_rule = $key_item->getPluginData($plugin_name);
-                /** @var MockRule $value_mock_rule */
+                /** @var PluginRule $value_mock_rule */
                 $value_mock_rule = $value_item->getPluginData($plugin_name);
                 $for_var_name = PackerBase::varName($depth, 'i');
                 $len_var_name = PackerBase::varName($depth, 'len');
@@ -251,7 +279,7 @@ class PhpMockCoder extends PluginCoderBase
      * mock值生成
      * @param CodeBuf $mock_buf
      * @param string $mock_item
-     * @param MockRule $mock_rule
+     * @param PluginRule $mock_rule
      * @param int $item_type
      * @throws Exception
      */
@@ -275,15 +303,17 @@ class PhpMockCoder extends PluginCoderBase
                     break;
             }
         } else {
-            switch ($mock_rule->mock_type) {
+            $mock_type = $mock_rule->getType();
+            switch ($mock_type) {
                 //固定值
-                case MockRule::MOCK_FIXED:
+                case MockType::MOCK_FIXED:
+                    /** @var RuleFixed $mock_rule */
                     $mock_buf->pushStr($mock_item . ' = ' . $mock_rule->fixed_value . ';');
                     break;
                 //指定几个值随机
-                case MockRule::MOCK_ENUM:
-                    $arr_name = '$tmp_arr_' . $tmp_arr_index;
-                    $tmp_arr_index++;
+                case MockType::MOCK_ENUM:
+                    /** @var RuleEnum $mock_rule */
+                    $arr_name = PackerBase::varName($tmp_arr_index++, '$tmp_arr');
                     $tmp_line = new StrBuf();
                     $mock_buf->insertBuf($tmp_line);
                     $tmp_line->pushStr($arr_name . ' = array(');
@@ -292,9 +322,10 @@ class PhpMockCoder extends PluginCoderBase
                     $mock_buf->pushStr($mock_item . ' = ' . $arr_name . '[array_rand(' . $arr_name . ')];');
                     break;
                 //指定范围随机
-                case MockRule::MOCK_RANGE:
+                case MockType::MOCK_RANGE:
+                    /** @var RuleRange $mock_rule */
                     //ARR和MAP 表示是长度
-                    if (ItemType::INT === $item_type || ItemType::ARR === $item_type || ItemType::MAP === $item_type ||ItemType::BOOL === $item_type) {
+                    if (ItemType::INT === $item_type || ItemType::ARR === $item_type || ItemType::MAP === $item_type || ItemType::BOOL === $item_type) {
                         $mock_buf->pushStr($mock_item . ' = mt_rand(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
                     } elseif (ItemType::FLOAT === $item_type || ItemType::DOUBLE === $item_type) {
                         $mock_buf->pushStr($mock_item . ' = self::floatRangeMock(' . $mock_rule->range_min . ', ' . $mock_rule->range_max . ');');
@@ -303,12 +334,33 @@ class PhpMockCoder extends PluginCoderBase
                     }
                     break;
                 //固定值mock
-                case MockRule::MOCK_BUILD_IN_TYPE:
+                case MockType::MOCK_BUILD_IN_TYPE:
+                    /** @var RuleType $mock_rule */
                     $build_func = $mock_rule->build_in_type . 'TypeMock';
                     $mock_buf->pushStr($mock_item . ' = self::' . $build_func . '();');
                     break;
+                //自增长
+                case MockType::MOCK_INCREASE:
+                    /** @var RuleIncrease $mock_rule */
+                    $tmp_name = PackerBase::varName($tmp_arr_index++, '$tmp_inc');
+                    $mock_buf->pushStr('static ' . $tmp_name . ' = ' . $mock_rule->begin . ';');
+                    $mock_buf->pushStr($mock_item . ' = ' . $tmp_name . ';');
+                    $mock_buf->pushStr($tmp_name . ' += ' . $mock_rule->step . ';');
+                    break;
+                //数据配对
+                case MockType::MOCK_PAIR:
+                    /** @var RulePair $mock_rule */
+                    $arr_name = PackerBase::varName($tmp_arr_index++, '$tmp_map');
+                    $tmp_line = new StrBuf();
+                    $mock_buf->insertBuf($tmp_line);
+                    $tmp_line->pushStr($arr_name . ' = array(');
+                    $tmp_line->pushStr(FFanStr::dualJoin($mock_rule->value_set, ',', ' => '));
+                    $tmp_line->pushStr(');');
+                    $tmp_code = $arr_name . '[$data->' . $mock_rule->key_field . ']';
+                    $mock_buf->pushStr($mock_item . ' = isset(' . $tmp_code . ') ? ' . $tmp_code . ' : null;');
+                    break;
                 default:
-                    throw new Exception('Unknown mock type . ', $mock_rule->mock_type);
+                    throw new Exception('Unknown mock type . ', $mock_type);
             }
         }
     }
