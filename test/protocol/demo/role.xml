@@ -87,7 +87,7 @@
         </response>
     </action>
     <action name="new_role">
-        <request>
+        <request method="post">
             <list name="roles">
                 <struct extend="role_info"/>
             </list>

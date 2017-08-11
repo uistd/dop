@@ -2,6 +2,7 @@
 
 namespace ffan\dop\protocol;
 
+use ffan\dop\build\BuildOption;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
@@ -89,6 +90,11 @@ class Protocol
     private $current_struct_type;
 
     /**
+     * @var BuildOption build_opt
+     */
+    private $build_opt;
+
+    /**
      * ProtocolXml constructor.
      * @param Manager $manager
      * @param string $file_name 协议文件
@@ -119,6 +125,7 @@ class Protocol
         }
         $this->namespace = $dir_name . basename($file_name, '.xml');
         $this->manager = $manager;
+        $this->build_opt = $manager->getCurrentBuildOpt();
     }
 
     /**
@@ -258,6 +265,7 @@ class Protocol
         $node_list = $action->childNodes;
         $request_count = 0;
         $response_count = 0;
+        $ignore_get = (int)$this->build_opt->getConfig('ignore_get', 0);
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->setLineNumber($node->getLineNo());
@@ -269,6 +277,11 @@ class Protocol
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
                     throw new Exception('Only one request node allowed');
+                }
+                //不生成get类
+                $method = $node->getAttribute('method');
+                if (1 === $ignore_get && !$method || 'get' === strtolower(trim($method))) {
+                    continue;
                 }
                 $type = Struct::TYPE_REQUEST;
                 //$node_name = $build_opt->getConfig('request_class_suffix', 'request');
@@ -348,7 +361,7 @@ class Protocol
             $item_arr[$item_name] = $item;
         }
         $extend_struct = null;
-        $build_opt = $this->manager->getCurrentBuildOpt();
+
         //继承关系
         if ($struct->hasAttribute('extend')) {
             if (!$allow_extend) {
@@ -356,7 +369,7 @@ class Protocol
             }
             $struct_name = trim($struct->getAttribute('extend'));
             $struct_name = $this->getFullName($struct_name);
-            $conf_suffix = $build_opt->getConfig('struct_class_suffix');
+            $conf_suffix = $this->build_opt->getConfig('struct_class_suffix');
             if (!empty($conf_suffix)) {
                 $struct_name .= FFanStr::camelName($conf_suffix);
             }
@@ -377,7 +390,7 @@ class Protocol
                 throw new Exception('Empty struct');
             }
         }
-        $class_name_suffix = $build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
+        $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
         $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
         $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file_name, $type, $is_public);
         //如果有注释

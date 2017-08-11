@@ -103,7 +103,9 @@ class BuildOption
             'utf8_bom' => false,
             'packer' => '',
             'request_class_suffix' => 'Request',
-            'response_class_suffix' => 'Response'
+            'response_class_suffix' => 'Response',
+            //忽略GET请求
+            'ignore_get' => false
         );
         //将Public config append to section_conf
         foreach ($public_conf as $name => $value) {
