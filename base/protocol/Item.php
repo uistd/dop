@@ -5,6 +5,7 @@ namespace ffan\dop\protocol;
 use ffan\dop\build\PluginRule;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class Item 协议的每一项
@@ -43,6 +44,11 @@ abstract class Item
     protected $plugin_data_arr;
 
     /**
+     * @var string 下划线命名
+     */
+    private $underline_name;
+
+    /**
      * Item constructor.
      * @param string $name 名称
      * @param Manager $manger
@@ -51,6 +57,7 @@ abstract class Item
     {
         $this->name = $name;
         $this->protocol_manager = $manger;
+        $this->underline_name = FFanStr::underlineName($name);
     }
 
     /**
@@ -156,5 +163,14 @@ abstract class Item
     public function getBinaryType()
     {
         return $this->type;
+    }
+
+    /**
+     * 获取字段的underline name
+     * @return string
+     */
+    public function getUnderLineName()
+    {
+        return $this->underline_name;
     }
 }

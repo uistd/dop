@@ -41,7 +41,9 @@ class ArrayPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            self::packItemValue($code_buf, 'this->' . $name, "result['" . $name . "']", $item, 0);
+            $property_name = $this->coder->fixPropertyName($name, $item);
+            $value_name = $this->coder->fixOutoutName($name, $item);
+            self::packItemValue($code_buf, 'this->' . $property_name, "result['" . $value_name . "']", $item, 0);
         }
         $code_buf->pushStr('return $result;');
         $code_buf->backIndent()->pushStr('}');
@@ -69,7 +71,9 @@ class ArrayPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            self::unpackItemValue($code_buf, 'this->' . $name, 'data', $item, 0, $name);
+            $property_name = $this->coder->fixPropertyName($name, $item);
+            $value_name = $this->coder->fixOutoutName($name, $item);
+            self::unpackItemValue($code_buf, 'this->' . $property_name, 'data', $item, 0, $value_name);
         }
         $code_buf->backIndent()->pushStr('}');
     }
@@ -188,8 +192,13 @@ class ArrayPack extends PackerBase
     {
         //如果是最外层，要判断值是不是null
         if (0 === $depth) {
-            $code_buf->pushStr('$' . $result_var . ' = null === $' . $var_name . ' ? $' . $var_name . ' : (' . $convert_type . ')$' . $var_name . ';');
+            $code_buf->pushStr('if (null !== $' . $var_name . ') {');
+            $code_buf->pushIndent('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name . ';');
+            $code_buf->pushStr('}');
         } else {
+            $code_buf->pushStr('if (null === $' . $var_name . ') {');
+            $code_buf->pushIndent('continue;');
+            $code_buf->pushStr('}');
             $code_buf->pushStr('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name . ';');
         }
     }

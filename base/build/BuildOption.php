@@ -27,6 +27,16 @@ class BuildOption
      * 生成文件的一些选项
      */
     const FILE_OPTION_UTF8_BOM = 1;
+
+    /**
+     * 驼峰命名
+     */
+    const CAMEL_NAME = 1;
+
+    /**
+     * 下划线命名
+     */
+    const UNDERLINE_NAME = 2;
     
     /**
      * @var string 生成文件目录
@@ -82,6 +92,16 @@ class BuildOption
      * @var int 生成文件选项
      */
     private $file_option = 0;
+
+    /**
+     * @var int 属性字段命名规则
+     */
+    public $item_name_property = self::CAMEL_NAME;
+
+    /**
+     * @var int 输出字段命名规则
+     */
+    public $item_name_output = self::CAMEL_NAME;
 
     /**
      * BuildOption constructor.
@@ -154,6 +174,28 @@ class BuildOption
         $this->build_side = $this->parseCodeSide($section_conf['code_side']);
         $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
         $this->parsePacker($section_conf['packer']);
+        $this->item_name_property = $this->fixNameRuleConfig('property_name');
+        $this->item_name_output = $this->fixNameRuleConfig('output_name');
+    }
+
+    /**
+     * 获取字段命名规则配置
+     * @param $conf_name
+     * @param int $default
+     * @return int
+     */
+    private function fixNameRuleConfig($conf_name, $default = self::CAMEL_NAME)
+    {
+        if (empty($this->section_conf[$conf_name]) || !is_string($this->section_conf[$conf_name])) {
+            return $default;
+        }
+        $conf_value = strtolower(trim($this->section_conf[$conf_name]));
+        if ('underline' === $conf_value) {
+            return self::UNDERLINE_NAME;
+        } elseif ('camel' === $conf_value) {
+            return self::CAMEL_NAME;
+        }
+        return $default;
     }
 
     /**
