@@ -119,7 +119,7 @@ class Coder extends CoderBase
             $property_buf->pushStr(' */');
             $property_line_buf = new StrBuf();
             $property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr('public $' . $name);
+            $property_line_buf->pushStr('public $' . $this->fixPropertyName($name, $item));
             if ($item->hasDefault()) {
                 $property_line_buf->pushStr(' = ' . $item->getDefault());
             }

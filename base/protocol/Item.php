@@ -5,6 +5,7 @@ namespace ffan\dop\protocol;
 use ffan\dop\build\PluginRule;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class Item 协议的每一项
@@ -43,9 +44,9 @@ abstract class Item
     protected $plugin_data_arr;
 
     /**
-     * @var string 字段的真实名字
+     * @var string 下划线命名
      */
-    private $real_name;
+    private $underline_name;
 
     /**
      * Item constructor.
@@ -56,6 +57,7 @@ abstract class Item
     {
         $this->name = $name;
         $this->protocol_manager = $manger;
+        $this->underline_name = FFanStr::underlineName($name);
     }
 
     /**
@@ -164,24 +166,11 @@ abstract class Item
     }
 
     /**
-     * 设置真实的字段名
-     * @param string $name
-     * @throws Exception
-     */
-    public function setRealName($name)
-    {
-        if (!is_string($name) || empty($name)) {
-            throw new Exception('Invalid item name');
-        }
-        $this->real_name = $name;
-    }
-
-    /**
-     * 获取字段的真实name
+     * 获取字段的underline name
      * @return string
      */
-    public function getRealName()
+    public function getUnderLineName()
     {
-        return $this->real_name || '';
+        return $this->underline_name;
     }
 }

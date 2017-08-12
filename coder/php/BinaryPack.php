@@ -82,6 +82,7 @@ class BinaryPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
+            $name = $this->coder->fixPropertyName($name, $item);
             $item_type = $item->getType();
             //如果是以下几种类型，特殊判断
             if (ItemType::ARR === $item_type || ItemType::STRUCT === $item_type || ItemType::MAP === $item_type) {

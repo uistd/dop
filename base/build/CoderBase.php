@@ -4,6 +4,7 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\dop\Manager;
+use ffan\dop\protocol\Item;
 use ffan\dop\protocol\Struct;
 use ffan\php\utils\ConfigBase;
 use ffan\php\utils\Utils as FFanUtils;
@@ -73,6 +74,12 @@ abstract class CoderBase extends ConfigBase
      * @var string 多个 implements 的连接字符串
      */
     protected $implements_join_char = ',';
+
+    /**
+     * 字段名转换对照表
+     * @var array
+     */
+    protected static $name_convert_map;
 
     /**
      * CoderBase constructor.
@@ -633,10 +640,32 @@ abstract class CoderBase extends ConfigBase
 
     /**
      * 获取属性名称
+     * @param string $camel_name
      * @param Item $item
+     * @return string
      */
-    protected function propertyName($item)
+    public function fixPropertyName($camel_name, $item)
     {
+        $result_name = BuildOption::CAMEL_NAME === $this->build_opt->item_name_property ? $camel_name : $item->getUnderLineName();
+        //如果有名字映射, 转换
+        if (isset(static::$name_convert_map[$result_name])) {
+            return static::$name_convert_map[$result_name];
+        }
+        return $result_name;
+    }
 
+    /**
+     * 获取输出的字段名
+     * @param string $camel_name
+     * @param Item $item
+     * @return string
+     */
+    public function fixOutoutName($camel_name, $item)
+    {
+        if (BuildOption::UNDERLINE_NAME === $this->build_opt->item_name_output) {
+            return $item->getUnderLineName();
+        } else {
+            return $camel_name;
+        }
     }
 }
