@@ -340,8 +340,10 @@ class Protocol
             }
             $item_name = trim($node->getAttribute('name'));
             $this->checkName($item_name);
+            $real_name = $item_name;
             $item_name = $this->fixItemName($item_name);
             $item = $this->makeItemObject($item_name, $node);
+            $item->setRealName($real_name);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }

@@ -630,4 +630,13 @@ abstract class CoderBase extends ConfigBase
             $class_name_buf->pushStr($this->implements_flag . $implement_buf->dump());
         }
     }
+
+    /**
+     * 获取属性名称
+     * @param Item $item
+     */
+    protected function propertyName($item)
+    {
+
+    }
 }

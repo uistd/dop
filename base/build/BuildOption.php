@@ -84,6 +84,16 @@ class BuildOption
     private $file_option = 0;
 
     /**
+     * @var bool 是否使用驼峰命名
+     */
+    public $is_camle_name = true;
+
+    /**
+     * @var bool 是否保持xml里的名称
+     */
+    public $is_keep_item_name = false;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -103,7 +113,7 @@ class BuildOption
             'utf8_bom' => false,
             'packer' => '',
             'request_class_suffix' => 'Request',
-            'response_class_suffix' => 'Response'
+            'response_class_suffix' => 'Response',
         );
         //将Public config append to section_conf
         foreach ($public_conf as $name => $value) {
@@ -151,6 +161,10 @@ class BuildOption
         $this->coder_name = $section_conf['coder'];
         $this->build_side = $this->parseCodeSide($section_conf['code_side']);
         $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
+        if (isset($section_conf['is_camle_name']) && 0 === (int)$section_conf['is_camle_name']) {
+            $this->is_camle_name = false;
+        }
+        if (isset($section_conf['']))
         $this->parsePacker($section_conf['packer']);
     }
 

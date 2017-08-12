@@ -43,6 +43,11 @@ abstract class Item
     protected $plugin_data_arr;
 
     /**
+     * @var string 字段的真实名字
+     */
+    private $real_name;
+
+    /**
      * Item constructor.
      * @param string $name 名称
      * @param Manager $manger
@@ -156,5 +161,27 @@ abstract class Item
     public function getBinaryType()
     {
         return $this->type;
+    }
+
+    /**
+     * 设置真实的字段名
+     * @param string $name
+     * @throws Exception
+     */
+    public function setRealName($name)
+    {
+        if (!is_string($name) || empty($name)) {
+            throw new Exception('Invalid item name');
+        }
+        $this->real_name = $name;
+    }
+
+    /**
+     * 获取字段的真实name
+     * @return string
+     */
+    public function getRealName()
+    {
+        return $this->real_name || '';
     }
 }
