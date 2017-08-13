@@ -86,6 +86,11 @@ class Struct
     private $load_from_cache = false;
 
     /**
+     * @var /DomElement 所在的节点(默认记录action所在的节点)
+     */
+    private $node;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -367,5 +372,23 @@ class Struct
     public function getNote()
     {
         return $this->note;
+    }
+
+    /**
+     * 设置所在的节点
+     * @param \DOMElement $node
+     */
+    public function setNode(\DOMElement $node)
+    {
+        $this->node = $node;
+    }
+
+    /**
+     * 获取所在节点
+     * @return \DOMElement|null
+     */
+    public function getNode()
+    {
+        return $this->node;
     }
 }

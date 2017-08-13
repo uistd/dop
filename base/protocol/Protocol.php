@@ -298,6 +298,7 @@ class Protocol
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($name, $node, false, $type);
             $struct->addReferType($type);
+            $struct->setNode($node);
         }
     }
 
@@ -324,16 +325,16 @@ class Protocol
     /**
      * 解析struct
      * @param string $class_name 上级类名
-     * @param \DomElement $struct
+     * @param \DomElement $struct_node
      * @param bool $is_public 是否可以被extend
      * @param int $type 类型
      * @param bool $allow_extend 是否允许extend其它struct
      * @return Struct
      * @throws Exception
      */
-    private function parseStruct($class_name, \DomElement $struct, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
+    private function parseStruct($class_name, \DomElement $struct_node, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
     {
-        $node_list = $struct->childNodes;
+        $node_list = $struct_node->childNodes;
         $item_arr = array();
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
@@ -363,11 +364,11 @@ class Protocol
         $extend_struct = null;
 
         //继承关系
-        if ($struct->hasAttribute('extend')) {
+        if ($struct_node->hasAttribute('extend')) {
             if (!$allow_extend) {
                 throw new Exception('Extend只允许在<action>标签内使用');
             }
-            $struct_name = trim($struct->getAttribute('extend'));
+            $struct_name = trim($struct_node->getAttribute('extend'));
             $struct_name = $this->getFullName($struct_name);
             $conf_suffix = $this->build_opt->getConfig('struct_class_suffix');
             if (!empty($conf_suffix)) {
@@ -394,8 +395,8 @@ class Protocol
         $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
         $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file_name, $type, $is_public);
         //如果有注释
-        if ($struct->hasAttribute('note')) {
-            $struct_obj->setNote($struct->getAttribute('note'));
+        if ($struct_node->hasAttribute('note')) {
+            $struct_obj->setNote($struct_node->getAttribute('note'));
         }
         foreach ($item_arr as $name => $item) {
             $struct_obj->addItem($name, $item);

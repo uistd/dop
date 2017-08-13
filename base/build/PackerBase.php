@@ -19,7 +19,7 @@ abstract class PackerBase
     /**
      * @var FileBuf 当前正在编辑的文件
      */
-    private $file_buf;
+    protected $file_buf;
 
     /**
      * @var CodeBuf 生成import的buf
@@ -50,8 +50,9 @@ abstract class PackerBase
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    public function buildPackMethod($struct, $code_buf) {
-        
+    public function buildPackMethod($struct, $code_buf)
+    {
+
     }
 
     /**
@@ -60,8 +61,9 @@ abstract class PackerBase
      * @param CodeBuf $code_buf 生成的代码缓存
      * @return void
      */
-    public function buildUnpackMethod($struct, $code_buf) {
-        
+    public function buildUnpackMethod($struct, $code_buf)
+    {
+
     }
 
     /**
@@ -77,9 +79,9 @@ abstract class PackerBase
      */
     public function build()
     {
-        
+
     }
-    
+
     /**
      * 生成通用代码（调用pack方法时）
      * @param FileBuf $file_buf 文件
