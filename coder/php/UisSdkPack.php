@@ -71,7 +71,7 @@ class UisSdkPack extends PackerBase
                 $method_buf->pushStr(' */');
                 $method_buf->pushStr('function getResponse()');
                 $method_buf->pushStr('{')->indent();
-                $method_buf->pushStr('$data = $this->getResponse();');
+                $method_buf->pushStr('$data = $this->getResponseData();');
                 $method_buf->pushStr('$result = new '. $response_class_name .'();');
                 $method_buf->pushStr('$result->arrayUnpack($data);');
                 $method_buf->pushStr('return $result;');
