@@ -196,6 +196,9 @@ abstract class CoderBase extends ConfigBase
          * @var PluginBase $plugin
          */
         foreach ($plugin_list as $name => $plugin) {
+            if (!$this->build_opt->isUsePlugin($name)) {
+                continue;
+            }
             $plugin_coder = $plugin->getPluginCoder($this->coder_name);
             if (null === $plugin_coder) {
                 continue;

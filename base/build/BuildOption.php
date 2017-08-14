@@ -66,7 +66,7 @@ class BuildOption
     /**
      * @var string 使用的插件, plugin1, plugin2
      */
-    private $use_plugin = 'all';
+    private $use_plugin = '';
 
     /**
      * @var string 语言类型
@@ -303,10 +303,10 @@ class BuildOption
      * @param string $plugin_name 插件名称
      * @return boolean
      */
-    public function usePlugin($plugin_name)
+    public function isUsePlugin($plugin_name)
     {
         //如果配置了all，表示使用所有的插件
-        if (false !== strpos($this->use_plugin, 'all,')) {
+        if (false !== strpos($this->use_plugin, 'all,') || false !== strpos($this->use_plugin, '*,')) {
             return true;
         }
         $plugin_name .= ',';
