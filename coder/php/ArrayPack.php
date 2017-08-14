@@ -330,10 +330,10 @@ class ArrayPack extends PackerBase
         }
         if ($isset_check) {
             $code_buf->backIndent();
-            if (0 === $depth) {
-                $code_buf->pushStr('} else {');
-                $code_buf->pushIndent('$' . $var_name . ' = ' . self::fixDefaultName($item) . ';');
-            }
+            //if (0 === $depth) {
+            //   $code_buf->pushStr('} else {');
+            //    $code_buf->pushIndent('$' . $var_name . ' = ' . self::fixDefaultName($item) . ';');
+            //}
             $code_buf->pushStr('}');
         }
     }
