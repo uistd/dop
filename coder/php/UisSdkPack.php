@@ -69,7 +69,7 @@ class UisSdkPack extends PackerBase
                 $method_buf->pushStr(' * 获取请求结果');
                 $method_buf->pushStr(' * @return '. $response_class_name);
                 $method_buf->pushStr(' */');
-                $method_buf->pushStr('function getResponse()');
+                $method_buf->pushStr('public function request()');
                 $method_buf->pushStr('{')->indent();
                 $method_buf->pushStr('$data = $this->getResponseData();');
                 $method_buf->pushStr('$result = new '. $response_class_name .'();');
