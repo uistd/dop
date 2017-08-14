@@ -135,8 +135,8 @@ class ArrayPack extends PackerBase
                 break;
             case ItemType::ARR:
                 $result_var_name = self::varName($depth, 'tmp_arr');
-                $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 self::packArrayCheckCode($code_buf, $var_name, $depth);
+                $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 $for_var_name = self::varName($depth, 'item');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
@@ -144,15 +144,15 @@ class ArrayPack extends PackerBase
                 $code_buf->indent();
                 self::packItemValue($code_buf, $for_var_name, $result_var_name . '[]', $sub_item, $depth + 1);
                 $code_buf->backIndent()->pushStr('}');
+                $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 if (0 === $depth) {
                     $code_buf->backIndent()->pushStr('}');
                 }
-                $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 break;
             case ItemType::MAP:
                 $result_var_name = self::varName($depth, 'tmp_' . $item->getName());
-                $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 self::packArrayCheckCode($code_buf, $var_name, $depth);
+                $code_buf->pushStr('$' . $result_var_name . ' = array();');
                 $key_var_name = self::varName($depth, 'key');
                 $for_var_name = self::varName($depth, 'item');
                 /** @var MapItem $item */
@@ -164,10 +164,10 @@ class ArrayPack extends PackerBase
                 self::packItemValue($code_buf, $key_var_name, $key_var_name, $key_item, $depth + 1);
                 $code_buf->pushStr('$' . $result_var_name . '[$' . $key_var_name . '] = $' . $for_var_name . ';');
                 $code_buf->backIndent()->pushStr('}');
+                $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 if (0 === $depth) {
                     $code_buf->backIndent()->pushStr('}');
                 }
-                $code_buf->pushStr('$' . $result_var . ' = $' . $result_var_name . ';');
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
@@ -220,7 +220,9 @@ class ArrayPack extends PackerBase
     {
         //如果是最外层，要判断值是不是null
         if (0 === $depth) {
+            $code_buf->pushStr('if (null !== $' . $var_name . ') {');
             $code_buf->pushIndent('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name . ';');
+            $code_buf->pushStr('}');
         } else {
             $code_buf->pushStr('if (null === $' . $var_name . ') {');
             $code_buf->pushIndent('continue;');
