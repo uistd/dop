@@ -19,6 +19,9 @@ class JsonPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
+        if ($struct->isSubStruct()) {
+            return;
+        }
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成json串');
@@ -45,6 +48,9 @@ class JsonPack extends PackerBase
      */
     public function buildUnpackMethod($struct, $code_buf)
     {
+        if ($struct->isSubStruct()) {
+            return;
+        }
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 对象初始化');
