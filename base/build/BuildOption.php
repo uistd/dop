@@ -169,7 +169,7 @@ class BuildOption
         //代码生成目录
         $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
         $this->namespace_prefix = $section_conf['namespace'];
-        $this->use_plugin = str_replace(' ', '', $this->use_plugin) . ',';
+        $this->use_plugin = str_replace(' ', '', $this->getConfig('plugin', '')) . ',';
         $this->coder_name = $section_conf['coder'];
         $this->build_side = $this->parseCodeSide($section_conf['code_side']);
         $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
