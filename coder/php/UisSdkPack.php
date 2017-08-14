@@ -64,15 +64,18 @@ class UisSdkPack extends PackerBase
                 $action_node = $node->parentNode;
                 $name = FFanStr::camelName($action_node->getAttribute('name'));
                 $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) .'_class_suffix');
-                $parent_name = $name . FFanStr::camelName($class_name_suffix);
+                $response_class_name = $name . FFanStr::camelName($class_name_suffix);
                 $method_buf->pushStr('/**');
-                $method_buf->pushStr(' * 请求');
-                $method_buf->pushStr(' * @return '. $parent_name);
+                $method_buf->pushStr(' * 获取请求结果');
+                $method_buf->pushStr(' * @return '. $response_class_name);
                 $method_buf->pushStr(' */');
                 $method_buf->pushStr('function getResponse()');
-                $method_buf->pushStr('{');
-                $method_buf->pushStr('}');
-
+                $method_buf->pushStr('{')->indent();
+                $method_buf->pushStr('$data = $this->getResponse();');
+                $method_buf->pushStr('$result = new '. $response_class_name .'();');
+                $method_buf->pushStr('$result->arrayUnpack($data);');
+                $method_buf->pushStr('return $result;');
+                $method_buf->backIndent()->pushStr('}');
                 break;
             }
             $response_node = $response_node->nextSibling;
