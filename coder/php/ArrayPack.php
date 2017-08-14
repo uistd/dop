@@ -79,6 +79,34 @@ class ArrayPack extends PackerBase
     }
 
     /**
+     * 生成默认值
+     * @param Item $item
+     * @return string
+     */
+    private static function fixDefaultName($item)
+    {
+        $item_type = $item->getType();
+        switch ($item_type) {
+            case ItemType::INT:
+                return 0;
+            case ItemType::STRING:
+            case ItemType::BINARY:
+                return "''";
+            case ItemType::FLOAT:
+            case ItemType::DOUBLE:
+                return '0.0';
+            case ItemType::MAP:
+            case ItemType::ARR:
+                return '[]';
+            case ItemType::STRUCT:
+                return 'null';
+            case ItemType::BOOL:
+                return 'false';
+        }
+        return '';
+    }
+
+    /**
      * 打包一项数据
      * @param CodeBuf $code_buf
      * @param string $var_name 变量名
@@ -192,9 +220,7 @@ class ArrayPack extends PackerBase
     {
         //如果是最外层，要判断值是不是null
         if (0 === $depth) {
-            $code_buf->pushStr('if (null !== $' . $var_name . ') {');
             $code_buf->pushIndent('$' . $result_var . ' = (' . $convert_type . ')$' . $var_name . ';');
-            $code_buf->pushStr('}');
         } else {
             $code_buf->pushStr('if (null === $' . $var_name . ') {');
             $code_buf->pushIndent('continue;');
@@ -304,6 +330,10 @@ class ArrayPack extends PackerBase
         }
         if ($isset_check) {
             $code_buf->backIndent();
+            if (0 === $depth) {
+                $code_buf->pushStr('} else {');
+                $code_buf->pushIndent('$' . $var_name . ' = ' . self::fixDefaultName($item) . ';');
+            }
             $code_buf->pushStr('}');
         }
     }
