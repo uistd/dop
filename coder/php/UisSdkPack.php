@@ -38,25 +38,25 @@ class UisSdkPack extends PackerBase
         }
         $node = $struct->getNode();
         $uri = $node->getAttribute('uri');
-        if (!empty($uri)) {
-            $uri = trim($uri);
-            $property_buf->emptyLine();
-            $property_buf->pushStr('/**');
-            $property_buf->pushStr(' * @var string api gateway资源地址');
-            $property_buf->pushStr(' */');
-            $property_buf->pushStr('protected static $api_gateway_uri = '. escapeshellarg($uri) .';');
-        }
         $method = $node->getAttribute('method');
-        if (!empty($method)) {
-            $method = strtolower(trim($method));
-            if ('get' !== $method) {
-                $property_buf->emptyLine();
-                $property_buf->pushStr('/**');
-                $property_buf->pushStr(' * @var string 方法');
-                $property_buf->pushStr(' */');
-                $property_buf->pushStr('protected static $api_gateway_method = '. escapeshellarg($method) .';');
-            }
+        $method_buf->emptyLine();
+        $method_buf->pushStr('/**');
+        $method_buf->pushStr(' * @param string $uri');
+        $method_buf->pushStr(' * @param string $method');
+        $method_buf->pushStr(' */');
+        $uri_param = '$uri';
+        if (!empty($uri)) {
+            $uri_param .= " = '". $uri ."'";
         }
+        $method_param = '$method';
+        if (!empty($method)) {
+            $method_param .= " = '". $method ."'";
+        }
+        $method_buf->pushStr('public function __construct('. $uri_param .', '. $method_param .')');
+        $method_buf->pushStr('{')->indent();
+        $method_buf->pushStr('parent::__construct($uri, $method);');
+        $method_buf->backIndent()->pushStr('}')->emptyLine();
+
         $response_node = $node->nextSibling;
         //如果有response, 生成获取response结果
         while(null !== $response_node) {
