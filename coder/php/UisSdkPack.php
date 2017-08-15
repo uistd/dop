@@ -49,7 +49,7 @@ class UisSdkPack extends PackerBase
             $uri_param .= " = '" . $uri . "'";
         }
         $method_param = '$method';
-        if (!empty($method)) {
+        if (empty($method)) {
             $method = 'get';
         }
         $method_param .= " = '" . $method . "'";
