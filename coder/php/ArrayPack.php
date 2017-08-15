@@ -42,7 +42,7 @@ class ArrayPack extends PackerBase
          */
         foreach ($all_item as $name => $item) {
             $property_name = $this->coder->fixPropertyName($name, $item);
-            $value_name = $this->coder->fixOutoutName($name, $item);
+            $value_name = $this->coder->fixOutputName($name, $item);
             self::packItemValue($code_buf, 'this->' . $property_name, "result['" . $value_name . "']", $item, 0);
         }
         $code_buf->pushStr('return $result;');
@@ -72,38 +72,10 @@ class ArrayPack extends PackerBase
          */
         foreach ($all_item as $name => $item) {
             $property_name = $this->coder->fixPropertyName($name, $item);
-            $value_name = $this->coder->fixOutoutName($name, $item);
+            $value_name = $this->coder->fixOutputName($name, $item);
             self::unpackItemValue($code_buf, 'this->' . $property_name, 'data', $item, 0, $value_name);
         }
         $code_buf->backIndent()->pushStr('}');
-    }
-
-    /**
-     * 生成默认值
-     * @param Item $item
-     * @return string
-     */
-    private static function fixDefaultName($item)
-    {
-        $item_type = $item->getType();
-        switch ($item_type) {
-            case ItemType::INT:
-                return 0;
-            case ItemType::STRING:
-            case ItemType::BINARY:
-                return "''";
-            case ItemType::FLOAT:
-            case ItemType::DOUBLE:
-                return '0.0';
-            case ItemType::MAP:
-            case ItemType::ARR:
-                return '[]';
-            case ItemType::STRUCT:
-                return 'null';
-            case ItemType::BOOL:
-                return 'false';
-        }
-        return '';
     }
 
     /**

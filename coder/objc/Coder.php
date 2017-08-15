@@ -190,4 +190,41 @@ class Coder extends CoderBase
         $class_name = $class_prefix . ucfirst(basename($struct->getFile(), '.xml')) . $struct->getClassName();
         return $class_name;
     }
+
+    /**
+     * 获取需要的kindOfClass name
+     * @param Item $item
+     * @return string
+     */
+    public function nsClassName($item)
+    {
+        $item_type = $item->getType();
+        switch ($item_type) {
+            case ItemType::INT:
+            case ItemType::BOOL:
+            case ItemType::FLOAT:
+            case ItemType::DOUBLE:
+                $type_name = 'NSNumber';
+                break;
+            case ItemType::BINARY:
+                $type_name = 'NSData';
+                break;
+            case ItemType::STRING:
+                $type_name = 'NSString';
+                break;
+            case ItemType::STRUCT:
+                /** @var StructItem $item */
+                $type_name = $this->makeClassName($item->getStruct());
+                break;
+            case ItemType::MAP:
+                $type_name = 'NSDictionary';
+                break;
+            case ItemType::ARR:
+                $type_name = 'NSArray';
+                break;
+            default:
+                $type_name = 'NSNull';
+        }
+        return $type_name;
+    }
 }

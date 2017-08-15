@@ -46,7 +46,7 @@ class StructPack extends PackerBase
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
-            $name = $this->coder->fixOutoutName($name, $item);
+            $name = $this->coder->fixOutputName($name, $item);
             $code_buf->pushStr('$byte_array->writeString(\'' . $name . '\');');
             $this->writeItemType($code_buf, $item);
         }

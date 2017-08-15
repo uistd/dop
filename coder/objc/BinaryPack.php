@@ -11,7 +11,6 @@ use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
 
 /**
  * Class BinaryPack
@@ -206,8 +205,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('FFANDOPEncode *' . $buffer_name . ' = [FFANDOPEncode new];');
                 $code_buf->pushStr('for (id ' . $for_var_name . ' in ' . $var_name . ') {');
                 $code_buf->indent();
-                /** @var IntItem $item */
-                $class_name = $this->nsClassName($sub_item);
+                $class_name = $this->coder->nsClassName($sub_item);
                 $code_buf->pushStr('if (![' . $for_var_name . ' isKindOfClass:[' . $class_name . ' class]]){');
                 $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
@@ -238,7 +236,7 @@ class BinaryPack extends PackerBase
                 $code_buf->pushStr('for (id ' . $key_var_name . ' in ' . $enumerator_name . '){');
                 $code_buf->indent();
                 $code_buf->pushStr('id '. $value_var_name .' = ['. $var_name .' objectForKey:'. $key_var_name .'];');
-                $value_class_type = $this->nsClassName($value_item);
+                $value_class_type = $this->coder->nsClassName($value_item);
                 $code_buf->pushStr('if ([' . $value_var_name . ' isKindOfClass:[' . $value_var_name . ' class]]) {')->indent();
                 $key_ns_type = DictionaryPack::nsTypeName($key_item->getType());
                 $key_var_name = self::objectChangeToBasic($key_item, '[FFANDOPUtils idTo'. $key_ns_type .':'.$key_var_name.']');
@@ -253,44 +251,6 @@ class BinaryPack extends PackerBase
                 break;
         }
     }
-
-    /**
-     * 获取需要的kindOfClass name
-     * @param Item $item
-     * @return string
-     */
-    private function nsClassName($item)
-    {
-        $item_type = $item->getType();
-        switch ($item_type) {
-            case ItemType::INT:
-            case ItemType::BOOL:
-            case ItemType::FLOAT:
-            case ItemType::DOUBLE:
-                $type_name = 'NSNumber';
-                break;
-            case ItemType::BINARY:
-                $type_name = 'NSData';
-                break;
-            case ItemType::STRING:
-                $type_name = 'NSString';
-                break;
-            case ItemType::STRUCT:
-                /** @var StructItem $item */
-                $type_name = $this->coder->makeClassName($item->getStruct());
-                break;
-            case ItemType::MAP:
-                $type_name = 'NSDictionary';
-                break;
-            case ItemType::ARR:
-                $type_name = 'NSArray';
-                break;
-            default:
-                $type_name = 'NSNull';
-        }
-        return $type_name;
-    }
-
 
     /**
      * 将对象转成基础类型

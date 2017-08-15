@@ -25,11 +25,6 @@ class DictionaryPack extends PackerBase
     protected $coder;
 
     /**
-     * @var bool 是否需要null
-     */
-    private $is_null_require;
-
-    /**
      * @var StrBuf
      */
     private $null_obj_buf;
@@ -42,28 +37,18 @@ class DictionaryPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        return;
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 输出NSDictionary');
         $code_buf->pushStr(' */');
-        if ($struct->isSubStruct()) {
-            $code_buf->pushStr('- (NSMutableDictionary*) DictionaryEncode {');
-            $code_buf->indent();
-            $code_buf->pushStr('NSMutableDictionary *result = [NSMutableDictionary new];');
-        } else {
-            $code_buf->pushStr('- (NSDictionary *)DictionaryEncode {');
-            $code_buf->indent();
-            $code_buf->pushStr('NSMutableDictionary *result = [NSMutableDictionary new];');
-        }
+        $code_buf->pushStr('- (NSDictionary *)DictionaryEncode {');
+        $code_buf->indent();
+        $code_buf->pushStr('NSMutableDictionary *result = [NSMutableDictionary new];');
         $this->null_obj_buf = new StrBuf();
         $code_buf->push($this->null_obj_buf);
         $this->writePropertyLoop($code_buf, $struct);
         $code_buf->pushStr('return result;');
         $code_buf->backIndent()->pushStr('}');
-        if ($this->is_null_require) {
-            $this->null_obj_buf->pushStr('NSNull *nil_object = [NSNull new];');
-        }
     }
 
     /**
@@ -80,6 +65,7 @@ class DictionaryPack extends PackerBase
             ItemType::BINARY => true,
             ItemType::STRUCT => true,
         );
+        $tmp_index = 0;
         /**
          * @var string $name
          * @var Item $item
@@ -88,19 +74,11 @@ class DictionaryPack extends PackerBase
             $type = $item->getType();
             $null_check = isset($null_check_list[$type]);
             if ($null_check) {
-                //如果忽略null值
-                if ($this->coder->isJsonIgnoreNull()) {
-                    $code_buf->pushStr('if (nil != self.' . $name . ') {')->indent();
-                } else {
-                    $this->is_null_require = true;
-                    $code_buf->pushStr('if (nil == self.' . $name . ') {');
-                    $code_buf->pushIndent('result[@"' . $name . '"] = nil_object;');
-                    $code_buf->pushStr('} else {')->indent();
-                }
-                $this->packItemValue($code_buf, 'self.' . $name, '@"' . $name . '"', $item);
+                $code_buf->pushStr('if (nil != self.' . $name . ') {')->indent();
+                $this->packItemValue($code_buf, 'self.' . $name, 'result[@"' . $name . '"]', $item, 0, $tmp_index);
                 $code_buf->backIndent()->pushStr('}');
             } else {
-                $this->packItemValue($code_buf, 'self.' . $name, '@"' . $name . '"', $item);
+                $this->packItemValue($code_buf, 'self.' . $name, 'result[@"' . $name . '"]', $item, 0, $tmp_index);
             }
         }
     }
@@ -111,42 +89,101 @@ class DictionaryPack extends PackerBase
      * @param string $value_name 变量名
      * @param string $name 属性名
      * @param Item $item 节点对象
+     * @param int $depth 递归深度
+     * @param int $tmp_index
      * @throws Exception
      */
-    private function packItemValue($code_buf, $value_name, $name, $item)
+    private function packItemValue($code_buf, $value_name, $name, $item, $depth, &$tmp_index)
     {
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::INT:
                 /** @var IntItem $item */
-                $code = '@(' . $value_name . ')';
+                $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::STRING:
                 $code = $value_name;
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::BINARY:
                 $code = '[' . $value_name . ' base64EncodedStringWithOptions:0]';
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::BOOL:
-                $code = '@(' . $value_name . ')';
+                $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::DOUBLE:
-                $code = '@(' . $value_name . ')';
+                $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::FLOAT:
-                $code = '@(' . $value_name . ')';
+                $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::STRUCT:
                 $code = '[' . $value_name . ' DictionaryEncode]';
+                $code_buf->pushStr($name . ' = ' . $code);
                 break;
             case ItemType::ARR:
+                $tmp_var = self::varName($tmp_index++, 'tmp_arr');
+                $for_var = self::varName($tmp_index, 'tmp_item');
+                $for_id_var = self::varName($tmp_index++, 'tmp_id');
+                /** @var ListItem $item */
+                $sub_item = $item->getItem();
+                $var_type = $this->coder->varType($sub_item, true, false);
+                $code_buf->pushStr('NSMutableArray *' . $tmp_var . ' = [NSMutableArray new];');
+                $code_buf->pushStr('for (id ' . $for_id_var . ' in ' . $value_name . ') {');
+                $code_buf->indent();
+                $class_name = $this->coder->nsClassName($sub_item);
+                $code_buf->pushStr('if (![' . $for_id_var . ' isKindOfClass:[' . $class_name . ' class]]){');
+                $code_buf->pushIndent('continue;');
+                $code_buf->pushStr('}');
+                $code_buf->pushStr($var_type . ' ' . $for_var . ';');
+                self::packItemValue($code_buf, '(' . $class_name . ' *)' . $for_id_var, $for_var, $sub_item, $depth + 1, $tmp_index);
+                $code_buf->pushStr('[' . $tmp_var . ' addObject:' . $for_var . '];');
+                $code_buf->backIndent()->push('}');
+                $code_buf->pushStr($name . ' = ' . $tmp_var . ';');
+                break;
             case ItemType::MAP:
-                $code = $value_name;
+                $tmp_var = self::varName($tmp_index++, 'tmp_map');
+                //Enumerator
+                $enumerator_name = self::varName($tmp_index++, 'enumerator');
+                $code_buf->pushStr('NSMutableDictionary *' . $tmp_var . ' = [NSMutableDictionary new];');
+                //循环键名
+                $key_var_name = self::varName($tmp_index++, 'key');
+                $value_var_name = self::varName($tmp_index++, 'value');
+                $for_key_name = self::varName($tmp_index++, 'tmp_key');
+                $for_value_name = self::varName($tmp_index++, 'tmp_value');
+                $code_buf->pushStr('NSEnumerator *' . $enumerator_name . ' = [' . $value_name . ' keyEnumerator];');
+                /** @var MapItem $item */
+                $key_item = $item->getKeyItem();
+                $value_item = $item->getValueItem();
+                $code_buf->pushStr('for (id ' . $key_var_name . ' in ' . $enumerator_name . '){');
+                $code_buf->indent();
+                $class_name = $this->coder->nsClassName($value_item);
+                $code_buf->pushStr('id ' . $value_var_name . ' = [' . $value_name . ' objectForKey:' . $key_var_name . '];');
+                $value_class_type = $this->coder->nsClassName($value_item);
+                $code_buf->pushStr('if (![' . $value_var_name . ' isKindOfClass:[' . $class_name . ' class]]) {');
+                $code_buf->pushIndent('continue;');
+                $code_buf->pushStr('};');
+                $key_ns_type = self::nsTypeName($key_item->getType());
+                $key_var_name = '[FFANDOPUtils idTo' . $key_ns_type . ':' . $key_var_name . ']';
+                $key_type = $this->coder->varType($key_item, true, false);
+                $value_type = $this->coder->varType($value_item, true, false);
+                $value_var_name = '(' . $value_class_type . ' *)' . $value_var_name;
+                $code_buf->pushStr($key_type . ' ' . $for_key_name . ';');
+                $code_buf->pushStr($value_type . ' ' . $for_value_name . ';');
+                self::packItemValue($code_buf, $key_var_name, $for_key_name, $key_item, $depth + 1, $tmp_index);
+                self::packItemValue($code_buf, $value_var_name, $for_value_name, $value_item, $depth + 1, $tmp_index);
+                $code_buf->pushStr($tmp_var . '[' . $for_key_name . '] = ' . $for_value_name . ';');
+                $code_buf->backIndent()->pushStr('}');
+                $code_buf->pushStr($name . ' = ' . $tmp_var . ';');
                 break;
             default:
                 throw new Exception('Unknown type');
         }
-        $code_buf->push('result[' . $name . '] = ' . $code . ';');
     }
 
     /**
@@ -313,7 +350,7 @@ class DictionaryPack extends PackerBase
                 $code_buf->pushStr($key_type . ' ' . $for_key_name . ' = [FFANDOPUtils idTo' . $key_ns_type . ':' . $for_key_var . '];');
                 $code_buf->pushStr($value_type . ' ' . $for_value_name . ';');
                 $this->unpackItemValue($code_buf, $for_value_name, '[FFANDOPUtils idTo' . $value_ns_type . ':' . $for_value_var . ']', $value_item, $tmp_index, $depth + 1);
-                $code_buf->pushStr($var_name . '['. $for_key_name .'] = ' . $for_value_name . ';');
+                $code_buf->pushStr($var_name . '[' . $for_key_name . '] = ' . $for_value_name . ';');
                 $code_buf->backIndent()->pushStr('}];');
                 break;
         }

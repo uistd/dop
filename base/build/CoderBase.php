@@ -563,16 +563,6 @@ abstract class CoderBase extends ConfigBase
         return $this->build_opt;
     }
 
-
-    /**
-     * 是否忽略null值
-     * @return bool
-     */
-    public function isJsonIgnoreNull()
-    {
-        return $this->getConfigBool("json_ignore_null", true);
-    }
-
     /**
      * 读取类文件配置
      * @param FileBuf $file_buf
@@ -663,7 +653,7 @@ abstract class CoderBase extends ConfigBase
      * @param Item $item
      * @return string
      */
-    public function fixOutoutName($camel_name, $item)
+    public function fixOutputName($camel_name, $item)
     {
         if (BuildOption::UNDERLINE_NAME === $this->build_opt->item_name_output) {
             return $item->getUnderLineName();
