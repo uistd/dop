@@ -46,33 +46,34 @@ class UisSdkPack extends PackerBase
         $method_buf->pushStr(' */');
         $uri_param = '$uri';
         if (!empty($uri)) {
-            $uri_param .= " = '". $uri ."'";
+            $uri_param .= " = '" . $uri . "'";
         }
         $method_param = '$method';
         if (!empty($method)) {
-            $method_param .= " = '". $method ."'";
+            $method = 'get';
         }
-        $method_buf->pushStr('public function __construct('. $uri_param .', '. $method_param .')');
+        $method_param .= " = '" . $method . "'";
+        $method_buf->pushStr('public function __construct(' . $uri_param . ', ' . $method_param . ')');
         $method_buf->pushStr('{')->indent();
         $method_buf->pushStr('parent::__construct($uri, $method);');
         $method_buf->backIndent()->pushStr('}')->emptyLine();
 
         $response_node = $node->nextSibling;
         //如果有response, 生成获取response结果
-        while(null !== $response_node) {
+        while (null !== $response_node) {
             if (XML_ELEMENT_NODE === $response_node->nodeType && 'response' === $response_node->nodeName) {
                 $action_node = $node->parentNode;
                 $name = FFanStr::camelName($action_node->getAttribute('name'));
-                $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) .'_class_suffix');
+                $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) . '_class_suffix');
                 $response_class_name = $name . FFanStr::camelName($class_name_suffix);
                 $method_buf->pushStr('/**');
                 $method_buf->pushStr(' * 获取请求结果');
-                $method_buf->pushStr(' * @return '. $response_class_name);
+                $method_buf->pushStr(' * @return ' . $response_class_name);
                 $method_buf->pushStr(' */');
                 $method_buf->pushStr('public function request()');
                 $method_buf->pushStr('{')->indent();
                 $method_buf->pushStr('$data = $this->getResponseData();');
-                $method_buf->pushStr('$result = new '. $response_class_name .'();');
+                $method_buf->pushStr('$result = new ' . $response_class_name . '();');
                 $method_buf->pushStr('$result->arrayUnpack($data);');
                 $method_buf->pushStr('return $result;');
                 $method_buf->backIndent()->pushStr('}');
