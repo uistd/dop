@@ -4,6 +4,8 @@ namespace ffan\dop\coder\objc;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\PackerBase;
+use ffan\dop\build\StrBuf;
+use ffan\dop\Exception;
 use ffan\dop\protocol\IntItem;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
@@ -21,6 +23,130 @@ class DictionaryPack extends PackerBase
      * @var Coder
      */
     protected $coder;
+
+    /**
+     * @var bool 是否需要null
+     */
+    private $is_null_require;
+
+    /**
+     * @var StrBuf
+     */
+    private $null_obj_buf;
+
+    /**
+     * 数据序列化
+     * @param Struct $struct 结构体
+     * @param CodeBuf $code_buf 生成的代码缓存
+     * @return void
+     */
+    public function buildPackMethod($struct, $code_buf)
+    {
+        $code_buf->emptyLine();
+        $code_buf->pushStr('/**');
+        $code_buf->pushStr(' * 输出NSDictionary');
+        $code_buf->pushStr(' */');
+        if ($struct->isSubStruct()) {
+            $code_buf->pushStr('- (NSMutableDictionary*) DictionaryEncode {');
+            $code_buf->indent();
+            $code_buf->pushStr('NSMutableDictionary *result = [NSMutableDictionary new];');
+        } else {
+            $code_buf->pushStr('- (NSDictionary *)DictionaryEncode {');
+            $code_buf->indent();
+            $code_buf->pushStr('NSMutableDictionary *result = [NSMutableDictionary new];');
+        }
+        $this->null_obj_buf = new StrBuf();
+        $code_buf->push($this->null_obj_buf);
+        $this->writePropertyLoop($code_buf, $struct);
+        $code_buf->pushStr('return result;');
+        $code_buf->backIndent()->pushStr('}');
+        if ($this->is_null_require) {
+            $this->null_obj_buf->pushStr('NSNull *nil_object = [NSNull new];');
+        }
+    }
+
+    /**
+     * @param CodeBuf $code_buf
+     * @param Struct $struct
+     */
+    private function writePropertyLoop($code_buf, $struct)
+    {
+        $all_item = $struct->getAllExtendItem();
+        static $null_check_list = array(
+            ItemType::STRING => true,
+            ItemType::ARR => true,
+            ItemType::MAP => true,
+            ItemType::BINARY => true,
+            ItemType::STRUCT => true,
+        );
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item as $name => $item) {
+            $type = $item->getType();
+            $null_check = isset($null_check_list[$type]);
+            if ($null_check) {
+                //如果忽略null值
+                if ($this->coder->isJsonIgnoreNull()) {
+                    $code_buf->pushStr('if (nil != self.' . $name . ') {')->indent();
+                } else {
+                    $this->is_null_require = true;
+                    $code_buf->pushStr('if (nil == self.' . $name . ') {');
+                    $code_buf->pushIndent('result[@"' . $name . '"] = nil_object;');
+                    $code_buf->pushStr('} else {')->indent();
+                }
+                $this->packItemValue($code_buf, 'self.' . $name, '@"' . $name . '"', $item);
+                $code_buf->backIndent()->pushStr('}');
+            } else {
+                $this->packItemValue($code_buf, 'self.' . $name, '@"' . $name . '"', $item);
+            }
+        }
+    }
+
+    /**
+     * 打包一项数据
+     * @param CodeBuf $code_buf
+     * @param string $value_name 变量名
+     * @param string $name 属性名
+     * @param Item $item 节点对象
+     * @throws Exception
+     */
+    private function packItemValue($code_buf, $value_name, $name, $item)
+    {
+        $item_type = $item->getType();
+        switch ($item_type) {
+            case ItemType::INT:
+                /** @var IntItem $item */
+                $code = '@(' . $value_name . ')';
+                break;
+            case ItemType::STRING:
+                $code = $value_name;
+                break;
+            case ItemType::BINARY:
+                $code = '[' . $value_name . ' base64EncodedStringWithOptions:0]';
+                break;
+            case ItemType::BOOL:
+                $code = '@(' . $value_name . ')';
+                break;
+            case ItemType::DOUBLE:
+                $code = '@(' . $value_name . ')';
+                break;
+            case ItemType::FLOAT:
+                $code = '@(' . $value_name . ')';
+                break;
+            case ItemType::STRUCT:
+                $code = '[' . $value_name . ' DictionaryEncode]';
+                break;
+            case ItemType::ARR:
+            case ItemType::MAP:
+                $code = $value_name;
+                break;
+            default:
+                throw new Exception('Unknown type');
+        }
+        $code_buf->push('result[' . $name . '] = ' . $code . ';');
+    }
 
     /**
      * 数据反序列化
