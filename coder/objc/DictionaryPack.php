@@ -42,6 +42,7 @@ class DictionaryPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
+        return;
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 输出NSDictionary');
