@@ -8,6 +8,7 @@ use ffan\dop\build\PackerBase;
 use ffan\dop\build\StrBuf;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\Struct;
+use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class ArrayPack
@@ -52,18 +53,33 @@ class UisSdkPack extends PackerBase
         $method_buf->pushStr('{')->indent();
         $method_buf->pushStr('parent::__construct($uri, $method);');
         $method_buf->backIndent()->pushStr('}');
+
+        //@todo 以下代码太难理解， 待优化
+        $response_node = $node->nextSibling;
+        //如果有response, 生成获取response结果
+        while (null !== $response_node) {
+            if (XML_ELEMENT_NODE !== $response_node->nodeType || 'response' !== $response_node->nodeName) {
+                $response_node = $response_node->nextSibling;
+                continue;
+            }
+            $action_node = $node->parentNode;
+            $name = FFanStr::camelName($action_node->getAttribute('name'));
+            $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) . '_class_suffix');
+            $response_class_name = $name . FFanStr::camelName($class_name_suffix);
+            $response_struct = $this->coder->getManager()->getStruct('/'. $struct->getFile(false) .'/'. $response_class_name);
+            if ($response_struct) {
+                $this->buildGetResult($response_struct, $method_buf);
+            }
+            break;
+        }
     }
 
     /**
      * @param Struct $struct
-     * @param CodeBuf $code_buf
+     * @param CodeBuf $method_buf
      */
-    public function buildUnpackMethod($struct, $code_buf)
+    public function buildGetResult($struct, $method_buf)
     {
-        if ($struct->isSubStruct() || Struct::TYPE_RESPONSE !== $struct->getType()) {
-            return;
-        }
-        $method_buf = $this->file_buf->getBuf(FileBuf::METHOD_BUF);
         if (!$method_buf) {
             return;
         }
