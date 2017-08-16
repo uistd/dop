@@ -146,8 +146,6 @@ class ArrayPack extends PackerBase
                 if (0 === $depth) {
                     $code_buf->pushStr('if ($' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
                     $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
-                    $code_buf->pushStr('} else {');
-                    $code_buf->pushIndent('$' . $result_var . ' = array();');
                     $code_buf->pushStr('}');
                 } else {
                     $code_buf->pushStr('if (!$' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
