@@ -100,31 +100,31 @@ class DictionaryPack extends PackerBase
             case ItemType::INT:
                 /** @var IntItem $item */
                 $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::STRING:
                 $code = $value_name;
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::BINARY:
                 $code = '[' . $value_name . ' base64EncodedStringWithOptions:0]';
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::BOOL:
                 $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::DOUBLE:
                 $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::FLOAT:
                 $code = 0 === $depth ? ('@(' . $value_name . ')') : $value_name;
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::STRUCT:
                 $code = '[' . $value_name . ' DictionaryEncode]';
-                $code_buf->pushStr($name . ' = ' . $code);
+                $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::ARR:
                 $tmp_var = self::varName($tmp_index++, 'tmp_arr');
