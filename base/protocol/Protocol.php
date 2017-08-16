@@ -411,7 +411,7 @@ class Protocol
     /**
      * 生成item对象
      * @param string $name
-     * @param \DOMNode $dom_node 节点
+     * @param \DOMElement $dom_node 节点
      * @return Item
      * @throws Exception
      */
@@ -657,13 +657,18 @@ class Protocol
     /**
      * 解析私有的struct
      * @param string $name
-     * @param \DOMNode $item 节点
+     * @param \DOMElement $item 节点
      * @return Struct
      */
-    private function parsePrivateStruct($name, \DOMNode $item)
+    private function parsePrivateStruct($name, \DOMElement $item)
     {
+        if ($item->hasAttribute('class_name')) {
+            $class_name = trim($item->getAttribute('class_name'));
+            if (!empty($class_name)) {
+                $name = FFanStr::camelName($class_name);
+            }
+        }
         //如果是引用其它Struct，加载其它Struct
-        /** @var \DOMElement $item */
         $struct = $this->parseStruct($name, $item, false);
         return $struct;
     }

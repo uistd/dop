@@ -5,14 +5,9 @@ namespace ffan\dop\coder\php;
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
 use ffan\dop\build\PackerBase;
-use ffan\php\utils\Str as FFanStr;
-use ffan\dop\Exception;
+use ffan\dop\build\StrBuf;
 use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
 
 /**
  * Class ArrayPack
@@ -56,30 +51,52 @@ class UisSdkPack extends PackerBase
         $method_buf->pushStr('public function __construct(' . $uri_param . ', ' . $method_param . ')');
         $method_buf->pushStr('{')->indent();
         $method_buf->pushStr('parent::__construct($uri, $method);');
-        $method_buf->backIndent()->pushStr('}')->emptyLine();
+        $method_buf->backIndent()->pushStr('}');
+    }
 
-        $response_node = $node->nextSibling;
-        //如果有response, 生成获取response结果
-        while (null !== $response_node) {
-            if (XML_ELEMENT_NODE === $response_node->nodeType && 'response' === $response_node->nodeName) {
-                $action_node = $node->parentNode;
-                $name = FFanStr::camelName($action_node->getAttribute('name'));
-                $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) . '_class_suffix');
-                $response_class_name = $name . FFanStr::camelName($class_name_suffix);
-                $method_buf->pushStr('/**');
-                $method_buf->pushStr(' * 获取请求结果');
-                $method_buf->pushStr(' * @return ' . $response_class_name);
-                $method_buf->pushStr(' */');
-                $method_buf->pushStr('public function request()');
-                $method_buf->pushStr('{')->indent();
-                $method_buf->pushStr('$data = $this->getResponseData();');
-                $method_buf->pushStr('$result = new ' . $response_class_name . '();');
-                $method_buf->pushStr('$result->arrayUnpack($data);');
-                $method_buf->pushStr('return $result;');
-                $method_buf->backIndent()->pushStr('}');
-                break;
-            }
-            $response_node = $response_node->nextSibling;
+    /**
+     * @param Struct $struct
+     * @param CodeBuf $code_buf
+     */
+    public function buildUnpackMethod($struct, $code_buf)
+    {
+        if ($struct->isSubStruct() || Struct::TYPE_RESPONSE !== $struct->getType()) {
+            return;
         }
+        $method_buf = $this->file_buf->getBuf(FileBuf::METHOD_BUF);
+        if (!$method_buf) {
+            return;
+        }
+        $method_buf->emptyLine();
+        $return_buf = new StrBuf();
+        $return_buf->pushStr(' * @return ');
+        $method_buf->pushStr('/**');
+        $method_buf->pushStr(' * 获取返回的结果');
+        $method_buf->push($return_buf);
+        $method_buf->pushStr(' */');
+        $method_buf->pushStr('public function getResult()');
+        $method_buf->pushStr('{')->indent();
+        $method_buf->pushStr('$result = new ' . $struct->getClassName() . '();');
+        $all_item = $struct->getAllExtendItem();
+        $method_buf->pushStr('$data = $this->getResponseData();');
+        $method_buf->pushStr('$result->arrayUnpack($data);');
+        if (isset($all_item['status'], $all_item['message'], $all_item['data'])) {
+            /** @var Item $data_item */
+            $data_item = $all_item['data'];
+            //如果只包含3个属性， 表示为标准输出
+            unset($all_item['status'], $all_item['message'], $all_item['data']);
+            //只有3个属性
+            if (empty($all_item)) {
+                $return_buf->pushStr(Coder::varType($data_item));
+                $method_buf->pushStr('return $result->data;');
+            } else {
+                $return_buf->pushStr($struct->getClassName());
+                $method_buf->pushStr('return $result;');
+            }
+        } else {
+            $return_buf->pushStr($struct->getClassName());
+            $method_buf->pushStr('return $result;');
+        }
+        $method_buf->backIndent()->pushStr('}');
     }
 }

@@ -93,7 +93,10 @@
             </list>
         </request>
         <response extend="/xapi/result">
-            <int name="re_code"/>
+            <model name="data" class_name="new_data">
+                <int name="c"/>
+                <int name="d"/>
+            </model>
         </response>
     </action>
     <action name="del_demo_role">
@@ -104,13 +107,14 @@
             </int>
         </request>
         <response extend="/xapi/result">
-            <int name="data"/>
+            <model name="data">
+                <int name="c"/>
+                <int name="d"/>
+            </model>
         </response>
     </action>
     <action name="demo_data">
-        <request>
-
-        </request>
+        <request></request>
         <response extend="/xapi/result">
             <int name="re_code"/>
         </response>
@@ -124,7 +128,7 @@
         <response extend="/xapi/result">
             <map name="data">
                 <int note="role_id"/>
-                <struct extend="role_info" note="用户信息">
+                <struct extend="role_info" class_name="new_role_info" note="用户信息">
                     <string name="remark" note="备注">
                         <plugin_mock value="note"/>
                     </string>
