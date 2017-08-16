@@ -41,7 +41,7 @@ class DictionaryPack extends PackerBase
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 输出NSDictionary');
         $code_buf->pushStr(' */');
-        $code_buf->pushStr('- (NSDictionary *)DictionaryEncode {');
+        $code_buf->pushStr('- (NSDictionary *)dictionaryEncode {');
         $code_buf->indent();
         $code_buf->pushStr('NSMutableDictionary *result = [NSMutableDictionary new];');
         $this->null_obj_buf = new StrBuf();
@@ -123,7 +123,7 @@ class DictionaryPack extends PackerBase
                 $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::STRUCT:
-                $code = '[' . $value_name . ' DictionaryEncode]';
+                $code = '[' . $value_name . ' dictionaryEncode]';
                 $code_buf->pushStr($name . ' = ' . $code .';');
                 break;
             case ItemType::ARR:
