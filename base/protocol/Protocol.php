@@ -85,11 +85,6 @@ class Protocol
     private $xml_file_name;
 
     /**
-     * @var int 当前正在解析的struct类型
-     */
-    private $current_struct_type;
-
-    /**
      * @var BuildOption build_opt
      */
     private $build_opt;
@@ -176,7 +171,6 @@ class Protocol
         if (null === $node_list) {
             return;
         }
-        $this->current_struct_type = Struct::TYPE_STRUCT;
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
@@ -239,7 +233,6 @@ class Protocol
         if (null === $node_list) {
             return;
         }
-        $this->current_struct_type = Struct::TYPE_DATA;
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
@@ -293,14 +286,12 @@ class Protocol
             } else {
                 throw new Exception('Unknown node:' . $node_name);
             }
-            $this->current_struct_type = $type;
             $name = FFanStr::camelName($class_name);
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($name, $node, false, $type);
             $struct->addReferType($type);
             $struct->setNode($node);
         }
-        $this->current_struct_type = 0;
     }
 
     /**
@@ -441,7 +432,6 @@ class Protocol
                 $item_obj = new StructItem($name, $this->manager);
                 $struct_obj = $this->parsePrivateStruct($name, $dom_node);
                 $item_obj->setStruct($struct_obj);
-                $struct_obj->addReferType($this->current_struct_type);
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->manager);

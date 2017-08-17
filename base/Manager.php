@@ -1,13 +1,17 @@
 <?php
 
 namespace ffan\dop;
-use ffan\dop\build\BuildCache;
 use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\Folder;
 use ffan\dop\build\PluginBase;
+use ffan\dop\protocol\Item;
+use ffan\dop\protocol\ItemType;
+use ffan\dop\protocol\ListItem;
+use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\Protocol;
+use ffan\dop\protocol\StructItem;
 use ffan\php\utils\Str as FFanStr;
 use ffan\php\utils\Utils as FFanUtils;
 
@@ -52,10 +56,6 @@ class Manager
      */
     private $require_map;
 
-    /**
-     * @var BuildCache 编译缓存
-     */
-    private $cache;
 
     /**
      * @var array 缓存数据
@@ -96,11 +96,6 @@ class Manager
      * @var bool 是否解析过协议文件
      */
     private $init_protocol_flag = false;
-
-    /**
-     * @var string 缓存的文件名
-     */
-    private $cache_name;
 
     /**
      * @var CoderBase 当前Coder
@@ -290,9 +285,7 @@ class Manager
         $this->build_message = '';
         $result = true;
         try {
-            //if (!$this->init_protocol_flag) {
-                $this->initProtocol();
-            //}
+            $this->initProtocol();
             $coder_class = $this->getCoderClass($build_opt->getCoderName());
             /** @var CoderBase $coder */
             $this->current_coder = $coder = new $coder_class($this, $build_opt);
@@ -328,15 +321,6 @@ class Manager
     }
 
     /**
-     * 是否缓存协议解析结果
-     * @return bool
-     */
-    private function isCacheProtocol()
-    {
-        return !empty($this->config['cache_protocol']);
-    }
-
-    /**
      * 获取当前的Coder
      * @return CoderBase | null
      */
@@ -352,40 +336,71 @@ class Manager
     {
         $this->init_protocol_flag = true;
         $file_list = $this->getAllFileList();
-        //@暂时取消缓存支持
-        //$use_flag = $this->isCacheProtocol();
-        //if ($use_flag) {
-        //    $this->initCache();
-        //   $build_list = $this->filterCacheFile($file_list);
-        //} else {
-            $build_list = $file_list;
-        //}
+        $build_list = $file_list;
         $this->build_file_list = $build_list;
         //解析文件
         foreach ($build_list as $xml_file => $v) {
             $this->parseFile($xml_file);
         }
-        //从缓存中将struct补全
-        //if ($use_flag) {
-        //    $this->loadStructFromCache($build_list, $file_list);
-        //}
+        //设置struct之间的引用关系
         /** @var Struct $struct */
         foreach ($this->struct_list as $struct) {
-            $file = $struct->getFile();
-            //如果是来自没有修改过的文件的，就标记为来自缓存
-            if (!isset($build_list[$file])) {
-                $struct->setCacheFlag(true);
+            $type = $struct->getType();
+            if (Struct::TYPE_STRUCT === $type) {
+                continue;
             }
+            //如果是data类型 encode 和 decode 方法都要编译
+            if (Struct::TYPE_DATA === $type) {
+                $type = Struct::TYPE_RESPONSE | Struct::TYPE_RESPONSE;
+            }
+            $this->setStructRef($struct, $type);
         }
-        /*
-         * 保存缓存文件
-        if ($use_flag) {
-            $this->setCache('require_map', $this->require_map);
-            $this->setCache('build_time', $file_list);
-            $this->setCache('struct_list', $this->struct_list);
-            $this->saveCache();
-        }*/
         Exception::setAppendMsg('Build files');
+    }
+
+    /**
+     * //设置struct之间的引用关系
+     * @param Struct $struct
+     * @param int $ref_type
+     */
+    private function setStructRef($struct, $ref_type)
+    {
+        $all_item = $struct->getAllExtendItem();
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item as $name => $item) {
+            $this->findItemRefStruct($item, $ref_type);
+        }
+    }
+
+    /**
+     * 找到字段中引用的struct
+     * @param Item $item
+     * @param int $ref_type
+     */
+    private function findItemRefStruct($item, $ref_type)
+    {
+        $item_type = $item->getType();
+        switch ($item_type) {
+            case ItemType::STRUCT:
+                /** @var StructItem $item */
+                $sub_struct = $item->getStruct();
+                $sub_struct->addReferType($ref_type);
+                $this->setStructRef($sub_struct, $ref_type);
+                break;
+            case ItemType::ARR:
+                /** @var ListItem $item */
+                $sub_item = $item->getItem();
+                $this->findItemRefStruct($sub_item, $ref_type);
+                break;
+            case ItemType::MAP:
+                /** @var MapItem $item */
+                $value_item = $item->getValueItem();
+                $this->findItemRefStruct($value_item, $ref_type);
+                break;
+        }
     }
 
     /**
@@ -418,97 +433,6 @@ class Manager
     }
 
     /**
-     * 从缓存中加载 struct
-     * @param array $build_list 本次解析过的协议文件
-     * @param array $file_list 所有的协议文件
-     */
-    private function loadStructFromCache($build_list, $file_list)
-    {
-        $cache_struct = $this->getCache('struct_list');
-        if (!$cache_struct) {
-            return;
-        }
-        /**
-         * @var string $name
-         * @var Struct $tmp_struct
-         */
-        foreach ($cache_struct as $name => $tmp_struct) {
-            //已经有了
-            if (null !== $this->getStruct($name)) {
-                continue;
-            }
-            $file = $tmp_struct->getFile();
-            //如果struct所在的文件，本次编译了，表示 这个struct已经不存在了
-            if (isset($build_list[$file])) {
-                $this->buildLog($tmp_struct->getClassName() . ' missing');
-                continue;
-            }
-            //找不到文件
-            if (!isset($file_list[$file])) {
-                $this->buildLog($tmp_struct->getClassName() . ' missing');
-                continue;
-            }
-            $this->addStruct($tmp_struct);
-        }
-    }
-
-    /**
-     * 过滤已经编译过缓存过的文件
-     * @param array $file_list
-     * @return array
-     */
-    private function filterCacheFile($file_list)
-    {
-        //加载一些缓存数据
-        $require_map = $this->getCache('require_map');
-        $file_build_time = $this->getCache('build_time');
-        if (!is_array($file_build_time) || !is_array($require_map)) {
-            return $file_list;
-        }
-        $this->require_map = $require_map;
-        $new_file_list = array();
-        //如果文件没有发生改变，就不编译
-        foreach ($file_list as $xml_file => $modify_time) {
-            if (isset($file_build_time[$xml_file]) && $file_build_time[$xml_file] === $modify_time) {
-                $this->buildLogNotice($xml_file . ' no changes.');
-                continue;
-            }
-            $new_file_list[$xml_file] = $modify_time;
-        }
-        //文件发生改变了，把依赖该文件的xml也找出来，所有依赖该文件的都要重新编译
-        $relation_arr = array();
-        foreach ($new_file_list as $xml_file => $modify_time) {
-            if (!isset($this->require_map[$xml_file])) {
-                continue;
-            }
-            foreach ($this->require_map[$xml_file] as $file => $v) {
-                $relation_arr[$file] = $v;
-            }
-        }
-        //将影响的文件合并入$new_file_list
-        foreach ($relation_arr as $file => $v) {
-            //文件已经不存在了
-            if (!isset($file_list[$file])) {
-                continue;
-            }
-            $this->buildLogNotice($file . ' required.');
-            $new_file_list[$file] = $file_list[$file];
-        }
-        return $new_file_list;
-    }
-
-    /**
-     * 保存缓存
-     */
-    private function saveCache()
-    {
-        if (!$this->cache) {
-            return;
-        }
-        $this->cache->saveCache($this->cache_name, $this->cache_data);
-    }
-
-    /**
      * 设置缓存
      * @param string $key
      * @param mixed $value
@@ -516,40 +440,6 @@ class Manager
     public function setCache($key, $value)
     {
         $this->cache_data[$key] = $value;
-    }
-
-    /**
-     * 从缓存文件中获取指定值
-     * @param string $key
-     * @return mixed|null
-     */
-    private function getCache($key)
-    {
-        if (!isset($this->cache_data[$key])) {
-            return null;
-        }
-        return $this->cache_data[$key];
-    }
-
-    /**
-     * 初始化缓存
-     */
-    private function initCache()
-    {
-        if ($this->cache) {
-            return;
-        }
-        $ini_file = $this->base_path . 'build.ini';
-        $sign_key = md5(serialize(file_get_contents($ini_file)) . $this->base_path);
-        $this->cache_name = 'build.' . substr(md5($this->base_path), -8);
-        $cache_path = FFanUtils::fixWithRuntimePath('dop ');
-        $this->cache = new BuildCache($this, $sign_key, $cache_path);
-        $cache_data = $this->cache->loadCache($this->cache_name);
-        if (!is_array($cache_data)) {
-            $this->cache_data = array();
-        } else {
-            $this->cache_data = $cache_data;
-        }
     }
 
     /**
