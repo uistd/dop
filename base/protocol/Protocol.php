@@ -300,6 +300,7 @@ class Protocol
             $struct->addReferType($type);
             $struct->setNode($node);
         }
+        $this->current_struct_type = 0;
     }
 
     /**
