@@ -23,12 +23,12 @@
         <binary name="binary"/>
         <bool name="is_ok" default="false"/>
         <list name="list"><string/></list>
-        <list name="list_list"><list name="list"><int/></list></list>
+        <list name="list_list" keep_name="1"><list name="list"><int/></list></list>
         <map name="map"><int/><string/></map>
         <struct name="null_struct">
             <int name="no_value"/>
         </struct>
-        <struct name="test_struct">
+        <struct name="test_struct" keep_name="true">
             <string name="first_name">
                 <plugin_mock range="10, 20"/>
             </string>

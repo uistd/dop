@@ -16,7 +16,7 @@ abstract class Item
     /**
      * @var string 名称
      */
-    private $name;
+    private $camelName;
 
     /**
      * @var int 类型
@@ -49,23 +49,33 @@ abstract class Item
     private $underline_name;
 
     /**
+     * @var string 原始名称
+     */
+    private $original_name;
+
+    /**
+     * @var bool 是否保持原始名称
+     */
+    private $keep_original_name = false;
+
+    /**
      * Item constructor.
-     * @param string $name 名称
+     * @param string $camel_name_name 驼峰名称
      * @param Manager $manger
      */
-    public function __construct($name, Manager $manger)
+    public function __construct($camel_name_name, Manager $manger)
     {
-        $this->name = $name;
+        $this->camelName = $camel_name_name;
         $this->protocol_manager = $manger;
-        $this->underline_name = FFanStr::underlineName($name);
+        $this->underline_name = FFanStr::underlineName($camel_name_name);
     }
 
     /**
-     * 获取元素名称
+     * 获取元素名称（默认是驼峰名称）
      */
     public function getName()
     {
-        return $this->name;
+        return $this->camelName;
     }
 
     /**
@@ -172,5 +182,40 @@ abstract class Item
     public function getUnderLineName()
     {
         return $this->underline_name;
+    }
+
+    /**
+     * 获取原始名称
+     */
+    public function getOriginalName()
+    {
+        return $this->original_name;
+    }
+
+    /**
+     * 设置原始名称
+     * @param string $original_name
+     */
+    public function setOriginalName($original_name)
+    {
+        $this->original_name = $original_name;
+    }
+
+    /**
+     * 设置是否保持原始名称
+     * @param bool $is_keep
+     */
+    public function setKeepOriginalFlag($is_keep)
+    {
+        $this->keep_original_name = (bool)$is_keep;
+    }
+
+    /**
+     * 获取是否原始原始名称
+     * @return bool
+     */
+    public function isKeepOriginalName()
+    {
+        return $this->keep_original_name;
     }
 }

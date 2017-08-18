@@ -655,6 +655,9 @@ abstract class CoderBase extends ConfigBase
      */
     public function fixOutputName($camel_name, $item)
     {
+        if ($item->isKeepOriginalName()) {
+            return $item->getOriginalName();
+        }
         if (BuildOption::UNDERLINE_NAME === $this->build_opt->item_name_output) {
             return $item->getUnderLineName();
         } else {

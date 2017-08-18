@@ -125,7 +125,9 @@ class BuildOption
             'request_class_suffix' => 'Request',
             'response_class_suffix' => 'Response',
             //忽略GET请求
-            'ignore_get' => false
+            'ignore_get' => false,
+            //是否保持原始名称
+            'keep_original_name' => false,
         );
         //将Public config append to section_conf
         foreach ($public_conf as $name => $value) {
@@ -176,6 +178,15 @@ class BuildOption
         $this->parsePacker($section_conf['packer']);
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
+    }
+
+    /**
+     * 是否全部保持原始名称
+     * @return bool
+     */
+    public function isKeepOriginalName()
+    {
+        return (bool)$this->getConfig('keep_original_name', false);
     }
 
     /**

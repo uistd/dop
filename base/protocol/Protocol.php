@@ -326,7 +326,18 @@ class Protocol
      */
     private function parseStruct($class_name, \DomElement $struct_node, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
     {
+        $keep_name_attr = 'keep_name';
+        //保持 原始字段 命名的权重
+        $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
         $node_list = $struct_node->childNodes;
+        //如果有在struct指定keep_name
+        if ($struct_node->hasAttribute($keep_name_attr)) {
+            if ((bool)$struct_node->getAttribute($keep_name_attr)) {
+                $item_name_keep_original_weight += 2;
+            } else {
+                $item_name_keep_original_weight -= 2;
+            }
+        }
         $item_arr = array();
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
@@ -344,12 +355,26 @@ class Protocol
                     throw new Exception('Attribute `name` required!');
                 }
             }
-            $item_name = trim($node->getAttribute('name'));
-            $this->checkName($item_name);
-            $item_name = $this->fixItemName($item_name);
+            $original_name = trim($node->getAttribute('name'));
+            $this->checkName($original_name);
+            $item_name = $this->fixItemName($original_name);
             $item = $this->makeItemObject($item_name, $node);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
+            }
+            $item_weight = 0;
+            //如果有在字段指定keep_name
+            if ($node->hasAttribute($keep_name_attr)) {
+                if ((bool)$node->getAttribute($keep_name_attr)) {
+                    $item_weight = 3;
+                } else {
+                    $item_weight = -3;
+                }
+            }
+            $item->setOriginalName($original_name);
+            //如果权重大于0
+            if ($item_name_keep_original_weight + $item_weight > 0) {
+                $item->setKeepOriginalFlag(true);
             }
             $item_arr[$item_name] = $item;
         }
