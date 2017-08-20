@@ -291,6 +291,14 @@ class Protocol
             $struct = $this->parseStruct($name, $node, false, $type);
             $struct->addReferType($type);
             $struct->setNode($node);
+            $node_str = '';
+            if ($action->hasAttribute('note')) {
+                $node_str .= $action->getAttribute('note');
+            }
+            if ($type === Struct::TYPE_REQUEST && $node->hasAttribute('uri')) {
+                $node_str .= ' uri: '. $node->getAttribute('uri');
+            }
+            $struct->setNote($node_str);
         }
     }
 

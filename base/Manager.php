@@ -274,18 +274,10 @@ class Manager
      */
     public function build($section = 'main')
     {
-        $name = 'build:' . $section;
-        if (!isset($this->build_section[$name])) {
-            $this->buildLogError('Build section ' . $name . ' not found!');
-            return false;
-        }
-        $section_config = $this->build_section[$name];
-        $build_opt = new BuildOption($section, $section_config, $this->config);
-        $this->current_build_opt = $build_opt;
-        $this->build_message = '';
         $result = true;
         try {
-            $this->initProtocol();
+            $this->initProtocol($section);
+            $build_opt = $this->current_build_opt;
             $coder_class = $this->getCoderClass($build_opt->getCoderName());
             /** @var CoderBase $coder */
             $this->current_coder = $coder = new $coder_class($this, $build_opt);
@@ -331,9 +323,21 @@ class Manager
 
     /**
      * 初始化协议文件
+     * @param $section
+     * @return bool
      */
-    private function initProtocol()
+    public function initProtocol($section = 'main')
     {
+        $name = 'build:' . $section;
+        if (!isset($this->build_section[$name])) {
+            $this->buildLogError('Build section ' . $name . ' not found!');
+            return false;
+        }
+        $section_config = $this->build_section[$name];
+        $build_opt = new BuildOption($section, $section_config, $this->config);
+        $this->current_build_opt = $build_opt;
+        $this->build_message = '';
+
         $this->init_protocol_flag = true;
         $file_list = $this->getAllFileList();
         $build_list = $file_list;
@@ -355,7 +359,7 @@ class Manager
             }
             $this->setStructRef($struct, $type);
         }
-        Exception::setAppendMsg('Build files');
+        return true;
     }
 
     /**
