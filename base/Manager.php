@@ -359,7 +359,7 @@ class Manager
             }
 
             //如果 服务器 和 客户端都生成
-            if ($build_opt->hasBuildSide(BuildOption::SIDE_CLIENT) && $build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
+            if ($build_opt->hasBuildSide(BuildOption::SIDE_SERVER) && $build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
                 $type = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
             }
             $this->setStructRef($struct, $type);

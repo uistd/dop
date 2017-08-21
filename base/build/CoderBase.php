@@ -370,13 +370,17 @@ abstract class CoderBase extends ConfigBase
      */
     private function isBuildPackMethod($struct)
     {
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
-            return $struct->hasReferType(Struct::TYPE_REQUEST);
+        $result = false;
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)
+            && $struct->hasReferType(Struct::TYPE_REQUEST)) {
+            $result = true;
         }
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)) {
-            return $struct->hasReferType(Struct::TYPE_RESPONSE);
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)
+            && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
+            $result = true;
         }
-        return false;
+
+        return $result;
     }
 
     /**
@@ -386,13 +390,17 @@ abstract class CoderBase extends ConfigBase
      */
     private function isBuildUnpackMethod($struct)
     {
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
-            return $struct->hasReferType(Struct::TYPE_RESPONSE);
+        $result = false;
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)
+            && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
+            $result = true;
         }
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)) {
-            return $struct->hasReferType(Struct::TYPE_REQUEST);
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)
+            && $struct->hasReferType(Struct::TYPE_REQUEST)) {
+            $result = true;
         }
-        return false;
+
+        return $result;
     }
 
     /**
@@ -615,7 +623,7 @@ abstract class CoderBase extends ConfigBase
         $extend_buf = $file_buf->getBuf(FileBuf::EXTENDS_BUF);
         if ($extend_buf && !$extend_buf->isEmpty()) {
             $extend_buf->setJoinStr($this->extends_join_char);
-            $class_name_buf->pushStr( $this->extends_flag. $extend_buf->dump());
+            $class_name_buf->pushStr($this->extends_flag . $extend_buf->dump());
         }
         /** @var StrBuf $implement_buf */
         $implement_buf = $file_buf->getBuf(FileBuf::IMPLEMENT_BUF);
