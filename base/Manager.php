@@ -355,7 +355,12 @@ class Manager
             }
             //如果是data类型 encode 和 decode 方法都要编译
             if (Struct::TYPE_DATA === $type) {
-                $type = Struct::TYPE_RESPONSE | Struct::TYPE_RESPONSE;
+                $type = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
+            }
+
+            //如果 服务器 和 客户端都生成
+            if ($build_opt->hasBuildSide(BuildOption::SIDE_CLIENT) && $build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
+                $type = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
             }
             $this->setStructRef($struct, $type);
         }

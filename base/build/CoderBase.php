@@ -370,9 +370,6 @@ abstract class CoderBase extends ConfigBase
      */
     private function isBuildPackMethod($struct)
     {
-        if ($struct->hasReferType(Struct::TYPE_DATA) || Struct::TYPE_DATA === $struct->getType()) {
-            return true;
-        }
         if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
             return $struct->hasReferType(Struct::TYPE_REQUEST);
         }
@@ -389,9 +386,6 @@ abstract class CoderBase extends ConfigBase
      */
     private function isBuildUnpackMethod($struct)
     {
-        if ($struct->hasReferType(Struct::TYPE_DATA) || Struct::TYPE_DATA === $struct->getType()) {
-            return true;
-        }
         if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
             return $struct->hasReferType(Struct::TYPE_RESPONSE);
         }
