@@ -54,7 +54,7 @@ class Coder extends CoderBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $sub_type = self::varType($sub_item);
-                $str = 'array[' . $sub_type . ']';
+                $str = $sub_type .'[]';
                 break;
             case ItemType::INT:
                 $str = 'int';
