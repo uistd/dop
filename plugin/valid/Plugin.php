@@ -120,6 +120,13 @@ class Plugin extends PluginBase
                 throw new Exception('Unknown format set:'. $format_set);
             }
         }
+        //调用其它函数
+        $func_set = PluginRule::read($node, 'func');
+        if (!empty($func_set)) {
+            if (!preg_match('/^[a-zA-z_][a-zA-Z_\d:]?/', $func_set)) {
+                throw new Exception('Unknown func set:'. $func_set);
+            }
+        }
         //长度计算方式
         $valid_rule->str_len_type = (int)PluginRule::read($node, 'strlen_type', 1);
     }

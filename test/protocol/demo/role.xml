@@ -86,10 +86,13 @@
             </list>
         </response>
     </action>
-    <action name="new_role">
-        <request method="post">
+    <action name="new_role" method="post">
+        <request>
             <list name="roles">
-                <struct extend="role_info"/>
+                <plugin_valid require="1" range="5, 10"/>
+                <int>
+                    <plugin_valid range="10, 100"/>
+                </int>
             </list>
         </request>
         <response extend="/xapi/result">

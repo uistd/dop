@@ -4,10 +4,12 @@ namespace ffan\dop\plugin\valid;
 
 use ffan\dop\build\CodeBuf;
 use ffan\dop\build\FileBuf;
+use ffan\dop\build\PackerBase;
 use ffan\dop\build\PluginCoderBase;
 use ffan\dop\build\StrBuf;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
+use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\Struct;
 use ffan\php\utils\Str as FFanStr;
 
@@ -21,6 +23,11 @@ class PhpValidCoder extends PluginCoderBase
      * @var Plugin
      */
     protected $plugin;
+
+    /**
+     * @var bool 是否要import基础类
+     */
+    private $import_flag;
 
     /**
      * 生成插件代码
@@ -63,6 +70,12 @@ class PhpValidCoder extends PluginCoderBase
         $method_buf->pushStr('public function validateCheck()');
         $method_buf->pushStr('{')->indent();
         $all_items = $struct->getAllExtendItem();
+
+        $this->import_flag = false;
+
+        $valid_buf = $dop_file->getBuf(FileBuf::METHOD_BUF);
+
+        $tmp_index = 0;
         /**
          * @var string $name
          * @var Item $item
@@ -73,7 +86,7 @@ class PhpValidCoder extends PluginCoderBase
             if (null === $valid_rule) {
                 continue;
             }
-            $this->validItem($dop_file, 'this->' . $name, $item, $valid_rule);
+            $this->validItem($valid_buf, 'this->' . $name, $item, $valid_rule, $tmp_index);
         }
         $method_buf->push('return true;');
         $method_buf->backIndent()->push('}');
@@ -87,28 +100,26 @@ class PhpValidCoder extends PluginCoderBase
         $method_buf->pushStr('{');
         $method_buf->pushIndent('return $this->validate_error_msg;');
         $method_buf->pushStr('}');
-        
-        //如果有用到DopValidator 类，加入到 import buf中
-        if ($dop_file->getFlag('use_valid_base')) {
+        if ($this->import_flag) {
             $use_buf = $dop_file->getBuf(FileBuf::IMPORT_BUF);
             if ($use_buf) {
-                $use_buf->pushStr('use '. $this->plugin->getNameSpace() .'\DopValidator;');
-            }            
+                $use_buf->pushUniqueStr('use '. $this->plugin->getNameSpace() .'\DopValidator;');
+            }
         }
     }
 
     /**
      * 生成检查代码
-     * @param FileBuf $dop_file
+     * @param CodeBuf $valid_buf
      * @param string $var_name
      * @param Item $item
      * @param ValidRule $rule
+     * @param int $tmp_index
      */
-    private function validItem($dop_file, $var_name, $item, $rule)
+    private function validItem($valid_buf, $var_name, $item, $rule, &$tmp_index)
     {
-        $valid_buf = $dop_file->getBuf(FileBuf::METHOD_BUF);
         if ($rule->is_require) {
-            $this->requireCheck($valid_buf, $var_name, $rule);
+            $this->requireCheck($valid_buf, $var_name, $rule, $item);
         }
         $item_type = $item->getType();
         switch ($item_type) {
@@ -120,18 +131,39 @@ class PhpValidCoder extends PluginCoderBase
                 }
                 break;
             case ItemType::STRING:
-                //是否要生成 use ffan\dop\plugin\Validator;
-                $use_code_flag = false;
                 //长度
                 if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
                     $this->lengthCheck($valid_buf, $var_name, $rule);
-                    $use_code_flag = true;
+                    $this->import_flag = true;
                 }
                 if (null !== $rule->format_set) {
                     $this->formatCheck($valid_buf, $var_name, $rule, $use_code_flag);
                 }
-                if ($use_code_flag) {
-                    $this->addUseFlag($dop_file);
+
+                break;
+            case ItemType::ARR:
+                $arr_check_code = new CodeBuf();
+                if (null !== $rule->min_value || null !== $rule->max_value) {
+                    //$count_chk_buf->pushStr('if (is_array($'. $var_name .')) {')->indent();
+                    $len_name = PackerBase::varName($tmp_index++, 'len');
+                    $arr_check_code->pushStr('$'. $len_name .' = count($'. $var_name .');');
+                    $this->rangeCheck($arr_check_code, $len_name, $rule);
+                    //$count_chk_buf->backIndent()->pushStr('}');
+                }
+                /** @var ListItem $item */
+                $sub_item = $item->getItem();
+                /** @var ValidRule $valid_rule */
+                $valid_rule = $sub_item->getPluginData($this->plugin->getPluginName());
+                if (null !== $valid_rule) {
+                    $for_var = PackerBase::varName($tmp_index++, 'item');
+                    $arr_check_code->pushStr('foreach ($'. $var_name .' as $'. $for_var .') {')->indent();
+                    $this->validItem($arr_check_code, $for_var, $sub_item, $valid_rule, $tmp_index);
+                    $arr_check_code->backIndent()->pushStr('}');
+                }
+                if (!$arr_check_code->isEmpty()){
+                    $valid_buf->pushStr('if (is_array($'.$var_name.')) {')->indent();
+                    $valid_buf->push($arr_check_code);
+                    $valid_buf->backIndent()->pushStr('}');
                 }
                 break;
         }
@@ -142,10 +174,16 @@ class PhpValidCoder extends PluginCoderBase
      * @param CodeBuf $valid_buf
      * @param string $var_name
      * @param ValidRule $rule
+     * @param Item $item
      */
-    private function requireCheck($valid_buf, $var_name, $rule)
+    private function requireCheck($valid_buf, $var_name, $rule, $item)
     {
-        $this->conditionCode($valid_buf, 'null === $' . $var_name, $rule, 'require');
+        $type = $item->getType();
+        if (ItemType::ARR === $type || ItemType::MAP === $type) {
+            $this->conditionCode($valid_buf, 'empty($' . $var_name .')', $rule, 'require');
+        } else {
+            $this->conditionCode($valid_buf, 'null === $' . $var_name, $rule, 'require');
+        }
     }
 
     /**
@@ -205,15 +243,6 @@ class PhpValidCoder extends PluginCoderBase
         $if_str = 'DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
         $this->conditionCode($valid_buf, $if_str, $rule, 'length');
         $valid_buf->backIndent()->pushStr('}');
-    }
-
-    /**
-     * 在use列表中加入struct
-     * @param FileBuf $dop_file
-     */
-    private function addUseFlag($dop_file)
-    {
-        $dop_file->addFlag('use_valid_base');
     }
 
     /**

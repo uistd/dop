@@ -50,7 +50,7 @@ class CodeBuf implements BufInterface
      * @var string 名称
      */
     private $name;
-    
+
     /**
      * CodeBuf constructor.
      * @param string $name buf name
@@ -188,7 +188,15 @@ class CodeBuf implements BufInterface
         if ($this->global_indent > 0) {
             $prefix_str = self::indentSpace($this->global_indent);
             foreach ($this->line_buffer as &$each_str) {
-                $each_str = $prefix_str . $each_str;
+                if (false === strpos($each_str, PHP_EOL)) {
+                    $each_str = $prefix_str . $each_str;
+                } else {
+                    $tmp_lines = explode(PHP_EOL, $each_str);
+                    foreach ($tmp_lines as &$tmp_line) {
+                        $tmp_line = $prefix_str . $tmp_line;
+                    }
+                    $each_str = join(PHP_EOL, $tmp_lines);
+                }
             }
         }
         $result = join(PHP_EOL, $this->line_buffer);
