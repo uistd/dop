@@ -94,6 +94,14 @@
                     <plugin_valid range="10, 100"/>
                 </int>
             </list>
+            <model name="info">
+                <model extend="role_info">
+                    <plugin_valid require="1"/>
+                </model>
+                <int name="id">
+                    <plugin_valid require="1" require-msg="must post id" range="0,"/>
+                </int>
+            </model>
         </request>
         <response extend="/xapi/result">
             <model name="data" class_name="new_data">

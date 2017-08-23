@@ -352,6 +352,10 @@ class Protocol
             if (XML_ELEMENT_NODE !== $node->nodeType) {
                 continue;
             }
+            //插件
+            if ($this->isPluginNode($node)) {
+                continue;
+            }
             $this->setLineNumber($node->getLineNo());
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {

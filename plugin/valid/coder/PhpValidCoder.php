@@ -11,6 +11,7 @@ use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
 use ffan\dop\protocol\Struct;
+use ffan\dop\protocol\StructItem;
 use ffan\php\utils\Str as FFanStr;
 
 /**
@@ -140,6 +141,15 @@ class PhpValidCoder extends PluginCoderBase
                     $this->formatCheck($valid_buf, $var_name, $rule, $use_code_flag);
                 }
 
+                break;
+            case ItemType::STRUCT:
+                /** @var StructItem $item */
+                $sub_struct = $item->getStruct();
+                $class_name = $sub_struct->getClassName();
+                $valid_buf->pushStr('if ($'.$var_name.' instanceof '.$class_name.' && !$'.$var_name.'->validateCheck()) {');
+                $valid_buf->pushIndent('$this->validate_error_msg = $'.$var_name .'->getValidateErrorMsg();');
+                $valid_buf->pushIndent('return false;');
+                $valid_buf->pushStr('}');
                 break;
             case ItemType::ARR:
                 $arr_check_code = new CodeBuf();
