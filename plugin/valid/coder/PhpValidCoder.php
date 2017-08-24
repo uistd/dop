@@ -256,7 +256,7 @@ class PhpValidCoder extends PluginCoderBase
         }
         $min_len = null === $rule->min_str_len ? 'null' : $rule->min_str_len;
         $max_len = null === $rule->max_str_len ? 'null' : $rule->max_str_len;
-        $if_str = 'DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
+        $if_str = '!DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
         $this->conditionCode($valid_buf, $if_str, $rule, 'length');
         $valid_buf->backIndent()->pushStr('}');
     }
