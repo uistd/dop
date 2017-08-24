@@ -160,18 +160,16 @@ class PhpValidCoder extends PluginCoderBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 /** @var ValidRule $valid_rule */
-                $valid_rule = $sub_item->getPluginData($this->plugin->getPluginName());
-                if (null !== $valid_rule) {
-                    $for_var = PackerBase::varName($tmp_index++, 'item');
-                    $arr_check_code->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
-                    $this->validItem($arr_check_code, $for_var, $sub_item, $tmp_index);
-                    $arr_check_code->backIndent()->pushStr('}');
-                }
+                $valid_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
                 if (!$arr_check_code->isEmpty()) {
-                    $valid_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
                     $valid_buf->push($arr_check_code);
-                    $valid_buf->backIndent()->pushStr('}');
                 }
+                $for_var = PackerBase::varName($tmp_index++, 'item');
+                $arr_check_code->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
+                $this->validItem($arr_check_code, $for_var, $sub_item, $tmp_index);
+                $arr_check_code->backIndent()->pushStr('}');
+
+                $valid_buf->backIndent()->pushStr('}');
                 break;
             case ItemType::MAP:
                 //todo
