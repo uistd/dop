@@ -122,10 +122,29 @@ abstract class Item
     /**
      * 添加插件数据
      * @param string $plugin_name
+     * @param \DOMElement $node
      * @param PluginRule $rule
+     * @param Protocol $parser
      */
-    public function addPluginData($plugin_name, PluginRule $rule)
+    public function addPluginData($plugin_name, \DOMElement $node, $rule, Protocol $parser)
     {
+        if (null !== $rule && !($rule instanceof PluginRule)) {
+            return;
+        }
+        //如果有继承
+        if ($node->hasAttribute('extend')) {
+            $extend_str = PluginRule::read($node, 'extend');
+            if (!empty($extend_str)) {
+                if (null === $rule) {
+                    $rule = new PluginRule();
+                }
+                $rule->extend_item = $parser->fixItemName(basename($extend_str));;
+                $rule->extend_class = $parser->getFullName(dirname($extend_str));
+            }
+        }
+        if (null == $node) {
+            return;
+        }
         $this->plugin_data_arr[$plugin_name] = $rule;
     }
 
@@ -136,7 +155,41 @@ abstract class Item
      */
     public function getPluginData($plugin_name)
     {
-        return isset($this->plugin_data_arr[$plugin_name]) ? $this->plugin_data_arr[$plugin_name] : null;
+        if (!isset($this->plugin_data_arr[$plugin_name])) {
+            return null;
+        }
+        /** @var PluginRule $plugin_rule */
+        $plugin_rule = $this->plugin_data_arr[$plugin_name];
+        //有继承其它字段
+        if (null !== $plugin_rule->extend_item && null !== $plugin_rule->extend_class) {
+            $struct =$this->protocol_manager->getStruct($plugin_rule->extend_class);
+            if (null === $struct) {
+                return $plugin_rule;
+            }
+            $item = $struct->getItem($plugin_rule->extend_item);
+            if (null === $item) {
+                return $plugin_rule;
+            }
+            $extend_rule = $item->getPluginData($plugin_name);
+            if (null === $extend_rule) {
+                return $plugin_rule;
+            }
+            $plugin_rule->extend_item = $plugin_rule->extend_class = null;
+            $new_rule = clone $extend_rule;
+            $attr = get_object_vars($plugin_rule);
+            foreach ($attr as $key => $value) {
+                if (null === $value) {
+                    continue;
+                }
+                if (property_exists($new_rule, $key)) {
+                    $new_rule->$key = $value;
+                }
+            }
+            $this->plugin_data_arr[$plugin_name] = $new_rule;
+            unset($plugin_rule);
+            $plugin_rule = $this->plugin_data_arr[$plugin_name];
+        }
+        return $plugin_rule;
     }
 
     /**

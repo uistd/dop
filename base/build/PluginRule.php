@@ -9,12 +9,23 @@ use ffan\dop\protocol\Protocol;
  * Class PluginRule 插件规则
  * @package ffan\dop\build
  */
-abstract class PluginRule {
+class PluginRule
+{
 
     /**
      * @var array 错误消息设置
      */
     protected static $error_msg;
+
+    /**
+     * @var string 继承设置
+     */
+    public $extend_item;
+
+    /**
+     * @var string 继承的类名
+     */
+    public $extend_class;
 
     /**
      * @var int 类型
@@ -28,7 +39,10 @@ abstract class PluginRule {
      * @param Item $item
      * @return int error_code
      */
-    abstract function init(Protocol $parser, $node, $item);
+    function init(Protocol $parser, $node, $item)
+    {
+
+    }
 
     /**
      * 获取类型
@@ -37,6 +51,15 @@ abstract class PluginRule {
     public function getType()
     {
         return $this->type;
+    }
+
+    /**
+     * 设置类型
+     * @param int $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
     }
 
     /**

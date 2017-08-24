@@ -32,7 +32,6 @@ class Plugin extends PluginBase
             return;
         }
         $mock_rule = null;
-        //在一个范围内 mock
         if ($node->hasAttribute('range')) {
             $mock_rule = new RuleRange();
         } elseif ($node->hasAttribute('enum')) {
@@ -45,18 +44,14 @@ class Plugin extends PluginBase
             $mock_rule = new RuleIncrease();
         } elseif ($node->hasAttribute('pair')) {
             $mock_rule = new RulePair();
-        } elseif ($node->hasAttribute('use')) {
-            $mock_rule = new RuleUse();
         }
         if (null !== $mock_rule) {
             $error_code = $mock_rule->init($parser, $node, $item);
             if (0 !== $error_code) {
                 $this->manager->buildLogError($mock_rule->getErrorMsg($error_code));
-                unset($mock_rule);
-            } else {
-                $item->addPluginData($this->plugin_name, $mock_rule);
             }
         }
+        $item->addPluginData($this->plugin_name, $node, $mock_rule, $parser);
     }
 
     /**

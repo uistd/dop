@@ -130,9 +130,9 @@ class ValidRule extends PluginRule
     public $err_msg;
 
     /**
-     * @var string 调用函数
+     * @var string 继承其它的item
      */
-    public $func_set;
+    public $extend;
 
     /**
      * 数据类型格式化

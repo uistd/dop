@@ -54,7 +54,7 @@ class Plugin extends PluginBase
         elseif (ItemType::ARR === $type || ItemType::MAP === $item) {
             $this->readIntSet($node, $valid_rule);
         }
-        $item->addPluginData($this->plugin_name, $valid_rule);
+        $item->addPluginData($this->plugin_name, $node, $valid_rule, $parser);
     }
 
     /**
@@ -118,13 +118,6 @@ class Plugin extends PluginBase
             $valid_rule->format_set = str_replace('#', '\#', $format_set);
             if ('/' !== $valid_rule->format_set[0] && !ValidRule::isBuildInType($valid_rule->format_set)) {
                 throw new Exception('Unknown format set:'. $format_set);
-            }
-        }
-        //调用其它函数
-        $func_set = PluginRule::read($node, 'func');
-        if (!empty($func_set)) {
-            if (!preg_match('/^[a-zA-z_][a-zA-Z_\d:]?/', $func_set)) {
-                throw new Exception('Unknown func set:'. $func_set);
             }
         }
         //长度计算方式

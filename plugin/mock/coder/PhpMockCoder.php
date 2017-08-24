@@ -144,35 +144,11 @@ class PhpMockCoder extends PluginCoderBase
             $name = $this->coder->fixPropertyName($name, $item);
             $this->makeImportCode($item, $base_ns, $import_buf);
             $mock_rule = $item->getPluginData($this->plugin->getPluginName());
-            if (null !== $mock_rule && MockType::MOCK_USE === $mock_rule->getType()) {
-                /** @var RuleUse $mock_rule */
-                $mock_rule = $this->getUseMockRule($mock_rule);
-            }
             Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }
         $mock_buf->pushStr('return $data;');
         $mock_buf->backIndent()->pushStr('}');
-    }
-
-    /**
-     * 获取引用的mock
-     * @param RuleUse $use_rule
-     * @return null
-     * @internal param RuleUse $use_name
-     */
-    private function getUseMockRule($use_rule)
-    {
-        $manager = $this->coder->getManager();
-        $struct =$manager->getStruct($use_rule->use_class);
-        if (null === $struct) {
-            return null;
-        }
-        $item = $struct->getItem($use_rule->use_item);
-        if (null === $item) {
-            return null;
-        }
-        return $item->getPluginData($this->plugin->getPluginName());
     }
 
     /**

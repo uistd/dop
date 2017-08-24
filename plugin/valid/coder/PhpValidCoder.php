@@ -82,16 +82,10 @@ class PhpValidCoder extends PluginCoderBase
          * @var Item $item
          */
         foreach ($all_items as $name => $item) {
-            /** @var ValidRule $valid_rule */
-            $valid_rule = $item->getPluginData($this->plugin->getPluginName());
-            if (null === $valid_rule) {
-                continue;
-            }
-            $this->validItem($valid_buf, 'this->' . $name, $item, $valid_rule, $tmp_index);
+            $this->validItem($valid_buf, 'this->' . $name, $item, $tmp_index);
         }
         $method_buf->push('return true;');
         $method_buf->backIndent()->push('}');
-
         $method_buf->emptyLine();
         $method_buf->pushStr('/**');
         $method_buf->pushStr(' * 获取出错的消息');
@@ -104,7 +98,7 @@ class PhpValidCoder extends PluginCoderBase
         if ($this->import_flag) {
             $use_buf = $dop_file->getBuf(FileBuf::IMPORT_BUF);
             if ($use_buf) {
-                $use_buf->pushUniqueStr('use '. $this->plugin->getNameSpace() .'\DopValidator;');
+                $use_buf->pushUniqueStr('use ' . $this->plugin->getNameSpace() . '\DopValidator;');
             }
         }
     }
@@ -114,12 +108,13 @@ class PhpValidCoder extends PluginCoderBase
      * @param CodeBuf $valid_buf
      * @param string $var_name
      * @param Item $item
-     * @param ValidRule $rule
      * @param int $tmp_index
      */
-    private function validItem($valid_buf, $var_name, $item, $rule, &$tmp_index)
+    private function validItem($valid_buf, $var_name, $item, &$tmp_index)
     {
-        if ($rule->is_require) {
+        /** @var ValidRule $rule */
+        $rule = $item->getPluginData($this->plugin->getPluginName());
+        if (null !== $rule && $rule->is_require) {
             $this->requireCheck($valid_buf, $var_name, $rule, $item);
         }
         $item_type = $item->getType();
@@ -127,11 +122,14 @@ class PhpValidCoder extends PluginCoderBase
             case ItemType::INT:
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
-                if (null !== $rule->min_value || null !== $rule->max_value) {
+                if (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
                     $this->rangeCheck($valid_buf, $var_name, $rule);
                 }
                 break;
             case ItemType::STRING:
+                if (null === $rule) {
+                    break;
+                }
                 //长度
                 if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
                     $this->lengthCheck($valid_buf, $var_name, $rule);
@@ -140,23 +138,22 @@ class PhpValidCoder extends PluginCoderBase
                 if (null !== $rule->format_set) {
                     $this->formatCheck($valid_buf, $var_name, $rule, $use_code_flag);
                 }
-
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $sub_struct = $item->getStruct();
                 $class_name = $sub_struct->getClassName();
-                $valid_buf->pushStr('if ($'.$var_name.' instanceof '.$class_name.' && !$'.$var_name.'->validateCheck()) {');
-                $valid_buf->pushIndent('$this->validate_error_msg = $'.$var_name .'->getValidateErrorMsg();');
+                $valid_buf->pushStr('if ($' . $var_name . ' instanceof ' . $class_name . ' && !$' . $var_name . '->validateCheck()) {');
+                $valid_buf->pushIndent('$this->validate_error_msg = $' . $var_name . '->getValidateErrorMsg();');
                 $valid_buf->pushIndent('return false;');
                 $valid_buf->pushStr('}');
                 break;
             case ItemType::ARR:
                 $arr_check_code = new CodeBuf();
-                if (null !== $rule->min_value || null !== $rule->max_value) {
+                if (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
                     //$count_chk_buf->pushStr('if (is_array($'. $var_name .')) {')->indent();
                     $len_name = PackerBase::varName($tmp_index++, 'len');
-                    $arr_check_code->pushStr('$'. $len_name .' = count($'. $var_name .');');
+                    $arr_check_code->pushStr('$' . $len_name . ' = count($' . $var_name . ');');
                     $this->rangeCheck($arr_check_code, $len_name, $rule);
                     //$count_chk_buf->backIndent()->pushStr('}');
                 }
@@ -166,18 +163,23 @@ class PhpValidCoder extends PluginCoderBase
                 $valid_rule = $sub_item->getPluginData($this->plugin->getPluginName());
                 if (null !== $valid_rule) {
                     $for_var = PackerBase::varName($tmp_index++, 'item');
-                    $arr_check_code->pushStr('foreach ($'. $var_name .' as $'. $for_var .') {')->indent();
-                    $this->validItem($arr_check_code, $for_var, $sub_item, $valid_rule, $tmp_index);
+                    $arr_check_code->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
+                    $this->validItem($arr_check_code, $for_var, $sub_item, $tmp_index);
                     $arr_check_code->backIndent()->pushStr('}');
                 }
-                if (!$arr_check_code->isEmpty()){
-                    $valid_buf->pushStr('if (is_array($'.$var_name.')) {')->indent();
+                if (!$arr_check_code->isEmpty()) {
+                    $valid_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
                     $valid_buf->push($arr_check_code);
                     $valid_buf->backIndent()->pushStr('}');
                 }
                 break;
+            case ItemType::MAP:
+                //todo
+                break;
         }
     }
+
+
 
     /**
      * require检查
@@ -190,7 +192,7 @@ class PhpValidCoder extends PluginCoderBase
     {
         $type = $item->getType();
         if (ItemType::ARR === $type || ItemType::MAP === $type) {
-            $this->conditionCode($valid_buf, 'empty($' . $var_name .')', $rule, 'require');
+            $this->conditionCode($valid_buf, 'empty($' . $var_name . ')', $rule, 'require');
         } else {
             $this->conditionCode($valid_buf, 'null === $' . $var_name, $rule, 'require');
         }
@@ -246,7 +248,7 @@ class PhpValidCoder extends PluginCoderBase
             }
             $left_buf->pushStr('$' . $var_name);
             $left_buf->push($right_buf);
-            $valid_buf->push('$' . $var_name . ' = ' . $left_buf->dump() .';');
+            $valid_buf->push('$' . $var_name . ' = ' . $left_buf->dump() . ';');
         }
         $min_len = null === $rule->min_str_len ? 'null' : $rule->min_str_len;
         $max_len = null === $rule->max_str_len ? 'null' : $rule->max_str_len;

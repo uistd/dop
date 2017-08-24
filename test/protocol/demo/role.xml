@@ -15,6 +15,7 @@
         </string>
         <int name="level" note="等级" mock-range="10, 20">
             <plugin_mock range="10, 20"/>
+            <plugin_valid range="10, 20"/>
         </int>
         <string name="address" note="地址" mock-range="20, 30">
             <plugin_mock range="20, 30"/>
@@ -95,11 +96,13 @@
                 </int>
             </list>
             <model name="info">
-                <model extend="role_info">
-                    <plugin_valid require="1"/>
-                </model>
+                <list name="role_list">
+                    <model extend="role_info">
+                        <plugin_valid require="1"/>
+                    </model>
+                </list>
                 <int name="id">
-                    <plugin_valid require="1" require-msg="must post id" range="0,"/>
+                    <plugin_valid extend="role_info/level"/>
                 </int>
             </model>
         </request>
