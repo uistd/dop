@@ -121,7 +121,7 @@ class Plugin extends PluginBase
             }
         }
         //长度计算方式
-        $valid_rule->str_len_type = (int)PluginRule::read($node, 'strlen_type', 1);
+        $valid_rule->str_len_type = (int)PluginRule::read($node, 'strlen_type', 3);
     }
 
     /**
