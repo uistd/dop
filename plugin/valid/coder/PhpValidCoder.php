@@ -159,17 +159,23 @@ class PhpValidCoder extends PluginCoderBase
                 }
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
-                /** @var ValidRule $valid_rule */
-                $valid_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
-                if (!$arr_check_code->isEmpty()) {
-                    $valid_buf->push($arr_check_code);
-                }
                 $for_var = PackerBase::varName($tmp_index++, 'item');
-                $arr_check_code->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
-                $this->validItem($arr_check_code, $for_var, $sub_item, $tmp_index);
-                $arr_check_code->backIndent()->pushStr('}');
-
-                $valid_buf->backIndent()->pushStr('}');
+                $sub_item_valid_code = new CodeBuf();
+                $this->validItem($sub_item_valid_code, $for_var, $sub_item, $tmp_index);
+                //有代码输出，需要array验证
+                if (!$arr_check_code->isEmpty() || !$sub_item_valid_code->isEmpty()) {
+                    /** @var ValidRule $valid_rule */
+                    $valid_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
+                    if (!$arr_check_code->isEmpty()) {
+                        $valid_buf->push($arr_check_code);
+                    }
+                    if (!$sub_item_valid_code->isEmpty()) {
+                        $valid_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
+                        $valid_buf->push($sub_item_valid_code);
+                        $valid_buf->backIndent()->pushStr('}');
+                    }
+                    $valid_buf->backIndent()->pushStr('}');
+                }
                 break;
             case ItemType::MAP:
                 //todo
