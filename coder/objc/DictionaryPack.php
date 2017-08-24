@@ -140,7 +140,7 @@ class DictionaryPack extends PackerBase
                 $code_buf->pushStr('if (![' . $for_id_var . ' isKindOfClass:[' . $class_name . ' class]]){');
                 $code_buf->pushIndent('continue;');
                 $code_buf->pushStr('}');
-                $code_buf->pushStr($var_type . ' ' . $for_var . ';');
+                $code_buf->pushStr($var_type . ' *' . $for_var . ';');
                 self::packItemValue($code_buf, '(' . $class_name . ' *)' . $for_id_var, $for_var, $sub_item, $depth + 1, $tmp_index);
                 $code_buf->pushStr('[' . $tmp_var . ' addObject:' . $for_var . '];');
                 $code_buf->backIndent()->push('}');
