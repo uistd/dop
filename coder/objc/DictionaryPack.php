@@ -132,7 +132,7 @@ class DictionaryPack extends PackerBase
                 $for_id_var = self::varName($tmp_index++, 'tmp_id');
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
-                $var_type = $this->coder->varType($sub_item, true, false);
+                $var_type = self::nsTypeName($sub_item->getType());
                 $code_buf->pushStr('NSMutableArray *' . $tmp_var . ' = [NSMutableArray new];');
                 $code_buf->pushStr('for (id ' . $for_id_var . ' in ' . $value_name . ') {');
                 $code_buf->indent();
