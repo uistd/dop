@@ -29,7 +29,7 @@ class ArrayPack extends PackerBase
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 转成数组');
-        $code_buf->pushStr(' * @return array');
+        $code_buf->pushStr(' * @return array|object');
         $code_buf->pushStr(' */');
         $code_buf->pushStr('public function arrayPack()');
         $code_buf->pushStr('{');
@@ -45,6 +45,9 @@ class ArrayPack extends PackerBase
             $value_name = $this->coder->fixOutputName($name, $item);
             self::packItemValue($code_buf, 'this->' . $property_name, "result['" . $value_name . "']", $item, 0);
         }
+        $code_buf->pushStr('if (empty($result)) {');
+        $code_buf->pushIndent('return new \\stdClass();');
+        $code_buf->pushStr('}');
         $code_buf->pushStr('return $result;');
         $code_buf->backIndent()->pushStr('}');
     }
