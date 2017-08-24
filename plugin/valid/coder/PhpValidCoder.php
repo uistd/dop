@@ -98,7 +98,7 @@ class PhpValidCoder extends PluginCoderBase
         if ($this->import_flag) {
             $use_buf = $dop_file->getBuf(FileBuf::IMPORT_BUF);
             if ($use_buf) {
-                $use_buf->pushUniqueStr('use ' . $this->plugin->getNameSpace() . '\DopValidator;');
+                $use_buf->pushUniqueStr('use ffan\dop\DopValidator;');
             }
         }
     }
