@@ -82,6 +82,7 @@ class PhpValidCoder extends PluginCoderBase
          * @var Item $item
          */
         foreach ($all_items as $name => $item) {
+            $name = $this->coder->fixPropertyName($name, $item);
             $this->validItem($valid_buf, 'this->' . $name, $item, $tmp_index);
         }
         $method_buf->push('return true;');
