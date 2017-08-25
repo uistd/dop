@@ -5,6 +5,7 @@ use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\Folder;
 use ffan\dop\build\PluginBase;
+use ffan\dop\build\Render;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -111,6 +112,11 @@ class Manager
      * @var BuildOption 当前的build_opt
      */
     private $current_build_opt;
+
+    /**
+     * @var Render[] 着色器列表
+     */
+    private $render_list;
 
     /**
      * 初始化
@@ -319,6 +325,15 @@ class Manager
     public function getCurrentCoder()
     {
         return $this->current_coder;
+    }
+
+    /**
+     * 添加着色器
+     * @param Render $render
+     */
+    public function addRender(Render $render)
+    {
+        $this->render_list[] = $render;
     }
 
     /**

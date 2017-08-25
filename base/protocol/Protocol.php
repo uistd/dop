@@ -3,6 +3,7 @@
 namespace ffan\dop\protocol;
 
 use ffan\dop\build\BuildOption;
+use ffan\dop\build\Render;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
@@ -38,6 +39,11 @@ class Protocol
      * 解析步骤：data
      */
     const QUERY_STEP_DATA = 4;
+
+    /**
+     * 解析步骤：render
+     */
+    const QUERY_STEP_RENDER = 8;
 
     /**
      * @var \DOMDocument xml_handle
@@ -143,6 +149,7 @@ class Protocol
         $this->queryStruct();
         $this->queryAction();
         $this->queryData();
+        $this->queryRender();
     }
 
     /**
@@ -244,6 +251,30 @@ class Protocol
             $name = FFanStr::camelName($name, true);
             $is_public = true === (bool)$struct->getAttribute('public');
             $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false);
+        }
+    }
+
+    /**
+     * 解析render
+     */
+    private function queryRender()
+    {
+        //已经解析过了，就打标志，避免重复解析
+        if ($this->query_step & self::QUERY_STEP_RENDER) {
+            return;
+        }
+        $this->query_step |= self::QUERY_STEP_RENDER;
+        $path_handle = $this->getPathHandle();
+        $node_list = $path_handle->query('/protocol/render');
+        if (null === $node_list) {
+            return;
+        }
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            /** @var \DOMElement $render_node */
+            $render_node = $node_list->item($i);
+            $this->setLineNumber($render_node->getLineNo());
+            $render = new Render($this->manager, $render_node);
+            $this->manager->addRender($render);
         }
     }
 
