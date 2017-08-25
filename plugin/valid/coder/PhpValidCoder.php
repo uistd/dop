@@ -115,16 +115,19 @@ class PhpValidCoder extends PluginCoderBase
     {
         /** @var ValidRule $rule */
         $rule = $item->getPluginData($this->plugin->getPluginName());
+        $null_check = true;
         if (null !== $rule && $rule->is_require) {
             $this->requireCheck($valid_buf, $var_name, $rule, $item);
+            $null_check = false;
         }
+        $if_buf = new CodeBuf();
         $item_type = $item->getType();
         switch ($item_type) {
             case ItemType::INT:
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
                 if (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
-                    $this->rangeCheck($valid_buf, $var_name, $rule);
+                    $this->rangeCheck($if_buf, $var_name, $rule);
                 }
                 break;
             case ItemType::STRING:
@@ -133,30 +136,29 @@ class PhpValidCoder extends PluginCoderBase
                 }
                 //长度
                 if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
-                    $this->lengthCheck($valid_buf, $var_name, $rule);
+                    $this->lengthCheck($if_buf, $var_name, $rule);
                     $this->import_flag = true;
                 }
                 if (null !== $rule->format_set) {
-                    $this->formatCheck($valid_buf, $var_name, $rule, $use_code_flag);
+                    $this->formatCheck($if_buf, $var_name, $rule, $use_code_flag);
                 }
                 break;
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 $sub_struct = $item->getStruct();
                 $class_name = $sub_struct->getClassName();
-                $valid_buf->pushStr('if ($' . $var_name . ' instanceof ' . $class_name . ' && !$' . $var_name . '->validateCheck()) {');
-                $valid_buf->pushIndent('$this->validate_error_msg = $' . $var_name . '->getValidateErrorMsg();');
-                $valid_buf->pushIndent('return false;');
-                $valid_buf->pushStr('}');
+                $if_buf->pushStr('if ($' . $var_name . ' instanceof ' . $class_name . ' && !$' . $var_name . '->validateCheck()) {');
+                $if_buf->pushIndent('$this->validate_error_msg = $' . $var_name . '->getValidateErrorMsg();');
+                $if_buf->pushIndent('return false;');
+                $if_buf->pushStr('}');
+                $null_check = false;
                 break;
             case ItemType::ARR:
                 $arr_check_code = new CodeBuf();
                 if (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
-                    //$count_chk_buf->pushStr('if (is_array($'. $var_name .')) {')->indent();
                     $len_name = PackerBase::varName($tmp_index++, 'len');
                     $arr_check_code->pushStr('$' . $len_name . ' = count($' . $var_name . ');');
                     $this->rangeCheck($arr_check_code, $len_name, $rule);
-                    //$count_chk_buf->backIndent()->pushStr('}');
                 }
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
@@ -166,21 +168,33 @@ class PhpValidCoder extends PluginCoderBase
                 //有代码输出，需要array验证
                 if (!$arr_check_code->isEmpty() || !$sub_item_valid_code->isEmpty()) {
                     /** @var ValidRule $valid_rule */
-                    $valid_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
+                    $if_buf->pushStr('if (is_array($' . $var_name . ')) {')->indent();
                     if (!$arr_check_code->isEmpty()) {
-                        $valid_buf->push($arr_check_code);
+                        $if_buf->push($arr_check_code);
                     }
                     if (!$sub_item_valid_code->isEmpty()) {
-                        $valid_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
-                        $valid_buf->push($sub_item_valid_code);
-                        $valid_buf->backIndent()->pushStr('}');
+                        $if_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
+                        $if_buf->push($sub_item_valid_code);
+                        $if_buf->backIndent()->pushStr('}');
                     }
-                    $valid_buf->backIndent()->pushStr('}');
+                    $if_buf->backIndent()->pushStr('}');
+                    $null_check = false;
                 }
                 break;
             case ItemType::MAP:
                 //todo
                 break;
+        }
+        //如果 if buf 不为空
+        if (!$if_buf->isEmpty()) {
+            //如果 rule 没不是必须传的
+            if ($null_check) {
+                $valid_buf->pushStr('if (null !== $'. $var_name .') {')->indent();
+            }
+            $valid_buf->push($if_buf);
+            if ($null_check) {
+                $valid_buf->backIndent()->pushStr('}');
+            }
         }
     }
 
