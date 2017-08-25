@@ -149,13 +149,13 @@ class ArrayPack extends PackerBase
                 /** @var StructItem $item */
                 if (0 === $depth) {
                     $code_buf->pushStr('if ($' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
-                    $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
+                    $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack($empty_convert);');
                     $code_buf->pushStr('}');
                 } else {
                     $code_buf->pushStr('if (!$' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
                     $code_buf->pushIndent('continue;');
                     $code_buf->pushStr('}');
-                    $code_buf->pushStr('$' . $result_var . ' = $' . $var_name . '->arrayPack();');
+                    $code_buf->pushStr('$' . $result_var . ' = $' . $var_name . '->arrayPack($empty_convert);');
                 }
                 break;
             default:
