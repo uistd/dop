@@ -244,8 +244,6 @@ class PhpValidCoder extends PluginCoderBase
      */
     private function lengthCheck($valid_buf, $var_name, $rule)
     {
-        $valid_buf->pushStr('if (null !== $' . $var_name . ') {');
-        $valid_buf->indent();
         //字符串安全性处理
         if ($rule->is_trim || $rule->is_add_slashes || $rule->is_html_special_chars || $rule->is_strip_tags) {
             $left_buf = new StrBuf();
@@ -273,7 +271,6 @@ class PhpValidCoder extends PluginCoderBase
         $max_len = null === $rule->max_str_len ? 'null' : $rule->max_str_len;
         $if_str = '!DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
         $this->conditionCode($valid_buf, $if_str, $rule, 'length');
-        $valid_buf->backIndent()->pushStr('}');
     }
 
     /**
