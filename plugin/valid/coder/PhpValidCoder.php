@@ -191,7 +191,7 @@ class PhpValidCoder extends PluginCoderBase
             if ($null_check) {
                 //要判断是不是null， 字符串不能只判断null， 还要判断是不是空
                 if (ItemType::STRING === $item_type) {
-                    $valid_buf->pushStr('if (is_string(' . $var_name . ') && strlen(' . $var_name . ') > 0) {')->indent();
+                    $valid_buf->pushStr('if (is_string($' . $var_name . ') && strlen($' . $var_name . ') > 0) {')->indent();
                 } else {
                     $valid_buf->pushStr('if (null !== $' . $var_name . ') {')->indent();
                 }
@@ -217,7 +217,7 @@ class PhpValidCoder extends PluginCoderBase
         if (ItemType::ARR === $type || ItemType::MAP === $type) {
             $this->conditionCode($valid_buf, 'empty($' . $var_name . ')', $rule, 'require');
         } elseif (ItemType::STRING === $type) {
-            $this->conditionCode($valid_buf, '!is_string($' . $var_name . ') || 0 === strlen(' . $var_name . ')', $rule, 'require');
+            $this->conditionCode($valid_buf, '!is_string($' . $var_name . ') || 0 === strlen($' . $var_name . ')', $rule, 'require');
         } else {
             $this->conditionCode($valid_buf, 'null === $' . $var_name, $rule, 'require');
         }
