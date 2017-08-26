@@ -5,7 +5,7 @@ use ffan\dop\build\BuildOption;
 use ffan\dop\build\CoderBase;
 use ffan\dop\build\Folder;
 use ffan\dop\build\PluginBase;
-use ffan\dop\build\Render;
+use ffan\dop\build\Shader;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\ListItem;
@@ -114,9 +114,9 @@ class Manager
     private $current_build_opt;
 
     /**
-     * @var Render[] 着色器列表
+     * @var Shader[] 着色器列表
      */
-    private $render_list;
+    private $shader_list;
 
     /**
      * 初始化
@@ -274,6 +274,20 @@ class Manager
     }
 
     /**
+     * 应用着色器
+     */
+    public function applyShader()
+    {
+        if (empty($this->shader_list)) {
+            return;
+        }
+        /** @var Shader $shader */
+        foreach ($this->shader_list as $shader) {
+
+        }
+    }
+
+    /**
      * 生成代码
      * @param string $section 使用的配置section
      * @return bool
@@ -288,6 +302,7 @@ class Manager
             /** @var CoderBase $coder */
             $this->current_coder = $coder = new $coder_class($this, $build_opt);
             $coder->build();
+
             $this->saveFiles($build_opt->getFileOption());
             $this->buildLog('done!');
         } catch (Exception $exception) {
@@ -329,11 +344,11 @@ class Manager
 
     /**
      * 添加着色器
-     * @param Render $render
+     * @param Shader $shader
      */
-    public function addRender(Render $render)
+    public function addShader(Shader $shader)
     {
-        $this->render_list[] = $render;
+        $this->shader_list[] = $shader;
     }
 
     /**

@@ -201,4 +201,15 @@ class Folder
         $dop_file->setPath($path);
         $this->file_list[$path][$dop_file->getFileName()] = $dop_file;
     }
+
+    /**
+     * 搜索所有文件
+     * @param $path
+     * @param $file
+     * @return array
+     */
+    public function search($path, $file)
+    {
+
+    }
 }

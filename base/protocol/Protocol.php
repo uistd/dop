@@ -3,7 +3,7 @@
 namespace ffan\dop\protocol;
 
 use ffan\dop\build\BuildOption;
-use ffan\dop\build\Render;
+use ffan\dop\build\Shader;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
@@ -41,9 +41,9 @@ class Protocol
     const QUERY_STEP_DATA = 4;
 
     /**
-     * 解析步骤：render
+     * 解析步骤：shader
      */
-    const QUERY_STEP_RENDER = 8;
+    const QUERY_STEP_SHADER = 8;
 
     /**
      * @var \DOMDocument xml_handle
@@ -149,7 +149,7 @@ class Protocol
         $this->queryStruct();
         $this->queryAction();
         $this->queryData();
-        $this->queryRender();
+        $this->queryShader();
     }
 
     /**
@@ -257,24 +257,24 @@ class Protocol
     /**
      * 解析render
      */
-    private function queryRender()
+    private function queryShader()
     {
         //已经解析过了，就打标志，避免重复解析
-        if ($this->query_step & self::QUERY_STEP_RENDER) {
+        if ($this->query_step & self::QUERY_STEP_SHADER) {
             return;
         }
-        $this->query_step |= self::QUERY_STEP_RENDER;
+        $this->query_step |= self::QUERY_STEP_SHADER;
         $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/render');
+        $node_list = $path_handle->query('/protocol/shader');
         if (null === $node_list) {
             return;
         }
         for ($i = 0; $i < $node_list->length; ++$i) {
-            /** @var \DOMElement $render_node */
-            $render_node = $node_list->item($i);
-            $this->setLineNumber($render_node->getLineNo());
-            $render = new Render($this->manager, $render_node);
-            $this->manager->addRender($render);
+            /** @var \DOMElement $shader_node */
+            $shader_node = $node_list->item($i);
+            $this->setLineNumber($shader_node->getLineNo());
+            $shader = new Shader($this->manager, $shader_node);
+            $this->manager->addShader($shader);
         }
     }
 
