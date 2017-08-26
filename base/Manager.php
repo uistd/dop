@@ -275,15 +275,25 @@ class Manager
 
     /**
      * 应用着色器
+     * @param string $seciton
      */
-    public function applyShader()
+    public function applyShader($seciton)
     {
         if (empty($this->shader_list)) {
             return;
         }
         /** @var Shader $shader */
         foreach ($this->shader_list as $shader) {
-
+            if ($shader->getBuildName() !== $seciton) {
+                continue;
+            }
+            /**
+             * @var string $path
+             * @var Folder $folder
+             */
+            foreach ($this->folder_list as $path => $folder) {
+                $shader->apply($folder);
+            }
         }
     }
 
@@ -302,7 +312,7 @@ class Manager
             /** @var CoderBase $coder */
             $this->current_coder = $coder = new $coder_class($this, $build_opt);
             $coder->build();
-
+            $this->applyShader($section);
             $this->saveFiles($build_opt->getFileOption());
             $this->buildLog('done!');
         } catch (Exception $exception) {

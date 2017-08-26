@@ -20,12 +20,12 @@ class Shader
     /**
      * @var string 文件名
      */
-    private $file_name = '*';
+    private $file_key = '*';
 
     /**
      * @var string 目录
      */
-    private $path_name = '*';
+    private $path_key = '*';
 
     /**
      * @var string buf
@@ -38,9 +38,9 @@ class Shader
     private $manager;
 
     /**
-     * @var string
+     * @var string[]
      */
-    private $code;
+    private $codes;
 
     /**
      * Shader constructor.
@@ -71,15 +71,15 @@ class Shader
         }
         $file_name = PluginRule::read($node, 'file');
         if (!empty($file_name)) {
-            $this->file_name = $file_name;
+            $this->file_key = $file_name;
         }
         $path_name = PluginRule::read($node, 'path');
         if (!empty($path_name)) {
-            $this->path_name = $path_name;
+            $this->path_key = $path_name;
         }
         $code_str = trim($node->nodeValue);
         $code_arr = FFanStr::split($code_str, PHP_EOL);
-        $this->code = join(PHP_EOL, $code_arr);
+        $this->codes = $code_arr;
     }
 
     /**
@@ -96,7 +96,27 @@ class Shader
      */
     public function apply(Folder $folder)
     {
-
+        if (empty($this->codes)) {
+            return;
+        }
+        $files = $folder->search($this->path_key, $this->file_key);
+        if (empty($files)) {
+            return;
+        }
+        /** @var FileBuf $file_buf */
+        foreach ($files as $file_buf) {
+            //如果指定将代码写入某个buf
+            if ($this->buf_name) {
+                $code_buf = $file_buf->getBuf($this->buf_name);
+            } else {
+                $code_buf = $file_buf;
+            }
+            if (!$code_buf) {
+                continue;
+            }
+            foreach ($this->codes as $code) {
+                $code_buf->pushStr($code);
+            }
+        }
     }
-
 }

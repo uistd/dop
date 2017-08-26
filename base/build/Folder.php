@@ -116,7 +116,7 @@ class Folder
         if (empty($this->file_list)) {
             return;
         }
-        $this->manager->buildLog('Save file of folder:'. $this->base_dir);
+        $this->manager->buildLog('Save file of folder:' . $this->base_dir);
         foreach ($this->file_list as $path => $dir) {
             $abs_path = $this->checkPatch($path);
             /**
@@ -131,10 +131,10 @@ class Folder
                 $content = $file_buf->dump();
                 //utf8 bom头
                 if (($option & BuildOption::FILE_OPTION_UTF8_BOM)) {
-                    $content = chr(0xEF).chr(0xBB).chr(0xBF) . $content;
+                    $content = chr(0xEF) . chr(0xBB) . chr(0xBF) . $content;
                 }
                 $re = file_put_contents($full_file_name, $content);
-                $log_file_name = $path .'/'. $file_name;
+                $log_file_name = $path . '/' . $file_name;
                 $this->manager->buildLog('Build file ' . $log_file_name . ($re ? ' success' : ' failed'));
             }
         }
@@ -159,7 +159,7 @@ class Folder
         }
         $buf->push($code);
     }
-        
+
 
     /**
      * 目录检查
@@ -172,7 +172,7 @@ class Folder
         FFanUtils::pathWriteCheck($file_path);
         return $file_path;
     }
-    
+
     /**
      * 查找文件
      * @param string $path
@@ -204,12 +204,49 @@ class Folder
 
     /**
      * 搜索所有文件
-     * @param $path
-     * @param $file
-     * @return array
+     * @param string $path_key 文件夹关键字
+     * @param string $file_key
+     * @return FileBuf[]
      */
-    public function search($path, $file)
+    public function search($path_key, $file_key)
     {
+        $result = array();
+        foreach ($this->file_list as $path => $dir) {
+            if (!$this->isKeyMatch($path_key, $path)) {
+                continue;
+            }
+            /**
+             * @var string $file_name
+             * @var FileBuf $file_buf
+             */
+            foreach ($dir as $file_name => $file_buf) {
+                if ($file_buf->isEmpty()) {
+                    continue;
+                }
+                if (!$this->isKeyMatch($file_key, $file_name)) {
+                    continue;
+                }
+                $result[] = $file_buf;
+            }
+        }
+        return $result;
+    }
 
+    /**
+     * 判断字符串是否匹配查找关键字
+     * @param string $key
+     * @param string $str
+     * @return bool
+     */
+    private function isKeyMatch($key, $str)
+    {
+        if ('*' === $key) {
+            return true;
+        }
+        if ($key === $str) {
+            return true;
+        }
+        $key = str_replace('*', '[a-zA-Z\d_]*', $key);
+        return preg_match('#'. $key .'#', $str) > 0;
     }
 }
