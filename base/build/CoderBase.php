@@ -320,9 +320,11 @@ abstract class CoderBase extends ConfigBase
         $packer->setFileBuf($file_buf);
         $packer->build();
         if ($this->isBuildPackMethod($struct)) {
+            $packer->setCurrentMethod(PackerBase::METHOD_PACK);
             $packer->buildPackMethod($struct, $code_buf);
         }
         if ($this->isBuildUnpackMethod($struct)) {
+            $packer->setCurrentMethod(PackerBase::METHOD_UNPACK);
             $packer->buildUnpackMethod($struct, $code_buf);
         }
     }
@@ -665,5 +667,14 @@ abstract class CoderBase extends ConfigBase
         } else {
             return $camel_name;
         }
+    }
+
+    /**
+     * 返回coder 名称
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->coder_name;
     }
 }

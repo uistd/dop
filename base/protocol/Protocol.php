@@ -2,7 +2,9 @@
 
 namespace ffan\dop\protocol;
 
+use ffan\dop\build\BufTrigger;
 use ffan\dop\build\BuildOption;
+use ffan\dop\build\NodeBase;
 use ffan\dop\build\Shader;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
@@ -551,12 +553,37 @@ class Protocol
             }
             $this->setLineNumber($tmp_node->getLineNo());
             $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
-            $plugin = $this->manager->getPlugin($plugin_name);
-            if (!$plugin) {
-                continue;
+            //如果是触发器，特殊处理
+            if ('trigger' === $plugin_name) {
+                $this->parseTrigger($tmp_node, $item);
+            } else {
+                $plugin = $this->manager->getPlugin($plugin_name);
+                if (!$plugin) {
+                    continue;
+                }
+                $plugin->init($this, $tmp_node, $item);
             }
-            $plugin->init($this, $tmp_node, $item);
         }
+    }
+
+    /**
+     * 解析trigger
+     * @param \DOMElement $dom_node
+     * @param Item $item
+     * @throws Exception
+     */
+    private function parseTrigger($dom_node, $item)
+    {
+        $type = NodeBase::read($dom_node, 'type');
+        switch ($type) {
+            case 'buf':
+                $trigger = new BufTrigger();
+                break;
+            default:
+                throw new Exception('Unknown trigger:'. $type);
+        }
+        $trigger->init($dom_node);
+        $item->addTrigger($trigger);
     }
 
     /**

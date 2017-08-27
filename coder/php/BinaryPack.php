@@ -108,6 +108,7 @@ class BinaryPack extends PackerBase
             } else {
                 self::packItemValue($code_buf, 'this->' . $name, 'result', $item, 0);
             }
+            $this->itemTrigger($code_buf, $item);
         }
         if (!$struct->isSubStruct()) {
             $code_buf->pushStr('return $result->pack();');

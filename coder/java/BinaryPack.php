@@ -127,6 +127,7 @@ class BinaryPack extends PackerBase
             if ($is_null_check) {
                 $code_buf->backIndent()->pushStr('}');
             }
+            $this->itemTrigger($code_buf, $item);
         }
         if (!$struct->isSubStruct()) {
             $code_buf->pushStr('return result.pack();');

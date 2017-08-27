@@ -80,6 +80,7 @@ class DictionaryPack extends PackerBase
             } else {
                 $this->packItemValue($code_buf, 'self.' . $name, 'result[@"' . $name . '"]', $item, 0, $tmp_index);
             }
+            $this->itemTrigger($code_buf, $item);
         }
     }
 
@@ -211,6 +212,7 @@ class DictionaryPack extends PackerBase
             $ns_type = self::nsTypeName($item_type);
             $value = '[FFANDOPUtils idTo' . $ns_type . ':[dict_map valueForKey:@"' . $name . '"]]';
             $this->unpackItemValue($code_buf, 'self.' . $name, $value, $item, $tmp_index);
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->backIndent()->pushStr('}');
     }

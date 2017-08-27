@@ -84,16 +84,16 @@ class Shader
      */
     private function parse($node)
     {
-        $shader_name = PluginRule::read($node, 'name');
+        $shader_name = NodeBase::read($node, 'name');
         if (empty($shader_name)) {
             throw new Exception('Shader name missing');
         }
         $this->shader_name = $shader_name;
-        $file_name = PluginRule::read($node, 'file');
+        $file_name = NodeBase::read($node, 'file');
         if (!empty($file_name)) {
             $this->file_key = $file_name;
         }
-        $path_name = PluginRule::read($node, 'path');
+        $path_name = NodeBase::read($node, 'path');
         if (!empty($path_name)) {
             $this->path_key = $path_name;
         }

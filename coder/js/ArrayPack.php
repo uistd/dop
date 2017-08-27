@@ -47,6 +47,7 @@ class ArrayPack extends PackerBase
          */
         foreach ($all_item as $name => $item) {
             self::packItemValue($code_buf, 'this.' . $name, "result['" . $name . "']", $item, $tmp_index);
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->pushStr('return result;');
         $code_buf->backIndent()->pushStr('},');
@@ -75,6 +76,7 @@ class ArrayPack extends PackerBase
          */
         foreach ($all_item as $name => $item) {
             self::unpackItemValue($code_buf, 'this.' . $name, 'data', $item, 0, $name, $tmp_index);
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->backIndent()->pushStr('},');
     }

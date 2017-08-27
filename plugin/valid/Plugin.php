@@ -2,8 +2,8 @@
 
 namespace ffan\dop\plugin\valid;
 
+use ffan\dop\build\NodeBase;
 use ffan\dop\build\PluginBase;
-use ffan\dop\build\PluginRule;
 use ffan\dop\Exception;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
@@ -33,12 +33,12 @@ class Plugin extends PluginBase
             return;
         }
         $valid_rule = new ValidRule();
-        $valid_rule->is_require = PluginRule::readBool($node, 'require', false);
-        $valid_rule->require_msg = PluginRule::read($node, 'require-msg');
-        $valid_rule->range_msg = PluginRule::read($node, 'range-msg');
-        $valid_rule->length_msg = PluginRule::read($node, 'length-msg');
-        $valid_rule->format_msg = PluginRule::read($node, 'format-msg');
-        $valid_rule->err_msg = PluginRule::read($node, 'msg');
+        $valid_rule->is_require = NodeBase::readBool($node, 'require', false);
+        $valid_rule->require_msg = NodeBase::read($node, 'require-msg');
+        $valid_rule->range_msg = NodeBase::read($node, 'range-msg');
+        $valid_rule->length_msg = NodeBase::read($node, 'length-msg');
+        $valid_rule->format_msg = NodeBase::read($node, 'format-msg');
+        $valid_rule->err_msg = NodeBase::read($node, 'msg');
         if (null === $valid_rule->err_msg) {
             $valid_rule->err_msg = 'Invalid `'. $item->getName() .'`';
         }
@@ -64,7 +64,7 @@ class Plugin extends PluginBase
      */
     private function readIntSet($node, $valid_rule)
     {
-        list($min, $max) = PluginRule::readSplitSet($node, 'range');
+        list($min, $max) = NodeBase::readSplitSet($node, 'range');
         if (null !== $min) {
             $valid_rule->min_value = $min;
         }
@@ -80,7 +80,7 @@ class Plugin extends PluginBase
      */
     private function readFloatSet($node, $valid_rule)
     {
-        list($min, $max) = PluginRule::readSplitSet($node, 'range', false);
+        list($min, $max) = NodeBase::readSplitSet($node, 'range', false);
         if (null !== $min) {
             $valid_rule->min_value = $min;
         }
@@ -97,7 +97,7 @@ class Plugin extends PluginBase
      */
     private function readStringSet($node, $valid_rule)
     {
-        list($min_len, $max_len) = PluginRule::readSplitSet($node, 'length');
+        list($min_len, $max_len) = NodeBase::readSplitSet($node, 'length');
         if ($min_len) {
             $valid_rule->min_str_len = $min_len;
         }
@@ -105,15 +105,15 @@ class Plugin extends PluginBase
             $valid_rule->max_str_len = $max_len;
         }
         //默认trim()
-        $valid_rule->is_trim = PluginRule::readBool($node, 'trim', true);
+        $valid_rule->is_trim = NodeBase::readBool($node, 'trim', true);
         //默认转义危险字符
-        $valid_rule->is_add_slashes = PluginRule::readBool($node, 'slashes', true);
+        $valid_rule->is_add_slashes = NodeBase::readBool($node, 'slashes', true);
         //默认过滤html标签
-        $valid_rule->is_strip_tags = PluginRule::readBool($node, 'html-strip', true);
+        $valid_rule->is_strip_tags = NodeBase::readBool($node, 'html-strip', true);
         //如果不过滤html标签，默认html-encode
-        $valid_rule->is_html_special_chars = PluginRule::readBool($node, 'html-encode', true);
+        $valid_rule->is_html_special_chars = NodeBase::readBool($node, 'html-encode', true);
         //内容格式
-        $format_set = PluginRule::read($node, 'format');
+        $format_set = NodeBase::read($node, 'format');
         if (!empty($format_set)) {
             $valid_rule->format_set = str_replace('#', '\#', $format_set);
             if ('/' !== $valid_rule->format_set[0] && !ValidRule::isBuildInType($valid_rule->format_set)) {
@@ -121,7 +121,7 @@ class Plugin extends PluginBase
             }
         }
         //长度计算方式
-        $valid_rule->str_len_type = (int)PluginRule::read($node, 'strlen_type', 3);
+        $valid_rule->str_len_type = (int)NodeBase::read($node, 'strlen_type', 3);
     }
 
     /**

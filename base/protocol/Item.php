@@ -2,7 +2,9 @@
 
 namespace ffan\dop\protocol;
 
+use ffan\dop\build\NodeBase;
 use ffan\dop\build\PluginRule;
+use ffan\dop\build\Trigger;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\php\utils\Str as FFanStr;
@@ -57,6 +59,11 @@ abstract class Item
      * @var bool 是否保持原始名称
      */
     private $keep_original_name = false;
+
+    /**
+     * @var Trigger[] 触发器
+     */
+    private $trigger_list;
 
     /**
      * Item constructor.
@@ -133,7 +140,7 @@ abstract class Item
         }
         //如果有继承
         if ($node->hasAttribute('extend')) {
-            $extend_str = PluginRule::read($node, 'extend');
+            $extend_str = NodeBase::read($node, 'extend');
             if (!empty($extend_str)) {
                 if (null === $rule) {
                     $rule = new PluginRule();
@@ -270,5 +277,23 @@ abstract class Item
     public function isKeepOriginalName()
     {
         return $this->keep_original_name;
+    }
+
+    /**
+     * 添加触发器
+     * @param Trigger $trigger
+     */
+    public function addTrigger(Trigger $trigger)
+    {
+        $this->trigger_list[] = $trigger;
+    }
+
+    /**
+     * 获取所有的trigger
+     * @return Trigger[]|null
+     */
+    public function getTrigger()
+    {
+        return $this->trigger_list;
     }
 }

@@ -45,6 +45,7 @@ class ArrayPack extends PackerBase
             $property_name = $this->coder->fixPropertyName($name, $item);
             $value_name = $this->coder->fixOutputName($name, $item);
             self::packItemValue($code_buf, 'this->' . $property_name, "result['" . $value_name . "']", $item, 0);
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->pushStr('if ($empty_convert && empty($result)) {');
         $code_buf->pushIndent('return new \\stdClass();');
@@ -78,6 +79,7 @@ class ArrayPack extends PackerBase
             $property_name = $this->coder->fixPropertyName($name, $item);
             $value_name = $this->coder->fixOutputName($name, $item);
             self::unpackItemValue($code_buf, 'this->' . $property_name, 'data', $item, 0, $value_name);
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->backIndent()->pushStr('}');
     }

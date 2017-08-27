@@ -51,6 +51,7 @@
         </list>
         <list name="children">
             <plugin_mock range="1,3"/>
+            <plugin_trigger type="buf" buf_name="trigger_add_buf"/>
             <struct>
                 <int name="gender" default="1" note="性别">
                     <plugin_mock enum="1,2"/>
@@ -165,6 +166,8 @@
         <code buf_name="import">
             //以上代码是DOP自动生成的
         </code>
-        <code>//end</code>
+        <code buf_name="trigger_add_buf">
+            //This code is build by trigger
+        </code>
     </shader>
 </protocol>

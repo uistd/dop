@@ -93,6 +93,7 @@ class GsonPack extends PackerBase
             if ($null_check) {
                 $code_buf->backIndent()->pushStr('}');
             }
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->pushStr('writer.endObject();');
     }
@@ -177,6 +178,7 @@ class GsonPack extends PackerBase
                 $code_buf->backIndent()->pushStr('}');
             }
             $code_buf->pushStr('break;')->backIndent();
+            $this->itemTrigger($code_buf, $item);
         }
         $code_buf->pushStr('default:')->indent();
         $code_buf->pushStr('reader.skipValue();');

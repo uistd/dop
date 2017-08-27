@@ -2,6 +2,7 @@
 
 namespace ffan\dop\build;
 
+use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Struct;
 
@@ -11,6 +12,16 @@ use ffan\dop\protocol\Struct;
  */
 abstract class PackerBase
 {
+    /**
+     * pack方法
+     */
+    const METHOD_PACK = 1;
+
+    /**
+     * unpack方法
+     */
+    const METHOD_UNPACK = 2;
+
     /**
      * @var CoderBase
      */
@@ -27,12 +38,24 @@ abstract class PackerBase
     private $import_buf;
 
     /**
+     * @var string
+     */
+    private $packer_name;
+
+    /**
+     * @var int 当前type
+     */
+    private $current_method;
+
+    /**
      * PackerBase constructor.
      * @param CoderBase $coder
      */
     public function __construct(CoderBase $coder)
     {
         $this->coder = $coder;
+        $pack_name = basename(str_replace('\\', '/', static::class));
+        $this->packer_name = strtolower(substr($pack_name, 0, -4));
     }
 
     /**
@@ -64,6 +87,27 @@ abstract class PackerBase
     public function buildUnpackMethod($struct, $code_buf)
     {
 
+    }
+
+    /**
+     * 获取当前的方法
+     * @return int
+     */
+    public function getCurrentMethod()
+    {
+        return $this->current_method;
+    }
+
+    /**
+     * 设置当前的方法
+     * @param int $method
+     */
+    public function setCurrentMethod($method)
+    {
+        if (self::METHOD_PACK !== $method) {
+            $method = self::METHOD_UNPACK;
+        }
+        $this->current_method = $method;
     }
 
     /**
@@ -102,12 +146,12 @@ abstract class PackerBase
      */
     protected function pushImportCode($str)
     {
-       if (!$this->import_buf) {
-           return;
-       }
-       $this->import_buf->pushUniqueStr($str);
+        if (!$this->import_buf) {
+            return;
+        }
+        $this->import_buf->pushUniqueStr($str);
     }
-    
+
     /**
      * 生成临时变量名
      * @param string $var
@@ -117,6 +161,23 @@ abstract class PackerBase
     public static function varName($var, $type)
     {
         return $type . '_' . (string)$var;
+    }
+
+    /**
+     * 检查item的trigger
+     * @param CodeBuf $code_buf
+     * @param Item $item
+     */
+    public function itemTrigger(CodeBuf $code_buf, Item $item)
+    {
+        $triggers = $item->getTrigger();
+        if (null === $triggers) {
+            return;
+        }
+        /** @var Trigger $trigger */
+        foreach ($triggers as $trigger) {
+            $trigger->trigger($code_buf, $this->file_buf, $this);
+        }
     }
 
     /**
@@ -144,5 +205,23 @@ abstract class PackerBase
             0x82 => 'int64',
         );
         return isset($comment_arr[$type]) ? $comment_arr[$type] : '';
+    }
+
+    /**
+     * 获取pack名称
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->packer_name;
+    }
+
+    /**
+     * 获取coder
+     * @return CoderBase
+     */
+    public function getCoder()
+    {
+        return $this->coder;
     }
 }
