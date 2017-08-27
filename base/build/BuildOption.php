@@ -104,6 +104,11 @@ class BuildOption
     public $item_name_output = self::CAMEL_NAME;
 
     /**
+     * @var string 生效的shader
+     */
+    private $use_shader;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -172,6 +177,7 @@ class BuildOption
         $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->getConfig('plugin', '')) . ',';
+        $this->use_shader = str_replace(' ', '', $this->getConfig('shader', '')) . ',';
         $this->coder_name = $section_conf['coder'];
         $this->build_side = $this->parseCodeSide($section_conf['code_side']);
         $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
@@ -322,6 +328,21 @@ class BuildOption
         }
         $plugin_name .= ',';
         return false !== strpos($this->use_plugin, $plugin_name);
+    }
+
+    /**
+     * 是否配置了某个shader
+     * @param string $shader_name
+     * @return boolean
+     */
+    public function isUseShader($shader_name)
+    {
+        //如果配置了all，表示使用所有的插件
+        if (false !== strpos($this->use_shader, 'all,') || false !== strpos($this->use_shader, '*,')) {
+            return true;
+        }
+        $shader_name .= ',';
+        return false !== strpos($this->use_shader, $shader_name);
     }
 
     /**

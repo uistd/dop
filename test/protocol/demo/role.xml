@@ -161,7 +161,10 @@
             </map>
         </response>
     </action>
-    <shader file="*.php" build_name="main">
-        //以上代码是DOP自动生成的
+    <shader file="*.php" name="php">
+        <code buf_name="import">
+            //以上代码是DOP自动生成的
+        </code>
+        <code>//end</code>
     </shader>
 </protocol>

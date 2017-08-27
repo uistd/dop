@@ -4,7 +4,6 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\dop\Manager;
-use ffan\php\utils\Str as FFanStr;
 
 /**
  * Class Shader 着色器
@@ -13,9 +12,9 @@ use ffan\php\utils\Str as FFanStr;
 class Shader
 {
     /**
-     * @var string 生成配置名
+     * @var string 名称
      */
-    private $build_name;
+    private $shader_name;
 
     /**
      * @var string 文件名
@@ -28,17 +27,12 @@ class Shader
     private $path_key = '*';
 
     /**
-     * @var string buf
-     */
-    private $buf_name;
-
-    /**
      * @var Manager
      */
     private $manager;
 
     /**
-     * @var string[]
+     * @var array
      */
     private $codes;
 
@@ -54,21 +48,47 @@ class Shader
     }
 
     /**
+     * 代码列表
+     * @param string $code
+     * @param string $buf_name 代码写入的buf PHP_EOL 表示在文件末尾
+     */
+    private function addCode($code, $buf_name = PHP_EOL)
+    {
+        if (!is_string($buf_name) || empty(trim($buf_name))) {
+            $buf_name = PHP_EOL;
+        }
+        $lines = explode(PHP_EOL, $code);
+        //多行
+        if (count($lines) > 0) {
+            $beg_pos = null;
+            foreach ($lines as $line) {
+                if (empty(trim($line))) {
+                    continue;
+                }
+                //记录第一个非空格的字符起始位置
+                if (null === $beg_pos) {
+                    $len = strlen($line);
+                    $beg_pos = $len - strlen(ltrim($line));
+                }
+                $this->codes[$buf_name][] = substr($line, $beg_pos);
+            }
+        } else {
+            $this->codes[$buf_name][] = trim($code);
+        }
+    }
+
+    /**
      * 解析
      * @param \DOMElement $node
      * @throws Exception
      */
     private function parse($node)
     {
-        $build_name = PluginRule::read($node, 'build_name');
-        if (empty($build_name)) {
-            throw new Exception('Shader build_name missing');
+        $shader_name = PluginRule::read($node, 'name');
+        if (empty($shader_name)) {
+            throw new Exception('Shader name missing');
         }
-        $this->build_name = $build_name;
-        $buf_name = PluginRule::read($node, 'buf_name');
-        if (!empty($buf_name)) {
-            $this->buf_name = $buf_name;
-        }
+        $this->shader_name = $shader_name;
         $file_name = PluginRule::read($node, 'file');
         if (!empty($file_name)) {
             $this->file_key = $file_name;
@@ -77,17 +97,27 @@ class Shader
         if (!empty($path_name)) {
             $this->path_key = $path_name;
         }
-        $code_str = trim($node->nodeValue);
-        $code_arr = FFanStr::split($code_str, PHP_EOL);
-        $this->codes = $code_arr;
+        $code_node_list = $node->childNodes;
+        $num = 0;
+        for ($i = 0; $i < $code_node_list->length; ++$i) {
+            $code_node = $code_node_list->item($i);
+            if (XML_ELEMENT_NODE !== $code_node->nodeType) {
+                continue;
+            }
+            $num++;
+            $this->addCode($code_node->nodeValue, $code_node->getAttribute('buf_name'));
+        }
+        if (0 === $num) {
+            $this->addCode($node->nodeValue);
+        }
     }
 
     /**
      * @return string
      */
-    public function getBuildName()
+    public function getName()
     {
-        return $this->build_name;
+        return $this->shader_name;
     }
 
     /**
@@ -105,17 +135,19 @@ class Shader
         }
         /** @var FileBuf $file_buf */
         foreach ($files as $file_buf) {
-            //如果指定将代码写入某个buf
-            if ($this->buf_name) {
-                $code_buf = $file_buf->getBuf($this->buf_name);
-            } else {
-                $code_buf = $file_buf;
-            }
-            if (!$code_buf) {
-                continue;
-            }
-            foreach ($this->codes as $code) {
-                $code_buf->pushStr($code);
+            foreach ($this->codes as $buf_name => $code_arr) {
+                if (PHP_EOL === $buf_name) {
+                    $code_buf = $file_buf;
+                } else {
+                    $code_buf = $file_buf->getBuf($buf_name);
+                }
+                if (!$code_buf) {
+                    continue;
+                }
+                foreach ($code_arr as $code) {
+                    $code_buf->pushStr($code);
+                }
+
             }
         }
     }
