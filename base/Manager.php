@@ -284,7 +284,6 @@ class Manager
         /** @var Shader $shader */
         foreach ($this->shader_list as $shader) {
             $shader_name = $shader->getName();
-            var_dump($shader_name);
             if (!$this->current_build_opt->isUseShader($shader_name)) {
                 continue;
             }
