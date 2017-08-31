@@ -14,3 +14,5 @@ test/java/DopTest/GsonTest/src/com/ffan/dop/demo/
 *.exe
 *.depend
 *.layout
+test/objc/mytest/mytest
+gson-2.8.1.jar
