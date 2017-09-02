@@ -6,7 +6,7 @@ use ffan\dop\build\PluginRule;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\ItemType;
 use ffan\dop\protocol\Protocol;
-use ffan\php\utils\Str as FFanStr;
+use FFan\Std\Common\Str as FFanStr;
 
 /**
  * @package ffan\dop

@@ -13,8 +13,8 @@ use ffan\dop\protocol\MapItem;
 use ffan\dop\protocol\Struct;
 use ffan\dop\protocol\Protocol;
 use ffan\dop\protocol\StructItem;
-use ffan\php\utils\Str as FFanStr;
-use ffan\php\utils\Utils as FFanUtils;
+use FFan\Std\Common\Str as FFanStr;
+use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class Manager

@@ -8,7 +8,7 @@ use ffan\dop\build\PackerBase;
 use ffan\dop\build\StrBuf;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\Struct;
-use ffan\php\utils\Str as FFanStr;
+use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class ArrayPack

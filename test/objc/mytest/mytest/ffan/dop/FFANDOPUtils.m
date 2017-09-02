@@ -68,6 +68,7 @@
  */
 + (NSDictionary *)idToDictionary:(id)pointer {
     NSDictionary *def = [NSDictionary new];
+    
     if (nil == pointer) {
         return def;
     }

@@ -3,7 +3,7 @@
 namespace ffan\dop\build;
 
 use ffan\dop\Exception;
-use ffan\php\utils\Str as FFanStr;
+use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class TplLoader 模板加载器

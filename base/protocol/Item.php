@@ -7,7 +7,7 @@ use ffan\dop\build\PluginRule;
 use ffan\dop\build\Trigger;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
-use ffan\php\utils\Str as FFanStr;
+use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class Item 协议的每一项

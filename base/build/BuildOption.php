@@ -4,8 +4,8 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\dop\protocol\Struct;
-use ffan\php\utils\Utils as FFanUtils;
-use ffan\php\utils\Str as FFanStr;
+use FFan\Std\Common\Utils as FFanUtils;
+use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class BuildOption 生成文件参数

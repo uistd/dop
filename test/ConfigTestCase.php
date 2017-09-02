@@ -1,8 +1,8 @@
 <?php
 require_once '../vendor/autoload.php';
 $file = 'protocol/build.ini';
-use ffan\php\utils\Env;
-use ffan\php\utils\Utils;
+use FFan\Std\Common\Env;
+use FFan\Std\Common\Utils;
 
 $config = parse_ini_file($file, true);
 print_r($config);

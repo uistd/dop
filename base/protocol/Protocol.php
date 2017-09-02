@@ -8,8 +8,8 @@ use ffan\dop\build\NodeBase;
 use ffan\dop\build\Shader;
 use ffan\dop\Exception;
 use ffan\dop\Manager;
-use ffan\php\utils\Str as FFanStr;
-use ffan\php\utils\Utils as FFanUtils;
+use FFan\Std\Common\Str as FFanStr;
+use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class Protocol

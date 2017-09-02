@@ -1,6 +1,6 @@
 <?php
 namespace ffan\dop\build;
-use ffan\php\utils\Str as FFanStr;
+use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class Trigger 触发器

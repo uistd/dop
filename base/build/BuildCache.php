@@ -3,7 +3,7 @@
 namespace ffan\dop\build;
 
 use ffan\dop\Manager;
-use ffan\php\utils\Utils as FFanUtils;
+use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class BuildCache 编译缓存

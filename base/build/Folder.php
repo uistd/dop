@@ -4,8 +4,7 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 use ffan\dop\Manager;
-use ffan\php\utils\Debug;
-use ffan\php\utils\Utils as FFanUtils;
+use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class Folder 虚拟目录

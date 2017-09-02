@@ -6,8 +6,8 @@ use ffan\dop\Exception;
 use ffan\dop\Manager;
 use ffan\dop\protocol\Item;
 use ffan\dop\protocol\Protocol;
-use ffan\php\utils\ConfigBase;
-use ffan\php\utils\Utils as FFanUtils;
+use FFan\Std\Common\ConfigBase;
+use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class PluginBase 插件基类

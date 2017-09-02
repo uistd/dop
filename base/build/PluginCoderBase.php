@@ -4,8 +4,6 @@ namespace ffan\dop\build;
 
 use ffan\dop\Exception;
 
-use ffan\php\utils\str as FFanStr;
-
 /**
  * Class PluginCoderBase
  * @package ffan\dop\build
@@ -64,7 +62,7 @@ abstract class PluginCoderBase
             return;
         }
         /** @var PluginRule $extend_rule */
-        $extend_rule = $item->getPluginData($plugin_name);
+        $item->getPluginData($plugin_name);
         $rule->extend_item = $rule->extend_class = null;
     }
 }
