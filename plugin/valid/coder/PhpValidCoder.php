@@ -292,7 +292,7 @@ class PhpValidCoder extends PluginCoderBase
         if ('/' === $rule->format_set[0]) {
             $if_str = '!preg_match(\'' . $rule->format_set . '\', $' . $var_name . ')';
         } else {
-            $if_str = 'DopValidator::isValid' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
+            $if_str = 'DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
             $use_code_flag = true;
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');
