@@ -132,15 +132,16 @@ class PhpValidCoder extends PluginCoderBase
                 break;
             case ItemType::STRING:
                 if (null === $rule) {
-                    break;
-                }
-                //长度
-                if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
-                    $this->lengthCheck($if_buf, $var_name, $rule);
-                    $this->import_flag = true;
-                }
-                if (null !== $rule->format_set) {
-                    $this->formatCheck($if_buf, $var_name, $rule, $use_code_flag);
+                    $this->strSafeConvert($valid_buf, $var_name);
+                } else {
+                    //长度
+                    if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
+                        $this->lengthCheck($if_buf, $var_name, $rule);
+                        $this->import_flag = true;
+                    }
+                    if (null !== $rule->format_set) {
+                        $this->formatCheck($if_buf, $var_name, $rule, $use_code_flag);
+                    }
                 }
                 break;
             case ItemType::STRUCT:
@@ -173,7 +174,7 @@ class PhpValidCoder extends PluginCoderBase
                         $if_buf->push($arr_check_code);
                     }
                     if (!$sub_item_valid_code->isEmpty()) {
-                        $if_buf->pushStr('foreach ($' . $var_name . ' as $' . $for_var . ') {')->indent();
+                        $if_buf->pushStr('foreach ($' . $var_name . ' as &$' . $for_var . ') {')->indent();
                         $if_buf->push($sub_item_valid_code);
                         $if_buf->backIndent()->pushStr('}');
                     }
@@ -252,31 +253,45 @@ class PhpValidCoder extends PluginCoderBase
     {
         //字符串安全性处理
         if ($rule->is_trim || $rule->is_add_slashes || $rule->is_html_special_chars || $rule->is_strip_tags) {
-            $left_buf = new StrBuf();
-            $right_buf = new StrBuf();
-            if ($rule->is_trim) {
-                $left_buf->pushStr('trim(');
-                $right_buf->pushStr(')');
-            }
-            if ($rule->is_add_slashes) {
-                $left_buf->pushStr('addslashes(');
-                $right_buf->pushStr(')');
-            }
-            if ($rule->is_strip_tags) {
-                $left_buf->pushStr('strip_tags(');
-                $right_buf->pushStr(')');
-            } elseif ($rule->is_html_special_chars) {
-                $left_buf->pushStr('htmlspecialchars(');
-                $right_buf->pushStr(')');
-            }
-            $left_buf->pushStr('$' . $var_name);
-            $left_buf->push($right_buf);
-            $valid_buf->push('$' . $var_name . ' = ' . $left_buf->dump() . ';');
+            $this->strSafeConvert($valid_buf, $var_name, $rule->is_trim, $rule->is_add_slashes, $rule->is_html_special_chars, $rule->is_strip_tags);
         }
         $min_len = null === $rule->min_str_len ? 'null' : $rule->min_str_len;
         $max_len = null === $rule->max_str_len ? 'null' : $rule->max_str_len;
         $if_str = '!DopValidator::checkStrLength($' . $var_name . ', ' . $rule->str_len_type . ', ' . $min_len . ', ' . $max_len . ')';
         $this->conditionCode($valid_buf, $if_str, $rule, 'length');
+    }
+
+    /**
+     * 字符串安全过滤
+     * @param CodeBuf $valid_buf
+     * @param string $var_name
+     * @param bool $is_trim
+     * @param bool $is_slash
+     * @param bool $is_html
+     * @param bool $is_strip
+     */
+    private function strSafeConvert($valid_buf, $var_name, $is_trim = true, $is_slash = true, $is_html = false, $is_strip = true)
+    {
+        $left_buf = new StrBuf();
+        $right_buf = new StrBuf();
+        if ($is_trim) {
+            $left_buf->pushStr('trim(');
+            $right_buf->pushStr(')');
+        }
+        if ($is_slash) {
+            $left_buf->pushStr('addslashes(');
+            $right_buf->pushStr(')');
+        }
+        if ($is_strip) {
+            $left_buf->pushStr('strip_tags(');
+            $right_buf->pushStr(')');
+        } elseif ($is_html) {
+            $left_buf->pushStr('htmlspecialchars(');
+            $right_buf->pushStr(')');
+        }
+        $left_buf->pushStr('$' . $var_name);
+        $left_buf->push($right_buf);
+        $valid_buf->push('$' . $var_name . ' = ' . $left_buf->dump() . ';');
     }
 
     /**
