@@ -2,6 +2,7 @@
 
 namespace ffan\dop;
 
+use FFan\Std\Console\Debug;
 use Throwable;
 
 /**
@@ -35,6 +36,7 @@ class Exception extends \Exception
         if (!empty(self::$append_msg)) {
             $message = self::$append_msg . ', ' . $message;
         }
+        $message .= PHP_EOL .Debug::codeTrace();
         parent::__construct($message, $code, $previous);
     }
 }

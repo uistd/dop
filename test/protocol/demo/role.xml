@@ -166,7 +166,7 @@
         <code buf_name="import">
             //以上代码是DOP自动生成的
         </code>
-        <code buf_name="trigger_add_buf">
+        <code trigger_buf="trigger_add_buf">
             //This code is build by trigger
         </code>
     </shader>

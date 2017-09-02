@@ -44,12 +44,25 @@ class BufTrigger extends Trigger
      */
     public function onTrigger(CodeBuf $buf, FileBuf $file, PackerBase $packer)
     {
+        $current_method = $packer->getCurrentMethod();
+        //使用section_name 和 method 做后缀,保证唯一
+        $suffix = $packer->getCoder()->getBuildOption()->getSectionName();
+        if (PackerBase::METHOD_PACK === $current_method) {
+            $suffix .= '_pack';
+        } else {
+            $suffix .= '_unpack';
+        }
         if ('str' === $this->buf_type) {
             $new_buf = new StrBuf();
         } else {
             $new_buf = new CodeBuf();
         }
+        $buf_name = $this->buf_name .'_'. $suffix;
         $buf->push($new_buf);
-        $file->setBuf($this->buf_name, $new_buf);
+        //已经存在了
+        if ($file->getBuf($buf_name)) {
+            return;
+        }
+        $file->setBuf($buf_name, $new_buf);
     }
 }

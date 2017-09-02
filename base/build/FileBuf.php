@@ -120,7 +120,7 @@ class FileBuf extends CodeBuf
     public function touchStrBuf($name)
     {
         if (isset($this->buf_arr[$name])) {
-            throw new Exception('Code buf name "' . $name . '" conflict, file:' . $this->file_name);
+            throw new Exception('Str buf name "' . $name . '" conflict, file:' . $this->file_name);
         }
         $buf = new StrBuf();
         $this->buf_arr[$name] = $buf;
@@ -150,7 +150,7 @@ class FileBuf extends CodeBuf
     public function setBuf($name, BufInterface $buf)
     {
         if (isset($this->buf_arr[$name])) {
-            throw new Exception('Buf name "' . $name . '" conflict, file:' . $this->file_name);
+            throw new Exception('Set buf name "' . $name . '" conflict, file:' . $this->file_name);
         }
         $this->buf_arr[$name] = $buf;
     }

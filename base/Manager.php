@@ -15,6 +15,7 @@ use ffan\dop\protocol\Protocol;
 use ffan\dop\protocol\StructItem;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
+use FFan\Std\Console\Debug;
 
 /**
  * Class Manager

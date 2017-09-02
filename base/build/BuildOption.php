@@ -76,7 +76,7 @@ class BuildOption
     /**
      * @var string
      */
-    public $section_name;
+    private $section_name;
 
     /**
      * @var array 代码生成配置
@@ -400,5 +400,14 @@ class BuildOption
     public function getFileOption()
     {
         return $this->file_option;
+    }
+
+    /**
+     * 获取配置名
+     * @return string
+     */
+    public function getSectionName()
+    {
+        return $this->section_name;
     }
 }

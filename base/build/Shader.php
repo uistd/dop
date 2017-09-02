@@ -99,13 +99,30 @@ class Shader
         }
         $code_node_list = $node->childNodes;
         $num = 0;
+        $section_name = $this->manager->getCurrentBuildOpt()->getSectionName();
         for ($i = 0; $i < $code_node_list->length; ++$i) {
             $code_node = $code_node_list->item($i);
             if (XML_ELEMENT_NODE !== $code_node->nodeType) {
                 continue;
             }
             $num++;
-            $this->addCode($code_node->nodeValue, $code_node->getAttribute('buf_name'));
+            if ($code_node->hasAttribute('trigger_buf')) {
+                //trigger_buf + section + method 为最终的buf_name
+                $buf_name = $code_node->getAttribute('trigger_buf');
+                if ($code_node->hasAttribute('section')) {
+                    $buf_name .= '_' . $code_node->getAttribute('section');
+                } else {
+                    $buf_name .= '_' . $section_name;
+                }
+                if ('unpack' === $code_node->getAttribute('method')) {
+                    $buf_name .= '_unpack';
+                } else {
+                    $buf_name .= '_pack';
+                }
+            } else {
+                $buf_name = $code_node->getAttribute('buf_name');
+            }
+            $this->addCode($code_node->nodeValue, $buf_name);
         }
         if (0 === $num) {
             $this->addCode($node->nodeValue);
