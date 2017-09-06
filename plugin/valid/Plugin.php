@@ -107,7 +107,7 @@ class Plugin extends PluginBase
         //默认trim()
         $valid_rule->is_trim = NodeBase::readBool($node, 'trim', true);
         //默认转义危险字符
-        $valid_rule->is_add_slashes = NodeBase::readBool($node, 'slashes', true);
+        $valid_rule->is_add_slashes = NodeBase::readBool($node, 'slashes', false);
         //默认过滤html标签
         $valid_rule->is_strip_tags = NodeBase::readBool($node, 'html-strip', true);
         //如果不过滤html标签，默认html-encode
