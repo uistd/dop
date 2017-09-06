@@ -270,7 +270,7 @@ class PhpValidCoder extends PluginCoderBase
      * @param bool $is_html
      * @param bool $is_strip
      */
-    private function strSafeConvert($valid_buf, $var_name, $is_trim = true, $is_slash = true, $is_html = false, $is_strip = true)
+    private function strSafeConvert($valid_buf, $var_name, $is_trim = true, $is_slash = false, $is_html = false, $is_strip = true)
     {
         $left_buf = new StrBuf();
         $right_buf = new StrBuf();
