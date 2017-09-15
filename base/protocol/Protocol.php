@@ -292,6 +292,7 @@ class Protocol
         $request_count = 0;
         $response_count = 0;
         $ignore_get = (int)$this->build_opt->getConfig('ignore_get', 0);
+        $note_info = $action->getAttribute('note');
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->setLineNumber($node->getLineNo());
@@ -323,6 +324,9 @@ class Protocol
                 throw new Exception('Unknown node:' . $node_name);
             }
             $name = FFanStr::camelName($class_name);
+            if (!$node->hasAttribute('note') && $note_info) {
+                $node->setAttribute('note', $note_info);
+            }
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($name, $node, false, $type);
             $struct->addReferType($type);
