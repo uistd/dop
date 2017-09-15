@@ -85,7 +85,7 @@ class Coder extends CoderBase
         $class_name_buf->pushStr($main_class_name);
         //模板中的变量处理
         $class_file->setVariableValue('namespace', $this->joinNameSpace($name_space));
-        $class_file->setVariableValue('struct_node', ' ' . $struct->getNote());
+        $class_file->setVariableValue('struct_note', ' ' . $struct->getNote());
 
         $use_buf = $class_file->getBuf(FileBuf::IMPORT_BUF);
         $method_buf = $class_file->getBuf(FileBuf::METHOD_BUF);
