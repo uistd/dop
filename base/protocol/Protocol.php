@@ -324,16 +324,13 @@ class Protocol
                 throw new Exception('Unknown node:' . $node_name);
             }
             $name = FFanStr::camelName($class_name);
-            if (!$node->hasAttribute('note') && $note_info) {
-                $node->setAttribute('note', $note_info);
-            }
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($name, $node, false, $type);
             $struct->addReferType($type);
             $struct->setNode($node);
             $node_str = '';
-            if ($action->hasAttribute('note')) {
-                $node_str .= $action->getAttribute('note');
+            if ($note_info) {
+                $node_str .= $note_info;
             }
             if ($type === Struct::TYPE_REQUEST && $node->hasAttribute('uri')) {
                 $node_str .= ' uri: '. $node->getAttribute('uri');
