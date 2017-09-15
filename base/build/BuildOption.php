@@ -109,6 +109,11 @@ class BuildOption
     private $use_shader;
 
     /**
+     * @var array 每个packer对应的side
+     */
+    private $packer_side;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -173,6 +178,9 @@ class BuildOption
         if (isset($this->section_conf['root_path'])) {
             $build_path = FFanUtils::joinPath($this->section_conf['root_path'], $build_path);
         }
+        if (!empty($section_conf['packer_side'])) {
+            $this->packer_side = $this->parsePackerSide($section_conf['packer_side']);
+        }
         //代码生成目录
         $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
         $this->namespace_prefix = $section_conf['namespace'];
@@ -184,6 +192,32 @@ class BuildOption
         $this->parsePacker($section_conf['packer']);
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
+    }
+
+    /**
+     * 解析配置字符串
+     * @param string $conf_str
+     * @return array
+     */
+    private function parsePackerSide($conf_str)
+    {
+        $conf_arr = FFanStr::dualSplit($conf_str);
+        $result = array();
+        foreach ($conf_arr as $packer_name => $each_conf) {
+            $arr = FFanStr::split($each_conf, '|');
+            if (empty($arr)) {
+                continue;
+            }
+            $value = 0;
+            if (in_array('client', $arr)) {
+                $value |= self::SIDE_CLIENT;
+            }
+            if (in_array('server', $arr)) {
+                $value |= self::SIDE_SERVER;
+            }
+            $result[$packer_name] = $value;
+        }
+        return $result;
     }
 
     /**
@@ -260,10 +294,14 @@ class BuildOption
     /**
      * 是否生成指定side的代码
      * @param int $side 服务器端 或者 客户端
+     * @param string $packer_name
      * @return bool
      */
-    public function hasBuildSide($side)
+    public function hasBuildSide($side, $packer_name = null)
     {
+        if ($packer_name && isset($this->packer_side[$packer_name])) {
+            return ($side & $this->packer_side[$packer_name]) > 0;
+        }
         return ($side & $this->build_side) > 0;
     }
 

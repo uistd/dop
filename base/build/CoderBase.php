@@ -319,11 +319,12 @@ abstract class CoderBase extends ConfigBase
         }
         $packer->setFileBuf($file_buf);
         $packer->build();
-        if ($this->isBuildPackMethod($struct)) {
+        $packer_name = $packer->getName();
+        if ($this->isBuildPackMethod($struct, $packer_name)) {
             $packer->setCurrentMethod(PackerBase::METHOD_PACK);
             $packer->buildPackMethod($struct, $code_buf);
         }
-        if ($this->isBuildUnpackMethod($struct)) {
+        if ($this->isBuildUnpackMethod($struct, $packer_name)) {
             $packer->setCurrentMethod(PackerBase::METHOD_UNPACK);
             $packer->buildUnpackMethod($struct, $code_buf);
         }
@@ -368,16 +369,17 @@ abstract class CoderBase extends ConfigBase
     /**
      * 是否需要生成Encode方法
      * @param Struct $struct
+     * @param string $packer_name
      * @return bool
      */
-    private function isBuildPackMethod($struct)
+    private function isBuildPackMethod($struct, $packer_name)
     {
         $result = false;
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT, $packer_name)
             && $struct->hasReferType(Struct::TYPE_REQUEST)) {
             $result = true;
         }
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER, $packer_name)
             && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
             $result = true;
         }
@@ -388,16 +390,17 @@ abstract class CoderBase extends ConfigBase
     /**
      * 是否需要生成Decode方法
      * @param Struct $struct
+     * @param string $packer_name
      * @return bool
      */
-    private function isBuildUnpackMethod($struct)
+    private function isBuildUnpackMethod($struct, $packer_name)
     {
         $result = false;
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT, $packer_name)
             && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
             $result = true;
         }
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER)
+        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER, $packer_name)
             && $struct->hasReferType(Struct::TYPE_REQUEST)) {
             $result = true;
         }
