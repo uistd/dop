@@ -304,9 +304,12 @@ class Protocol
                 if (++$request_count > 1) {
                     throw new Exception('Only one request node allowed');
                 }
-                //不生成get类
                 $method = $node->getAttribute('method');
-                if (1 === $ignore_get && !$method || 'get' === strtolower(trim($method))) {
+                if (!is_string($method)) {
+                    $method = 'get';
+                }
+                //不生成get类
+                if (1 === $ignore_get && 'get' === strtolower(trim($method))) {
                     continue;
                 }
                 $type = Struct::TYPE_REQUEST;
