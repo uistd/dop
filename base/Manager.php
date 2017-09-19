@@ -387,6 +387,9 @@ class Manager
         foreach ($build_list as $xml_file => $v) {
             $this->parseFile($xml_file);
         }
+
+        $build_side = $build_opt->getBuildSide();
+
         //设置struct之间的引用关系
         /** @var Struct $struct */
         foreach ($this->struct_list as $struct) {
@@ -400,7 +403,7 @@ class Manager
             }
 
             //如果 服务器 和 客户端都生成
-            if ($build_opt->hasBuildSide(BuildOption::SIDE_SERVER) && $build_opt->hasBuildSide(BuildOption::SIDE_CLIENT)) {
+            if (($build_side & BuildOption::SIDE_SERVER) && ($build_side & BuildOption::SIDE_CLIENT)) {
                 $type = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
             }
             $this->setStructRef($struct, $type);

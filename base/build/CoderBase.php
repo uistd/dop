@@ -46,7 +46,7 @@ abstract class CoderBase extends ConfigBase
     private $build_base_path;
 
     /**
-     * @var array 所有加载的packer
+     * @var PackerBase[] 所有加载的packer
      */
     private $packer_list;
 
@@ -256,12 +256,17 @@ abstract class CoderBase extends ConfigBase
     /**
      * 获取所有的packer，包括依赖的
      * @param array $packer_arr
-     * @param array $packer_object_arr
+     * @param PackerBase[] $packer_object_arr
+     * @param int $side_code
      */
-    private function getAllPackerObject($packer_arr, &$packer_object_arr)
+    private function getAllPackerObject($packer_arr, &$packer_object_arr, $side_code = 0)
     {
         foreach ($packer_arr as $packer_name) {
+            if (0 === $side_code) {
+                $side_code = $this->build_opt->getBuildSide($packer_name);
+            }
             if (isset($packer_object_arr[$packer_name])) {
+                $packer_object_arr[$packer_name]->setCodeSide($side_code);
                 continue;
             }
             $packer_object = $this->getPackInstance($packer_name);
@@ -269,11 +274,12 @@ abstract class CoderBase extends ConfigBase
                 $this->manager->buildLogError('Can not found packer of ' . $packer_name);
                 continue;
             }
+            $packer_object->setCodeSide($side_code);
             $packer_object_arr[$packer_name] = $packer_object;
             //依赖的其它packer
             $require_packer = $packer_object->getRequirePacker();
             if (!empty($require_packer)) {
-                $this->getAllPackerObject($require_packer, $packer_object_arr);
+                $this->getAllPackerObject($require_packer, $packer_object_arr, $side_code);
             }
         }
     }
@@ -319,12 +325,11 @@ abstract class CoderBase extends ConfigBase
         }
         $packer->setFileBuf($file_buf);
         $packer->build();
-        $packer_name = $packer->getName();
-        if ($this->isBuildPackMethod($struct, $packer_name)) {
+        if ($this->isBuildPackMethod($struct, $packer->getCodeSide())) {
             $packer->setCurrentMethod(PackerBase::METHOD_PACK);
             $packer->buildPackMethod($struct, $code_buf);
         }
-        if ($this->isBuildUnpackMethod($struct, $packer_name)) {
+        if ($this->isBuildUnpackMethod($struct, $packer->getCodeSide())) {
             $packer->setCurrentMethod(PackerBase::METHOD_UNPACK);
             $packer->buildUnpackMethod($struct, $code_buf);
         }
@@ -369,17 +374,17 @@ abstract class CoderBase extends ConfigBase
     /**
      * 是否需要生成Encode方法
      * @param Struct $struct
-     * @param string $packer_name
+     * @param int $packer_code_side
      * @return bool
      */
-    private function isBuildPackMethod($struct, $packer_name)
+    private function isBuildPackMethod($struct, $packer_code_side)
     {
         $result = false;
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT, $packer_name)
+        if (($packer_code_side & BuildOption::SIDE_CLIENT) > 0
             && $struct->hasReferType(Struct::TYPE_REQUEST)) {
             $result = true;
         }
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER, $packer_name)
+        if (($packer_code_side & BuildOption::SIDE_SERVER) > 0
             && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
             $result = true;
         }
@@ -390,17 +395,17 @@ abstract class CoderBase extends ConfigBase
     /**
      * 是否需要生成Decode方法
      * @param Struct $struct
-     * @param string $packer_name
+     * @param int $packer_code_side
      * @return bool
      */
-    private function isBuildUnpackMethod($struct, $packer_name)
+    private function isBuildUnpackMethod($struct, $packer_code_side)
     {
         $result = false;
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_CLIENT, $packer_name)
+        if (($packer_code_side & BuildOption::SIDE_CLIENT) > 0
             && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
             $result = true;
         }
-        if ($this->build_opt->hasBuildSide(BuildOption::SIDE_SERVER, $packer_name)
+        if (($packer_code_side & BuildOption::SIDE_SERVER) > 0
             && $struct->hasReferType(Struct::TYPE_REQUEST)) {
             $result = true;
         }

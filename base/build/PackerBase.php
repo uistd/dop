@@ -48,6 +48,11 @@ abstract class PackerBase
     private $current_method;
 
     /**
+     * @var int 代码side
+     */
+    private $code_side = 0;
+
+    /**
      * PackerBase constructor.
      * @param CoderBase $coder
      */
@@ -223,5 +228,24 @@ abstract class PackerBase
     public function getCoder()
     {
         return $this->coder;
+    }
+
+    /**
+     * 设置code side
+     * @param int $side
+     */
+    public function setCodeSide($side)
+    {
+        $side = (int)$side;
+        $this->code_side |= $side;
+    }
+
+    /**
+     * 获取code side
+     * @return int
+     */
+    public function getCodeSide()
+    {
+        return $this->code_side;
     }
 }

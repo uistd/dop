@@ -292,17 +292,16 @@ class BuildOption
     }
 
     /**
-     * 是否生成指定side的代码
-     * @param int $side 服务器端 或者 客户端
-     * @param string $packer_name
-     * @return bool
+     * 获取一个packer的build side设置
+     * @param string $pack_name
+     * @return int
      */
-    public function hasBuildSide($side, $packer_name = null)
+    public function getBuildSide($pack_name = null)
     {
-        if ($packer_name && isset($this->packer_side[$packer_name])) {
-            return ($side & $this->packer_side[$packer_name]) > 0;
+        if (null !== $pack_name && isset($this->packer_side[$pack_name])) {
+            return $this->packer_side[$pack_name];
         }
-        return ($side & $this->build_side) > 0;
+        return $this->build_side;
     }
 
     /**
