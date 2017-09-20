@@ -194,6 +194,9 @@ class BuildOption
         $this->build_side = $this->parseCodeSide($section_conf['code_side']);
         $this->build_protocol = $this->parseBuildStructType($section_conf['protocol_type']);
         $this->parsePacker($section_conf['packer']);
+        if (isset($section_conf['packer_side'])) {
+            $this->packer_side = $this->parsePackerSide($section_conf['packer_side']);
+        }
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
     }
