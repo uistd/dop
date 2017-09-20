@@ -139,10 +139,12 @@ class BuildOption
             //是否保持原始名称
             'keep_original_name' => false,
         );
-        //将Public config append to section_conf
-        foreach ($public_conf as $name => $value) {
-            if (!isset($section_conf[$name])) {
-                $section_conf[$name] = $value;
+        if (is_array($public_conf)) {
+            //将Public config append to section_conf
+            foreach ($public_conf as $name => $value) {
+                if (!isset($section_conf[$name])) {
+                    $section_conf[$name] = $value;
+                }
             }
         }
         //修正缺失的配置项
@@ -178,11 +180,13 @@ class BuildOption
         if (isset($this->section_conf['root_path'])) {
             $build_path = FFanUtils::joinPath($this->section_conf['root_path'], $build_path);
         }
-        if (!empty($section_conf['packer_side'])) {
-            $this->packer_side = $this->parsePackerSide($section_conf['packer_side']);
+        //代码生成目录 如果使用root path
+        if (isset($section_conf['path_type']) && 'root' === $section_conf['path_type']) {
+            $this->build_path = FFanUtils::fixWithRootPath($build_path);
+        } //生成代码目录 使用 runtime path
+        else {
+            $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
         }
-        //代码生成目录
-        $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->getConfig('plugin', '')) . ',';
         $this->use_shader = str_replace(' ', '', $this->getConfig('shader', '')) . ',';
