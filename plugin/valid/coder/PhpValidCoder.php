@@ -1,22 +1,22 @@
 <?php
 
-namespace ffan\dop\plugin\valid;
+namespace FFan\Dop\Plugin\Valid;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
-use ffan\dop\build\PackerBase;
-use ffan\dop\build\PluginCoderBase;
-use ffan\dop\build\StrBuf;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Build\PackerBase;
+use FFan\Dop\Build\PluginCoderBase;
+use FFan\Dop\Build\StrBuf;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class PhpValidCoder
- * @package ffan\dop\plugin\validator
+ * @package FFan\Dop\Plugin\Validator
  */
 class PhpValidCoder extends PluginCoderBase
 {
@@ -99,7 +99,7 @@ class PhpValidCoder extends PluginCoderBase
         if ($this->import_flag) {
             $use_buf = $dop_file->getBuf(FileBuf::IMPORT_BUF);
             if ($use_buf) {
-                $use_buf->pushUniqueStr('use ffan\dop\DopValidator;');
+                $use_buf->pushUniqueStr('use FFan\Dop\DopValidator;');
             }
         }
     }

@@ -1,11 +1,11 @@
 <?php
 
-namespace ffan\dop\coder\objc;
+namespace FFan\Dop\Coder\Objc;
 
-use ffan\dop\build\PackerBase;
+use FFan\Dop\Build\PackerBase;
 
 /**
- * @package ffan\dop\coder\objc
+ * @package FFan\Dop\Coder\Ojbc
  */
 class HeadDictionaryPack extends PackerBase
 {

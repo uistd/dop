@@ -1,18 +1,18 @@
 <?php
 
-namespace ffan\dop\coder\php;
+namespace FFan\Dop\Coder\Php;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
-use ffan\dop\build\PackerBase;
-use ffan\dop\build\StrBuf;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\Struct;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Build\PackerBase;
+use FFan\Dop\Build\StrBuf;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\Struct;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class ArrayPack
- * @package ffan\dop\coder\php
+ * @package FFan\Dop\Coder\Php
  */
 class UisSdkPack extends PackerBase
 {

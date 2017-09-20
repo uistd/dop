@@ -1,15 +1,15 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
-use ffan\dop\protocol\Struct;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\Struct;
 use FFan\Std\Common\Utils as FFanUtils;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class BuildOption 生成文件参数
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class BuildOption
 {
@@ -127,7 +127,7 @@ class BuildOption
         //默认配置
         static $default_config = array(
             'build_path' => 'build',
-            'namespace' => 'ffan\dop',
+            'namespace' => 'FFan\Dop',
             'protocol_type' => 'action',
             'code_side' => 'server',
             'utf8_bom' => false,
@@ -159,9 +159,6 @@ class BuildOption
         }
         //命名空间检查
         $ns = rtrim(trim($section_conf['namespace']), '\\/');
-        if (!FFanStr::isValidClassName($ns)) {
-            $ns = $default_config['namespace'];
-        }
         $section_conf['namespace'] = $ns;
         if ($section_conf['utf8_bom']) {
             $this->file_option |= self::FILE_OPTION_UTF8_BOM;

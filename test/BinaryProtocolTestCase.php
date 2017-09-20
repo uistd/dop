@@ -1,9 +1,9 @@
 <?php
 require_once 'runtime/build/php/dop.php';
 
-use ffan\dop\demo\data\TestArr;
-use ffan\dop\demo\data\TestData;
-use ffan\dop\demo\data\TestDataTestStruct;
+use FFan\Dop\Demo\Data\TestArr;
+use FFan\Dop\Demo\Data\TestData;
+use FFan\Dop\Demo\Data\TestDataTestStruct;
 
 $data = new TestData();
 $data->binary = pack('l', 100);
@@ -46,7 +46,7 @@ echo 'pack result:' . md5($bin_data) . ' strlen:' . strlen($bin_data), PHP_EOL;
  * die();
  * //*/
 $new_data = new TestData();
-$buffer = new \ffan\dop\DopDecode($bin_data);
+$buffer = new \FFan\Dop\DopDecode($bin_data);
 $re = $new_data->binaryDecode($buffer);
 if ($re) {
     echo 'success', PHP_EOL;
@@ -58,7 +58,7 @@ $bin_data2 = $data->binaryEncode(true);
 echo 'pack sign result:' . md5($bin_data2) . ' strlen:' . strlen($bin_data2), PHP_EOL;
 
 $new_data2 = new TestData();
-$buffer2 = new \ffan\dop\DopDecode($bin_data2);
+$buffer2 = new \FFan\Dop\DopDecode($bin_data2);
 $re = $new_data2->binaryDecode($buffer2);
 if ($re) {
     echo $buffer2->getPid() . ' success', PHP_EOL;
@@ -70,7 +70,7 @@ $bin_data3 = $data->binaryEncode(true, true);
 echo 'pack mask result:' . md5($bin_data3) . ' strlen:' . strlen($bin_data3), PHP_EOL;
 
 $new_data3 = new TestData();
-$buffer3 = new \ffan\dop\DopDecode($bin_data3);
+$buffer3 = new \FFan\Dop\DopDecode($bin_data3);
 $re = $new_data3->binaryDecode($buffer3);
 if ($re) {
     echo $buffer3->getPid() . ' success', PHP_EOL;

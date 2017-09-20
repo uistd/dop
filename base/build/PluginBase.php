@@ -1,17 +1,17 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
-use ffan\dop\Manager;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\Protocol;
+use FFan\Dop\Exception;
+use FFan\Dop\Manager;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\Protocol;
 use FFan\Std\Common\ConfigBase;
 use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class PluginBase 插件基类
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 abstract class PluginBase extends ConfigBase
 {
@@ -126,7 +126,7 @@ abstract class PluginBase extends ConfigBase
             if (class_exists($full_class)) {
                 $parents = class_parents($full_class);
                 //类是否 继续 PluginCoderBase
-                if (isset($parents['ffan\dop\build\PluginCoderBase'])) {
+                if (isset($parents['FFan\Dop\Build\PluginCoderBase'])) {
                     $coder = new $full_class($this);
                 }
             }
@@ -159,7 +159,7 @@ abstract class PluginBase extends ConfigBase
     {
         $class_name = ucfirst($coder_name) . ucfirst($this->plugin_name) . 'Coder';
         if ($ns) {
-            $ns_str = 'ffan\dop\plugin\\' . $this->plugin_name;
+            $ns_str = 'FFan\Dop\Plugin\\' . $this->plugin_name;
             $class_name = $ns_str . '\\' . $class_name;
         }
         return $class_name;

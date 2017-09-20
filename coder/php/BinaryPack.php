@@ -1,21 +1,21 @@
 <?php
 
-namespace ffan\dop\coder\php;
+namespace FFan\Dop\Coder\Php;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\PackerBase;
-use ffan\dop\Exception;
-use ffan\dop\protocol\IntItem;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\PackerBase;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\IntItem;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 
 /**
  * Class BinaryPack
- * @package ffan\dop\coder\php
+ * @package FFan\Dop\Coder\Php
  */
 class BinaryPack extends PackerBase
 {
@@ -42,7 +42,7 @@ class BinaryPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        $this->pushImportCode('use ffan\\dop\\DopEncode;');
+        $this->pushImportCode('use FFan\\Dop\\DopEncode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制打包');
@@ -128,7 +128,7 @@ class BinaryPack extends PackerBase
         if ($struct->isSubStruct()) {
             return;
         }
-        $this->pushImportCode('use ffan\\dop\\DopDecode;');
+        $this->pushImportCode('use FFan\\Dop\\DopDecode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制解包');

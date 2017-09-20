@@ -1,13 +1,13 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class TplLoader 模板加载器
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class TplLoader
 {

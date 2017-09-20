@@ -1,13 +1,13 @@
 <?php
 
-namespace ffan\dop;
+namespace FFan\Dop;
 
 use FFan\Std\Console\Debug;
 use Throwable;
 
 /**
  * Class Exception
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class Exception extends \Exception
 {

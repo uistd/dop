@@ -1,20 +1,20 @@
 <?php
 
-namespace ffan\dop\coder\objc;
+namespace FFan\Dop\Coder\Objc;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\CoderBase;
-use ffan\dop\build\FileBuf;
-use ffan\dop\build\StrBuf;
-use ffan\dop\Exception;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\CoderBase;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Build\StrBuf;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 
 /**
  * Class HeadCoder
- * @package ffan\dop\coder\objc
+ * @package FFan\Dop\Coder\Ojbc
  */
 class HeadCoder extends CoderBase
 {
@@ -128,7 +128,7 @@ class HeadCoder extends CoderBase
     /**
      * 获取coder
      * @param string $pack_type
-     * @return \ffan\dop\build\PackerBase
+     * @return \FFan\Dop\Build\PackerBase
      */
     public function getPackInstance($pack_type)
     {

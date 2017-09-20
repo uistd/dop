@@ -1,13 +1,13 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\Protocol;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\Protocol;
 
 /**
  * Class PluginRule 插件规则
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class PluginRule extends NodeBase
 {

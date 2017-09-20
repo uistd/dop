@@ -1,13 +1,13 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Manager;
+use FFan\Dop\Manager;
 use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class BuildCache 编译缓存
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class BuildCache
 {

@@ -1,9 +1,10 @@
 <?php
 
-namespace ffan\dop\plugin\mock;
+namespace FFan\Dop\Plugin\Mock;
 
 /**
- * @package ffan\dop
+ * Class MockType
+ * @package FFan\Dop\Plugin\Mock
  */
 class MockType
 {

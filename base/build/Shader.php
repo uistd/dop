@@ -1,13 +1,13 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
-use ffan\dop\Manager;
+use FFan\Dop\Exception;
+use FFan\Dop\Manager;
 
 /**
  * Class Shader 着色器
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class Shader
 {

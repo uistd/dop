@@ -1,14 +1,14 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
-use ffan\dop\Manager;
+use FFan\Dop\Exception;
+use FFan\Dop\Manager;
 use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class Folder 虚拟目录
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class Folder
 {

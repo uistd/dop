@@ -1,13 +1,13 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace FFan\Dop\Protocol;
 
-use ffan\dop\build\BufTrigger;
-use ffan\dop\build\BuildOption;
-use ffan\dop\build\NodeBase;
-use ffan\dop\build\Shader;
-use ffan\dop\Exception;
-use ffan\dop\Manager;
+use FFan\Dop\Build\BufTrigger;
+use FFan\Dop\Build\BuildOption;
+use FFan\Dop\Build\NodeBase;
+use FFan\Dop\Build\Shader;
+use FFan\Dop\Exception;
+use FFan\Dop\Manager;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
 

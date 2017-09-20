@@ -1,25 +1,24 @@
 <?php
 
-namespace ffan\dop;
-use ffan\dop\build\BuildOption;
-use ffan\dop\build\CoderBase;
-use ffan\dop\build\Folder;
-use ffan\dop\build\PluginBase;
-use ffan\dop\build\Shader;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\Protocol;
-use ffan\dop\protocol\StructItem;
+namespace FFan\Dop;
+use FFan\Dop\Build\BuildOption;
+use FFan\Dop\Build\CoderBase;
+use FFan\Dop\Build\Folder;
+use FFan\Dop\Build\PluginBase;
+use FFan\Dop\Build\Shader;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\Protocol;
+use FFan\Dop\Protocol\StructItem;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
-use FFan\Std\Console\Debug;
 
 /**
  * Class Manager
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class Manager
 {
@@ -746,12 +745,12 @@ class Manager
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = '\ffan\dop\coder\\' . $coder_name . '\\' . $class_name;
+        $full_class = '\FFan\Dop\Coder\\' . $coder_name . '\\' . $class_name;
         if (!class_exists($full_class)) {
             throw new Exception('Unknown class name ' . $full_class);
         }
         $parents = class_parents($full_class);
-        if (!isset($parents['ffan\dop\build\CoderBase'])) {
+        if (!isset($parents['FFan\Dop\Build\CoderBase'])) {
             throw new Exception('Coder ' . $coder_name . ' must be implements of CoderBase');
         }
         $coder_instance_arr[$coder_name] = $full_class;
@@ -778,12 +777,12 @@ class Manager
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = 'ffan\dop\plugin\\' . $plugin_name . '\\' . $class_name;
+        $full_class = 'FFan\Dop\Plugin\\' . $plugin_name . '\\' . $class_name;
         if (!class_exists($full_class)) {
             return null;
         }
         $parents = class_parents($full_class);
-        if (!isset($parents['ffan\dop\build\PluginBase'])) {
+        if (!isset($parents['FFan\Dop\Build\PluginBase'])) {
             throw new Exception('Plugin ' . $full_class . ' must be implements of PluginBase');
         }
         $plugin_instance[$plugin_name] = new $full_class($this, $plugin_name);

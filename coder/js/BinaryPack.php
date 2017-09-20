@@ -1,22 +1,22 @@
 <?php
 
-namespace ffan\dop\coder\js;
+namespace FFan\Dop\Coder\Js;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
-use ffan\dop\build\PackerBase;
-use ffan\dop\Exception;
-use ffan\dop\protocol\IntItem;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Build\PackerBase;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\IntItem;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 
 /**
  * Class BinaryPack
- * @package ffan\dop\coder\js
+ * @package FFan\Dop\Coder\Js
  */
 class BinaryPack extends PackerBase
 {

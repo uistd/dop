@@ -1,18 +1,18 @@
 <?php
 
-namespace ffan\dop\plugin\valid;
+namespace FFan\Dop\Plugin\Valid;
 
-use ffan\dop\build\NodeBase;
-use ffan\dop\build\PluginBase;
-use ffan\dop\Exception;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\Protocol;
-use ffan\dop\protocol\Struct;
+use FFan\Dop\Build\NodeBase;
+use FFan\Dop\Build\PluginBase;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\Protocol;
+use FFan\Dop\Protocol\Struct;
 
 /**
  * Class Plugin 数据有效性检验
- * @package ffan\dop\plugin\validator
+ * @package FFan\Dop\Plugin\Validator
  */
 class Plugin extends PluginBase
 {

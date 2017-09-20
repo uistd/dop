@@ -1,14 +1,14 @@
 <?php
 
-namespace ffan\dop\plugin\valid;
+namespace FFan\Dop\Plugin\Valid;
 
-use ffan\dop\build\PluginRule;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\Protocol;
+use FFan\Dop\Build\PluginRule;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\Protocol;
 
 /**
  * Class ValidRule 数据有效规则
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class ValidRule extends PluginRule
 {

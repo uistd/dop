@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace FFan\Dop\Protocol;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 
 /**
  * Class ItemStruct 结构体
- * @package ffan\dop\protocol
+ * @package FFan\Dop\Protocol
  */
 class StructItem extends Item
 {

@@ -1,14 +1,14 @@
 <?php
 
-namespace ffan\dop\plugin\mock;
+namespace FFan\Dop\Plugin\Mock;
 
-use ffan\dop\build\PluginRule;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\Protocol;
+use FFan\Dop\Build\PluginRule;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\Protocol;
 
 /**
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class RuleIncrease extends PluginRule
 {

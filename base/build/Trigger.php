@@ -1,10 +1,12 @@
 <?php
-namespace ffan\dop\build;
+
+namespace FFan\Dop\Build;
+
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class Trigger 触发器
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 abstract class Trigger extends NodeBase
 {

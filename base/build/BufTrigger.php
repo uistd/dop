@@ -1,11 +1,11 @@
 <?php
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 
 /**
  * Class BufTrigger
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class BufTrigger extends Trigger
 {

@@ -1,22 +1,22 @@
 <?php
 
-namespace ffan\dop\coder\objc;
+namespace FFan\Dop\Coder\Objc;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\CoderBase;
-use ffan\dop\build\FileBuf;
-use ffan\dop\Exception;
-use ffan\dop\protocol\IntItem;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\CoderBase;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\IntItem;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 
 /**
  * Class Coder
- * @package ffan\dop\coder\objc
+ * @package FFan\Dop\Coder\Ojbc
  */
 class Coder extends CoderBase
 {

@@ -1,14 +1,14 @@
 <?php
 
-namespace ffan\dop\plugin\mock;
+namespace FFan\Dop\Plugin\Mock;
 
-use ffan\dop\build\PluginRule;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\Protocol;
+use FFan\Dop\Build\PluginRule;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\Protocol;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class RuleType extends PluginRule
 {

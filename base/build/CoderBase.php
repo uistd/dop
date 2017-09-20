@@ -1,11 +1,11 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
-use ffan\dop\Manager;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\Struct;
+use FFan\Dop\Exception;
+use FFan\Dop\Manager;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\Struct;
 use FFan\Std\Common\ConfigBase;
 use FFan\Std\Common\Utils as FFanUtils;
 use FFan\Std\Common\Str as FFanStr;
@@ -13,7 +13,7 @@ use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class CoderBase 生成器基类
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 abstract class CoderBase extends ConfigBase
 {
@@ -355,13 +355,13 @@ abstract class CoderBase extends ConfigBase
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $ns = 'ffan\dop\coder\\' . $this->coder_name . '\\';
+        $ns = 'FFan\Dop\Coder\\' . $this->coder_name . '\\';
         $full_class_name = $ns . $class_name;
         if (!class_exists($full_class_name)) {
             throw new Exception('Can not load class ' . $full_class_name);
         }
         $parents = class_parents($full_class_name);
-        if (!isset($parents['ffan\dop\build\PackerBase'])) {
+        if (!isset($parents['FFan\Dop\Build\PackerBase'])) {
             throw new Exception('Class ' . $full_class_name . ' must extend of PackerBase');
         }
         /** @var PackerBase $packer */

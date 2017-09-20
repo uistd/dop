@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace FFan\Dop\Protocol;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 
 /**
  * Class StringItem
- * @package ffan\dop\protocol
+ * @package FFan\Dop\Protocol
  */
 class StringItem extends Item
 {

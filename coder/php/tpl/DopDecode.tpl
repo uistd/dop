@@ -1,10 +1,10 @@
 <?php
 
-namespace ffan\dop;
+namespace FFan\Dop;
 
 /**
  * Class DopDecode PHP二进制解包类
- * @package ffan\dop
+ * @package FFan\Dop
  */
 class DopDecode
 {

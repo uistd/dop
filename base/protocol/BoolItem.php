@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace FFan\Dop\Protocol;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 
 /**
  * Class BoolItem
- * @package ffan\dop\protocol
+ * @package FFan\Dop\Protocol
  */
 class BoolItem extends Item
 {

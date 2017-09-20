@@ -1,14 +1,14 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\Struct;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\Struct;
 
 /**
  * Class PackerBase 序列化和反序列化代码生成接口
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 abstract class PackerBase
 {

@@ -1,25 +1,25 @@
 <?php
 
-namespace ffan\dop\plugin\mock;
+namespace FFan\Dop\Plugin\Mock;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\FileBuf;
-use ffan\dop\build\PackerBase;
-use ffan\dop\build\PluginCoderBase;
-use ffan\dop\build\PluginRule;
-use ffan\dop\build\StrBuf;
-use ffan\dop\Exception;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Build\PackerBase;
+use FFan\Dop\Build\PluginCoderBase;
+use FFan\Dop\Build\PluginRule;
+use FFan\Dop\Build\StrBuf;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class PhpMockCode
- * @package ffan\dop\plugin\mock
+ * @package FFan\Dop\Plugin\Mock
  */
 class PhpMockCoder extends PluginCoderBase
 {
@@ -79,7 +79,7 @@ class PhpMockCoder extends PluginCoderBase
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
         $main_buf->emptyLine();
-        $main_buf->pushStr('class ' . $class_name . ' extends \ffan\dop\DopMock');
+        $main_buf->pushStr('class ' . $class_name . ' extends \FFan\Dop\DopMock');
         $main_buf->pushStr('{');
         $main_buf->indent();
         $main_buf->touchBuf(FileBuf::METHOD_BUF);

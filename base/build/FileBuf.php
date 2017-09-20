@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 
 /**
  * Class FileBuf 一个文件的代码
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 class FileBuf extends CodeBuf
 {

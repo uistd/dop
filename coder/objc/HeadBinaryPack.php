@@ -1,14 +1,14 @@
 <?php
 
-namespace ffan\dop\coder\objc;
+namespace FFan\Dop\Coder\Objc;
 
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\PackerBase;
-use ffan\dop\protocol\Struct;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\PackerBase;
+use FFan\Dop\Protocol\Struct;
 
 /**
  * Class HeadBinaryPack
- * @package ffan\dop\coder\objc
+ * @package FFan\Dop\Coder\Ojbc
  */
 class HeadBinaryPack extends PackerBase
 {

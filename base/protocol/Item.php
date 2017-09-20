@@ -1,17 +1,17 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace FFan\Dop\Protocol;
 
-use ffan\dop\build\NodeBase;
-use ffan\dop\build\PluginRule;
-use ffan\dop\build\Trigger;
-use ffan\dop\Exception;
-use ffan\dop\Manager;
+use FFan\Dop\Build\NodeBase;
+use FFan\Dop\Build\PluginRule;
+use FFan\Dop\Build\Trigger;
+use FFan\Dop\Exception;
+use FFan\Dop\Manager;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
  * Class Item 协议的每一项
- * @package ffan\dop\protocol
+ * @package FFan\Dop\Protocol
  */
 abstract class Item
 {

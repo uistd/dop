@@ -20,9 +20,9 @@
   },
   "autoload": {
     "psr-4": {
-      "ffan\\dop\\" : "base",
-      "ffan\\dop\\coder\\" : "coder",
-      "ffan\\dop\\plugin\\" : "plugin"
+      "FFan\\Dop\\" : "base",
+      "FFan\\Dop\\Coder\\" : "coder",
+      "FFan\\Dop\\Plugin\\" : "plugin"
     }
   },
   "minimum-stability": "dev",

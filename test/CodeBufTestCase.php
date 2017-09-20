@@ -1,6 +1,6 @@
 <?php
 
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
 require_once '../vendor/autoload.php';
 

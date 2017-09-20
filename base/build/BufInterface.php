@@ -1,9 +1,9 @@
 <?php
-namespace ffan\dop\build;
+namespace FFan\Dop\Build;
 
 /**
  * Interface BufInterface
- * @package ffan\dop\build
+ * @package FFan\Dop\Build
  */
 interface BufInterface
 {

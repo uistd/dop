@@ -1,21 +1,21 @@
 <?php
 
-namespace ffan\dop\coder\js;
-use ffan\dop\build\CodeBuf;
-use ffan\dop\build\CoderBase;
-use ffan\dop\build\FileBuf;
-use ffan\dop\build\StrBuf;
-use ffan\dop\Exception;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Struct;
-use ffan\dop\protocol\StructItem;
+namespace FFan\Dop\Coder\Js;
+use FFan\Dop\Build\CodeBuf;
+use FFan\Dop\Build\CoderBase;
+use FFan\Dop\Build\FileBuf;
+use FFan\Dop\Build\StrBuf;
+use FFan\Dop\Exception;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Protocol\StructItem;
 
 /**
  * Class Coder
- * @package ffan\dop\coder\php
+ * @package FFan\Dop\Coder\Php
  */
 class Coder extends CoderBase
 {

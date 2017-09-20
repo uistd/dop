@@ -1,17 +1,17 @@
 <?php
 
-namespace ffan\dop\plugin\mock;
+namespace FFan\Dop\Plugin\Mock;
 
-use ffan\dop\build\PluginBase;
-use ffan\dop\protocol\Item;
-use ffan\dop\protocol\ItemType;
-use ffan\dop\protocol\ListItem;
-use ffan\dop\protocol\MapItem;
-use ffan\dop\protocol\Protocol;
+use FFan\Dop\Build\PluginBase;
+use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
+use FFan\Dop\Protocol\Protocol;
 
 /**
  * Class Plugin
- * @package ffan\dop\plugin\mock
+ * @package FFan\Dop\Plugin\Mock
  */
 class Plugin extends PluginBase
 {

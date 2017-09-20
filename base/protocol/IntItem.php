@@ -1,12 +1,12 @@
 <?php
 
-namespace ffan\dop\protocol;
+namespace FFan\Dop\Protocol;
 
-use ffan\dop\Exception;
+use FFan\Dop\Exception;
 
 /**
  * Class IntItem int类型元素
- * @package ffan\dop\protocol
+ * @package FFan\Dop\Protocol
  */
 class IntItem extends Item
 {

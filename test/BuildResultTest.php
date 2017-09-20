@@ -1,5 +1,5 @@
 <?php
-use ffan\dop\demo\role\ResponseDemoRole;
+use FFan\Dop\Demo\Role\ResponseDemoRole;
 
 require_once 'runtime/build/php/dop.php';
 
