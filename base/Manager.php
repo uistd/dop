@@ -122,9 +122,10 @@ class Manager
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
+     * @param string $build_ini_content build_ini内容
      * @throws Exception
      */
-    public function __construct($base_path)
+    public function __construct($base_path, $build_ini_content = '')
     {
         $base_path = FFanUtils::fixWithRootPath($base_path);
         if (!is_dir($base_path)) {
@@ -136,19 +137,25 @@ class Manager
         $this->base_path = $base_path;
         $this->initCoder();
         $this->initPlugin();
-        $this->initBuildOption();
+        $this->initBuildOption($build_ini_content);
     }
 
     /**
      * 获取生成代码的参数
+     * @param string $build_ini_content
      */
-    private function initBuildOption()
+    private function initBuildOption($build_ini_content)
     {
-        $ini_file = $this->base_path . 'build.ini';
-        if (!is_file($ini_file)) {
-            return;
+        //如果 没有build_ini。那就尝试从build.ini加载
+        if (!is_string($build_ini_content) || empty($build_ini_content)) {
+            $ini_file = $this->base_path . 'build.ini';
+            if (!is_file($ini_file)) {
+                return;
+            }
+            $ini_config = parse_ini_file($ini_file, true);
+        } else {
+            $ini_config = parse_ini_string($build_ini_content, true);
         }
-        $ini_config = parse_ini_file($ini_file, true);
         //公共配置
         if (!empty($ini_config['public']) && is_array($ini_config['public'])) {
             $this->config = $ini_config['public'];
