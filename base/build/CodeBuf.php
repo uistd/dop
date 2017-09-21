@@ -52,6 +52,11 @@ class CodeBuf implements BufInterface
     private $name;
 
     /**
+     * @var bool 是否在内容前增加空行
+     */
+    private $prefix_empty_line;
+
+    /**
      * CodeBuf constructor.
      * @param string $name buf name
      */
@@ -176,11 +181,22 @@ class CodeBuf implements BufInterface
     }
 
     /**
+     * 设置第一行自动空行
+     */
+    public function setPrefixEmptyLine()
+    {
+        $this->prefix_empty_line = true;
+    }
+
+    /**
      * 输出内容
      * @return string
      */
     public function dump()
     {
+        if ($this->isEmpty()) {
+            return '';
+        }
         if (!empty($this->sub_buffer_list)) {
             $this->mergeSubBuffer();
         }
@@ -199,7 +215,11 @@ class CodeBuf implements BufInterface
                 }
             }
         }
-        $result = join(PHP_EOL, $this->line_buffer);
+        $result = '';
+        if ($this->prefix_empty_line) {
+            $result .= PHP_EOL;
+        }
+        $result .= join(PHP_EOL, $this->line_buffer);
         $this->clean();
         return $result;
     }

@@ -95,6 +95,7 @@ class Coder extends CoderBase
         if (!$method_buf || !$property_buf || !$use_buf) {
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
+        $use_buf->setPrefixEmptyLine();
         $this->readClassConfig($class_file, $struct);
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
