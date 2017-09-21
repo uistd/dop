@@ -102,9 +102,15 @@ class PhpMockCoder extends PluginCoderBase
         $ns = $this->plugin->getNameSpace();
         $pos = strpos($file_name, '/');
         if (false !== $pos) {
-            $file_name = substr($file_name, 0, $pos);
+            $tmp_arr = FFanStr::split($file_name, '/');
+            foreach ($tmp_arr as &$tmp) {
+                $tmp = FFanStr::camelName($tmp);
+            }
+            $file_name = join('\\', $tmp_arr);
+        } else {
+            $file_name = FFanStr::camelName($file_name);
         }
-        $ns .= '\\' . FFanStr::camelName($file_name);
+        $ns .= '\\' . $file_name;
         return $ns;
     }
 
