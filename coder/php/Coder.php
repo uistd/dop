@@ -179,7 +179,7 @@ class Coder extends CoderBase
         if (!$autoload_buf) {
             return;
         }
-        $autoload_buf->pushStr("'" . $this->joinNameSpace($xml_file) . "' => \$dop_file_dir . '" . $xml_file . "',");
+        $autoload_buf->pushStr("'\\" . $this->joinNameSpace($xml_file) . "' => \$dop_file_dir . '" . $xml_file . "',");
     }
 
     /**
