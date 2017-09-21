@@ -55,7 +55,7 @@ class Coder extends CoderBase
                 /** @var ListItem $item */
                 $sub_item = $item->getItem();
                 $sub_type = self::varType($sub_item);
-                $str = $sub_type .'[]';
+                $str = $sub_type . '[]';
                 break;
             case ItemType::INT:
                 $str = 'int';
@@ -79,6 +79,7 @@ class Coder extends CoderBase
         $name_space = $struct->getNamespace();
         $class_file = $this->getClassFileBuf($struct);
         $this->loadTpl($class_file, 'tpl/class.tpl');
+        /** @var StrBuf $class_name_buf */
         $class_name_buf = $class_file->getBuf('php_class');
         if (null === $class_name_buf) {
             throw new Exception('Can not found class name buf');
@@ -224,5 +225,51 @@ class Coder extends CoderBase
             $file = $folder->touch($path, $file_name);
         }
         return $file;
+    }
+
+    /**
+     * className 生成
+     * @param StrBuf $class_name_buf
+     * @param FileBuf $file_buf
+     */
+    public function fixClassName($class_name_buf, $file_buf)
+    {
+        /** @var StrBuf $extend_buf */
+        $extend_buf = $file_buf->getBuf(FileBuf::EXTENDS_BUF);
+        if ($extend_buf && !$extend_buf->isEmpty()) {
+            $extend_buf->setJoinStr($this->extends_join_char);
+            $class_name = $this->fixClassImport($extend_buf->dump(), $file_buf);
+            $class_name_buf->pushStr($this->extends_flag . $class_name);
+        }
+        /** @var StrBuf $implement_buf */
+        $implement_buf = $file_buf->getBuf(FileBuf::IMPLEMENT_BUF);
+        if ($implement_buf && !$implement_buf->isEmpty()) {
+            $implement_buf->setJoinStr($this->implements_join_char);
+            $class_name = $this->fixClassImport($implement_buf->dump(), $file_buf);
+            $class_name_buf->pushStr($this->implements_flag . $class_name);
+        }
+    }
+
+    /**
+     * 将引用的 命名空间\类名，转成use 方式
+     * @param string $full_class_name
+     * @param FileBuf $file_buf
+     * @return string
+     */
+    private function fixClassImport($full_class_name, $file_buf)
+    {
+        $import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
+        if (!$import_buf) {
+            return $full_class_name;
+        }
+        $pos = strrpos($full_class_name, '\\');
+        if (false === $pos) {
+            return $full_class_name;
+        }
+        if ($import_buf->isEmpty()) {
+            $import_buf->emptyLine();
+        }
+        $import_buf->pushStr('use ' . ltrim($full_class_name, '\\') . ';');
+        return substr($full_class_name, $pos + 1);
     }
 }
