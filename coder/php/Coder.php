@@ -191,7 +191,7 @@ class Coder extends CoderBase
     {
         $name_arr = Str::split($path, '/');
         foreach ($name_arr as &$tmp) {
-            $tmp = ucfirst($tmp);
+            $tmp = Str::camelName($tmp);
         }
         return join('\\', $name_arr);
     }
