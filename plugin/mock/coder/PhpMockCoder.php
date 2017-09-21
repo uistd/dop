@@ -104,7 +104,7 @@ class PhpMockCoder extends PluginCoderBase
         if (false !== $pos) {
             $file_name = substr($file_name, 0, $pos);
         }
-        $ns .= '\\' . $file_name;
+        $ns .= '\\' . FFanStr::camelName($file_name);
         return $ns;
     }
 
