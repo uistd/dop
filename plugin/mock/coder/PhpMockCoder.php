@@ -89,7 +89,7 @@ class PhpMockCoder extends PluginCoderBase
         foreach ($struct_list as $struct) {
             $this->buildStructCode($struct, $main_buf, $file_name);
         }
-        $this->autoload_buf->pushStr("'\\" . $class_ns . "' => \$mock_file_dir,");
+        $this->autoload_buf->pushUniqueStr("'\\" . $class_ns . "' => \$mock_file_dir,");
     }
 
     /**
