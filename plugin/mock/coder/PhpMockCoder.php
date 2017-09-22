@@ -106,11 +106,8 @@ class PhpMockCoder extends PluginCoderBase
             foreach ($tmp_arr as &$tmp) {
                 $tmp = FFanStr::camelName($tmp);
             }
-            $file_name = join('\\', $tmp_arr);
-        } else {
-            $file_name = FFanStr::camelName($file_name);
+            $ns .= join('\\', $tmp_arr);
         }
-        $ns .= '\\' . $file_name;
         return $ns;
     }
 
