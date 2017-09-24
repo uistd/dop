@@ -457,8 +457,13 @@ class Protocol
                 throw new Exception('Empty struct');
             }
         }
-        $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
-        $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
+        $class_name_prefix = $this->build_opt->getConfig(Struct::getTypeName($type) .'_class_prefix');
+        if (!empty($class_name_prefix)) {
+            $struct_class_name = $this->joinName($class_name, FFanStr::camelName($class_name_prefix));
+        } else {
+            $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
+            $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
+        }
         $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file_name, $type, $is_public);
         //如果有注释
         if ($struct_node->hasAttribute('note')) {
