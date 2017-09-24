@@ -166,6 +166,9 @@ class Coder extends CoderBase
      */
     public function buildCommonCode()
     {
+        if ($this->build_opt->getConfig('no_autoload_file')) {
+            return;
+        }
         $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
         $this->loadTpl($main_buf, 'tpl/dop.tpl');
     }
