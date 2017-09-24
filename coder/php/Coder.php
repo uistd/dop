@@ -96,19 +96,14 @@ class Coder extends CoderBase
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
         $use_buf->setPrefixEmptyLine();
+        $property_buf->setPrefixEmptyLine();
         $this->readClassConfig($class_file, $struct);
         $item_list = $struct->getAllExtendItem();
-        $is_first_property = true;
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($item_list as $name => $item) {
-            if (!$is_first_property) {
-                $property_buf->emptyLine();
-            } else {
-                $is_first_property = false;
-            }
             $this->makeImportCode($item, $name_space, $use_buf);
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
@@ -147,9 +142,6 @@ class Coder extends CoderBase
             $use_ns = $struct->getNamespace();
             if ($use_ns !== $name_space) {
                 $use_name_space = $this->joinNameSpace($use_ns, $struct->getClassName());
-                if ($use_buf->isEmpty()) {
-                    $use_buf->emptyLine();
-                }
                 $use_buf->pushUniqueStr('use ' . $use_name_space . ';');
             }
         } elseif (ItemType::ARR === $type) {
@@ -269,9 +261,6 @@ class Coder extends CoderBase
         $pos = strrpos($full_class_name, '\\');
         if (false === $pos) {
             return $full_class_name;
-        }
-        if ($import_buf->isEmpty()) {
-            $import_buf->emptyLine();
         }
         $import_buf->pushStr('use ' . ltrim($full_class_name, '\\') . ';');
         return substr($full_class_name, $pos + 1);
