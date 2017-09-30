@@ -215,6 +215,11 @@ class Coder extends CoderBase
     {
         $folder = $this->getFolder();
         $path = $struct->getNamespace();
+        $path_arr = explode('/', $path);
+        foreach ($path_arr as &$tmp) {
+            $tmp = Str::camelName($tmp);
+        }
+        $path = join('/', $path_arr);
         $file_name = $struct->getClassName() . '.php';
         $file = $folder->getFile($path, $file_name);
         if (null === $file) {
