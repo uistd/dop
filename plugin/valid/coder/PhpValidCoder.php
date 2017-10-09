@@ -7,6 +7,7 @@ use FFan\Dop\Build\FileBuf;
 use FFan\Dop\Build\PackerBase;
 use FFan\Dop\Build\PluginCoderBase;
 use FFan\Dop\Build\StrBuf;
+use FFan\Dop\Coder\Php\Coder;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\ListItem;
@@ -31,6 +32,11 @@ class PhpValidCoder extends PluginCoderBase
     private $import_flag;
 
     /**
+     * @var Coder
+     */
+    protected $coder;
+
+    /**
      * 生成插件代码
      */
     public function buildCode()
@@ -47,8 +53,7 @@ class PhpValidCoder extends PluginCoderBase
         if (!$this->plugin->isBuildCode($struct)) {
             return;
         }
-        $folder = $this->coder->getFolder();
-        $dop_file = $folder->getFile($struct->getNamespace(), $struct->getClassName() . '.php');
+        $dop_file = $this->coder->getClassFileBuf($struct);
         if (!$dop_file) {
             return;
         }
