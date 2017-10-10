@@ -70,6 +70,12 @@ class PhpMockCoder extends PluginCoderBase
     {
         $this->current_file = $file_name;
         $build_path = $this->plugin->getBuildPath();
+        $path_name = '';
+        //如果 带 子目录
+        if (false !== strpos($file_name, '/')) {
+            $path_name = '/' . dirname($file_name);
+            $build_path .= $path_name;
+        }
         $class_name = $this->fileNameToClassName($file_name);
         $main_buf = $this->coder->getFolder()->touch($build_path, $class_name . '.php');
         $main_buf->pushStr('<?php');
@@ -89,7 +95,11 @@ class PhpMockCoder extends PluginCoderBase
         foreach ($struct_list as $struct) {
             $this->buildStructCode($struct, $main_buf, $file_name);
         }
-        $this->autoload_buf->pushUniqueStr("'\\" . $class_ns . "' => \$mock_file_dir,");
+        $file_path = '$mock_file_dir';
+        if (!empty($path_name)) {
+            $file_path .= " . '" . $path_name . "'";
+        }
+        $this->autoload_buf->pushUniqueStr("'\\" . $class_ns . "' => " . $file_path . ',');
     }
 
     /**
@@ -103,10 +113,11 @@ class PhpMockCoder extends PluginCoderBase
         $pos = strpos($file_name, '/');
         if (false !== $pos) {
             $tmp_arr = FFanStr::split($file_name, '/');
+            array_pop($tmp_arr);
             foreach ($tmp_arr as &$tmp) {
                 $tmp = FFanStr::camelName($tmp);
             }
-            $ns .= join('\\', $tmp_arr);
+            $ns .= '\\' . join('\\', $tmp_arr);
         }
         return $ns;
     }
