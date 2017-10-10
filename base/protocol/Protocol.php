@@ -180,6 +180,10 @@ class Protocol
         if (null === $node_list) {
             return;
         }
+        //所有struct
+        $all_struct = array();
+        //顺序
+        $extend_index = array();
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
@@ -188,9 +192,31 @@ class Protocol
                 throw new Exception('Struct must have name attribute');
             }
             $name = trim($struct->getAttribute('name'));
-            $name = FFanStr::camelName($name, true);
-            //默认是公共的struct
-            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT, false);
+            $name = FFanStr::camelName($name);
+            //将node还原成xml代码
+            $xml_string = $struct->C14N();
+            //如果有本文件继承
+            if (false !== strpos($xml_string, ' extend=') && preg_match_all('/extend=[\'"]([a-zA-Z_\d]+)[\'"]/', $xml_string, $extend_arr)) {
+                //整理顺序，保证不管怎么写，都能解析，不然就必须把依赖的写在前面
+                foreach ($extend_arr[1] as $ext_name) {
+                    $ext_name = FFanStr::camelName($ext_name);
+                    $extend_index[$ext_name] = true;
+                }
+            }
+            $all_struct[$name] = $struct;
+        }
+        //先把依赖的先加载完
+        foreach ($extend_index as $name => $v) {
+            if (!isset($all_struct[$name])) {
+                continue;
+            }
+            $this->parseStruct($name, $all_struct[$name], true, Struct::TYPE_STRUCT);
+            unset($all_struct[$name]);
+        }
+        //再处理其它的struct
+        foreach ($all_struct as $name => $struct) {
+            echo 'Load '. $name,PHP_EOL;
+            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT);
         }
     }
 
@@ -252,7 +278,7 @@ class Protocol
             $name = trim($struct->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
             $is_public = true === (bool)$struct->getAttribute('public');
-            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA, false);
+            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA);
         }
     }
 
@@ -365,12 +391,12 @@ class Protocol
      * @param \DomElement $struct_node
      * @param bool $is_public 是否可以被extend
      * @param int $type 类型
-     * @param bool $allow_extend 是否允许extend其它struct
      * @return Struct
      * @throws Exception
      */
-    private function parseStruct($class_name, \DomElement $struct_node, $is_public = false, $type = Struct::TYPE_STRUCT, $allow_extend = true)
+    private function parseStruct($class_name, \DomElement $struct_node, $is_public = false, $type = Struct::TYPE_STRUCT)
     {
+        Manager::setCurrentStruct($struct_node);
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
@@ -431,10 +457,10 @@ class Protocol
 
         //继承关系
         if ($struct_node->hasAttribute('extend')) {
-            if (!$allow_extend) {
-                throw new Exception('Extend只允许在<action>标签内使用');
-            }
             $struct_name = trim($struct_node->getAttribute('extend'));
+            if (empty($struct_name)) {
+                throw new Exception('extend 不能为空');
+            }
             $struct_name = $this->getFullName($struct_name);
             $conf_suffix = $this->build_opt->getConfig('struct_class_suffix');
             if (!empty($conf_suffix)) {
@@ -442,7 +468,7 @@ class Protocol
             }
             $extend_struct = $this->manager->loadRequireStruct($struct_name, $this->xml_file_name);
             if (null === $extend_struct) {
-                throw new Exception('无法找到Struct ' . $struct_name);
+                throw new Exception('无法 extend "' . $struct_name .'"');
             } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {
                 throw new Exception('struct:' . $struct_name . ' is not public!');
             }
@@ -476,6 +502,7 @@ class Protocol
             $struct_obj->extend($extend_struct);
         }
         $this->manager->addStruct($struct_obj);
+        Manager::setCurrentStruct(null);
         return $struct_obj;
     }
 

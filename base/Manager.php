@@ -119,6 +119,11 @@ class Manager
     private $shader_list;
 
     /**
+     * @var \DOMElement 当前正在解析的节点
+     */
+    private static $current_struct;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
@@ -510,6 +515,21 @@ class Manager
         return $this->build_message;
     }
 
+    /**
+     * @param \DOMElement $struct
+     */
+    public static function setCurrentStruct($struct)
+    {
+        self::$current_struct = $struct;
+    }
+
+    /**
+     * @return \DOMElement
+     */
+    public static function getCurrentStruct()
+    {
+        return self::$current_struct;
+    }
 
     /**
      * 获取所有需要编译的文件列表
