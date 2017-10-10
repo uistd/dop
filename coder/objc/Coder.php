@@ -13,6 +13,7 @@ use FFan\Dop\Protocol\ListItem;
 use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\StructItem;
+use FFan\Std\Common\Str;
 
 /**
  * Class Coder
@@ -184,8 +185,23 @@ class Coder extends CoderBase
     public function makeClassName($struct)
     {
         $class_prefix = $this->getConfigString('class_prefix');
-        if (empty($class_prefix) || !preg_match('/^[a-zA-Z][a-zA-Z\d]*$/', $class_prefix)) {
+        if (empty($class_prefix)) {
             $class_prefix = 'APP';
+        }
+        //如果 有, 号
+        if (false !== strpos($class_prefix, ',')) {
+            $file_name_flag = $struct->getFile() .':';
+            $all_prefix = Str::split($class_prefix, ',');
+            foreach ($all_prefix as $each_prefix) {
+                $each_prefix = str_replace(' ', '', $each_prefix);
+                //如果 没有带 : ，表示全局
+                if (false === strpos($each_prefix, ':')) {
+                    $class_prefix = $each_prefix;
+                } elseif (0 === strpos($each_prefix, $file_name_flag)) {
+                    $class_prefix = str_replace($file_name_flag, '', $each_prefix);
+                    break;
+                }
+            }
         }
         $class_name = $class_prefix . ucfirst(basename($struct->getFile(), '.xml')) . $struct->getClassName();
         return $class_name;
