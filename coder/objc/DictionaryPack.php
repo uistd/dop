@@ -213,7 +213,7 @@ class DictionaryPack extends PackerBase
             //空对象判断
             if (ItemType::STRUCT === $item_type) {
                 $dic_var = PackerBase::varName($tmp_index++, 'tmp');
-                $code_buf->pushStr('NSDictionary *' . $dic_var . ' = [FFANDOPUtils idTo' . $ns_type . ':[dict_map valueForKey:@"' . $name . '"]]');
+                $code_buf->pushStr('NSDictionary *' . $dic_var . ' = [FFANDOPUtils idTo' . $ns_type . ':[dict_map valueForKey:@"' . $name . '"]];');
                 $code_buf->pushStr('if ([' . $dic_var . ' count] > 0) {')->indent();
                 $this->unpackItemValue($code_buf, 'self.' . $name, $dic_var, $item, $tmp_index);
                 $code_buf->backIndent()->pushStr('}');

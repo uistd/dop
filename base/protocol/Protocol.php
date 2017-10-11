@@ -215,7 +215,6 @@ class Protocol
         }
         //再处理其它的struct
         foreach ($all_struct as $name => $struct) {
-            echo 'Load '. $name,PHP_EOL;
             $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT);
         }
     }
@@ -319,6 +318,7 @@ class Protocol
         $response_count = 0;
         $ignore_get = (int)$this->build_opt->getConfig('ignore_get', 0);
         $note_info = $action->getAttribute('note');
+        $action_method = $action->getAttribute('method');
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->setLineNumber($node->getLineNo());
@@ -332,9 +332,14 @@ class Protocol
                     throw new Exception('Only one request node allowed');
                 }
                 $method = $node->getAttribute('method');
+                //如果在 request 上没有指定method, 尝试使用 action 上的method
+                if (empty($method)) {
+                    $method = $action_method;
+                }
                 if (!is_string($method)) {
                     $method = 'get';
                 }
+                $node->setAttribute('method', $method);
                 //不生成get类
                 if (1 === $ignore_get && 'get' === strtolower(trim($method))) {
                     continue;
