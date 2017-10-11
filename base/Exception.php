@@ -40,7 +40,7 @@ class Exception extends \Exception
         if (null !== $current_struct) {
             $message .= PHP_EOL. $current_struct->C14N();
         }
-        $message .= PHP_EOL .Debug::codeTrace();
+        //$message .= PHP_EOL .Debug::codeTrace();
         parent::__construct($message, $code, $previous);
     }
 }
