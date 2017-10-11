@@ -155,17 +155,29 @@ abstract class CoderBase extends ConfigBase
             if ($struct_type === Struct::TYPE_STRUCT) {
                 continue;
             }
-            $require_struct = $struct->getRequireStruct();
-            foreach ($require_struct as $id => $req_struct) {
-                if (!isset($all_require_struct[$id])) {
-                    $all_require_struct[$id] = $req_struct;
-                }
-            }
+            $this->loadAllRequireStruct($all_require_struct, $struct);
             call_user_func($callback, $struct);
         }
         //生成依赖的struct
         foreach ($all_require_struct as $id => $req_struct) {
             call_user_func($callback, $req_struct);
+        }
+    }
+
+    /**
+     * 加载所有依赖的struct
+     * @param array $all_require_struct
+     * @param Struct $struct
+     */
+    private function loadAllRequireStruct(&$all_require_struct, $struct)
+    {
+        $require_struct = $struct->getRequireStruct();
+        foreach ($require_struct as $id => $req_struct) {
+            if (isset($all_require_struct[$id])) {
+                continue;
+            }
+            $all_require_struct[$id] = $req_struct;
+            $this->loadAllRequireStruct($all_require_struct, $req_struct);
         }
     }
 
