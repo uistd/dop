@@ -37,7 +37,7 @@ class BuildOption
      * 下划线命名
      */
     const UNDERLINE_NAME = 2;
-    
+
     /**
      * @var string 生成文件目录
      */
@@ -112,6 +112,11 @@ class BuildOption
      * @var array 每个packer对应的side
      */
     private $packer_side;
+
+    /**
+     * @var array 每个packer限制 request 或者 response
+     */
+    private $packer_struct;
 
     /**
      * BuildOption constructor.
@@ -194,6 +199,9 @@ class BuildOption
         if (isset($section_conf['packer_side'])) {
             $this->packer_side = $this->parsePackerSide($section_conf['packer_side']);
         }
+        if (isset($section_conf['packer_struct'])) {
+            $this->packer_struct = $this->parsePackerStruct($section_conf['packer_struct']);
+        }
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
     }
@@ -207,21 +215,55 @@ class BuildOption
     {
         $conf_arr = FFanStr::dualSplit($conf_str);
         $result = array();
+        $value_arr = array(
+            'client' => self::SIDE_CLIENT,
+            'server' => self::SIDE_SERVER
+        );
         foreach ($conf_arr as $packer_name => $each_conf) {
-            $arr = FFanStr::split($each_conf, '|');
-            if (empty($arr)) {
-                continue;
-            }
-            $value = 0;
-            if (in_array('client', $arr)) {
-                $value |= self::SIDE_CLIENT;
-            }
-            if (in_array('server', $arr)) {
-                $value |= self::SIDE_SERVER;
-            }
-            $result[$packer_name] = $value;
+            $result[$packer_name] = $this->parseCommonOrValue($each_conf, $value_arr);
         }
         return $result;
+    }
+
+    /**
+     * 解析packer_struct
+     * @param string $conf_str
+     * @return array
+     */
+    private function parsePackerStruct($conf_str)
+    {
+        $conf_arr = FFanStr::dualSplit($conf_str);
+        $result = array();
+        $value_arr = array(
+            'request' => Struct::TYPE_REQUEST,
+            'response' => Struct::TYPE_RESPONSE,
+            'data' => Struct::TYPE_DATA
+        );
+        foreach ($conf_arr as $packer_name => $each_conf) {
+            $result[$packer_name] = $this->parseCommonOrValue($each_conf, $value_arr);
+        }
+        return $result;
+    }
+
+    /**
+     * 能用的解析or
+     * @param string $conf_str
+     * @param array $value_arr
+     * @return int
+     */
+    private function parseCommonOrValue($conf_str, $value_arr)
+    {
+        $arr = FFanStr::split($conf_str, '|');
+        $value = 0;
+        if (empty($arr)) {
+            return $value;
+        }
+        foreach ($arr as $each_str) {
+            if (isset($value_arr[$each_str])) {
+                $value |= $value_arr[$each_str];
+            }
+        }
+        return $value;
     }
 
     /**
@@ -306,6 +348,20 @@ class BuildOption
             return $this->packer_side[$pack_name];
         }
         return $this->build_side;
+    }
+
+    /**
+     * 是否生是这个struct的方法
+     * @param string $pack_name
+     * @param int $type
+     * @return bool
+     */
+    public function hasPackerStruct($pack_name, $type)
+    {
+        if (!isset($this->packer_struct[$pack_name]) || Struct::TYPE_STRUCT === $type) {
+            return true;
+        }
+        return ($this->packer_struct[$pack_name] & $type) > 0;
     }
 
     /**

@@ -142,13 +142,30 @@ abstract class CoderBase extends ConfigBase
     public function structIterator(callable $callback, $ignore_cache = false)
     {
         $all_struct = $this->manager->getAllStruct();
-        /** @var Struct $struct */
+        $all_require_struct = array();
         foreach ($all_struct as $struct) {
-            //如果struct来自缓存，或者 struct 不需要生成
-            if (!$this->isBuildStructCode($struct, $ignore_cache)) {
+            if ($struct->loadFromCache() && !$ignore_cache) {
                 continue;
             }
+            $struct_type = $struct->getType();
+            if (!$this->build_opt->hasBuildProtocol($struct_type)) {
+                continue;
+            }
+            //第一次不处理 struct  model
+            if ($struct_type === Struct::TYPE_STRUCT) {
+                continue;
+            }
+            $require_struct = $struct->getRequireStruct();
+            foreach ($require_struct as $id => $req_struct) {
+                if (!isset($all_require_struct[$id])) {
+                    $all_require_struct[$id] = $req_struct;
+                }
+            }
             call_user_func($callback, $struct);
+        }
+        //生成依赖的struct
+        foreach ($all_require_struct as $id => $req_struct) {
+            call_user_func($callback, $req_struct);
         }
     }
 
@@ -258,8 +275,9 @@ abstract class CoderBase extends ConfigBase
      * @param array $packer_arr
      * @param PackerBase[] $packer_object_arr
      * @param int $side_code
+     * @param PackerBase[] $load_arr 本次加载的packer
      */
-    private function getAllPackerObject($packer_arr, &$packer_object_arr, $side_code = 0)
+    private function getAllPackerObject($packer_arr, &$packer_object_arr, $side_code = 0, &$load_arr = array())
     {
         foreach ($packer_arr as $packer_name) {
             if (0 === $side_code) {
@@ -276,10 +294,21 @@ abstract class CoderBase extends ConfigBase
             }
             $packer_object->setCodeSide($side_code);
             $packer_object_arr[$packer_name] = $packer_object;
+            $load_arr[] = $packer_object;
+        }
+        //再检查 这些packer是否依赖其它 packer
+        foreach ($packer_arr as $packer_name) {
+            $packer_object = $packer_object_arr[$packer_name];
             //依赖的其它packer
             $require_packer = $packer_object->getRequirePacker();
-            if (!empty($require_packer)) {
-                $this->getAllPackerObject($require_packer, $packer_object_arr, $side_code);
+            if (empty($require_packer)) {
+                continue;
+            }
+            /** @var PackerBase[] $new_load_packer */
+            $new_load_packer = array();
+            $this->getAllPackerObject($require_packer, $packer_object_arr, $side_code, $new_load_packer);
+            foreach ($new_load_packer as $tmp_packer) {
+                $tmp_packer->setMainPacker($packer_object);
             }
         }
     }
@@ -325,11 +354,36 @@ abstract class CoderBase extends ConfigBase
         }
         $packer->setFileBuf($file_buf);
         $packer->build();
-        if ($this->isBuildPackMethod($struct, $packer->getCodeSide())) {
+        $struct_type = $struct->getType();
+        $pack_name = $packer->getMainPackerName();
+        $build_method = 0;
+        //如果是 struct
+        if (Struct::TYPE_STRUCT === $struct_type) {
+            if ($struct->hasPackerMethod($pack_name, PackerBase::METHOD_PACK)) {
+                $build_method |= PackerBase::METHOD_PACK;
+            }
+            if ($struct->hasPackerMethod($pack_name, PackerBase::METHOD_UNPACK)) {
+                $build_method |= PackerBase::METHOD_UNPACK;
+            }
+        } else {
+            //如果 这个packer 不生成这种类型 struct 的代码
+            if (!$this->build_opt->hasPackerStruct($pack_name, $struct_type)) {
+                return;
+            }
+            if ($this->isBuildPackMethod($packer->getCodeSide())) {
+                $build_method |= PackerBase::METHOD_PACK;
+                $struct->addPackerMethod($pack_name, PackerBase::METHOD_PACK);
+            }
+            if ($this->isBuildUnpackMethod($packer->getCodeSide())) {
+                $build_method |= PackerBase::METHOD_UNPACK;
+                $struct->addPackerMethod($pack_name, PackerBase::METHOD_UNPACK);
+            }
+        }
+        if (($build_method & PackerBase::METHOD_PACK) > 0) {
             $packer->setCurrentMethod(PackerBase::METHOD_PACK);
             $packer->buildPackMethod($struct, $code_buf);
         }
-        if ($this->isBuildUnpackMethod($struct, $packer->getCodeSide())) {
+        if (($build_method & PackerBase::METHOD_UNPACK) > 0) {
             $packer->setCurrentMethod(PackerBase::METHOD_UNPACK);
             $packer->buildUnpackMethod($struct, $code_buf);
         }
@@ -373,19 +427,16 @@ abstract class CoderBase extends ConfigBase
 
     /**
      * 是否需要生成Encode方法
-     * @param Struct $struct
      * @param int $packer_code_side
      * @return bool
      */
-    private function isBuildPackMethod($struct, $packer_code_side)
+    private function isBuildPackMethod($packer_code_side)
     {
         $result = false;
-        if (($packer_code_side & BuildOption::SIDE_CLIENT) > 0
-            && $struct->hasReferType(Struct::TYPE_REQUEST)) {
+        if (($packer_code_side & BuildOption::SIDE_CLIENT) > 0) {
             $result = true;
         }
-        if (($packer_code_side & BuildOption::SIDE_SERVER) > 0
-            && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
+        if (($packer_code_side & BuildOption::SIDE_SERVER) > 0) {
             $result = true;
         }
 
@@ -394,48 +445,20 @@ abstract class CoderBase extends ConfigBase
 
     /**
      * 是否需要生成Decode方法
-     * @param Struct $struct
      * @param int $packer_code_side
      * @return bool
      */
-    private function isBuildUnpackMethod($struct, $packer_code_side)
+    private function isBuildUnpackMethod($packer_code_side)
     {
         $result = false;
-        if (($packer_code_side & BuildOption::SIDE_CLIENT) > 0
-            && $struct->hasReferType(Struct::TYPE_RESPONSE)) {
+        if (($packer_code_side & BuildOption::SIDE_CLIENT) > 0) {
             $result = true;
         }
-        if (($packer_code_side & BuildOption::SIDE_SERVER) > 0
-            && $struct->hasReferType(Struct::TYPE_REQUEST)) {
+        if (($packer_code_side & BuildOption::SIDE_SERVER) > 0) {
             $result = true;
         }
 
         return $result;
-    }
-
-    /**
-     * 是否需要生成struct代码
-     * @param Struct $struct
-     * @param bool $ignore_cache 忽略缓存
-     * @return bool
-     */
-    public function isBuildStructCode($struct, $ignore_cache = false)
-    {
-        if ($struct->loadFromCache() && !$ignore_cache) {
-            return false;
-        }
-        $struct_type = $struct->getType();
-        if (Struct::TYPE_STRUCT === $struct_type) {
-            $refer_type = $struct->getReferType();
-            //没有任何引用
-            if (0 === $refer_type) {
-                return false;
-            }
-            if (Struct::TYPE_DATA === $refer_type) {
-                return $this->build_opt->hasBuildProtocol(Struct::TYPE_DATA);
-            }
-        }
-        return $this->build_opt->hasBuildProtocol($struct_type);
     }
 
     /**

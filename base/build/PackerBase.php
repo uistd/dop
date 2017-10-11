@@ -53,6 +53,11 @@ abstract class PackerBase
     private $code_side = 0;
 
     /**
+     * @var PackerBase 主packer
+     */
+    private $main_packer;
+
+    /**
      * PackerBase constructor.
      * @param CoderBase $coder
      */
@@ -247,5 +252,36 @@ abstract class PackerBase
     public function getCodeSide()
     {
         return $this->code_side;
+    }
+
+    /**
+     * 设置主packer
+     * @param PackerBase $packer
+     */
+    public function setMainPacker($packer)
+    {
+        $this->main_packer = $packer;
+    }
+
+    /**
+     * 获取 主 packer
+     * @return PackerBase
+     */
+    public function getMainPacker()
+    {
+        return $this->main_packer;
+    }
+
+    /**
+     * 获取主 packer 的名称
+     * @return string
+     */
+    public function getMainPackerName()
+    {
+        if ($this->main_packer) {
+            return $this->main_packer->getMainPackerName();
+        } else {
+            return $this->getName();
+        }
     }
 }

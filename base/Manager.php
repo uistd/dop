@@ -23,7 +23,7 @@ use FFan\Std\Common\Utils as FFanUtils;
 class Manager
 {
     /**
-     * @var array 所有的struct列表
+     * @var Struct[] 所有的struct列表
      */
     private $struct_list = [];
 
@@ -399,71 +399,34 @@ class Manager
             $this->parseFile($xml_file);
         }
 
-        $build_side = $build_opt->getBuildSide();
-
-        //设置struct之间的引用关系
-        /** @var Struct $struct */
+        //设置依赖关系
         foreach ($this->struct_list as $struct) {
-            $type = $struct->getType();
-            if (Struct::TYPE_STRUCT === $type) {
-                continue;
+            $all_item = $struct->getAllExtendItem();
+            foreach ($all_item as $name => $item) {
+                $this->structRequire($item, $struct);
             }
-            //如果是data类型 encode 和 decode 方法都要编译
-            if (Struct::TYPE_DATA === $type) {
-                $type = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
-            }
-
-            //如果 服务器 和 客户端都生成
-            if (($build_side & BuildOption::SIDE_SERVER) && ($build_side & BuildOption::SIDE_CLIENT)) {
-                $type = Struct::TYPE_REQUEST | Struct::TYPE_RESPONSE;
-            }
-            $this->setStructRef($struct, $type);
         }
         return true;
     }
 
     /**
-     * //设置struct之间的引用关系
-     * @param Struct $struct
-     * @param int $ref_type
-     */
-    private function setStructRef($struct, $ref_type)
-    {
-        $all_item = $struct->getAllExtendItem();
-        /**
-         * @var string $name
-         * @var Item $item
-         */
-        foreach ($all_item as $name => $item) {
-            $this->findItemRefStruct($item, $ref_type);
-        }
-    }
-
-    /**
-     * 找到字段中引用的struct
+     * Struct 之间的依赖关系
      * @param Item $item
-     * @param int $ref_type
+     * @param Struct $struct
      */
-    private function findItemRefStruct($item, $ref_type)
+    private function structRequire($item, $struct)
     {
-        $item_type = $item->getType();
-        switch ($item_type) {
-            case ItemType::STRUCT:
-                /** @var StructItem $item */
-                $sub_struct = $item->getStruct();
-                $sub_struct->addReferType($ref_type);
-                $this->setStructRef($sub_struct, $ref_type);
-                break;
-            case ItemType::ARR:
-                /** @var ListItem $item */
-                $sub_item = $item->getItem();
-                $this->findItemRefStruct($sub_item, $ref_type);
-                break;
-            case ItemType::MAP:
-                /** @var MapItem $item */
-                $value_item = $item->getValueItem();
-                $this->findItemRefStruct($value_item, $ref_type);
-                break;
+        $type = $item->getType();
+        if (ItemType::STRUCT === $type) {
+            /** @var StructItem $item */
+            $sub_struct = $item->getStruct();
+            $struct->addRequireStruct($sub_struct);
+        } elseif (ItemType::ARR === $type) {
+            /** @var ListItem $item */
+            $this->structRequire($item->getItem(), $struct);
+        } elseif (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $this->structRequire($item->getValueItem(), $struct);
         }
     }
 
@@ -651,7 +614,7 @@ class Manager
 
     /**
      * 获取所有的struct
-     * @return array[Struct]
+     * @return Struct[]
      */
     public function getAllStruct()
     {

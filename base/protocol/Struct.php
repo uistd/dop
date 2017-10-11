@@ -71,11 +71,6 @@ class Struct
     private $file;
 
     /**
-     * @var int 被引用的类型
-     */
-    private $refer_type = 0;
-
-    /**
      * @var array 所有item包括继承的
      */
     private $all_extend_item;
@@ -89,6 +84,26 @@ class Struct
      * @var /DomElement 所在的节点(默认记录action所在的节点)
      */
     private $node;
+
+    /**
+     * @var int
+     */
+    private $id;
+
+    /**
+     * @var int id 自增
+     */
+    private static $id_count;
+
+    /**
+     * @var array 记录每个packer需要生成的method
+     */
+    private $packer_method;
+
+    /**
+     * @var Struct[] 所有依赖的其它 struct
+     */
+    private $require_struct;
 
     /**
      * Struct constructor.
@@ -107,6 +122,7 @@ class Struct
         $this->namespace = $namespace;
         $this->className = $name;
         $this->is_public = (bool)$is_public;
+        $this->id = self::$id_count++;
         $this->type = $type;
     }
 
@@ -126,34 +142,6 @@ class Struct
     public function setCacheFlag($flag = true)
     {
         $this->load_from_cache = (bool)$flag;
-    }
-
-    /**
-     * 增加一种被引用的类型
-     * @param int $type 类型
-     */
-    public function addReferType($type)
-    {
-        $this->refer_type |= $type;
-    }
-
-    /**
-     * 是否被指定的类型引用
-     * @param int $type
-     * @return bool
-     */
-    public function hasReferType($type)
-    {
-        return ($this->refer_type & $type) === $type;
-    }
-
-    /**
-     * 获取refer type
-     * @return int
-     */
-    public function getReferType()
-    {
-        return $this->refer_type;
     }
 
     /**
@@ -285,7 +273,7 @@ class Struct
 
     /**
      * 返回所有的Item包括Extend的Item
-     * @return array
+     * @return Item[]
      */
     public function getAllExtendItem()
     {
@@ -390,5 +378,55 @@ class Struct
     public function getNode()
     {
         return $this->node;
+    }
+
+    /**
+     * 增加packer method
+     * @param string $name
+     * @param int $method
+     */
+    public function addPackerMethod($name, $method)
+    {
+        if (!isset($this->packer_method[$name])) {
+            $this->packer_method[$name] = 0;
+        }
+        $this->packer_method[$name] |= $method;
+        if ($this->require_struct) {
+            foreach ($this->require_struct as $id => $struct) {
+                $struct->addPackerMethod($name, $method);
+            }
+        }
+    }
+
+    /**
+     * 是否有某个packer的method
+     * @param string $name
+     * @param int $method
+     * @return bool
+     */
+    public function hasPackerMethod($name, $method)
+    {
+        return isset($this->packer_method[$name]) && ($this->packer_method[$name] & $method) > 0;
+    }
+
+    /**
+     * 设置依赖其它 struct
+     * @param Struct $struct
+     */
+    public function addRequireStruct(Struct $struct)
+    {
+        $this->require_struct[$struct->id] = $struct;
+    }
+
+    /**
+     * 加载依赖的struct
+     * @return Struct[]
+     */
+    public function getRequireStruct()
+    {
+        if (null === $this->require_struct) {
+            return [];
+        }
+        return $this->require_struct;
     }
 }

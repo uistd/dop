@@ -130,10 +130,6 @@ class PhpMockCoder extends PluginCoderBase
      */
     private function buildStructCode($struct, $file_buf, $file_name)
     {
-        //如果struct来自缓存，或者 struct 不需要生成
-        if (!$this->coder->isBuildStructCode($struct)) {
-            return;
-        }
         $import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
         $mock_buf = $file_buf->getBuf(FileBuf::METHOD_BUF);
         $mock_buf->emptyLine();

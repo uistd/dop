@@ -3,6 +3,7 @@
 namespace FFan\Dop\Plugin\Valid;
 
 use FFan\Dop\Build\NodeBase;
+use FFan\Dop\Build\PackerBase;
 use FFan\Dop\Build\PluginBase;
 use FFan\Dop\Exception;
 use FFan\Dop\Protocol\Item;
@@ -141,6 +142,14 @@ class Plugin extends PluginBase
      */
     public function isBuildCode($struct)
     {
-        return $struct->hasReferType(Struct::TYPE_REQUEST);
+        $type = $struct->getType();
+        //模拟一个pack的方法
+        $pack_name = 'plugin:valid';
+        if (Struct::TYPE_REQUEST === $type) {
+            $struct->addPackerMethod($pack_name, PackerBase::METHOD_PACK);
+            return true;
+        } else {
+            return $struct->hasPackerMethod($pack_name, PackerBase::METHOD_PACK);
+        }
     }
 }

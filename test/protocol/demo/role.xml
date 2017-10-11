@@ -98,9 +98,7 @@
             </list>
             <model name="info">
                 <list name="role_list">
-                    <model extend="role_info">
-                        <plugin_valid require="1"/>
-                    </model>
+                    <int/>
                 </list>
                 <int name="id">
                     <plugin_valid extend="role_info/level"/>

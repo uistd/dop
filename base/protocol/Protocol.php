@@ -357,7 +357,6 @@ class Protocol
             $name = FFanStr::camelName($class_name);
             /** @var \DOMElement $node */
             $struct = $this->parseStruct($name, $node, false, $type);
-            $struct->addReferType($type);
             $struct->setNode($node);
             $node_str = '';
             if ($note_info) {
