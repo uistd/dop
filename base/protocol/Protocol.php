@@ -101,6 +101,7 @@ class Protocol
      * ProtocolXml constructor.
      * @param Manager $manager
      * @param string $file_name 协议文件
+     * @throws Exception
      */
     public function __construct(Manager $manager, $file_name)
     {
@@ -108,7 +109,7 @@ class Protocol
         $this->xml_file_name = $file_name;
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
-            throw new \InvalidArgumentException('Can not open xml:' . $full_name);
+            throw new Exception('找不到协议文件:' . $full_name);
         }
         $this->file_name = $full_name;
         Exception::setAppendMsg('Parse xml ' . $full_name);
