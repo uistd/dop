@@ -269,16 +269,18 @@ class Protocol
             return;
         }
         for ($i = 0; $i < $node_list->length; ++$i) {
-            /** @var \DOMElement $struct */
-            $struct = $node_list->item($i);
-            $this->setLineNumber($struct->getLineNo());
-            if (!$struct->hasAttribute('name')) {
+            /** @var \DOMElement $data_node */
+            $data_node = $node_list->item($i);
+            $this->setLineNumber($data_node->getLineNo());
+            if (!$data_node->hasAttribute('name')) {
                 throw new Exception('Data must have name attribute');
             }
-            $name = trim($struct->getAttribute('name'));
+            $name = trim($data_node->getAttribute('name'));
             $name = FFanStr::camelName($name, true);
-            $is_public = true === (bool)$struct->getAttribute('public');
-            $this->parseStruct($name, $struct, $is_public, Struct::TYPE_DATA);
+            $extra_packer = $this->parseExtraPacer($data_node);
+            $is_public = true === (bool)$data_node->getAttribute('public');
+            $struct = $this->parseStruct($name, $data_node, $is_public, Struct::TYPE_DATA);
+            $this->addExtraPacker($extra_packer, $struct);
         }
     }
 
@@ -307,6 +309,36 @@ class Protocol
     }
 
     /**
+     * 解析extra-packer设置
+     * @param \DOMElement $node
+     * @return array|null
+     */
+    private function parseExtraPacer(\DOMElement $node)
+    {
+        $extra_packer = $node->getAttribute('packer-extra');
+        //附加packer
+        if (!empty($extra_packer)) {
+            $extra_packer = FFanStr::split($extra_packer);
+        }
+        return $extra_packer;
+    }
+
+    /**
+     * 给struct附加extra packer
+     * @param array $extra_packer
+     * @param Struct $struct
+     */
+    private function addExtraPacker($extra_packer, $struct)
+    {
+        if (empty($extra_packer)) {
+            return;
+        }
+        foreach ($extra_packer as $name) {
+            $struct->addExtraPacker($name);
+        }
+    }
+
+    /**
      * 解析request
      * @param $action_name
      * @param \DOMElement $action
@@ -320,6 +352,7 @@ class Protocol
         $ignore_get = (int)$this->build_opt->getConfig('ignore_get', 0);
         $note_info = $action->getAttribute('note');
         $action_method = $action->getAttribute('method');
+        $extra_packer = $this->parseExtraPacer($action);
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->setLineNumber($node->getLineNo());
@@ -367,6 +400,7 @@ class Protocol
                 $node_str .= ' uri: '. $node->getAttribute('uri');
             }
             $struct->setNote($node_str);
+            $this->addExtraPacker($extra_packer, $struct);
         }
     }
 

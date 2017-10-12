@@ -337,6 +337,13 @@ abstract class CoderBase extends ConfigBase
         $packer_list = $this->build_opt->getPacker();
         $this->packer_list = array();
         $this->getAllPackerObject($packer_list, $this->packer_list);
+        foreach ($this->packer_list as $name => $packer) {
+            //如果不是主packer，不检查 is_extra 属性
+            if (null !== $packer->getMainPacker()) {
+                continue;
+            }
+            $packer->setExtraFlag($this->build_opt->isPackerExtra($name));
+        }
         return $this->packer_list;
     }
 
@@ -380,6 +387,14 @@ abstract class CoderBase extends ConfigBase
         } else {
             //如果 这个packer 不生成这种类型 struct 的代码
             if (!$this->build_opt->hasPackerStruct($pack_name, $struct_type)) {
+                return;
+            }
+            $main_packer = $packer->getMainPacker();
+            if (!$main_packer) {
+                $main_packer = $packer;
+            }
+            //该packer只生成指定了packer-extra的方法
+            if ($main_packer->getExtraFlag() && !$struct->isSetExtraPacker($pack_name)) {
                 return;
             }
             if ($this->isBuildPackMethod($packer->getCodeSide())) {

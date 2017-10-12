@@ -58,6 +58,11 @@ abstract class PackerBase
     private $main_packer;
 
     /**
+     * @var bool 是否只生成 packer-extra 的协议
+     */
+    private $is_extra = false;
+
+    /**
      * PackerBase constructor.
      * @param CoderBase $coder
      */
@@ -283,5 +288,22 @@ abstract class PackerBase
         } else {
             return $this->getName();
         }
+    }
+
+    /**
+     * 设置 is_extra 标志
+     * @param bool $flag
+     */
+    public function setExtraFlag($flag)
+    {
+        $this->is_extra = (bool)$flag;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getExtraFlag()
+    {
+        return $this->is_extra;
     }
 }

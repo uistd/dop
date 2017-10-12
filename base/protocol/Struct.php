@@ -106,6 +106,11 @@ class Struct
     private $require_struct;
 
     /**
+     * @var string[] 附加生成packer方法
+     */
+    private $extra_packer;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -428,5 +433,27 @@ class Struct
             return [];
         }
         return $this->require_struct;
+    }
+
+    /**
+     * 增加附加packer
+     * @param string $name
+     */
+    public function addExtraPacker($name)
+    {
+        if (isset($this->extra_packer[$name])) {
+            return;
+        }
+        $this->extra_packer[$name] = true;
+    }
+
+    /**
+     * 是否满足某个extra packer
+     * @param string $name
+     * @return bool
+     */
+    public function isSetExtraPacker($name)
+    {
+        return isset($this->extra_packer[$name]);
     }
 }

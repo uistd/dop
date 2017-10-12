@@ -65,7 +65,7 @@
             </struct>
         </list>
     </struct>
-    <action name="get_demo_role">
+    <action name="get_demo_role" packer-extra="binary">
         <request uri="/cda/aaa/bbb/{role_id}" method="put">
             <int name="role_id">
                 <plugin_valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>

@@ -119,6 +119,11 @@ class BuildOption
     private $packer_struct;
 
     /**
+     * @var array 只生成packer-extra的协议
+     */
+    private $packer_extra;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -201,6 +206,9 @@ class BuildOption
         }
         if (isset($section_conf['packer_struct'])) {
             $this->packer_struct = $this->parsePackerStruct($section_conf['packer_struct']);
+        }
+        if (isset($section_conf['packer_extra'])) {
+            $this->packer_extra = FFanStr::split($section_conf['packer_extra']);
         }
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
@@ -410,6 +418,16 @@ class BuildOption
             $result = self::SIDE_SERVER;
         }
         return $result;
+    }
+
+    /**
+     * 该packer是否是附加的
+     * @param string $packer_name
+     * @return bool
+     */
+    public function isPackerExtra($packer_name)
+    {
+        return in_array($packer_name, $this->packer_extra);
     }
 
     /**
