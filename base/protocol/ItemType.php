@@ -97,4 +97,15 @@ class ItemType
         }
         return null;
     }
+
+    /**
+     * 类型的类型
+     * @param string $node_name
+     * @return bool
+     */
+    public static function isAllowType($node_name)
+    {
+        $node_name = strtolower($node_name);
+        return isset(self::$typeSets[$node_name]);
+    }
 }

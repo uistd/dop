@@ -22,7 +22,8 @@
     "psr-4": {
       "FFan\\Dop\\" : "base",
       "FFan\\Dop\\Coder\\" : "coder",
-      "FFan\\Dop\\Plugin\\" : "plugin"
+      "FFan\\Dop\\Plugin\\" : "plugin",
+      "FFan\\Dop\\Scheme\\" : "scheme"
     }
   },
   "minimum-stability": "dev",

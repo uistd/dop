@@ -33,11 +33,6 @@ class Manager
     private $xml_list = [];
 
     /**
-     * @var array 所有的协议文件
-     */
-    private $all_file_list;
-
-    /**
      * @var string 协议基础路径
      */
     private $base_path;
@@ -92,11 +87,6 @@ class Manager
      * @var array 生成代码的配置项
      */
     private $build_section;
-
-    /**
-     * @var bool 是否解析过协议文件
-     */
-    private $init_protocol_flag = false;
 
     /**
      * @var CoderBase 当前Coder
@@ -390,7 +380,6 @@ class Manager
         $this->current_build_opt = $build_opt;
         $this->build_message = '';
 
-        $this->init_protocol_flag = true;
         $file_list = $this->getAllFileList();
         $build_list = $file_list;
         $this->build_file_list = $build_list;
@@ -640,12 +629,8 @@ class Manager
      */
     public function getAllFileList()
     {
-        if (null !== $this->all_file_list) {
-            return $this->all_file_list;
-        }
         $file_list = array();
         $this->getNeedBuildFile($this->base_path, $file_list);
-        $this->all_file_list = $file_list;
         return $file_list;
     }
 
