@@ -470,7 +470,7 @@ class Manager
     /**
      * @param \DOMElement $struct
      */
-    public static function setCurrentStruct($struct)
+    public static function setCurrentNode($struct)
     {
         self::$current_struct = $struct;
     }
@@ -478,7 +478,7 @@ class Manager
     /**
      * @return \DOMElement
      */
-    public static function getCurrentStruct()
+    public static function getCurrentNode()
     {
         return self::$current_struct;
     }

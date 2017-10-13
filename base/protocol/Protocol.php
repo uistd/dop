@@ -435,7 +435,7 @@ class Protocol
      */
     private function parseStruct($class_name, \DomElement $struct_node, $is_public = false, $type = Struct::TYPE_STRUCT)
     {
-        Manager::setCurrentStruct($struct_node);
+        Manager::setCurrentNode($struct_node);
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
@@ -541,7 +541,7 @@ class Protocol
             $struct_obj->extend($extend_struct);
         }
         $this->manager->addStruct($struct_obj);
-        Manager::setCurrentStruct(null);
+        Manager::setCurrentNode(null);
         return $struct_obj;
     }
 

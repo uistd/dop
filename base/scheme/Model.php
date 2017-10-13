@@ -6,7 +6,7 @@ namespace FFan\Dop\Scheme;
  * Class Model
  * @package FFan\Dop\Scheme
  */
-class Model
+class Model extends Node
 {
     /**
      * 普通struct
@@ -34,11 +34,6 @@ class Model
     private $node_list;
 
     /**
-     * @var array
-     */
-    private $attributes;
-
-    /**
      * @var string
      */
     private $extend;
@@ -55,8 +50,8 @@ class Model
      */
     public function __construct($name, \DOMElement $node)
     {
+        parent::__construct($node);
         $this->name = $name;
-        $this->attributes = Item::getAllAttribute($node);
     }
 
     /**
@@ -76,5 +71,4 @@ class Model
     {
         $this->extend = $extend;
     }
-
 }

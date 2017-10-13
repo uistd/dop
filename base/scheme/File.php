@@ -31,9 +31,14 @@ class File
     private $path_handle;
 
     /**
-     * @var Model[] model列表
+     * @var array model列表
      */
     private $model_list;
+
+    /**
+     * @var Shader[] 着色器
+     */
+    private $shader;
 
     /**
      * @var string
@@ -75,6 +80,9 @@ class File
     {
         $this->queryModel('struct');
         $this->queryModel('model');
+        $this->queryAction();
+        $this->queryData();
+        $this->queryShader();
     }
 
     /**
@@ -93,12 +101,118 @@ class File
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
             $this->setLineNumber($struct->getLineNo());
-            if (!$struct->hasAttribute('name')) {
-                throw new Exception('缺少"name"属性');
+            $this->parseModel($struct);
+        }
+    }
+
+    /**
+     * 解析Action协议
+     */
+    private function queryAction()
+    {
+        $path_handle = $this->getPathHandle();
+        $action_list = $path_handle->query('/protocol/action');
+        if (null === $action_list) {
+            return;
+        }
+        for ($i = 0; $i < $action_list->length; ++$i) {
+            /** @var \DOMElement $action */
+            $action = $action_list->item($i);
+            Manager::setCurrentNode($action);
+            $this->setLineNumber($action->getLineNo());
+            if (!$action->hasAttribute('name')) {
+                throw new Exception('Action must have name attribute');
             }
-            $name = trim($struct->getAttribute('name'));
-            $name = FFanStr::camelName($name);
-            $this->parseModel($name, $struct);
+            //action 的name支持 /aa/bb 的格式
+            $name = $action->getAttribute('name');
+            $this->parseAction($name, $action);
+            Manager::setCurrentNode(null);
+        }
+    }
+
+    /**
+     * 解析request
+     * @param string $name
+     * @param \DOMElement $action
+     * @throws Exception
+     */
+    private function parseAction($name, \DOMElement $action)
+    {
+        $node_list = $action->childNodes;
+        $request_count = 0;
+        $response_count = 0;
+        $action_method = $action->getAttribute('method');
+        if (empty($action_method)) {
+            $action_method = 'get';
+        }
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            $node = $node_list->item($i);
+            $this->setLineNumber($node->getLineNo());
+            if (XML_ELEMENT_NODE !== $node->nodeType) {
+                continue;
+            }
+            $node->setAttribute('name',$name);
+            $node_name = strtolower($node->nodeName);
+            if ('request' === $node_name) {
+                if (++$request_count > 1) {
+                    throw new Exception('Only one request node allowed');
+                }
+                $method = $node->getAttribute('method');
+                //如果在 request 上没有指定method, 尝试使用 action 上的method
+                if (empty($method)) {
+                    $method = $action_method;
+                    $node->setAttribute('method', $method);
+                }
+                $type = Model::TYPE_REQUEST;
+            } elseif ('response' === $node_name) {
+                if (++$response_count > 1) {
+                    throw new Exception('Only one response node allowed');
+                }
+                $type = Model::TYPE_RESPONSE;
+            } else {
+                throw new Exception('Unknown node:' . $node_name);
+            }
+            /** @var \DOMElement $node */
+            $this->parseModel($node, $type);
+        }
+    }
+
+    /**
+     * 解析Data协议
+     */
+    private function queryData()
+    {
+        $path_handle = $this->getPathHandle();
+        $node_list = $path_handle->query('/protocol/data');
+        if (null === $node_list) {
+            return;
+        }
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            /** @var \DOMElement $data_node */
+            $data_node = $node_list->item($i);
+            $this->setLineNumber($data_node->getLineNo());
+            $this->parseModel($data_node, Model::TYPE_DATA);
+        }
+    }
+
+    /**
+     * 解析render
+     */
+    private function queryShader()
+    {
+        $path_handle = $this->getPathHandle();
+        $node_list = $path_handle->query('/protocol/shader');
+        if (null === $node_list) {
+            return;
+        }
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            /** @var \DOMElement $shader_node */
+            $shader_node = $node_list->item($i);
+            Manager::setCurrentNode($shader_node);
+            $this->setLineNumber($shader_node->getLineNo());
+            $shader = new Shader($shader_node);
+            $this->shader[] = $shader;
+            Manager::setCurrentNode(null);
         }
     }
 
@@ -127,14 +241,22 @@ class File
 
     /**
      * 解析一组协议
-     * @param string $class_name
      * @param \DomElement $model_node
      * @param int $type
      * @throws Exception
      */
-    private function parseModel($class_name, \DomElement $model_node, $type = Model::TYPE_STRUCT)
+    private function parseModel(\DomElement $model_node, $type = Model::TYPE_STRUCT)
     {
-        Manager::setCurrentStruct($model_node);
+        Manager::setCurrentNode($model_node);
+        //model 取名 的时候，优先使用 class_name
+        $name_attr = $model_node->hasAttribute('class_name') ? 'class_name' : 'name';
+        $class_name = $model_node->getAttribute($name_attr);
+        if (is_string($class_name)) {
+            $class_name = trim($class_name);
+        }
+        if (empty($class_name)) {
+            throw new Exception('缺少 name 属性');
+        }
         $node_list = $model_node->childNodes;
         $item_arr = array();
         for ($i = 0; $i < $node_list->length; ++$i) {
@@ -191,8 +313,11 @@ class File
         if (!empty($extend_name)) {
             $model->setExtend($extend_name);
         }
-        Manager::setCurrentStruct(null);
-        $this->model_list[$class_name] = $model;
+        Manager::setCurrentNode(null);
+        if (isset($this->model_list[$type][$class_name])) {
+            throw new Exception('class_name 类名冲突');
+        }
+        $this->model_list[$type][$class_name] = $model;
     }
 
     /**
@@ -220,9 +345,8 @@ class File
             case ItemType::STRUCT:
                 $this->parsePrivateStruct($name, $item_node, $item);
                 break;
-            default:
-                throw new Exception('Unknown type');
         }
+        $this->parsePlugin($item_node, $item);
         return $item;
     }
 
@@ -255,11 +379,7 @@ class File
             throw new Exception('List下必须包括一个指定list类型的节点');
         }
         if ($type_node->hasAttribute('name')) {
-            $tmp_name = trim($type_node->getAttribute('name'));
-            if (!empty($tmp_name)) {
-                $this->checkName($tmp_name);
-                $name = FFanStr::camelName($tmp_name);
-            }
+            $name = trim($type_node->getAttribute('name'));
         }
         return $this->makeItem($name, $type_node);
     }
@@ -318,16 +438,37 @@ class File
      */
     private function parsePrivateStruct($name, \DOMElement $item, Item $item_object)
     {
-        if ($item->hasAttribute('class_name')) {
-            $class_name = trim($item->getAttribute('class_name'));
-            if (!empty($class_name)) {
-                $name = FFanStr::camelName($class_name);
-            }
-        }
         $item_object->setRequireModel($name);
-        $this->parseModel($name, $item);
+        if (!$item->hasAttribute('name')) {
+            $item->setAttribute('name', $name);
+        }
+        $this->parseModel($item);
     }
 
+    /**
+     * 插件解析
+     * @param \DOMElement $dom_node 节点
+     * @param Item $item
+     */
+    private function parsePlugin($dom_node, $item)
+    {
+        $item_list = $dom_node->childNodes;
+        for ($i = 0; $i < $item_list->length; ++$i) {
+            $tmp_node = $item_list->item($i);
+            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
+                continue;
+            }
+            if (!$this->isPluginNode($tmp_node)) {
+                continue;
+            }
+            Manager::setCurrentNode($tmp_node);
+            $this->setLineNumber($tmp_node->getLineNo());
+            $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
+            $plugin = new Plugin($plugin_name, $tmp_node);
+            $item->addPlugin($plugin_name, $plugin);
+            Manager::setCurrentNode(null);
+        }
+    }
 
     /**
      * 是否是插件节点

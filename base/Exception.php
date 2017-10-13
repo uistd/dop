@@ -36,10 +36,11 @@ class Exception extends \Exception
         if (!empty(self::$append_msg)) {
             $message = self::$append_msg . ', ' . $message;
         }
-        $current_struct = Manager::getCurrentStruct();
+        $current_struct = Manager::getCurrentNode();
         if (null !== $current_struct) {
             $message .= PHP_EOL. $current_struct->C14N();
         }
+        $message .= PHP_EOL;
         //$message .= PHP_EOL .Debug::codeTrace();
         parent::__construct($message, $code, $previous);
     }
