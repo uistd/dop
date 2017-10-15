@@ -179,8 +179,8 @@ class PhpMockCoder extends PluginCoderBase
                 $struct_file = $full_file;
             }
             if ($struct_file !== $base_ns && '.' !== $base_ns) {
-                $import_ns = $this->makeClassNs($struct_file);
-                $import_class = $this->fileNameToClassName($struct_file);
+                $import_ns = $this->makeClassNs($full_file);
+                $import_class = $this->fileNameToClassName($full_file);
                 $use_buf->pushUniqueStr('use ' . $import_ns . '\\' . $import_class . ';');
             }
         } elseif (ItemType::ARR === $type) {
