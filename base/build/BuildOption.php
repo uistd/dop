@@ -427,7 +427,7 @@ class BuildOption
      */
     public function isPackerExtra($packer_name)
     {
-        return in_array($packer_name, $this->packer_extra);
+        return null !== $this->packer_extra && in_array($packer_name, $this->packer_extra);
     }
 
     /**
