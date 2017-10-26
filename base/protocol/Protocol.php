@@ -8,8 +8,8 @@ use FFan\Dop\Build\NodeBase;
 use FFan\Dop\Build\Shader;
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
+use FFan\Dop\Scheme\File;
 use FFan\Std\Common\Str as FFanStr;
-use FFan\Std\Common\Utils as FFanUtils;
 
 /**
  * Class Protocol
@@ -98,61 +98,45 @@ class Protocol
     private $build_opt;
 
     /**
-     * ProtocolXml constructor.
+     * @var File scheme
+     */
+    private $scheme_file;
+
+    /**
+     * ProtocolScheme constructor.
      * @param Manager $manager
-     * @param string $file_name 协议文件
+     * @param string $namespace 命名空间
      * @throws Exception
      */
-    public function __construct(Manager $manager, $file_name)
+    public function __construct(Manager $manager, $namespace)
     {
-        $base_path = $manager->getBasePath();
-        $this->xml_file_name = $file_name;
-        $full_name = FFanUtils::joinFilePath($base_path, $file_name);
-        if (!is_file($full_name)) {
-            throw new Exception('找不到协议文件:' . $full_name);
-        }
-        $this->file_name = $full_name;
-        Exception::setAppendMsg('Parse xml ' . $full_name);
-        $this->xml_handle = new \DOMDocument();
-        $this->xml_handle->load($full_name);
-        $dir_name = dirname($file_name);
-        if ('.' === $dir_name) {
-            $dir_name = DIRECTORY_SEPARATOR;
-        }
-        //如果不是以/开始，前端加 /
-        if (DIRECTORY_SEPARATOR !== $dir_name[0]) {
-            $dir_name = DIRECTORY_SEPARATOR . $dir_name;
-        }
-        //如果不是以 / 结尾，后面加 /
-        if (DIRECTORY_SEPARATOR !== $dir_name[strlen($dir_name) - 1]) {
-            $dir_name .= DIRECTORY_SEPARATOR;
-        }
-        $this->namespace = $dir_name . basename($file_name, '.xml');
+        $this->namespace = $namespace;
         $this->manager = $manager;
-        $this->build_opt = $manager->getCurrentBuildOpt();
-    }
-
-    /**
-     * 获取Xpath
-     * @return \DOMXpath
-     */
-    private function getPathHandle()
-    {
-        if (null === $this->path_handle) {
-            $this->path_handle = new \DOMXpath($this->xml_handle);
+        $this->scheme_file = $manager->getScheme($namespace);
+        if (null === $this->scheme_file) {
+            throw new Exception('Can not found scheme :' . $namespace);
         }
-        return $this->path_handle;
+        $this->build_opt = $manager->getCurrentBuildOpt();
+        $this->parse();
     }
 
     /**
-     * 解析该xml文件
+     * 解析scheme文件
      */
-    public function query()
+    public function parse()
     {
-        $this->queryStruct();
-        $this->queryAction();
-        $this->queryData();
-        $this->queryShader();
+        $this->parseModel();
+    }
+
+    /**
+     * 解析Model
+     */
+    private function parseModel()
+    {
+        $model_list = $this->scheme_file->getModelList();
+        foreach ($model_list as $model) {
+            $struct = new Struct($this->namespace, $model->);
+        }
     }
 
     /**
@@ -160,11 +144,6 @@ class Protocol
      */
     public function queryStruct()
     {
-        //已经解析过了，就打标志，避免重复解析
-        if ($this->query_step & self::QUERY_STEP_STRUCT) {
-            return;
-        }
-        $this->query_step |= self::QUERY_STEP_STRUCT;
         $this->queryModel('struct');
         $this->queryModel('model');
     }

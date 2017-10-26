@@ -1,6 +1,7 @@
 <?php
 
 namespace FFan\Dop;
+
 use FFan\Dop\Build\BuildOption;
 use FFan\Dop\Build\CoderBase;
 use FFan\Dop\Build\Folder;
@@ -13,6 +14,7 @@ use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Dop\Protocol\StructItem;
+use FFan\Dop\Scheme\File;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
 
@@ -112,6 +114,11 @@ class Manager
      * @var \DOMElement 当前正在解析的节点
      */
     private static $current_struct;
+
+    /**
+     * @var File[] 协议列表
+     */
+    private $scheme_list;
 
     /**
      * 初始化
@@ -266,16 +273,6 @@ class Manager
     }
 
     /**
-     * 解析指定文件
-     * @param string $file
-     */
-    public function parseFile($file)
-    {
-        $xml_protocol = $this->loadXmlProtocol($file);
-        $xml_protocol->query();
-    }
-
-    /**
      * 应用着色器
      */
     public function applyShader()
@@ -364,6 +361,19 @@ class Manager
     }
 
     /**
+     * 获取scheme
+     * @param $namespace
+     * @return File|null
+     */
+    public function getScheme($namespace)
+    {
+        if (!isset($this->scheme_list[$namespace])) {
+            return null;
+        }
+        return $this->scheme_list[$namespace];
+    }
+
+    /**
      * 初始化协议文件
      * @param $section
      * @return bool
@@ -381,20 +391,22 @@ class Manager
         $this->build_message = '';
 
         $file_list = $this->getAllFileList();
-        $build_list = $file_list;
-        $this->build_file_list = $build_list;
-        //解析文件
-        foreach ($build_list as $xml_file => $v) {
-            $this->parseFile($xml_file);
+        foreach ($file_list as $file => $modify_time) {
+            $ns = str_replace('.xml', '', strtolower($file));
+            $this->scheme_list[$ns] = new Scheme\File($this, $file);
+        }
+        $this->build_file_list = $file_list;
+        foreach ($this->scheme_list as $ns => $scheme_file) {
+            new Protocol($this, $ns);
         }
 
         //设置依赖关系
-        foreach ($this->struct_list as $struct) {
+        /*foreach ($this->struct_list as $struct) {
             $all_item = $struct->getAllExtendItem();
             foreach ($all_item as $name => $item) {
                 $this->structRequire($item, $struct);
             }
-        }
+        }*/
         return true;
     }
 

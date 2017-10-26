@@ -511,4 +511,12 @@ class File
     {
         return FFanStr::camelName($item_name, false);
     }
+
+    /**
+     * @return Model[]
+     */
+    public function getModelList()
+    {
+        return $this->model_list;
+    }
 }

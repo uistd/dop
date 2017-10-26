@@ -116,9 +116,8 @@ class Struct
      * @param string $name 类名
      * @param string $file 所在的文件
      * @param int $type 类型
-     * @param bool $is_public 是否可以被其它文件调用
      */
-    public function __construct($namespace, $name, $file, $type = self::TYPE_STRUCT, $is_public = false)
+    public function __construct($namespace, $name, $file, $type = self::TYPE_STRUCT)
     {
         if (!is_string($namespace) || '/' !== $namespace[0]) {
             throw new \InvalidArgumentException('namespace error');
@@ -126,7 +125,6 @@ class Struct
         $this->file = str_replace('.xml', '', $file);
         $this->namespace = $namespace;
         $this->className = $name;
-        $this->is_public = (bool)$is_public;
         $this->id = self::$id_count++;
         $this->type = $type;
     }
