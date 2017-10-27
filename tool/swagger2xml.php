@@ -1,4 +1,5 @@
 <?php
+//php swagger2xml.php http://feed.intra.sit.ffan.com/v2/api-docs
 require_once '../vendor/autoload.php';
 if (!isset($argv[1])) {
     exit("请输入swagger api file\n");
