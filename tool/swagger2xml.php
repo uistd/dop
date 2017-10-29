@@ -30,14 +30,19 @@ class SwaggerToXml
     private $actions;
 
     /**
-     * @var array 公共的model
+     * @var array 临时action，未确认最终的类名
+     */
+    private $tmp_action;
+
+    /**
+     * @var array 公共model
      */
     private $public_model;
 
     /**
-     * @var array 临时action，未确认最终的类名
+     * @var DomDocument
      */
-    private $tmp_action;
+    private $dom;
 
     /**
      * SwaggerToXml constructor.
@@ -131,22 +136,79 @@ class SwaggerToXml
     private function buildXml()
     {
         $dom = new DomDocument('1.0', 'utf-8');
+        $this->dom = $dom;
         //  创建根节点
-        $article = $dom->createElement('protocol');
-        //公共的model
-        if (!empty($this->public_model)) {
-            foreach ($this->public_model as $name => $v) {
-                if (!isset($this->model_name[$name])) {
-                    continue;
-                }
-                $class_name = $this->model_name[$name];
-                $model_node = $dom->createElement('model');
-                $model_node->setAttribute('name', $class_name);
-                //todo
+        $root_node = $dom->createElement('protocol');
+        $dom->appendChild($root_node);
+        foreach ($this->actions as $name => $action_info) {
+            $action_name = str_replace('_', '/', $name);
+            $action_node = $dom->createElement('action');
+            $action_node->setAttribute('name', $action_name);
+            if (isset($action_info['summary'])) {
+                $action_node->setAttribute('note', $action_info['summary']);
+            }
+            $tmp_pos = strpos($name, '_');
+            if (false === $tmp_pos) {
+                $method = 'get';
+            } else {
+                $method = substr($name, 0, $tmp_pos);
+            }
+            if (!empty($action_info['request'])) {
+                $request_node = $dom->createElement('request');
+                $request_node->setAttribute('method', $method);
+                $this->buildModelXml($request_node, $action_info['request']);
+                $action_node->appendChild($request_node);
+            }
+            $root_node->appendChild($action_node);
+        }
+        echo $dom->C14N();
+    }
 
+    /**
+     * 生成model的xml
+     * @param DomNode $domNode
+     * @param array $items
+     */
+    private function buildModelXml(DomNode $domNode, $items)
+    {
+        foreach($items as $name => $item) {
+            $type = $item['type'];
+            $item_node = $this->createTypeNode($type, $name);
+            $item_node->setAttribute('name', $name);
+            if (isset($item['note'])) {
+                $item_node->setAttribute('note', $item['note']);
+            }
+            $domNode->appendChild($item_node);
+        }
+    }
+
+    /**
+     * 按类型生成node
+     * @param string|array $type
+     * @param string $name
+     * @return DOMElement|null
+     */
+    private function createTypeNode($type, $name)
+    {
+        if (is_string($type)) {
+            return $this->dom->createElement($type);
+        } else {
+            $arr_type = $type['type'];
+            if ('array' === $arr_type) {
+                $node = $this->dom->createElement('list');
+                $node->appendChild($this->createTypeNode($type['sub_item'], $name));
+                return $node;
+            } elseif ('model' === $type['type']) {
+                $model = $this->dom->createElement('model');
+                $ref = $type['ref'];
+                if (!isset($this->public_model[$ref])) {
+                    $this->public_model[$ref] = $name .'Model';
+                }
+                $model->setAttribute('extend', $this->public_model[$ref]);
+                return $model;
             }
         }
-        $dom->appendchild($article);
+        return null;
     }
 
     /**
@@ -185,10 +247,13 @@ class SwaggerToXml
             }
             $ref = $response_info['schema']['$ref'];
             if (!isset($this->models[$ref])) {
-                print_r($response_info);
                 $response = array();
             } else {
                 $response = $this->models[$ref];
+                if (isset($response['data'], $response['status'], $response['message'])) {
+                    $response['is_standard_api'] = true;
+                    unset($response['status'], $response['message']);
+                }
             }
             $action['response'] = $response;
         }
@@ -199,18 +264,14 @@ class SwaggerToXml
      * 一个参数
      * @param string $name
      * @param array $item
-     * @param bool $is_public 如果 遇到model，是否是公共的
      * @return array|string
      */
-    private function parseItem($name, $item, $is_public = false)
+    private function parseItem($name, $item)
     {
         //引用其它
         if (isset($item['$ref'])) {
             if (!isset($this->model_name[$name])) {
                 $this->model_name[$item['$ref']] = $name;
-                if ($is_public) {
-                    $this->public_model[$item['$ref']] = true;
-                }
             }
             return array(
                 'type' => 'model',
@@ -218,7 +279,7 @@ class SwaggerToXml
             );
         }
         if (!isset($item['type']) && isset($item['schema'])) {
-            return $this->parseItem($name, $item['schema'], $is_public);
+            return $this->parseItem($name, $item['schema']);
         }
         $type = $item['type'];
         $format = isset($item['format']) ? $item['format'] : null;
@@ -237,7 +298,7 @@ class SwaggerToXml
         } elseif ('array' === $type) {
             return array(
                 'type' => 'array',
-                'sub_item' => $this->parseItem($name, $item['items'], $is_public)
+                'sub_item' => $this->parseItem($name, $item['items'])
             );
         }
         return $type;
@@ -255,7 +316,6 @@ class SwaggerToXml
             }
             $model_name = '#/definitions/' . $name;
             $model = $this->parseModels($struct);
-            $model['summary'] = $name;
             $this->models[$model_name] = $model;
         }
     }
@@ -269,7 +329,11 @@ class SwaggerToXml
     {
         $model = array();
         foreach ($struct['properties'] as $name => $item) {
-            $model[$name] = $this->parseItem($name, $item, true);
+            $tmp_item = array('type' => $this->parseItem($name, $item));
+            if (isset($item['description'])) {
+                $tmp_item['note'] = $item['description'];
+            }
+            $model[$name] = $tmp_item;
         }
         return $model;
     }
