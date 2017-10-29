@@ -1,5 +1,7 @@
 <?php
 //php swagger2xml.php http://feed.intra.sit.ffan.com/v2/api-docs
+use FFan\Dop\Build\CodeBuf;
+
 require_once '../vendor/autoload.php';
 if (!isset($argv[1])) {
     exit("请输入swagger api file\n");
@@ -38,11 +40,6 @@ class SwaggerToXml
      * @var array 公共model
      */
     private $public_model;
-
-    /**
-     * @var DomDocument
-     */
-    private $dom;
 
     /**
      * SwaggerToXml constructor.
@@ -135,18 +132,28 @@ class SwaggerToXml
      */
     private function buildXml()
     {
-        $dom = new DomDocument('1.0', 'utf-8');
-        $this->dom = $dom;
+        $dom = new CodeBuf();
+        $dom->pushStr('<?xml version="1.0" encoding="UTF-8"?>');
         //  创建根节点
-        $root_node = $dom->createElement('protocol');
-        $dom->appendChild($root_node);
+        $dom->pushStr('<protocol>')->indent();
+        $action_node = new CodeBuf();
+        $model_node = new CodeBuf();
+        $dom->push($model_node);
+        $dom->push($action_node);
+        $dom->backIndent()->pushStr('</protocol>');
         foreach ($this->actions as $name => $action_info) {
             $action_name = str_replace('_', '/', $name);
-            $action_node = $dom->createElement('action');
-            $action_node->setAttribute('name', $action_name);
+            $action_str = '<action name="'. $action_name .'"';
             if (isset($action_info['summary'])) {
-                $action_node->setAttribute('note', $action_info['summary']);
+                $action_str .= ' note="'.$action_info['summary'].'"';
             }
+            $action_node->pushStr($action_str .'>')->indent();
+            $request_node = new CodeBuf();
+            $response_node = new CodeBuf();
+            $action_node->push($request_node);
+            $action_node->push($response_node);
+            $action_node->backIndent()->pushStr('</action>')->emptyLine();
+
             $tmp_pos = strpos($name, '_');
             if (false === $tmp_pos) {
                 $method = 'get';
@@ -154,31 +161,51 @@ class SwaggerToXml
                 $method = substr($name, 0, $tmp_pos);
             }
             if (!empty($action_info['request'])) {
-                $request_node = $dom->createElement('request');
-                $request_node->setAttribute('method', $method);
+                $request_node->pushStr('<request method="'. $method .'">')->indent();
                 $this->buildModelXml($request_node, $action_info['request']);
-                $action_node->appendChild($request_node);
+                $request_node->backIndent()->pushStr('</request>');
             }
-            $root_node->appendChild($action_node);
+            if (!empty($action_info['response'])) {
+                $response = $action_info['response'];
+                $is_standard_api = isset($response['is_standard_api']);
+                $str = '<response';
+                if ($is_standard_api) {
+                    $str .= ' extend="/api/result"';
+                    unset($$response['is_standard_api']);
+                }
+                $response_node->pushStr($str .'>')->indent();
+                //如果剩下data 是model 类型
+                if ($is_standard_api && is_array($response['data']['type']) && 'model' === $response['data']['type']['type']) {
+                    $model_name = $action_name .'_data';
+                    $response_node->pushStr('<model name="data" class_name="'. $model_name .'">')->indent();
+                    $model_info = $this->models[$response['data']['type']['ref']];
+                    $this->buildModelXml($response_node, $model_info);
+                    $response_node->backIndent()->pushStr('</model>');
+                } else {
+                    $this->buildModelXml($response_node, $action_info['response']);
+                }
+                $response_node->backIndent()->pushStr('</request>');
+            }
         }
-        echo $dom->C14N();
+        print_r($this->public_model);
+        echo $dom->dump();
     }
 
     /**
      * 生成model的xml
-     * @param DomNode $domNode
+     * @param CodeBuf $request_code
      * @param array $items
      */
-    private function buildModelXml(DomNode $domNode, $items)
+    private function buildModelXml($request_code, $items)
     {
         foreach($items as $name => $item) {
             $type = $item['type'];
-            $item_node = $this->createTypeNode($type, $name);
-            $item_node->setAttribute('name', $name);
-            if (isset($item['note'])) {
-                $item_node->setAttribute('note', $item['note']);
+            if (null === $type) {
+                continue;
             }
-            $domNode->appendChild($item_node);
+            $note = isset($item['note']) ? $item['note'] : '';
+            $item_node = $this->createTypeNode($type, $name, $note, false);
+            $request_code->push($item_node);
         }
     }
 
@@ -186,29 +213,50 @@ class SwaggerToXml
      * 按类型生成node
      * @param string|array $type
      * @param string $name
-     * @return DOMElement|null
+     * @param $note
+     * @param bool $is_sub_item
+     * @return CodeBuf
      */
-    private function createTypeNode($type, $name)
+    private function createTypeNode($type, $name, $note = null, $is_sub_item = true)
     {
+        $result = new CodeBuf();
+        $sub_node = null;
+        $node_xml = '<';
+        $type_str = $extend_str = '';
         if (is_string($type)) {
-            return $this->dom->createElement($type);
+            $type_str = $type;
         } else {
             $arr_type = $type['type'];
             if ('array' === $arr_type) {
-                $node = $this->dom->createElement('list');
-                $node->appendChild($this->createTypeNode($type['sub_item'], $name));
-                return $node;
+                $type_str = 'list';
+                $sub_node = $this->createTypeNode($type['sub_item'], $name);
             } elseif ('model' === $type['type']) {
-                $model = $this->dom->createElement('model');
+                $type_str = 'model';
                 $ref = $type['ref'];
                 if (!isset($this->public_model[$ref])) {
-                    $this->public_model[$ref] = $name .'Model';
+                    $this->public_model[$ref] = $name;
                 }
-                $model->setAttribute('extend', $this->public_model[$ref]);
-                return $model;
+                $extend_str = ' extend="'.$name.'"';
             }
         }
-        return null;
+        $node_xml .= $type_str;
+        $node_xml .= $extend_str;
+        if (!$is_sub_item) {
+            $node_xml .= ' name="'.$name.'"';
+            if (!empty($note)) {
+                $node_xml .= ' note="'. $note .'"';
+            }
+        }
+        if (null === $sub_node) {
+            $node_xml .= '/>';
+            $result->pushStr($node_xml);
+        } else {
+            $node_xml .= '>';
+            $result->pushStr($node_xml)->indent();
+            $result->push($sub_node);
+            $result->backIndent()->pushStr('</'.$type_str.'>');
+        }
+        return $result;
     }
 
     /**
@@ -300,6 +348,10 @@ class SwaggerToXml
                 'type' => 'array',
                 'sub_item' => $this->parseItem($name, $item['items'])
             );
+        }
+        //如果 有object  但没有ref，表示null
+        elseif ('object' === $type) {
+            return null;
         }
         return $type;
     }
