@@ -159,6 +159,10 @@ abstract class CoderBase extends ConfigBase
             call_user_func($callback, $struct);
         }
         //生成依赖的struct
+        /**
+         * @var int $id
+         * @var Struct $req_struct
+         */
         foreach ($all_require_struct as $id => $req_struct) {
             call_user_func($callback, $req_struct);
         }

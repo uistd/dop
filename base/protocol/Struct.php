@@ -111,6 +111,11 @@ class Struct
     private $extra_packer;
 
     /**
+     * @var int 版本号
+     */
+    private $version = 1;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -455,5 +460,47 @@ class Struct
     public function isSetExtraPacker($name)
     {
         return isset($this->extra_packer[$name]);
+    }
+
+    /**
+     * 版本号
+     */
+    public function setVersion($ver)
+    {
+        $this->version = (int)$ver;
+        if ($this->version < 1) {
+            $this->version = 1;
+        }
+    }
+
+    /**
+     * 获取版本号
+     * @return int
+     */
+    public function getVersion()
+    {
+        return $this->version;
+    }
+
+    /**
+     * 忽略版本号
+     * @param string $ns
+     * @return string
+     */
+    public static function ignoreVersion($ns)
+    {
+        return preg_replace('#_v[\d]+$#', '', $ns);
+    }
+
+    /**
+     * 重置命名空间，忽略版本号
+     */
+    public function resetNameSpaceIgnoreVersion()
+    {
+        if (1 === $this->version) {
+            return;
+        }
+        $this->namespace = self::ignoreVersion($this->namespace);
+        $this->file = self::ignoreVersion($this->file);
     }
 }

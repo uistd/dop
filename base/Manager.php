@@ -1,6 +1,7 @@
 <?php
 
 namespace FFan\Dop;
+
 use FFan\Dop\Build\BuildOption;
 use FFan\Dop\Build\CoderBase;
 use FFan\Dop\Build\Folder;
@@ -398,15 +399,118 @@ class Manager
         foreach ($build_list as $xml_file => $v) {
             $this->parseFile($xml_file);
         }
+        //如果忽略版本号，先整理版本号
+        if ($build_opt->getConfig('ignore_version')) {
+            $this->ignoreVersion();
+        }
 
         //设置依赖关系
         foreach ($this->struct_list as $struct) {
+            //echo 'check: ', $struct->getNamespace() .'/'. $struct->getClassName(), PHP_EOL;
             $all_item = $struct->getAllExtendItem();
             foreach ($all_item as $name => $item) {
                 $this->structRequire($item, $struct);
             }
         }
+
+        //如果忽略版本号，重新整理版本号
+        if ($build_opt->getConfig('ignore_version')) {
+            foreach ($this->struct_list as $struct) {
+                $struct->resetNameSpaceIgnoreVersion();
+            }
+        }
         return true;
+    }
+
+    /**
+     * 忽略版本号处理
+     */
+    private function ignoreVersion()
+    {
+        //替换记录
+        $replace_record = array();
+        $class_map = array();
+        //设置依赖关系
+        foreach ($this->struct_list as $full_name => $struct) {
+            $struct->getAllExtendItem();
+            $namespace = $struct->getNamespace();
+            $pos = strrpos($namespace, '_');
+            $class_name = Struct::ignoreVersion($namespace) . '/' . $struct->getClassName();
+            $class_map[$class_name][$full_name] = $struct;
+            if (false === $pos) {
+                continue;
+            }
+            $ver = substr($namespace, $pos);
+            //如果 是以  _v2 类似的结束的
+            if (!preg_match('#^_v(\d+)$#', $ver, $re)) {
+                continue;
+            }
+            $version = $re[1];
+            $struct->setVersion($version);
+        }
+        /** @var Struct[] $class_group */
+        foreach ($class_map as $class_group) {
+            //如果 这个类名只有一个，并且版本号是1，不处理
+            if (1 === count($class_group) && 1 === current($class_group)->getVersion()) {
+                continue;
+            }
+            $max_version = -1;
+            $max_version_struct = null;
+            /**
+             * @var string $full_name
+             * @var Struct $struct
+             */
+            foreach ($class_group as $full_name => $struct) {
+                $version = $struct->getVersion();
+                if ($version > $max_version) {
+                    $max_version = $version;
+                    $max_version_struct = $struct;
+                }
+            }
+            if (null === $max_version_struct) {
+                continue;
+            }
+            //记录下替换设置
+            foreach ($class_group as $full_name => $struct) {
+                unset($this->struct_list[$full_name]);
+                $replace_record[$full_name] = $max_version_struct;
+            }
+            $new_full_name = Struct::ignoreVersion($struct->getNamespace()) . '/' . $struct->getClassName();
+            $this->struct_list[$new_full_name] = $struct;
+        }
+        //遍历所有的struct，将item中有引用到struct的地方都检查一下，检查是否被替换了
+        //设置依赖关系
+        foreach ($this->struct_list as $struct) {
+            $all_item = $struct->getAllExtendItem();
+            foreach ($all_item as $name => $item) {
+                $this->ignoreReplaceCheck($item, $replace_record);
+            }
+        }
+    }
+
+    /**
+     * Struct 之间的依赖关系
+     * @param Item $item
+     * @param Struct[] $replace_record
+     */
+    private function ignoreReplaceCheck($item, $replace_record)
+    {
+        $type = $item->getType();
+        if (ItemType::STRUCT === $type) {
+            /** @var StructItem $item */
+            $sub_struct = $item->getStruct();
+            $full_name = $sub_struct->getNamespace() . '/' . $sub_struct->getClassName();
+            if (isset($replace_record[$full_name])) {
+                $sub_struct = $replace_record[$full_name];
+                $item->setStruct($sub_struct);
+            }
+        } elseif (ItemType::ARR === $type) {
+            /** @var ListItem $item */
+            $this->ignoreReplaceCheck($item->getItem(), $replace_record);
+        } elseif (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $this->ignoreReplaceCheck($item->getValueItem(), $replace_record);
+        }
     }
 
     /**

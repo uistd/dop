@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol>
+    <model name="role_info" extend="/demo/role/role_info">
+        <string name="version_test"/>
+    </model>
+    <action name="demo_data">
+        <request>
+            <int name="test1"></int>
+            <string name="test2"></string>
+        </request>
+        <response extend="/xapi/result">
+            <int name="re_code"/>
+            <int name="test"/>
+            <model extend="role_info"/>
+        </response>
+    </action>
+    <action name="put_demo_role">
+        <request>
+            <string name="role_ids">
+                <plugin_valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>
+            </string>
+        </request>
+        <response extend="/xapi/result">
+            <map name="data">
+                <int note="role_id"/>
+                <struct extend="role_info" class_name="new_role_info" note="用户信息">
+                    <string name="remark" note="备注">
+                        <plugin_mock value="note"/>
+                    </string>
+                    <struct name="demo">
+                        <string name="user_name" note="用户名">
+                            <plugin_mock range="6,10"/>
+                        </string>
+                        <string name="name" note="真实姓名">
+                            <plugin_mock type="chinese_name"/>
+                        </string>
+                        <string name="mobile" note="手机号">
+                            <plugin_mock type="mobile"/>
+                        </string>
+                    </struct>
+                </struct>
+            </map>
+        </response>
+    </action>
+</protocol>
