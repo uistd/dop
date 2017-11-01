@@ -7,7 +7,7 @@ if (!isset($argv[1])) {
     exit("请输入swagger api file\n");
 }
 $doc_file = $argv[1];
-$file_name = isset($argv[2]) ? $argv[2] : 'swagger';
+$file_name = isset($argv[2]) ? $argv[2] : null;
 
 new SwaggerToXml($doc_file, $file_name);
 
@@ -42,12 +42,31 @@ class SwaggerToXml
     private $public_model;
 
     /**
+     * @var array 已经完成生成的公共model
+     */
+    private $public_model_done_list;
+
+    /**
+     * @var array 公共model的命名
+     */
+    private $public_model_name;
+
+    /**
+     * @var string
+     */
+    private $save_file_name;
+
+    /**
      * SwaggerToXml constructor.
      * @param string $doc_file
      * @param string $file_name
      */
     function __construct($doc_file, $file_name)
     {
+        if (empty($file_name)) {
+            $file_name = 'protocol';
+        }
+        $this->save_file_name = $file_name;
         $this->read($doc_file);
     }
 
@@ -57,6 +76,7 @@ class SwaggerToXml
      */
     private function read($doc_file)
     {
+        echo 'Load swagger schema...', PHP_EOL;
         $content = file_get_contents($doc_file);
         if (empty($content)) {
             exit('无法获取 ' . $doc_file . " 内容\n");
@@ -68,6 +88,7 @@ class SwaggerToXml
         if (!isset($schema['swagger'], $schema['definitions'], $schema['tags'], $schema['paths'])) {
             exit("无法请别 swagger json\n");
         }
+        echo 'Generating...', PHP_EOL;
         $this->readModels($schema['definitions']);
         $this->readAction($schema['paths']);
         $this->buildXml();
@@ -142,12 +163,11 @@ class SwaggerToXml
         $dom->push($action_node);
         $dom->backIndent()->pushStr('</protocol>');
         foreach ($this->actions as $name => $action_info) {
-            $action_name = str_replace('_', '/', $name);
-            $action_str = '<action name="'. $action_name .'"';
+            $action_str = '<action name="' . $name . '"';
             if (isset($action_info['summary'])) {
-                $action_str .= ' note="'.$action_info['summary'].'"';
+                $action_str .= ' note="' . $action_info['summary'] . '"';
             }
-            $action_node->pushStr($action_str .'>')->indent();
+            $action_node->pushStr($action_str . '>')->indent();
             $request_node = new CodeBuf();
             $response_node = new CodeBuf();
             $action_node->push($request_node);
@@ -161,8 +181,8 @@ class SwaggerToXml
                 $method = substr($name, 0, $tmp_pos);
             }
             if (!empty($action_info['request'])) {
-                $request_node->pushStr('<request method="'. $method .'">')->indent();
-                $this->buildModelXml($request_node, $action_info['request']);
+                $request_node->pushStr('<request method="' . $method . '">')->indent();
+                $this->buildModelXml($request_node, $action_info['request'], $name);
                 $request_node->backIndent()->pushStr('</request>');
             }
             if (!empty($action_info['response'])) {
@@ -173,39 +193,99 @@ class SwaggerToXml
                     $str .= ' extend="/api/result"';
                     unset($$response['is_standard_api']);
                 }
-                $response_node->pushStr($str .'>')->indent();
+                $response_node->pushStr($str . '>')->indent();
                 //如果剩下data 是model 类型
                 if ($is_standard_api && is_array($response['data']['type']) && 'model' === $response['data']['type']['type']) {
-                    $model_name = $action_name .'_data';
-                    $response_node->pushStr('<model name="data" class_name="'. $model_name .'">')->indent();
+                    $model_name = $name . '_data';
+                    $response_node->pushStr('<model name="data" class_name="' . $model_name . '">')->indent();
                     $model_info = $this->models[$response['data']['type']['ref']];
-                    $this->buildModelXml($response_node, $model_info);
+                    $this->buildModelXml($response_node, $model_info, $name);
                     $response_node->backIndent()->pushStr('</model>');
                 } else {
-                    $this->buildModelXml($response_node, $action_info['response']);
+                    $this->buildModelXml($response_node, $action_info['response'], $name);
                 }
-                $response_node->backIndent()->pushStr('</request>');
+                $response_node->backIndent()->pushStr('</response>');
             }
         }
-        print_r($this->public_model);
-        echo $dom->dump();
+        $this->buildPublicModel($model_node);
+        $dom->pushStr("\n");
+        $file_content = $dom->dump();
+        $save_file = $this->save_file_name .'.xml';
+        file_put_contents($save_file, $file_content);
+        echo 'Done, save protocol file to '. $save_file, PHP_EOL, PHP_EOL;
+    }
+
+    /**
+     * 生成公共的model
+     * @param CodeBuf $model_code_buf
+     */
+    private function buildPublicModel($model_code_buf)
+    {
+        while (!empty($this->public_model)) {
+            $key = key($this->public_model);
+            $name_arr = $this->public_model[$key];
+            unset($this->public_model[$key]);
+            $this->public_model_done_list[$key] = true;
+            $model_name = $name_arr['name'];
+            $model_buf = new CodeBuf();
+            $note = str_replace('#/definitions/', '', $key);
+            $model_buf->pushStr('<model name="' . $model_name . '" note="' . $note . '">')->indent();
+            $model = $this->models[$key];
+            $this->buildModelXml($model_buf, $model, $name_arr['parent_name']);
+            $model_buf->backIndent()->pushStr('</model>');
+            $model_code_buf->push($model_buf)->emptyLine();
+            $this->public_model_done_list[$key] = true;
+        }
+    }
+
+    /**
+     * 生成公共model命名
+     * @param string $name
+     * @param string $parentName
+     * @return string
+     */
+    private function makePublicModelName($name, $parentName)
+    {
+        $public_name = \FFan\Std\Common\Str::underlineName($parentName);
+        $name_arr = explode('_', $public_name);
+        $tmp_name_arr = [];
+        $tmp_name = '';
+        for ($i = count($name_arr) - 1; $i >= 0; --$i) {
+            $each_name = $name_arr[$i];
+            $tmp_name_arr[] = $each_name;
+            $tmp_name = join('_', $tmp_name_arr) . '_' . $name;
+            if (!isset($this->public_model_name[$tmp_name])) {
+                $this->public_model_name[$tmp_name] = true;
+                return $tmp_name;
+            }
+        }
+        //到最后都还没有找到，采用数字 编号
+        $i = 0;
+        $tmp_tmp_name = $tmp_name . $i;
+        while (!isset($this->public_model_name[$tmp_tmp_name])) {
+            $i++;
+            $tmp_tmp_name = $tmp_name . $i;
+        }
+        $this->public_model_name[$tmp_tmp_name] = true;
+        return $tmp_tmp_name;
     }
 
     /**
      * 生成model的xml
-     * @param CodeBuf $request_code
+     * @param CodeBuf $code_buf
      * @param array $items
+     * @param string $parent_name 父级名称
      */
-    private function buildModelXml($request_code, $items)
+    private function buildModelXml($code_buf, $items, $parent_name)
     {
-        foreach($items as $name => $item) {
+        foreach ($items as $name => $item) {
             $type = $item['type'];
             if (null === $type) {
                 continue;
             }
             $note = isset($item['note']) ? $item['note'] : '';
-            $item_node = $this->createTypeNode($type, $name, $note, false);
-            $request_code->push($item_node);
+            $item_node = $this->createTypeNode($type, $name, $parent_name, $note, false);
+            $code_buf->push($item_node);
         }
     }
 
@@ -213,11 +293,12 @@ class SwaggerToXml
      * 按类型生成node
      * @param string|array $type
      * @param string $name
+     * @param string $parent_name 父级名称
      * @param $note
      * @param bool $is_sub_item
      * @return CodeBuf
      */
-    private function createTypeNode($type, $name, $note = null, $is_sub_item = true)
+    private function createTypeNode($type, $name, $parent_name, $note = null, $is_sub_item = true)
     {
         $result = new CodeBuf();
         $sub_node = null;
@@ -229,22 +310,23 @@ class SwaggerToXml
             $arr_type = $type['type'];
             if ('array' === $arr_type) {
                 $type_str = 'list';
-                $sub_node = $this->createTypeNode($type['sub_item'], $name);
+                $sub_node = $this->createTypeNode($type['sub_item'], $name, $parent_name);
             } elseif ('model' === $type['type']) {
                 $type_str = 'model';
                 $ref = $type['ref'];
-                if (!isset($this->public_model[$ref])) {
-                    $this->public_model[$ref] = $name;
+                if (!isset($this->public_model_done_list[$ref]) && !isset($this->public_model[$ref])) {
+                    $extend_name = $this->makePublicModelName($name, $parent_name);
+                    $this->public_model[$ref] = array('name' => $extend_name, 'parent_name' => $parent_name);
                 }
-                $extend_str = ' extend="'.$name.'"';
+                $extend_str = ' extend="' . $this->public_model[$ref]['name'] . '"';
             }
         }
         $node_xml .= $type_str;
         $node_xml .= $extend_str;
         if (!$is_sub_item) {
-            $node_xml .= ' name="'.$name.'"';
+            $node_xml .= ' name="' . $name . '"';
             if (!empty($note)) {
-                $node_xml .= ' note="'. $note .'"';
+                $node_xml .= ' note="' . $note . '"';
             }
         }
         if (null === $sub_node) {
@@ -254,7 +336,7 @@ class SwaggerToXml
             $node_xml .= '>';
             $result->pushStr($node_xml)->indent();
             $result->push($sub_node);
-            $result->backIndent()->pushStr('</'.$type_str.'>');
+            $result->backIndent()->pushStr('</' . $type_str . '>');
         }
         return $result;
     }
@@ -348,10 +430,11 @@ class SwaggerToXml
                 'type' => 'array',
                 'sub_item' => $this->parseItem($name, $item['items'])
             );
-        }
-        //如果 有object  但没有ref，表示null
+        } //如果 有object  但没有ref，表示null
         elseif ('object' === $type) {
             return null;
+        } elseif ('number' === $type) {
+            $type = 'float';
         }
         return $type;
     }

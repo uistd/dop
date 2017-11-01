@@ -8,7 +8,7 @@
             <int name="test1"></int>
             <string name="test2"></string>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <int name="re_code"/>
             <int name="test"/>
             <model extend="role_info"/>
@@ -20,7 +20,7 @@
                 <plugin_valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>
             </string>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <map name="data">
                 <int note="role_id"/>
                 <struct extend="role_info" class_name="new_role_info" note="用户信息">

@@ -71,7 +71,7 @@
                 <plugin_valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>
             </int>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <struct name="data" extend="role_info"/>
         </response>
     </action>
@@ -82,7 +82,7 @@
                 <plugin_mock enum="10,20|30,35"/>
             </string>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <list name="data">
                 <struct extend="role_info"/>
             </list>
@@ -105,7 +105,7 @@
                 </int>
             </model>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <model name="data" class_name="new_data">
                 <int name="c"/>
                 <int name="d"/>
@@ -119,7 +119,7 @@
                 <plugin_valid  require="1" range="1," range-msg="role_id不能小于1" require-msg="role_id为必传参数"/>
             </int>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <model name="data">
                 <int name="c"/>
                 <int name="d"/>
@@ -128,7 +128,7 @@
     </action>
     <action name="demo_data">
         <request></request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <int name="re_code"/>
         </response>
     </action>
@@ -138,7 +138,7 @@
                 <plugin_valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>
             </string>
         </request>
-        <response extend="/xapi/result">
+        <response extend="/api/result">
             <map name="data">
                 <int note="role_id"/>
                 <struct extend="role_info" class_name="new_role_info" note="用户信息">
