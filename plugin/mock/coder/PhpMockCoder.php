@@ -220,7 +220,11 @@ class PhpMockCoder extends PluginCoderBase
                 $for_var_name = PackerBase::varName($depth, 'i');
                 $len_var_name = PackerBase::varName($depth, 'len');
                 $result_var_name = PackerBase::varName($depth, 'mock_arr');
-                self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
+                if (null !== $mock_rule) {
+                    self::mockValue($mock_buf, '$' . $len_var_name, $mock_rule, ItemType::INT);
+                } else {
+                    $mock_buf->pushStr('$' . $len_var_name . ' = mt_rand(1, 3);');
+                }
                 $mock_buf->pushStr('$' . $result_var_name . ' = array();');
                 $mock_buf->pushStr('for ($' . $for_var_name . ' = 0; $' . $for_var_name . ' < $' . $len_var_name . '; ++$' . $for_var_name . ') {');
                 $mock_buf->indent();
