@@ -828,6 +828,7 @@ class Manager
      */
     private function getCoderClass($coder_name)
     {
+        $coder_name = FFanStr::camelName($coder_name);
         static $coder_instance_arr = [];
         if (isset($coder_instance_arr[$coder_name])) {
             return $coder_instance_arr[$coder_name];
@@ -864,6 +865,7 @@ class Manager
     public function getPlugin($plugin_name)
     {
         static $plugin_instance = [];
+        $plugin_name = FFanStr::camelName($plugin_name);
         if (isset($plugin_instance[$plugin_name])) {
             return $plugin_instance[$plugin_name];
         }
@@ -895,6 +897,7 @@ class Manager
      */
     public function getCoderPath($coder_name)
     {
+        $coder_name = FFanStr::camelName($coder_name);
         if (!isset($this->coder_list[$coder_name])) {
             throw new Exception('Coder "' . $coder_name . '" is unregistered!');
         }
