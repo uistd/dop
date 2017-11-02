@@ -102,8 +102,7 @@ class SwaggerToXml
     {
         $tmp_action_arr = array();
         foreach ($paths as $path => $actions) {
-            $path = str_replace('{', '', $path);
-            $path = str_replace('}', '', $path);
+            $path = preg_replace('#\{(.*?)\}#', 'by_$1', $path );
             $path_arr = \FFan\Std\Common\Str::split($path, '/');
             foreach ($actions as $method => $info) {
                 $tmp_action_arr[] = array(
@@ -191,7 +190,7 @@ class SwaggerToXml
                 $str = '<response';
                 if ($is_standard_api) {
                     $str .= ' extend="/api/result"';
-                    unset($$response['is_standard_api']);
+                    unset($response['is_standard_api']);
                 }
                 $response_node->pushStr($str . '>')->indent();
                 //如果剩下data 是model 类型
