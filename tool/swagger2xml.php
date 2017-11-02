@@ -102,7 +102,7 @@ class SwaggerToXml
     {
         $tmp_action_arr = array();
         foreach ($paths as $path => $actions) {
-            $path = preg_replace('#\{(.*?)\}#', 'by_$1', $path );
+            $path = preg_replace('#\{(.*?)\}#', 'by_$1', $path);
             $path_arr = \FFan\Std\Common\Str::split($path, '/');
             foreach ($actions as $method => $info) {
                 $tmp_action_arr[] = array(
@@ -209,9 +209,9 @@ class SwaggerToXml
         $this->buildPublicModel($model_node);
         $dom->pushStr("\n");
         $file_content = $dom->dump();
-        $save_file = $this->save_file_name .'.xml';
+        $save_file = $this->save_file_name . '.xml';
         file_put_contents($save_file, $file_content);
-        echo 'Done, save protocol file to '. $save_file, PHP_EOL, PHP_EOL;
+        echo 'Done, save protocol file to ' . $save_file, PHP_EOL, PHP_EOL;
     }
 
     /**
