@@ -21,6 +21,8 @@
   "autoload": {
     "psr-4": {
       "FFan\\Dop\\" : "base",
+      "FFan\\Dop\\Protocol\\": "base/protocol",
+      "FFan\\Dop\\Build\\": "base/build",
       "FFan\\Dop\\Coder\\" : "coder",
       "FFan\\Dop\\Plugin\\" : "plugin"
     }
