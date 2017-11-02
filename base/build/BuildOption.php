@@ -124,6 +124,16 @@ class BuildOption
     private $packer_extra;
 
     /**
+     * @var array 只包含指定的文件
+     */
+    private $include_file;
+
+    /**
+     * @var array 不包含指定的文件
+     */
+    private $exclude_file;
+
+    /**
      * BuildOption constructor.
      * @param string $section_name
      * @param array $section_conf
@@ -148,6 +158,8 @@ class BuildOption
             'ignore_get' => false,
             //是否保持原始名称
             'keep_original_name' => false,
+            'include_file' => null,
+            'exclude_file' => null
         );
         if (is_array($public_conf)) {
             //将Public config append to section_conf
@@ -212,6 +224,45 @@ class BuildOption
         }
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
+        if (isset($section_conf['include_file'])) {
+            $this->include_file = $this->parseFileFilter($section_conf['include_file']);
+        }
+        if (isset($section_conf['exclude_file'])) {
+            $this->exclude_file = $this->parseFileFilter($section_conf['exclude_file']);
+        }
+    }
+
+    /**
+     * 解析文件过滤
+     * @param string $file_filter
+     * @return array
+     */
+    private function parseFileFilter($file_filter)
+    {
+        $filter_arr = FFanStr::split($file_filter, ',');
+        return array_flip($filter_arr);
+    }
+
+    /**
+     * 是否是过滤这个文件
+     * @param string $file
+     * @return bool
+     */
+    public function isIgnoreFile($file)
+    {
+        //在排除的文件里
+        if (isset($this->exclude_file[$file])) {
+            return true;
+        }
+        //没有指定的文件
+        if (empty($this->include_file) || isset($this->include_file[$file])) {
+            return false;
+        }
+        $path_name = dirname($file);
+        if ('.' !== $path_name) {
+            return $this->isIgnoreFile($path_name);
+        }
+        return true;
     }
 
     /**

@@ -376,7 +376,7 @@ class Manager
 
     /**
      * 初始化协议文件
-     * @param $section
+     * @param string $section
      * @return bool
      */
     public function initProtocol($section = 'main')
@@ -397,6 +397,10 @@ class Manager
         $this->build_file_list = $build_list;
         //解析文件
         foreach ($build_list as $xml_file => $v) {
+            if ($build_opt->isIgnoreFile($xml_file)) {
+                $this->buildLog('Ignore file:'. $xml_file);
+                continue;
+            }
             $this->parseFile($xml_file);
         }
         //如果忽略版本号，先整理版本号
