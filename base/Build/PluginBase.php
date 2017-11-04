@@ -192,7 +192,7 @@ abstract class PluginBase extends ConfigBase
      */
     public function getBuildPath()
     {
-        return $this->getConfigString('build_path', 'plugin_'. $this->plugin_name);
+        return $this->getConfigString('build_path', 'Plugin'. $this->plugin_name);
     }
 
     /**
@@ -204,7 +204,7 @@ abstract class PluginBase extends ConfigBase
         if (!empty($ns)) {
             return $ns;
         } else {
-            return $this->getCoder()->joinNameSpace('plugin/'. $this->plugin_name);
+            return $this->getCoder()->joinNameSpace('plugin'. $this->plugin_name);
         }
     }
 }

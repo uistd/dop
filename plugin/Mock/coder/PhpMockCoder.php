@@ -29,26 +29,28 @@ class PhpMockCoder extends PluginCoderBase
     private $current_file;
 
     /**
-     * @var FileBuf
+     * @var Struct[] 使用到的struct
      */
-    private $autoload_buf;
+    private $struct_list;
 
     /**
      * 生成插件 PHP 代码
      */
     public function buildCode()
     {
-        $folder = $this->coder->getFolder();
-        $include_file = $folder->touch($this->plugin->getBuildPath(), 'include.php');
-        $this->plugin->loadTpl($include_file, 'tpl/include.tpl');
-        $autoload_buf = $include_file->getBuf('autoload');
-        if (!$autoload_buf) {
-            throw new Exception('autoload buf mission');
-        }
-        $this->autoload_buf = $autoload_buf;
-
+        $this->coder->structIterator(array($this, 'getAllstruct'));
         //按xml文件生成代码
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
+    }
+
+    /**
+     * 保存使用到的struct
+     * @param Struct $struct
+     */
+    public function getAllstruct(Struct $struct)
+    {
+        $key = $struct->getFullName();
+        $this->struct_list[$key] = true;
     }
 
     /**
@@ -70,10 +72,9 @@ class PhpMockCoder extends PluginCoderBase
     {
         $this->current_file = $file_name;
         $build_path = $this->plugin->getBuildPath();
-        $path_name = '';
         //如果 带 子目录
         if (false !== strpos($file_name, '/')) {
-            $path_name = '/' . dirname($file_name);
+            $path_name = '/' . FFanStr::camelName(dirname($file_name));
             $build_path .= $path_name;
         }
         $class_name = $this->fileNameToClassName($file_name);
@@ -93,13 +94,12 @@ class PhpMockCoder extends PluginCoderBase
         $main_buf->emptyLine();
         /** @var Struct $struct */
         foreach ($struct_list as $struct) {
+            $full_name = $struct->getFullName();
+            if (!isset($this->struct_list[$full_name])) {
+                continue;
+            }
             $this->buildStructCode($struct, $main_buf, $file_name);
         }
-        $file_path = '$mock_file_dir';
-        if (!empty($path_name)) {
-            $file_path .= " . '" . $path_name . "'";
-        }
-        $this->autoload_buf->pushUniqueStr("'\\" . $class_ns . "' => " . $file_path . ',');
     }
 
     /**
