@@ -1,15 +1,5 @@
 <?php
-//php swagger2xml.php http://feed.intra.sit.ffan.com/v2/api-docs
 use FFan\Dop\Build\CodeBuf;
-
-require_once '../vendor/autoload.php';
-if (!isset($argv[1])) {
-    exit("请输入swagger api file\n");
-}
-$doc_file = $argv[1];
-$file_name = isset($argv[2]) ? $argv[2] : null;
-
-new SwaggerToXml($doc_file, $file_name);
 
 /**
  * Class SwaggerToXml
@@ -54,20 +44,111 @@ class SwaggerToXml
     /**
      * @var string
      */
-    private $save_file_name;
+    private $save_file_name = '';
+
+    /**
+     * @var array 当前存在的model 使用的名称
+     */
+    private $exist_model_name;
+
+    /**
+     * @var array 当前存在的action 使用的名称
+     */
+    private $exist_action_name;
+
+    /**
+     * @var array 当前存在的action 使用的uri名称
+     */
+    private $exist_action_uri;
+
+    /**
+     * @var array 每个action 对应的fullPath名称
+     */
+    private $action_original_name;
+
+    /**
+     * @var string api分组名称
+     */
+    private $api_group = '';
 
     /**
      * SwaggerToXml constructor.
      * @param string $doc_file
      * @param string $file_name
+     * @param array $exist_action_name 指定 action name
+     * @param array $exist_model_name 指定 model_name
      */
-    function __construct($doc_file, $file_name)
+    function __construct($doc_file, $file_name, array $exist_action_name = [], array $exist_model_name = [])
     {
         if (empty($file_name)) {
             $file_name = 'protocol';
         }
+        $this->api_group = basename($file_name, '.xml');
         $this->save_file_name = $file_name;
+        $this->exist_model_name = $exist_model_name;
+        $this->exist_action_name = $exist_action_name;
+        $this->parseCurrentFile();
         $this->read($doc_file);
+    }
+
+    /**
+     * 解析当前文件, 保存好人工写入的一些东西
+     */
+    private function parseCurrentFile()
+    {
+        if (!is_file($this->save_file_name)) {
+            return;
+        }
+        $xml_handle = new \DOMDocument();
+        $xml_handle->load($this->save_file_name);
+        $xml_path = new DOMXpath($xml_handle);
+        $model_list = $xml_path->query('/protocol/model');
+        if (null === $model_list) {
+            return;
+        }
+        for ($i = 0; $i < $model_list->length; ++$i) {
+            /** @var \DOMElement $model */
+            $model = $model_list->item($i);
+            if ($model->hasAttribute('swagger_ref')) {
+                $name = $model->getAttribute('name');
+                $ref = $model->getAttribute('swagger_ref');
+                if (!isset($this->exist_model_name[$ref])) {
+                    $this->exist_model_name[$ref] = $name;
+                }
+            }
+        }
+        $action_list = $xml_path->query('/protocol/action');
+        for ($i = 0; $i < $action_list->length; ++$i) {
+            /** @var \DOMElement $model */
+            $action = $action_list->item($i);
+            $action_name = $action->getAttribute('name');
+            if ($action->hasAttribute('original_name')) {
+                $original_name = $action->getAttribute('original_name');
+                if (!isset($this->exist_action_name[$original_name])) {
+                    $this->exist_action_name[$original_name] = $action_name;
+                }
+            }
+            $node_list = $action->childNodes;
+            for ($n = 0; $n < $node_list->length; ++$n) {
+                $node = $node_list->item($n);
+                if (XML_ELEMENT_NODE !== $node->nodeType) {
+                    continue;
+                }
+                $node_name = strtolower($node->nodeName);
+                if ('request' !== $node_name) {
+                    continue;
+                }
+                $uri = $node->getAttribute('uri');
+                if (empty($uri)) {
+                    continue;
+                }
+                $this->exist_action_uri[$action_name] = $uri;
+            }
+        }
+        //标识 已经被占用名称
+        foreach ($this->exist_model_name as $tmp_name => $v) {
+            $this->public_model_name[$tmp_name] = true;
+        }
     }
 
     /**
@@ -101,15 +182,23 @@ class SwaggerToXml
     private function readAction($paths)
     {
         $tmp_action_arr = array();
-        foreach ($paths as $path => $actions) {
-            $path = preg_replace('#\{(.*?)\}#', 'by_$1', $path);
+        foreach ($paths as $full_path => $actions) {
+            $path = preg_replace('#\{(.*?)\}#', 'by_$1', $full_path);
             $path_arr = \FFan\Std\Common\Str::split($path, '/');
             foreach ($actions as $method => $info) {
-                $tmp_action_arr[] = array(
+                $full_name = $method . $full_path;
+                $tmp_action = array(
                     'path_arr' => $path_arr,
                     'method' => $method,
-                    'info' => $info
+                    'info' => $info,
+                    'full_path' => $full_name
                 );
+                //如果 这个名称已经定义过了
+                if (isset($this->exist_action_name[$full_name])) {
+                    $this->tmp_action[$this->exist_action_name[$full_name]] = $tmp_action;
+                } else {
+                    $tmp_action_arr[] = $tmp_action;
+                }
             }
         }
         $rename_arr = array();
@@ -143,6 +232,7 @@ class SwaggerToXml
         }
         foreach ($this->tmp_action as $name => $tmp_action) {
             $this->actions[$name] = $this->parseAction($tmp_action['info']);
+            $this->action_original_name[$name] = $tmp_action['full_path'];
         }
         $this->tmp_action = null;
     }
@@ -166,6 +256,7 @@ class SwaggerToXml
             if (isset($action_info['summary'])) {
                 $action_str .= ' note="' . $action_info['summary'] . '"';
             }
+            $action_str .= ' original_name="' . $this->action_original_name[$name] . '"';
             $action_node->pushStr($action_str . '>')->indent();
             $request_node = new CodeBuf();
             $response_node = new CodeBuf();
@@ -180,7 +271,12 @@ class SwaggerToXml
                 $method = substr($name, 0, $tmp_pos);
             }
             if (!empty($action_info['request'])) {
-                $request_node->pushStr('<request method="' . $method . '">')->indent();
+                if (isset($this->exist_action_uri[$name])) {
+                    $uri = $this->exist_action_uri[$name];
+                } else {
+                    $uri = str_replace($method, $this->api_group, $this->action_original_name[$name]);
+                }
+                $request_node->pushStr('<request method="' . $method . '" uri="' . $uri . '">')->indent();
                 $this->buildModelXml($request_node, $action_info['request'], $name);
                 $request_node->backIndent()->pushStr('</request>');
             }
@@ -209,7 +305,7 @@ class SwaggerToXml
         $this->buildPublicModel($model_node);
         $dom->pushStr("\n");
         $file_content = $dom->dump();
-        $save_file = $this->save_file_name . '.xml';
+        $save_file = $this->save_file_name;
         file_put_contents($save_file, $file_content);
         echo 'Done, save protocol file to ' . $save_file, PHP_EOL, PHP_EOL;
     }
@@ -228,7 +324,7 @@ class SwaggerToXml
             $model_name = $name_arr['name'];
             $model_buf = new CodeBuf();
             $note = str_replace('#/definitions/', '', $key);
-            $model_buf->pushStr('<model name="' . $model_name . '" note="' . $note . '">')->indent();
+            $model_buf->pushStr('<model name="' . $model_name . '" note="' . $note . '" swagger_ref="' . $key . '">')->indent();
             $model = $this->models[$key];
             $this->buildModelXml($model_buf, $model, $name_arr['parent_name']);
             $model_buf->backIndent()->pushStr('</model>');
@@ -314,7 +410,11 @@ class SwaggerToXml
                 $type_str = 'model';
                 $ref = $type['ref'];
                 if (!isset($this->public_model_done_list[$ref]) && !isset($this->public_model[$ref])) {
-                    $extend_name = $this->makePublicModelName($name, $parent_name);
+                    if (isset($this->exist_model_name[$ref])) {
+                        $extend_name = $this->exist_model_name[$ref];
+                    } else {
+                        $extend_name = $this->makePublicModelName($name, $parent_name);
+                    }
                     $this->public_model[$ref] = array('name' => $extend_name, 'parent_name' => $parent_name);
                 }
                 $extend_str = ' extend="' . $this->public_model[$ref]['name'] . '"';
