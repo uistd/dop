@@ -107,7 +107,7 @@ class UisSdkPack extends PackerBase
         $method_buf->push($return_buf);
         $method_buf->pushStr(' * @throws ActionException');
         $method_buf->pushStr(' */');
-        $method_buf->pushStr('public function getResult($result_mode = HttpClient::DEFAULT_MODE, $success_status = 200)');
+        $method_buf->pushStr('public function getResult($result_mode = HttpClient::COMPATIBLE_MODE, $success_status = 200)');
         $method_buf->pushStr('{')->indent();
         $method_buf->pushStr('$api_result = $this->getResponse();');
         $method_buf->pushStr('if (HttpClient::STRICT_MODE === $result_mode && $success_status !== $api_result->status) {')->indent();
