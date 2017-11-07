@@ -305,9 +305,10 @@ class SwaggerToXml
         $this->buildPublicModel($model_node);
         $dom->pushStr("\n");
         $file_content = $dom->dump();
-        $save_file = $this->save_file_name;
-        file_put_contents($save_file, $file_content);
-        echo 'Done, save protocol file to ' . $save_file, PHP_EOL, PHP_EOL;
+        $save_path = dirname($this->save_file_name);
+        \FFan\Std\Common\Utils::pathWriteCheck($save_path);
+        file_put_contents($this->save_file_name, $file_content);
+        echo 'Done, save protocol file to ' . $this->save_file_name, PHP_EOL, PHP_EOL;
     }
 
     /**
