@@ -7,6 +7,7 @@ use FFan\Dop\Build\FileBuf;
 use FFan\Dop\Build\PackerBase;
 use FFan\Dop\Build\StrBuf;
 use FFan\Dop\Protocol\Item;
+use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Struct;
 use FFan\Std\Common\Str as FFanStr;
 
@@ -16,6 +17,15 @@ use FFan\Std\Common\Str as FFanStr;
  */
 class UisSdkPack extends PackerBase
 {
+    /**
+     * 获取依赖的packer
+     * @return null|array
+     */
+    public function getRequirePacker()
+    {
+        return array('fix');
+    }
+
     /**
      * 生成定制的方法
      * @param Struct $struct 结构体
@@ -66,7 +76,7 @@ class UisSdkPack extends PackerBase
             $name = FFanStr::camelName($action_node->getAttribute('name'));
             $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) . '_class_suffix');
             $response_class_name = $name . FFanStr::camelName($class_name_suffix);
-            $response_struct = $this->coder->getManager()->getStruct('/'. $struct->getFile(false) .'/'. $response_class_name);
+            $response_struct = $this->coder->getManager()->getStruct('/' . $struct->getFile(false) . '/' . $response_class_name);
             if ($response_struct) {
                 $this->buildGetResult($response_struct, $method_buf);
             }
@@ -85,17 +95,33 @@ class UisSdkPack extends PackerBase
         }
         $method_buf->emptyLine();
         $return_buf = new StrBuf();
+        $import_buf = $this->file_buf->getBuf(FileBuf::IMPORT_BUF);
+        if ($import_buf) {
+            $import_buf->pushStr('use FFan\Dop\Uis\ActionException;');
+        }
         $return_buf->pushStr(' * @return ');
         $method_buf->pushStr('/**');
         $method_buf->pushStr(' * 获取返回的结果');
+        $method_buf->pushStr(' * @param int $result_mode 模式：默认，严格，兼容 三种模式');
+        $method_buf->pushStr(' * @param int $success_status 成功的status');
         $method_buf->push($return_buf);
+        $method_buf->pushStr(' * @throws ActionException');
         $method_buf->pushStr(' */');
-        $method_buf->pushStr('public function getResult()');
+        $method_buf->pushStr('public function getResult($result_mode = HttpClient::DEFAULT_MODE, $success_status = 200)');
         $method_buf->pushStr('{')->indent();
+        $method_buf->pushStr('$api_result = $this->getResponse();');
+        $method_buf->pushStr('if (HttpClient::STRICT_MODE === $result_mode && $success_status !== $api_result->status) {')->indent();
+        $method_buf->pushStr('self::fixErrorMessage($api_result);');
+        $method_buf->pushStr('throw new ActionException($api_result->message, $api_result->status);');
+        $method_buf->backIndent()->pushStr('}');
         $method_buf->pushStr('$result = new ' . $struct->getClassName() . '();');
         $all_item = $struct->getAllExtendItem();
+        $method_buf->pushStr('if ($success_status === $api_result->status) {')->indent();
         $method_buf->pushStr('$data = $this->getResponseData();');
         $method_buf->pushStr('$result->arrayUnpack($data);');
+        $method_buf->backIndent()->pushStr('} elseif (HttpClient::COMPATIBLE_MODE === $result_mode) {')->indent();
+        $method_buf->pushStr('$result->fixNullData();');
+        $method_buf->backIndent()->pushStr('}');
         if (isset($all_item['status'], $all_item['message'], $all_item['data'])) {
             /** @var Item $data_item */
             $data_item = $all_item['data'];
