@@ -451,6 +451,9 @@ class SwaggerToXml
             'summary' => $action_info['summary']
         );
         $request = array();
+        if (empty($action_info['parameters'])) {
+            $action_info['parameters'] = array();
+        }
         foreach ($action_info['parameters'] as $param) {
             $name = $param['name'];
             $item = array('name' => $name);
