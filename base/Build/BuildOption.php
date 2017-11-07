@@ -285,6 +285,15 @@ class BuildOption
     }
 
     /**
+     * 是否忽略get请求
+     * @return boolean
+     */
+    public function isIgnoreGet()
+    {
+        return (bool)$this->getConfig('ignore_get', 0);
+    }
+
+    /**
      * 解析packer_struct
      * @param string $conf_str
      * @return array

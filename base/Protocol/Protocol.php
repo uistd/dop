@@ -75,7 +75,7 @@ class Protocol
     /**
      * @var array 允许的方法
      */
-    //private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
+    private static $allow_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'DELETE');
 
     /**
      * @var Manager
@@ -349,9 +349,11 @@ class Protocol
         $node_list = $action->childNodes;
         $request_count = 0;
         $response_count = 0;
-        $ignore_get = (int)$this->build_opt->getConfig('ignore_get', 0);
         $note_info = $action->getAttribute('note');
         $action_method = $action->getAttribute('method');
+        if (empty($action_method)) {
+            $action_method = 'get';
+        }
         $extra_packer = $this->parseExtraPacer($action);
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
@@ -361,6 +363,7 @@ class Protocol
             }
             $class_name = $action_name;
             $node_name = strtolower($node->nodeName);
+            $method = '';
             if (self::REQUEST_NODE === $node_name) {
                 if (++$request_count > 1) {
                     throw new Exception('Only one request node allowed');
@@ -370,14 +373,7 @@ class Protocol
                 if (empty($method)) {
                     $method = $action_method;
                 }
-                if (!is_string($method)) {
-                    $method = 'get';
-                }
                 $node->setAttribute('method', $method);
-                //不生成get类
-                if (1 === $ignore_get && 'get' === strtolower(trim($method))) {
-                    continue;
-                }
                 $type = Struct::TYPE_REQUEST;
                 //$node_name = $build_opt->getConfig('request_class_suffix', 'request');
             } elseif (self::RESPONSE_NODE === $node_name) {
@@ -400,6 +396,14 @@ class Protocol
                 $node_str .= ' uri: '. $node->getAttribute('uri');
             }
             $struct->setNote($node_str);
+            //如果 是request
+            if (Struct::TYPE_REQUEST === $type) {
+                $method = strtoupper($method);
+                if (!in_array($method, self::$allow_method_list)) {
+                    throw new Exception('不支持的method:'. $method);
+                }
+                $struct->setMethod($method);
+            }
             $this->addExtraPacker($extra_packer, $struct);
         }
     }

@@ -151,6 +151,10 @@ abstract class CoderBase extends ConfigBase
             if (!$this->build_opt->hasBuildProtocol($struct_type)) {
                 continue;
             }
+            //如果 忽略了 Get 请求
+            if ($struct_type === Struct::TYPE_REQUEST && $this->build_opt->isIgnoreGet()) {
+                continue;
+            }
             //第一次不处理 struct  model
             if ($struct_type === Struct::TYPE_STRUCT) {
                 continue;

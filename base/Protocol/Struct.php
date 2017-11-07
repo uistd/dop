@@ -116,6 +116,11 @@ class Struct
     private $version = 1;
 
     /**
+     * @var string 方法 request struct使用
+     */
+    private $method;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -464,6 +469,7 @@ class Struct
 
     /**
      * 版本号
+     * @param int $ver
      */
     public function setVersion($ver)
     {
@@ -480,6 +486,24 @@ class Struct
     public function getVersion()
     {
         return $this->version;
+    }
+
+    /**
+     * 设置请求方法
+     * @param $method
+     */
+    public function setMethod($method)
+    {
+        $this->method = $method;
+    }
+
+    /**
+     * 获取请求方法
+     * @return string
+     */
+    public function getMethod()
+    {
+        return $this->method;
     }
 
     /**
