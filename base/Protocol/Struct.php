@@ -121,6 +121,11 @@ class Struct
     private $method;
 
     /**
+     * @var string uri
+     */
+    private $uri;
+
+    /**
      * Struct constructor.
      * @param string $namespace 命名空间
      * @param string $name 类名
@@ -504,6 +509,24 @@ class Struct
     public function getMethod()
     {
         return $this->method;
+    }
+
+    /**
+     * 设置uri
+     * @param $uri
+     */
+    public function setUri($uri)
+    {
+        $this->uri = $uri;
+    }
+
+    /**
+     * 获取uri
+     * @return string
+     */
+    public function getUri()
+    {
+        return $this->uri;
     }
 
     /**
