@@ -270,16 +270,16 @@ class SwaggerToXml
             } else {
                 $method = substr($name, 0, $tmp_pos);
             }
-            if (!empty($action_info['request'])) {
-                if (isset($this->exist_action_uri[$name])) {
-                    $uri = $this->exist_action_uri[$name];
-                } else {
-                    $uri = str_replace($method, $this->api_group, $this->action_original_name[$name]);
-                }
-                $request_node->pushStr('<request method="' . $method . '" uri="' . $uri . '">')->indent();
-                $this->buildModelXml($request_node, $action_info['request'], $name);
-                $request_node->backIndent()->pushStr('</request>');
+            if (isset($this->exist_action_uri[$name])) {
+                $uri = $this->exist_action_uri[$name];
+            } else {
+                $uri = str_replace($method, $this->api_group, $this->action_original_name[$name]);
             }
+            $request_node->pushStr('<request method="' . $method . '" uri="' . $uri . '">')->indent();
+            if (!empty($action_info['request'])) {
+                $this->buildModelXml($request_node, $action_info['request'], $name);
+            }
+            $request_node->backIndent()->pushStr('</request>');
             if (!empty($action_info['response'])) {
                 $response = $action_info['response'];
                 $is_standard_api = isset($response['is_standard_api']);
