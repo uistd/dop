@@ -160,6 +160,10 @@ abstract class CoderBase extends ConfigBase
                 continue;
             }
             $this->loadAllRequireStruct($all_require_struct, $struct);
+            //忽略主StructModel
+            if (Struct::TYPE_RESPONSE === $struct_type && $this->isIgnoreResponseStruct()) {
+                continue;
+            }
             call_user_func($callback, $struct);
         }
         //生成依赖的struct
@@ -742,5 +746,14 @@ abstract class CoderBase extends ConfigBase
     public function getName()
     {
         return $this->coder_name;
+    }
+
+    /**
+     * 是否忽略返回主协议，只生成数据model
+     * @return bool
+     */
+    private function isIgnoreResponseStruct()
+    {
+        return (bool)$this->build_opt->getConfig('ignore_response_main_model', false);
     }
 }
