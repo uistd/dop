@@ -23,7 +23,7 @@
       "FFan\\Dop\\" : "base",
       "FFan\\Dop\\Coder\\" : "coder",
       "FFan\\Dop\\Plugin\\" : "plugin",
-      "FFan\\Dop\\Scheme\\" : "scheme"
+      "FFan\\Dop\\Tool\\" : "tool"
     }
   },
   "minimum-stability": "dev",

@@ -151,14 +151,26 @@ abstract class CoderBase extends ConfigBase
             if (!$this->build_opt->hasBuildProtocol($struct_type)) {
                 continue;
             }
+            //如果 忽略了 Get 请求
+            if ($struct_type === Struct::TYPE_REQUEST && $this->build_opt->isIgnoreGet()) {
+                continue;
+            }
             //第一次不处理 struct  model
             if ($struct_type === Struct::TYPE_STRUCT) {
                 continue;
             }
             $this->loadAllRequireStruct($all_require_struct, $struct);
+            //忽略主StructModel
+            if (Struct::TYPE_RESPONSE === $struct_type && $this->isIgnoreResponseStruct()) {
+                continue;
+            }
             call_user_func($callback, $struct);
         }
         //生成依赖的struct
+        /**
+         * @var int $id
+         * @var Struct $req_struct
+         */
         foreach ($all_require_struct as $id => $req_struct) {
             call_user_func($callback, $req_struct);
         }
@@ -734,5 +746,14 @@ abstract class CoderBase extends ConfigBase
     public function getName()
     {
         return $this->coder_name;
+    }
+
+    /**
+     * 是否忽略返回主协议，只生成数据model
+     * @return bool
+     */
+    private function isIgnoreResponseStruct()
+    {
+        return (bool)$this->build_opt->getConfig('ignore_response_main_model', false);
     }
 }

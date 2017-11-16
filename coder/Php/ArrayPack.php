@@ -150,7 +150,7 @@ class ArrayPack extends PackerBase
             case ItemType::STRUCT:
                 /** @var StructItem $item */
                 if (0 === $depth) {
-                    $code_buf->pushStr('if ($' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
+                    $code_buf->pushStr('if (isset($'.$var_name.') && $' . $var_name . ' instanceof ' . $item->getStructName() . ') {');
                     $code_buf->pushIndent('$' . $result_var . ' = $' . $var_name . '->arrayPack($empty_convert);');
                     $code_buf->pushStr('}');
                 } else {

@@ -14,7 +14,6 @@ use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Dop\Protocol\StructItem;
-use FFan\Dop\Scheme\File;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
 
@@ -33,6 +32,11 @@ class Manager
      * @var array 解析过的xml列表
      */
     private $xml_list = [];
+
+    /**
+     * @var array 所有的协议文件
+     */
+    private $all_file_list;
 
     /**
      * @var string 协议基础路径
@@ -91,6 +95,11 @@ class Manager
     private $build_section;
 
     /**
+     * @var bool 是否解析过协议文件
+     */
+    private $init_protocol_flag = false;
+
+    /**
      * @var CoderBase 当前Coder
      */
     private $current_coder;
@@ -114,11 +123,6 @@ class Manager
      * @var \DOMElement 当前正在解析的节点
      */
     private static $current_struct;
-
-    /**
-     * @var File[] 协议列表
-     */
-    private $scheme_list;
 
     /**
      * 初始化
@@ -273,6 +277,16 @@ class Manager
     }
 
     /**
+     * 解析指定文件
+     * @param string $file
+     */
+    public function parseFile($file)
+    {
+        $xml_protocol = $this->loadXmlProtocol($file);
+        $xml_protocol->query();
+    }
+
+    /**
      * 应用着色器
      */
     public function applyShader()
@@ -361,21 +375,8 @@ class Manager
     }
 
     /**
-     * 获取scheme
-     * @param $namespace
-     * @return File|null
-     */
-    public function getScheme($namespace)
-    {
-        if (!isset($this->scheme_list[$namespace])) {
-            return null;
-        }
-        return $this->scheme_list[$namespace];
-    }
-
-    /**
      * 初始化协议文件
-     * @param $section
+     * @param string $section
      * @return bool
      */
     public function initProtocol($section = 'main')
@@ -390,24 +391,130 @@ class Manager
         $this->current_build_opt = $build_opt;
         $this->build_message = '';
 
+        $this->init_protocol_flag = true;
         $file_list = $this->getAllFileList();
-        foreach ($file_list as $file => $modify_time) {
-            $ns = str_replace('.xml', '', strtolower($file));
-            $this->scheme_list[$ns] = new Scheme\File($this, $file);
+        $build_list = $file_list;
+        $this->build_file_list = $build_list;
+        //解析文件
+        foreach ($build_list as $xml_file => $v) {
+            if ($build_opt->isIgnoreFile($xml_file)) {
+                $this->buildLog('Ignore file:'. $xml_file);
+                continue;
+            }
+            $this->parseFile($xml_file);
         }
-        $this->build_file_list = $file_list;
-        foreach ($this->scheme_list as $ns => $scheme_file) {
-            new Protocol($this, $ns);
+        //如果忽略版本号，先整理版本号
+        if ($build_opt->getConfig('ignore_version')) {
+            $this->ignoreVersion();
         }
 
         //设置依赖关系
-        /*foreach ($this->struct_list as $struct) {
+        foreach ($this->struct_list as $struct) {
+            //echo 'check: ', $struct->getNamespace() .'/'. $struct->getClassName(), PHP_EOL;
             $all_item = $struct->getAllExtendItem();
             foreach ($all_item as $name => $item) {
                 $this->structRequire($item, $struct);
             }
-        }*/
+        }
+
+        //如果忽略版本号，重新整理版本号
+        if ($build_opt->getConfig('ignore_version')) {
+            foreach ($this->struct_list as $struct) {
+                $struct->resetNameSpaceIgnoreVersion();
+            }
+        }
         return true;
+    }
+
+    /**
+     * 忽略版本号处理
+     */
+    private function ignoreVersion()
+    {
+        //替换记录
+        $replace_record = array();
+        $class_map = array();
+        //设置依赖关系
+        foreach ($this->struct_list as $full_name => $struct) {
+            $struct->getAllExtendItem();
+            $namespace = $struct->getNamespace();
+            $pos = strrpos($namespace, '_');
+            $class_name = Struct::ignoreVersion($namespace) . '/' . $struct->getClassName();
+            $class_map[$class_name][$full_name] = $struct;
+            if (false === $pos) {
+                continue;
+            }
+            $ver = substr($namespace, $pos);
+            //如果 是以  _v2 类似的结束的
+            if (!preg_match('#^_v(\d+)$#', $ver, $re)) {
+                continue;
+            }
+            $version = $re[1];
+            $struct->setVersion($version);
+        }
+        /** @var Struct[] $class_group */
+        foreach ($class_map as $class_group) {
+            //如果 这个类名只有一个，并且版本号是1，不处理
+            if (1 === count($class_group) && 1 === current($class_group)->getVersion()) {
+                continue;
+            }
+            $max_version = -1;
+            $max_version_struct = null;
+            /**
+             * @var string $full_name
+             * @var Struct $struct
+             */
+            foreach ($class_group as $full_name => $struct) {
+                $version = $struct->getVersion();
+                if ($version > $max_version) {
+                    $max_version = $version;
+                    $max_version_struct = $struct;
+                }
+            }
+            if (null === $max_version_struct) {
+                continue;
+            }
+            //记录下替换设置
+            foreach ($class_group as $full_name => $struct) {
+                unset($this->struct_list[$full_name]);
+                $replace_record[$full_name] = $max_version_struct;
+            }
+            $new_full_name = Struct::ignoreVersion($struct->getNamespace()) . '/' . $struct->getClassName();
+            $this->struct_list[$new_full_name] = $struct;
+        }
+        //遍历所有的struct，将item中有引用到struct的地方都检查一下，检查是否被替换了
+        //设置依赖关系
+        foreach ($this->struct_list as $struct) {
+            $all_item = $struct->getAllExtendItem();
+            foreach ($all_item as $name => $item) {
+                $this->ignoreReplaceCheck($item, $replace_record);
+            }
+        }
+    }
+
+    /**
+     * Struct 之间的依赖关系
+     * @param Item $item
+     * @param Struct[] $replace_record
+     */
+    private function ignoreReplaceCheck($item, $replace_record)
+    {
+        $type = $item->getType();
+        if (ItemType::STRUCT === $type) {
+            /** @var StructItem $item */
+            $sub_struct = $item->getStruct();
+            $full_name = $sub_struct->getNamespace() . '/' . $sub_struct->getClassName();
+            if (isset($replace_record[$full_name])) {
+                $sub_struct = $replace_record[$full_name];
+                $item->setStruct($sub_struct);
+            }
+        } elseif (ItemType::ARR === $type) {
+            /** @var ListItem $item */
+            $this->ignoreReplaceCheck($item->getItem(), $replace_record);
+        } elseif (ItemType::MAP === $type) {
+            /** @var MapItem $item */
+            $this->ignoreReplaceCheck($item->getValueItem(), $replace_record);
+        }
     }
 
     /**
@@ -482,7 +589,7 @@ class Manager
     /**
      * @param \DOMElement $struct
      */
-    public static function setCurrentNode($struct)
+    public static function setCurrentStruct($struct)
     {
         self::$current_struct = $struct;
     }
@@ -490,7 +597,7 @@ class Manager
     /**
      * @return \DOMElement
      */
-    public static function getCurrentNode()
+    public static function getCurrentStruct()
     {
         return self::$current_struct;
     }
@@ -641,8 +748,12 @@ class Manager
      */
     public function getAllFileList()
     {
+        if (null !== $this->all_file_list) {
+            return $this->all_file_list;
+        }
         $file_list = array();
         $this->getNeedBuildFile($this->base_path, $file_list);
+        $this->all_file_list = $file_list;
         return $file_list;
     }
 
@@ -717,6 +828,7 @@ class Manager
      */
     private function getCoderClass($coder_name)
     {
+        $coder_name = FFanStr::camelName($coder_name);
         static $coder_instance_arr = [];
         if (isset($coder_instance_arr[$coder_name])) {
             return $coder_instance_arr[$coder_name];
@@ -753,6 +865,7 @@ class Manager
     public function getPlugin($plugin_name)
     {
         static $plugin_instance = [];
+        $plugin_name = FFanStr::camelName($plugin_name);
         if (isset($plugin_instance[$plugin_name])) {
             return $plugin_instance[$plugin_name];
         }
@@ -784,6 +897,7 @@ class Manager
      */
     public function getCoderPath($coder_name)
     {
+        $coder_name = FFanStr::camelName($coder_name);
         if (!isset($this->coder_list[$coder_name])) {
             throw new Exception('Coder "' . $coder_name . '" is unregistered!');
         }
