@@ -31,7 +31,7 @@ class Model extends Node
     /**
      * @var Item[]
      */
-    private $node_list;
+    private $node_list = [];
 
     /**
      * @var string
@@ -60,6 +60,7 @@ class Model extends Node
      */
     public function addItem($name, $node)
     {
+        $name = trim($name);
         $this->node_list[$name] = $node;
     }
 
@@ -70,5 +71,31 @@ class Model extends Node
     public function setExtend($extend)
     {
         $this->extend = $extend;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * 获取继承的model name
+     * @return string|null
+     */
+    public function getExtend()
+    {
+        return $this->extend;
+    }
+
+    /**
+     * 获取所有的node
+     * @return Node[]
+     */
+    public function getNodeList()
+    {
+        return $this->node_list;
     }
 }

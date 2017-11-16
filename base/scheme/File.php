@@ -123,8 +123,10 @@ class File
             if (!$action->hasAttribute('name')) {
                 throw new Exception('Action must have name attribute');
             }
-            //action 的name支持 /aa/bb 的格式
             $name = $action->getAttribute('name');
+            if(false !== strpos($name, '/')) {
+                $name = str_replace('/', '_', $name);
+            }
             $this->parseAction($name, $action);
             Manager::setCurrentStruct(null);
         }
@@ -145,6 +147,7 @@ class File
         if (empty($action_method)) {
             $action_method = 'get';
         }
+        $extra_packer = $this->parseExtraPacer($action);
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->setLineNumber($node->getLineNo());
@@ -173,8 +176,21 @@ class File
                 throw new Exception('Unknown node:' . $node_name);
             }
             /** @var \DOMElement $node */
+            if (!empty($extra_packer)) {
+                $node->setAttribute('packer-extra', $extra_packer);
+            }
             $this->parseModel($node, $type);
         }
+    }
+
+    /**
+     * 解析extra-packer设置
+     * @param \DOMElement $node
+     * @return string|null
+     */
+    private function parseExtraPacer($node)
+    {
+        return $node->getAttribute('packer-extra');
     }
 
     /**
@@ -259,6 +275,7 @@ class File
         }
         $node_list = $model_node->childNodes;
         $item_arr = array();
+        $name_conflict = array();
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             if (XML_ELEMENT_NODE !== $node->nodeType) {
@@ -279,12 +296,16 @@ class File
                     throw new Exception('Attribute `name` required!');
                 }
             }
-            $original_name = trim($node->getAttribute('name'));
-            $this->checkName($original_name);
-            $item_name = $this->fixItemName($original_name);
+            $item_name = trim($node->getAttribute('name'));
+            $this->checkName($item_name);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }
+            $camel_name = FFanStr::camelName($item_name);
+            if (isset($name_conflict[$camel_name])) {
+                throw new Exception('Item name 驼峰命名:' . $camel_name . ' 冲突');
+            }
+            $name_conflict[$camel_name] = true;
             $item = $this->makeItem($item_name, $node);
             $item_arr[$item_name] = $item;
         }
@@ -306,6 +327,7 @@ class File
                 throw new Exception('Empty struct');
             }
         }
+        $class_name = trim($class_name);
         $model = new Model($class_name, $model_node);
         foreach ($item_arr as $name => $item) {
             $model->addItem($name, $item);
@@ -503,20 +525,23 @@ class File
     }
 
     /**
-     * 修正字段名
-     * @param string $item_name
-     * @return string
+     * 获取模型列表
+     * @param int $model_type
+     * @return Model[]
      */
-    public function fixItemName($item_name)
+    public function getModels($model_type)
     {
-        return FFanStr::camelName($item_name, false);
+        if (isset($this->model_list[$model_type])) {
+            return $this->model_list[$model_type];
+        }
+        return array();
     }
 
     /**
-     * @return Model[]
+     * @return Shader[]|null
      */
-    public function getModelList()
+    public function getShaderList()
     {
-        return $this->model_list;
+        return $this->shader;
     }
 }

@@ -14,11 +14,17 @@ class Node
     protected $attributes;
 
     /**
+     * @var string
+     */
+    private $node_name;
+
+    /**
      * Node constructor.
      * @param \DOMElement $node
      */
     public function __construct(\DOMElement $node)
     {
+        $this->node_name = $node->nodeName;
         $this->attributes = $this->getAllAttribute($node);
     }
 
@@ -125,5 +131,23 @@ class Node
     public function getAttributes()
     {
         return $this->attributes;
+    }
+
+    /**
+     * 是否存在某个属性
+     * @param string $name
+     * @return bool
+     */
+    public function hasAttribute($name)
+    {
+        return isset($this->attributes[$name]);
+    }
+
+    /**
+     * @return string
+     */
+    public function getNodeName()
+    {
+        return $this->node_name;
     }
 }

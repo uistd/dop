@@ -9,7 +9,9 @@ use FFan\Dop\Build\Shader;
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
 use FFan\Dop\Scheme\File;
+use FFan\Dop\Scheme\Model;
 use FFan\Std\Common\Str as FFanStr;
+use \FFan\Dop\Scheme\Item as SchemaItem;
 
 /**
  * Class Protocol
@@ -48,16 +50,6 @@ class Protocol
     const QUERY_STEP_SHADER = 8;
 
     /**
-     * @var \DOMDocument xml_handle
-     */
-    private $xml_handle;
-
-    /**
-     * @var \DOMXpath
-     */
-    private $path_handle;
-
-    /**
      * @var string 文件名
      */
     private $file_name;
@@ -73,9 +65,14 @@ class Protocol
     private $namespace;
 
     /**
+     * @var string 协议文件名
+     */
+    private $xml_file;
+
+    /**
      * @var array 允许的方法
      */
-    private static $allow_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'DELETE');
+    //private static $http_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS');
 
     /**
      * @var Manager
@@ -86,11 +83,6 @@ class Protocol
      * @var int 已经解析的步骤
      */
     private $query_step = 0;
-
-    /**
-     * @var string xml文件名称
-     */
-    private $xml_file_name;
 
     /**
      * @var BuildOption build_opt
@@ -105,38 +97,31 @@ class Protocol
     /**
      * ProtocolScheme constructor.
      * @param Manager $manager
-     * @param string $namespace 命名空间
+     * @param string $schema_file 命名空间
      * @throws Exception
      */
-    public function __construct(Manager $manager, $namespace)
+    public function __construct(Manager $manager, $schema_file)
     {
-        $this->namespace = $namespace;
+        $this->namespace = dirname($schema_file);
+        $this->xml_file = $schema_file;
         $this->manager = $manager;
-        $this->scheme_file = $manager->getScheme($namespace);
+        $this->scheme_file = $manager->getScheme($schema_file);
         if (null === $this->scheme_file) {
-            throw new Exception('Can not found scheme :' . $namespace);
+            throw new Exception('Can not found scheme :' . $schema_file);
         }
         $this->build_opt = $manager->getCurrentBuildOpt();
         $this->parse();
     }
 
     /**
-     * 解析scheme文件
+     * 解析该xml文件
      */
     public function parse()
     {
-        $this->parseModel();
-    }
-
-    /**
-     * 解析Model
-     */
-    private function parseModel()
-    {
-        $model_list = $this->scheme_file->getModelList();
-        foreach ($model_list as $model) {
-            $struct = new Struct($this->namespace, $model->);
-        }
+        $this->queryStruct();
+        $this->queryAction();
+        $this->queryData();
+        $this->queryShader();
     }
 
     /**
@@ -144,58 +129,37 @@ class Protocol
      */
     public function queryStruct()
     {
-        $this->queryModel('struct');
-        $this->queryModel('model');
-    }
-
-    /**
-     * 解析model
-     * @param string $tag_name
-     * @throws Exception
-     */
-    private function queryModel($tag_name)
-    {
-        $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/' . $tag_name);
-        if (null === $node_list) {
+        //已经解析过了，就打标志，避免重复解析
+        if ($this->query_step & self::QUERY_STEP_STRUCT) {
             return;
         }
+        $this->query_step |= self::QUERY_STEP_STRUCT;
+        $node_list = $this->scheme_file->getModels(Model::TYPE_STRUCT);
         //所有struct
         $all_struct = array();
         //顺序
         $extend_index = array();
-        for ($i = 0; $i < $node_list->length; ++$i) {
-            /** @var \DOMElement $struct */
-            $struct = $node_list->item($i);
-            $this->setLineNumber($struct->getLineNo());
-            if (!$struct->hasAttribute('name')) {
-                throw new Exception('Struct must have name attribute');
-            }
-            $name = trim($struct->getAttribute('name'));
+        foreach($node_list as $name => $model) {
             $name = FFanStr::camelName($name);
-            //将node还原成xml代码
-            $xml_string = $struct->C14N();
-            //如果有本文件继承
-            if (false !== strpos($xml_string, ' extend=') && preg_match_all('/extend=[\'"]([a-zA-Z_\d]+)[\'"]/', $xml_string, $extend_arr)) {
-                //整理顺序，保证不管怎么写，都能解析，不然就必须把依赖的写在前面
-                foreach ($extend_arr[1] as $ext_name) {
-                    $ext_name = FFanStr::camelName($ext_name);
-                    $extend_index[$ext_name] = true;
-                }
+            $ext_name = $model->getExtend();
+            //如果有继承, 并且就是同一个文件里的继承
+            if (null !== $ext_name && FFanStr::isValidVarName($ext_name)) {
+                $ext_name = FFanStr::camelName($ext_name);
+                $extend_index[$ext_name] = true;
             }
-            $all_struct[$name] = $struct;
+            $all_struct[$name] = $model;
         }
         //先把依赖的先加载完
         foreach ($extend_index as $name => $v) {
             if (!isset($all_struct[$name])) {
                 continue;
             }
-            $this->parseStruct($name, $all_struct[$name], true, Struct::TYPE_STRUCT);
+            $this->parseStruct($name, $all_struct[$name], Struct::TYPE_STRUCT);
             unset($all_struct[$name]);
         }
         //再处理其它的struct
         foreach ($all_struct as $name => $struct) {
-            $this->parseStruct($name, $struct, true, Struct::TYPE_STRUCT);
+            $this->parseStruct($name, $struct, Struct::TYPE_STRUCT);
         }
     }
 
@@ -209,26 +173,16 @@ class Protocol
             return;
         }
         $this->query_step |= self::QUERY_STEP_ACTION;
-        $path_handle = $this->getPathHandle();
-        $action_list = $path_handle->query('/protocol/action');
-        if (null === $action_list) {
-            return;
+        $request_model = $this->scheme_file->getModels(Model::TYPE_REQUEST);
+        foreach ($request_model as $name => $model) {
+            $tmp_name = FFanStr::camelName($name);
+            $this->parseStruct($tmp_name, $model, Struct::TYPE_REQUEST);
         }
-        for ($i = 0; $i < $action_list->length; ++$i) {
-            /** @var \DOMElement $action */
-            $action = $action_list->item($i);
-            $this->setLineNumber($action->getLineNo());
-            if (!$action->hasAttribute('name')) {
-                throw new Exception('Action must have name attribute');
-            }
-            //action 的name支持 /aa/bb 的格式
-            $name = $action->getAttribute('name');
-            $tmp_name = str_replace('/', '_', trim($name));
-            if ($tmp_name !== $name) {
-                $action->setAttribute('name', $tmp_name);
-            }
-            $tmp_name = FFanStr::camelName($tmp_name);
-            $this->parseAction($tmp_name, $action);
+
+        $response_model = $this->scheme_file->getModels(Model::TYPE_REQUEST);
+        foreach ($response_model as $name => $model) {
+            $tmp_name = FFanStr::camelName($name);
+            $this->parseStruct($tmp_name, $model, Struct::TYPE_REQUEST);
         }
     }
 
@@ -242,24 +196,10 @@ class Protocol
             return;
         }
         $this->query_step |= self::QUERY_STEP_DATA;
-        $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/data');
-        if (null === $node_list) {
-            return;
-        }
-        for ($i = 0; $i < $node_list->length; ++$i) {
-            /** @var \DOMElement $data_node */
-            $data_node = $node_list->item($i);
-            $this->setLineNumber($data_node->getLineNo());
-            if (!$data_node->hasAttribute('name')) {
-                throw new Exception('Data must have name attribute');
-            }
-            $name = trim($data_node->getAttribute('name'));
-            $name = FFanStr::camelName($name, true);
-            $extra_packer = $this->parseExtraPacer($data_node);
-            $is_public = true === (bool)$data_node->getAttribute('public');
-            $struct = $this->parseStruct($name, $data_node, $is_public, Struct::TYPE_DATA);
-            $this->addExtraPacker($extra_packer, $struct);
+        $node_list = $this->scheme_file->getModels(Model::TYPE_DATA);
+        foreach ($node_list as $name => $model) {
+            $name = FFanStr::camelName($name);
+            $this->parseStruct($name, $model, Struct::TYPE_DATA);
         }
     }
 
@@ -273,128 +213,14 @@ class Protocol
             return;
         }
         $this->query_step |= self::QUERY_STEP_SHADER;
-        $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/shader');
-        if (null === $node_list) {
+        $shader_list = $this->scheme_file->getShaderList();
+        if (!$shader_list) {
             return;
         }
-        for ($i = 0; $i < $node_list->length; ++$i) {
-            /** @var \DOMElement $shader_node */
-            $shader_node = $node_list->item($i);
-            $this->setLineNumber($shader_node->getLineNo());
+        foreach ($shader_list as $shader_node) {
             $shader = new Shader($this->manager, $shader_node);
             $this->manager->addShader($shader);
         }
-    }
-
-    /**
-     * 解析extra-packer设置
-     * @param \DOMElement $node
-     * @return array|null
-     */
-    private function parseExtraPacer(\DOMElement $node)
-    {
-        $extra_packer = $node->getAttribute('packer-extra');
-        //附加packer
-        if (!empty($extra_packer)) {
-            $extra_packer = FFanStr::split($extra_packer);
-        }
-        return $extra_packer;
-    }
-
-    /**
-     * 给struct附加extra packer
-     * @param array $extra_packer
-     * @param Struct $struct
-     */
-    private function addExtraPacker($extra_packer, $struct)
-    {
-        if (empty($extra_packer)) {
-            return;
-        }
-        foreach ($extra_packer as $name) {
-            $struct->addExtraPacker($name);
-        }
-    }
-
-    /**
-     * 解析request
-     * @param $action_name
-     * @param \DOMElement $action
-     * @throws Exception
-     */
-    private function parseAction($action_name, \DOMElement $action)
-    {
-        $node_list = $action->childNodes;
-        $request_count = 0;
-        $response_count = 0;
-        $note_info = $action->getAttribute('note');
-        $action_method = $action->getAttribute('method');
-        if (empty($action_method)) {
-            $action_method = 'get';
-        }
-        $extra_packer = $this->parseExtraPacer($action);
-        for ($i = 0; $i < $node_list->length; ++$i) {
-            $node = $node_list->item($i);
-            $this->setLineNumber($node->getLineNo());
-            if (XML_ELEMENT_NODE !== $node->nodeType) {
-                continue;
-            }
-            $class_name = $action_name;
-            $node_name = strtolower($node->nodeName);
-            $method = '';
-            if (self::REQUEST_NODE === $node_name) {
-                if (++$request_count > 1) {
-                    throw new Exception('Only one request node allowed');
-                }
-                $method = $node->getAttribute('method');
-                //如果在 request 上没有指定method, 尝试使用 action 上的method
-                if (empty($method)) {
-                    $method = $action_method;
-                }
-                $node->setAttribute('method', $method);
-                $type = Struct::TYPE_REQUEST;
-                //$node_name = $build_opt->getConfig('request_class_suffix', 'request');
-            } elseif (self::RESPONSE_NODE === $node_name) {
-                if (++$response_count > 1) {
-                    throw new Exception('Only one response node allowed');
-                }
-                $type = Struct::TYPE_RESPONSE;
-            } else {
-                throw new Exception('Unknown node:' . $node_name);
-            }
-            $name = FFanStr::camelName($class_name);
-            /** @var \DOMElement $node */
-            $struct = $this->parseStruct($name, $node, false, $type);
-            $struct->setNode($node);
-            $node_str = '';
-            if ($note_info) {
-                $node_str .= $note_info;
-            }
-            $struct->setNote($node_str);
-            //如果 是request
-            if (Struct::TYPE_REQUEST === $type) {
-                $method = strtoupper($method);
-                if (!in_array($method, self::$allow_method_list)) {
-                    throw new Exception('不支持的method:' . $method);
-                }
-                $struct->setMethod($method);
-                if ($node->hasAttribute('uri')) {
-                    $struct->setUri($node->getAttribute('uri'));
-                }
-            }
-            $this->addExtraPacker($extra_packer, $struct);
-        }
-    }
-
-    /**
-     * 是否为struct
-     * @param string $name
-     * @return bool
-     */
-    private function isStruct($name)
-    {
-        return 'model' === $name || 'struct' === $name;
     }
 
     /**
@@ -410,59 +236,34 @@ class Protocol
     /**
      * 解析struct
      * @param string $class_name 上级类名
-     * @param \DomElement $struct_node
+     * @param Model $model
      * @param bool $is_public 是否可以被extend
      * @param int $type 类型
      * @return Struct
      * @throws Exception
      */
-    private function parseStruct($class_name, \DomElement $struct_node, $is_public = false, $type = Struct::TYPE_STRUCT)
+    private function parseStruct($class_name, $model, $type = Struct::TYPE_STRUCT)
     {
-        Manager::setCurrentNode($struct_node);
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
-        $node_list = $struct_node->childNodes;
+        $node_list = $model->getNodeList();
         //如果有在struct指定keep_name
-        if ($struct_node->hasAttribute($keep_name_attr)) {
-            if ((bool)$struct_node->getAttribute($keep_name_attr)) {
+        if ($model->hasAttribute($keep_name_attr)) {
+            if ($model->getBool($keep_name_attr)) {
                 $item_name_keep_original_weight += 2;
             } else {
                 $item_name_keep_original_weight -= 2;
             }
         }
         $item_arr = array();
-        for ($i = 0; $i < $node_list->length; ++$i) {
-            $node = $node_list->item($i);
-            if (XML_ELEMENT_NODE !== $node->nodeType) {
-                continue;
-            }
-            //插件
-            if ($this->isPluginNode($node)) {
-                continue;
-            }
-            $this->setLineNumber($node->getLineNo());
-            /** @var \DOMElement $node */
-            if (!$node->hasAttribute('name')) {
-                //如果 是struct 并且指定了 extend, 就不需要名字
-                if ($this->isStruct($node->tagName) && $node->hasAttribute('extend')) {
-                    $extend = basename($node->getAttribute('extend'));
-                    $node->setAttribute('name', $extend);
-                } else {
-                    throw new Exception('Attribute `name` required!');
-                }
-            }
-            $original_name = trim($node->getAttribute('name'));
-            $this->checkName($original_name);
+        foreach ($node_list as $original_name => $node) {
             $item_name = $this->fixItemName($original_name);
             $item = $this->makeItemObject($item_name, $node);
-            if (isset($item_arr[$item_name])) {
-                throw new Exception('Item name:' . $item_name . ' 已经存在');
-            }
             $item_weight = 0;
             //如果有在字段指定keep_name
             if ($node->hasAttribute($keep_name_attr)) {
-                if ((bool)$node->getAttribute($keep_name_attr)) {
+                if ($node->getBool($keep_name_attr)) {
                     $item_weight = 3;
                 } else {
                     $item_weight = -3;
@@ -476,23 +277,22 @@ class Protocol
             $item_arr[$item_name] = $item;
         }
         $extend_struct = null;
-
         //继承关系
-        if ($struct_node->hasAttribute('extend')) {
-            $struct_name = trim($struct_node->getAttribute('extend'));
-            if (empty($struct_name)) {
-                throw new Exception('extend 不能为空');
-            }
-            $struct_name = $this->getFullName($struct_name);
+        $extend_struct_name = $model->getExtend();
+        if ($extend_struct_name) {
+            $extend_struct_name = $this->getFullName($extend_struct_name);
             $conf_suffix = $this->build_opt->getConfig('struct_class_suffix');
             if (!empty($conf_suffix)) {
-                $struct_name .= FFanStr::camelName($conf_suffix);
+                $extend_struct_name .= FFanStr::camelName($conf_suffix);
             }
-            $extend_struct = $this->manager->loadRequireStruct($struct_name, $this->xml_file_name);
+            $extend_struct = $this->manager->loadRequireStruct($extend_struct_name, $this->xml_file);
             if (null === $extend_struct) {
-                throw new Exception('无法 extend "' . $struct_name . '"');
-            } elseif (!$extend_struct->isPublic() && $this->namespace !== $extend_struct->getNamespace()) {
-                throw new Exception('struct:' . $struct_name . ' is not public!');
+                throw new Exception('无法 extend "' . $extend_struct_name .'"');
+            }
+            $extend_type = $extend_struct->getType();
+            //如果 继承不是来自 Struct, 那只能同类型继承
+            if (Struct::TYPE_STRUCT !== $extend_struct && $extend_type !== $type) {
+                throw new Exception($class_name .' can not extend '. $extend_struct_name);
             }
         }
         //如果item为空
@@ -502,20 +302,20 @@ class Protocol
                 return $extend_struct;
             } //struct不允许空item
             elseif (Struct::TYPE_STRUCT === $type || Struct::TYPE_DATA === $type) {
-                throw new Exception('Empty struct');
+                throw new Exception($class_name .' is empty struct');
             }
         }
-        $class_name_prefix = $this->build_opt->getConfig(Struct::getTypeName($type) . '_class_prefix');
+        $class_name_prefix = $this->build_opt->getConfig(Struct::getTypeName($type) .'_class_prefix');
         if (!empty($class_name_prefix)) {
             $struct_class_name = $this->joinName($class_name, FFanStr::camelName($class_name_prefix));
         } else {
-            $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($type) . '_class_suffix');
+            $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($type) .'_class_suffix');
             $struct_class_name = $this->joinName(FFanStr::camelName($class_name_suffix), $class_name);
         }
-        $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file_name, $type, $is_public);
+        $struct_obj = new Struct($this->namespace, $struct_class_name, $this->xml_file, $type);
         //如果有注释
-        if ($struct_node->hasAttribute('note')) {
-            $struct_obj->setNote($struct_node->getAttribute('note'));
+        if ($model->hasAttribute('note')) {
+            $struct_obj->setNote($model->get('note'));
         }
         foreach ($item_arr as $name => $item) {
             $struct_obj->addItem($name, $item);
@@ -524,23 +324,19 @@ class Protocol
             $struct_obj->extend($extend_struct);
         }
         $this->manager->addStruct($struct_obj);
-        Manager::setCurrentNode(null);
         return $struct_obj;
     }
 
     /**
      * 生成item对象
      * @param string $name
-     * @param \DOMElement $dom_node 节点
+     * @param SchemaItem $dom_node 节点
      * @return Item
      * @throws Exception
      */
     private function makeItemObject($name, $dom_node)
     {
-        $type = ItemType::getType($dom_node->nodeName);
-        if (null === $type) {
-            throw new Exception('Unknown type `' . $dom_node->nodeName . '`');
-        }
+        $type = $dom_node->getType();
         switch ($type) {
             case ItemType::STRING:
                 $item_obj = new StringItem($name, $this->manager);
@@ -567,7 +363,7 @@ class Protocol
                 break;
             case ItemType::INT:
                 $item_obj = new IntItem($name, $this->manager);
-                $item_obj->setIntType($dom_node->nodeName);
+                $item_obj->setIntType($dom_node->getNodeName());
                 break;
             case ItemType::DOUBLE:
                 $item_obj = new DoubleItem($name, $this->manager);
@@ -581,13 +377,11 @@ class Protocol
         //注释
         /** @var \DOMElement $dom_node */
         if ($dom_node->hasAttribute('note')) {
-            $note = trim($dom_node->getAttribute('note'));
-            $item_obj->setNote($note);
+            $item_obj->setNote($dom_node->get('note'));
         }
         //默认值
         if ($dom_node->hasAttribute('default')) {
-            $default = $dom_node->getAttribute('default');
-            $item_obj->setDefault($default);
+            $item_obj->setDefault($dom_node->getAttribute('default'));
         }
         $this->parsePlugin($dom_node, $item_obj);
         return $item_obj;
@@ -638,7 +432,7 @@ class Protocol
                 $trigger = new BufTrigger();
                 break;
             default:
-                throw new Exception('Unknown trigger:' . $type);
+                throw new Exception('Unknown trigger:'. $type);
         }
         $trigger->init($dom_node);
         $item->addTrigger($trigger);

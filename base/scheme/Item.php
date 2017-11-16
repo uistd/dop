@@ -66,4 +66,12 @@ class Item extends Node
     {
         $this->plugin_list[$name] = $plugin;
     }
+
+    /**
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
 }

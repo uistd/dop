@@ -14,6 +14,7 @@ use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Dop\Protocol\StructItem;
+use FFan\Dop\Scheme\File;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
 
@@ -118,6 +119,11 @@ class Manager
      * @var Shader[] 着色器列表
      */
     private $shader_list;
+
+    /**
+     * @var File[] 协议列表
+     */
+    private $scheme_list;
 
     /**
      * @var \DOMElement 当前正在解析的节点
@@ -283,7 +289,7 @@ class Manager
     public function parseFile($file)
     {
         $xml_protocol = $this->loadXmlProtocol($file);
-        $xml_protocol->query();
+        $xml_protocol->parse();
     }
 
     /**
@@ -375,6 +381,20 @@ class Manager
     }
 
     /**
+     * 获取scheme
+     * @param $namespace
+     * @return File|null
+     */
+    public function getScheme($namespace)
+    {
+        if (!isset($this->scheme_list[$namespace])) {
+            return null;
+        }
+        return $this->scheme_list[$namespace];
+    }
+
+
+    /**
      * 初始化协议文件
      * @param string $section
      * @return bool
@@ -401,7 +421,8 @@ class Manager
                 $this->buildLog('Ignore file:'. $xml_file);
                 continue;
             }
-            $this->parseFile($xml_file);
+            $ns = str_replace('.xml', '', strtolower($xml_file));
+            $this->scheme_list[$ns] = new Scheme\File($this, $xml_file);
         }
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {
