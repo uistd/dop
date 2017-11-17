@@ -1,6 +1,6 @@
 <?php
 
-namespace FFan\Dop\Scheme;
+namespace FFan\Dop\Schema;
 
 /**
  * Class Model
@@ -31,7 +31,7 @@ class Model extends Node
     /**
      * @var Item[]
      */
-    private $node_list = [];
+    private $item_list = [];
 
     /**
      * @var string
@@ -61,7 +61,7 @@ class Model extends Node
     public function addItem($name, $node)
     {
         $name = trim($name);
-        $this->node_list[$name] = $node;
+        $this->item_list[$name] = $node;
     }
 
     /**
@@ -92,10 +92,10 @@ class Model extends Node
 
     /**
      * 获取所有的node
-     * @return Node[]
+     * @return Item[]
      */
-    public function getNodeList()
+    public function getItemList()
     {
-        return $this->node_list;
+        return $this->item_list;
     }
 }

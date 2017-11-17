@@ -1,6 +1,6 @@
 <?php
 
-namespace FFan\Dop\Scheme;
+namespace FFan\Dop\Schema;
 
 /**
  * Class Node

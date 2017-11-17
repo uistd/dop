@@ -14,7 +14,7 @@ use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Dop\Protocol\StructItem;
-use FFan\Dop\Scheme\File;
+use FFan\Dop\Schema\File;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
 
@@ -422,7 +422,7 @@ class Manager
                 continue;
             }
             $ns = str_replace('.xml', '', strtolower($xml_file));
-            $this->scheme_list[$ns] = new Scheme\File($this, $xml_file);
+            $this->scheme_list[$ns] = new Schema\File($this, $xml_file);
         }
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {

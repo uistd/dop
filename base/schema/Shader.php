@@ -1,6 +1,6 @@
 <?php
 
-namespace FFan\Dop\Scheme;
+namespace FFan\Dop\Schema;
 
 /**
  * Class Shader
@@ -9,7 +9,7 @@ namespace FFan\Dop\Scheme;
 class Shader extends Node
 {
     /**
-     * @var array
+     * @var string[]
      */
     private $codes;
 
@@ -44,5 +44,13 @@ class Shader extends Node
         if (0 === $num) {
             $this->codes[] = array('code_value' => $node->nodeValue);
         }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCodes()
+    {
+        return $this->codes;
     }
 }

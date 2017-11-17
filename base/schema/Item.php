@@ -1,6 +1,6 @@
 <?php
 
-namespace FFan\Dop\Scheme;
+namespace FFan\Dop\Schema;
 
 /**
  * Class Item
@@ -73,5 +73,13 @@ class Item extends Node
     public function getType()
     {
         return $this->type;
+    }
+
+    /**
+     * @return Item[]
+     */
+    public function getSubItems()
+    {
+        return $this->sub_item;
     }
 }

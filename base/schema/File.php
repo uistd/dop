@@ -1,6 +1,6 @@
 <?php
 
-namespace FFan\Dop\Scheme;
+namespace FFan\Dop\Schema;
 
 use FFan\Dop\Build\BuildOption;
 use FFan\Dop\Exception;
@@ -224,6 +224,9 @@ class File
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $shader_node */
             $shader_node = $node_list->item($i);
+            if (empty($shader_node->getAttribute('name'))){
+                throw new Exception('Shader name missing');
+            }
             Manager::setCurrentStruct($shader_node);
             $this->setLineNumber($shader_node->getLineNo());
             $shader = new Shader($shader_node);

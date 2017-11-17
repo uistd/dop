@@ -4,6 +4,7 @@ namespace FFan\Dop\Build;
 
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
+use FFan\Dop\Schema\Shader as ShaderSchema;
 
 /**
  * Class Shader 着色器
@@ -39,12 +40,12 @@ class Shader
     /**
      * Shader constructor.
      * @param Manager $manager
-     * @param \DOMElement $node
+     * @param ShaderSchema $shader_node
      */
-    public function __construct(Manager $manager, \DOMElement $node)
+    public function __construct(Manager $manager, ShaderSchema $shader_node)
     {
         $this->manager = $manager;
-        $this->parse($node);
+        $this->parse($shader_node);
     }
 
     /**
@@ -79,53 +80,48 @@ class Shader
 
     /**
      * 解析
-     * @param \DOMElement $node
+     * @param ShaderSchema $shader_node
      * @throws Exception
      */
-    private function parse($node)
+    private function parse($shader_node)
     {
-        $shader_name = NodeBase::read($node, 'name');
+        $shader_name = $shader_node->get('node');
         if (empty($shader_name)) {
-            throw new Exception('Shader name missing');
+            $this->shader_name = $shader_name;
         }
-        $this->shader_name = $shader_name;
-        $file_name = NodeBase::read($node, 'file');
+        $file_name = $shader_node->get('file');
         if (!empty($file_name)) {
             $this->file_key = $file_name;
         }
-        $path_name = NodeBase::read($node, 'path');
+        $path_name = $shader_node->get('path');
         if (!empty($path_name)) {
             $this->path_key = $path_name;
         }
-        $code_node_list = $node->childNodes;
         $num = 0;
         $section_name = $this->manager->getCurrentBuildOpt()->getSectionName();
-        for ($i = 0; $i < $code_node_list->length; ++$i) {
-            $code_node = $code_node_list->item($i);
-            if (XML_ELEMENT_NODE !== $code_node->nodeType) {
-                continue;
-            }
+        $code_list = $shader_node->getCodes();
+        foreach ($code_list as $code_node) {
             $num++;
-            if ($code_node->hasAttribute('trigger_buf')) {
+            if (isset($code_node['trigger_buf'])) {
                 //trigger_buf + section + method 为最终的buf_name
-                $buf_name = $code_node->getAttribute('trigger_buf');
-                if ($code_node->hasAttribute('section')) {
-                    $buf_name .= '_' . $code_node->getAttribute('section');
+                $buf_name = $code_node['trigger_buf'];
+                if (isset($code_node['section'])) {
+                    $buf_name .= '_' . $code_node['section'];
                 } else {
                     $buf_name .= '_' . $section_name;
                 }
-                if ('unpack' === $code_node->getAttribute('method')) {
+                if (isset($code_node['method']) && 'unpack' === $code_node['method']) {
                     $buf_name .= '_unpack';
                 } else {
                     $buf_name .= '_pack';
                 }
             } else {
-                $buf_name = $code_node->getAttribute('buf_name');
+                $buf_name = $code_node['buf_name'];
             }
             $this->addCode($code_node->nodeValue, $buf_name);
         }
         if (0 === $num) {
-            $this->addCode($node->nodeValue);
+            $this->addCode($shader_node['nodeValue']);
         }
     }
 

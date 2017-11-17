@@ -8,10 +8,10 @@ use FFan\Dop\Build\NodeBase;
 use FFan\Dop\Build\Shader;
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
-use FFan\Dop\Scheme\File;
-use FFan\Dop\Scheme\Model;
+use FFan\Dop\Schema\File;
+use FFan\Dop\Schema\Model;
 use FFan\Std\Common\Str as FFanStr;
-use \FFan\Dop\Scheme\Item as SchemaItem;
+use \FFan\Dop\Schema\Item as SchemaItem;
 
 /**
  * Class Protocol
@@ -247,7 +247,6 @@ class Protocol
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
-        $node_list = $model->getNodeList();
         //如果有在struct指定keep_name
         if ($model->hasAttribute($keep_name_attr)) {
             if ($model->getBool($keep_name_attr)) {
@@ -256,14 +255,15 @@ class Protocol
                 $item_name_keep_original_weight -= 2;
             }
         }
+        $item_list = $model->getItemList();
         $item_arr = array();
-        foreach ($node_list as $original_name => $node) {
+        foreach ($item_list as $original_name => $item_schema) {
             $item_name = $this->fixItemName($original_name);
-            $item = $this->makeItemObject($item_name, $node);
+            $item = $this->makeItemObject($item_name, $item_schema);
             $item_weight = 0;
             //如果有在字段指定keep_name
-            if ($node->hasAttribute($keep_name_attr)) {
-                if ($node->getBool($keep_name_attr)) {
+            if ($item_schema->hasAttribute($keep_name_attr)) {
+                if ($item_schema->getBool($keep_name_attr)) {
                     $item_weight = 3;
                 } else {
                     $item_weight = -3;
@@ -451,11 +451,11 @@ class Protocol
     /**
      * 解析list
      * @param string $name
-     * @param \DOMNode $item 节点
+     * @param SchemaItem $item 节点
      * @return Item
      * @throws Exception
      */
-    private function parseList($name, \DOMNode $item)
+    private function parseList($name, SchemaItem $item)
     {
         $item_list = $item->childNodes;
         $type_node = null;

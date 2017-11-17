@@ -7,7 +7,7 @@ $manager = new Manager('test/protocol');
 $files = $manager->getAllFileList();
 try {
     foreach ($files as $file => $md5) {
-        $file = new Scheme\File($manager, $file);
+        $file = new Schema\File($manager, $file);
         print_r($file);
     }
 } catch (Exception $excp) {
