@@ -19,14 +19,14 @@ class Item extends Node
     private $sub_item;
 
     /**
-     * @var string 依赖的Model
-     */
-    private $require_model;
-
-    /**
      * @var Plugin[] 插件列表
      */
     private $plugin_list;
+
+    /**
+     * @var string
+     */
+    private $sub_model_name;
 
     /**
      * Node constructor.
@@ -37,7 +37,6 @@ class Item extends Node
     {
         parent::__construct($node);
         $this->type = $type;
-        $this->attributes = self::getAllAttribute($node);
     }
 
     /**
@@ -47,15 +46,6 @@ class Item extends Node
     public function addSubItem($item)
     {
         $this->sub_item[] = $item;
-    }
-
-    /**
-     * 设置依赖的model
-     * @param string $model_name
-     */
-    public function setRequireModel($model_name)
-    {
-        $this->require_model = $model_name;
     }
 
     /**
@@ -81,5 +71,28 @@ class Item extends Node
     public function getSubItems()
     {
         return $this->sub_item;
+    }
+
+    /**
+     * @param string $model_name
+     */
+    public function setSubModel($model_name) {
+        $this->sub_model_name = $model_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubModelName()
+    {
+        return $this->sub_model_name;
+    }
+
+    /**
+     * @return Plugin[]
+     */
+    public function getPluginList()
+    {
+        return $this->plugin_list;
     }
 }

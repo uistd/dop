@@ -51,6 +51,16 @@ class File
     private $build_opt;
 
     /**
+     * @var string 命名空间
+     */
+    private $namespace;
+
+    /**
+     * @var Model[] 所有的model
+     */
+    private static $all_model = array();
+
+    /**
      * Scheme constructor.
      * @param Manager $manager
      * @param $file_name
@@ -60,14 +70,13 @@ class File
     {
         $this->manager = $manager;
         $base_path = $manager->getBasePath();
-        $this->xml_file_name = $file_name;
+        $this->namespace = self::fileToNamespace($file_name);
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
             throw new Exception('找不到协议文件:' . $full_name);
         }
         $this->xml_handle = new \DOMDocument();
         $this->xml_handle->load($full_name);
-        $this->xml_file_name = $file_name;
         $this->file_name = $full_name;
         $this->build_opt = $manager->getCurrentBuildOpt();
         $this->parse();
@@ -93,7 +102,7 @@ class File
     private function queryModel($tag_name)
     {
         $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/'. $tag_name);
+        $node_list = $path_handle->query('/protocol/' . $tag_name);
         if (null === $node_list) {
             return;
         }
@@ -124,7 +133,7 @@ class File
                 throw new Exception('Action must have name attribute');
             }
             $name = $action->getAttribute('name');
-            if(false !== strpos($name, '/')) {
+            if (false !== strpos($name, '/')) {
                 $name = str_replace('/', '_', $name);
             }
             $this->parseAction($name, $action);
@@ -154,7 +163,7 @@ class File
             if (XML_ELEMENT_NODE !== $node->nodeType) {
                 continue;
             }
-            $node->setAttribute('name',$name);
+            $node->setAttribute('name', $name);
             $node_name = strtolower($node->nodeName);
             if ('request' === $node_name) {
                 if (++$request_count > 1) {
@@ -224,7 +233,7 @@ class File
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $shader_node */
             $shader_node = $node_list->item($i);
-            if (empty($shader_node->getAttribute('name'))){
+            if (empty($shader_node->getAttribute('name'))) {
                 throw new Exception('Shader name missing');
             }
             Manager::setCurrentStruct($shader_node);
@@ -262,6 +271,7 @@ class File
      * 解析一组协议
      * @param \DomElement $model_node
      * @param int $type
+     * @return string
      * @throws Exception
      */
     private function parseModel(\DomElement $model_node, $type = Model::TYPE_STRUCT)
@@ -324,7 +334,8 @@ class File
         if (empty($item_arr)) {
             //完全继承
             if (!empty($extend_name)) {
-                return;
+                Manager::setCurrentStruct(null);
+                return $extend_name;
             } //data 和 struct不允许空item
             elseif (Model::TYPE_STRUCT === $type || Model::TYPE_DATA === $type) {
                 throw new Exception('Empty struct');
@@ -343,6 +354,8 @@ class File
             throw new Exception('class_name 类名冲突');
         }
         $this->model_list[$type][$class_name] = $model;
+        self::$all_model[$this->namespace . '/' . $class_name] = $model;
+        return $class_name;
     }
 
     /**
@@ -368,7 +381,11 @@ class File
                 $this->parseMap($name, $item_node, $item);
                 break;
             case ItemType::STRUCT:
-                $this->parsePrivateStruct($name, $item_node, $item);
+                $sub_model_name = $this->parsePrivateStruct($name, $item_node);
+                if (false === strpos($sub_model_name, '/')) {
+                    $sub_model_name = $this->namespace . '/' . $sub_model_name;
+                }
+                $item->setSubModel($sub_model_name);
                 break;
         }
         $this->parsePlugin($item_node, $item);
@@ -458,16 +475,19 @@ class File
     /**
      * 解析私有的struct
      * @param string $name
-     * @param \DOMElement $item 节点
-     * @param Item $item_object
+     * @param \DOMElement $item_node 节点
+     * @return string
      */
-    private function parsePrivateStruct($name, \DOMElement $item, Item $item_object)
+    private function parsePrivateStruct($name, $item_node)
     {
-        $item_object->setRequireModel($name);
-        if (!$item->hasAttribute('name')) {
-            $item->setAttribute('name', $name);
+        if ($item_node->hasAttribute('class_name')) {
+            $class_name = trim($item_node->getAttribute('class_name'));
+            if (!empty($class_name)) {
+                $name = $class_name;
+            }
         }
-        $this->parseModel($item);
+        $item_node->setAttribute('name', $name);
+        return $this->parseModel($item_node, Model::TYPE_STRUCT);
     }
 
     /**
@@ -546,5 +566,32 @@ class File
     public function getShaderList()
     {
         return $this->shader;
+    }
+
+    /**
+     * @param string $file_name
+     * @return string
+     */
+    public static function fileToNamespace($file_name)
+    {
+        $path = dirname($file_name);
+        if ('.' === $path{0}) {
+            $path = '/';
+        } else {
+            $path = '/' . $path . '/';
+        }
+        return $path . basename($file_name, '.xml');
+    }
+
+    /**
+     * @param string $full_name
+     * @return Model|null
+     */
+    public static function getModelSchema($full_name)
+    {
+        if (!isset(self::$all_model[$full_name])) {
+            return null;
+        }
+        return self::$all_model[$full_name];
     }
 }

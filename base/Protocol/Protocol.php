@@ -12,6 +12,7 @@ use FFan\Dop\Schema\File;
 use FFan\Dop\Schema\Model;
 use FFan\Std\Common\Str as FFanStr;
 use \FFan\Dop\Schema\Item as SchemaItem;
+use \FFan\Dop\Schema\File as SchemaFile;
 
 /**
  * Class Protocol
@@ -95,6 +96,11 @@ class Protocol
     private $scheme_file;
 
     /**
+     * @var Struct[]
+     */
+    private static $all_struct;
+
+    /**
      * ProtocolScheme constructor.
      * @param Manager $manager
      * @param string $schema_file 命名空间
@@ -102,7 +108,7 @@ class Protocol
      */
     public function __construct(Manager $manager, $schema_file)
     {
-        $this->namespace = dirname($schema_file);
+        $this->namespace = File::fileToNamespace($schema_file);
         $this->xml_file = $schema_file;
         $this->manager = $manager;
         $this->scheme_file = $manager->getScheme($schema_file);
@@ -237,13 +243,16 @@ class Protocol
      * 解析struct
      * @param string $class_name 上级类名
      * @param Model $model
-     * @param bool $is_public 是否可以被extend
      * @param int $type 类型
      * @return Struct
      * @throws Exception
      */
     private function parseStruct($class_name, $model, $type = Struct::TYPE_STRUCT)
     {
+        $full_name = $this->namespace .'/'. $model->getName();
+        if (isset(self::$all_struct[$full_name])) {
+            return self::$all_struct[$full_name];
+        }
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
@@ -324,6 +333,7 @@ class Protocol
             $struct_obj->extend($extend_struct);
         }
         $this->manager->addStruct($struct_obj);
+        self::$all_struct[$full_name] = $struct_obj;
         return $struct_obj;
     }
 
@@ -381,7 +391,7 @@ class Protocol
         }
         //默认值
         if ($dom_node->hasAttribute('default')) {
-            $item_obj->setDefault($dom_node->getAttribute('default'));
+            $item_obj->setDefault($dom_node->get('default'));
         }
         $this->parsePlugin($dom_node, $item_obj);
         return $item_obj;
@@ -389,31 +399,25 @@ class Protocol
 
     /**
      * 插件解析
-     * @param \DOMElement $dom_node 节点
+     * @param SchemaItem $dom_node 节点
      * @param Item $item
      */
     private function parsePlugin($dom_node, $item)
     {
-        $item_list = $dom_node->childNodes;
-        for ($i = 0; $i < $item_list->length; ++$i) {
-            $tmp_node = $item_list->item($i);
-            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
-                continue;
-            }
-            if (!$this->isPluginNode($tmp_node)) {
-                continue;
-            }
-            $this->setLineNumber($tmp_node->getLineNo());
-            $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
+        $plugin_list = $dom_node->getPluginList();
+        if (!$plugin_list) {
+            return;
+        }
+        foreach ($plugin_list as $plugin_name => $plugin) {
             //如果是触发器，特殊处理
             if ('trigger' === $plugin_name) {
-                $this->parseTrigger($tmp_node, $item);
+                //$this->parseTrigger($dom_node, $item);
             } else {
                 $plugin = $this->manager->getPlugin($plugin_name);
                 if (!$plugin) {
                     continue;
                 }
-                $plugin->init($this, $tmp_node, $item);
+                //$plugin->init($this, $tmp_node, $item);
             }
         }
     }
@@ -439,16 +443,6 @@ class Protocol
     }
 
     /**
-     * 是否是插件节点
-     * @param \DOMNode $node
-     * @return bool
-     */
-    private function isPluginNode($node)
-    {
-        return 0 === strpos($node->nodeName, 'plugin_');
-    }
-
-    /**
      * 解析list
      * @param string $name
      * @param SchemaItem $item 节点
@@ -457,79 +451,25 @@ class Protocol
      */
     private function parseList($name, SchemaItem $item)
     {
-        $item_list = $item->childNodes;
-        $type_node = null;
-        for ($i = 0; $i < $item_list->length; ++$i) {
-            $tmp_node = $item_list->item($i);
-            $this->setLineNumber($tmp_node->getLineNo());
-            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
-                continue;
-            }
-            if ($this->isPluginNode($tmp_node)) {
-                continue;
-            }
-            if (null !== $type_node) {
-                throw new Exception('List只能有一个节点');
-            }
-            $type_node = $tmp_node;
-        }
-        if (null === $type_node) {
-            throw new Exception('List下必须包括一个指定list类型的节点');
-        }
-        if ($type_node->hasAttribute('name')) {
-            $tmp_name = trim($type_node->getAttribute('name'));
-            if (!empty($tmp_name)) {
-                $this->checkName($tmp_name);
-                $name = FFanStr::camelName($tmp_name);
-            }
-        }
-        return $this->makeItemObject($name, $type_node);
+        $sub_item_list = $item->getSubItems();
+        $sub_item = $sub_item_list[0];
+        return $this->makeItemObject($name, $sub_item);
     }
 
     /**
      * 解析Map
      * @param string $name
-     * @param \DOMNode $item 节点
+     * @param SchemaItem $item 节点
      * @param MapItem $item_obj
      * @throws Exception
      */
-    private function parseMap($name, \DOMNode $item, MapItem $item_obj)
+    private function parseMap($name, $item, MapItem $item_obj)
     {
-        $item_list = $item->childNodes;
-        $key_node = null;
-        $value_node = null;
-        for ($i = 0; $i < $item_list->length; ++$i) {
-            $tmp_node = $item_list->item($i);
-            $this->setLineNumber($tmp_node->getLineNo());
-            if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
-                continue;
-            }
-            if ($this->isPluginNode($tmp_node)) {
-                continue;
-            }
-            if (null === $key_node) {
-                $key_node = $tmp_node;
-                $key_item = $this->makeItemObject($name, $key_node);
-                $item_obj->setKeyItem($key_item);
-            } elseif (null === $value_node) {
-                $value_node = $tmp_node;
-                if ($tmp_node->hasAttribute('name')) {
-                    $tmp_name = trim($tmp_node->getAttribute('name'));
-                    if (!empty($tmp_name)) {
-                        $this->checkName($tmp_name);
-                        $name = FFanStr::camelName($tmp_name);
-                    }
-                }
-                $value_item = $this->makeItemObject($name, $value_node);
-                $item_obj->setValueItem($value_item);
-            } else {
-                throw new Exception('Map下只能有两个节点');
-            }
-            $key_node = $tmp_node;
-        }
-        if (null === $key_node || null === $value_node) {
-            throw new Exception('Map下必须包含两个节点');
-        }
+        $sub_item_list = $item->getSubItems();
+        $key_item = $this->makeItemObject($name, $sub_item_list[0]);
+        $value_item = $this->makeItemObject($name, $sub_item_list[1]);
+        $item_obj->setKeyItem($key_item);
+        $item_obj->setValueItem($value_item);
     }
 
     /**
@@ -595,29 +535,14 @@ class Protocol
     /**
      * 解析私有的struct
      * @param string $name
-     * @param \DOMElement $item 节点
+     * @param SchemaItem $item 节点
      * @return Struct
      */
-    private function parsePrivateStruct($name, \DOMElement $item)
+    private function parsePrivateStruct($name, SchemaItem $item)
     {
-        if ($item->hasAttribute('class_name')) {
-            $class_name = trim($item->getAttribute('class_name'));
-            if (!empty($class_name)) {
-                $name = FFanStr::camelName($class_name);
-            }
-        }
+        $sub_model_name = $item->getSubModelName();
         //如果是引用其它Struct，加载其它Struct
-        $struct = $this->parseStruct($name, $item, false);
+        $struct = $this->parseStruct($sub_model_name, SchemaFile::getModelSchema($sub_model_name));
         return $struct;
-    }
-
-    /**
-     * 设置行号
-     * @param string $line_number
-     */
-    private function setLineNumber($line_number)
-    {
-        $position_info = 'File:' . $this->file_name . ' Line:' . $line_number;
-        Exception::setAppendMsg($position_info);
     }
 }

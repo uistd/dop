@@ -421,9 +421,17 @@ class Manager
                 $this->buildLog('Ignore file:'. $xml_file);
                 continue;
             }
-            $ns = str_replace('.xml', '', strtolower($xml_file));
-            $this->scheme_list[$ns] = new Schema\File($this, $xml_file);
+            $this->scheme_list[$xml_file] = new Schema\File($this, $xml_file);
         }
+        self::setCurrentStruct(null);
+        /**
+         * @var string $name_space
+         * @var File $file
+         */
+        foreach ($this->scheme_list as $xml_file => $file) {
+            new Protocol($this, $xml_file);
+        }
+
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {
             $this->ignoreVersion();
