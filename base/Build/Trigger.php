@@ -2,6 +2,7 @@
 
 namespace FFan\Dop\Build;
 
+use FFan\Dop\Schema\Item;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
@@ -46,21 +47,21 @@ abstract class Trigger extends NodeBase
 
     /**
      * 全局初始化
-     * @param \DomElement $node
+     * @param Item $node
      * @return void
      */
     public function init($node)
     {
-        $coder_set = self::read($node, 'coder');
+        $coder_set = $node->get('coder');
         if (null !== $coder_set) {
             $this->coder_list = FFanStr::split($coder_set);
         }
 
-        $packer_set = self::read($node, 'packer');
+        $packer_set = $node->get('packer');
         if (null !== $packer_set) {
             $this->packer_list = FFanStr::split($packer_set);
         }
-        $method_type = self::read($node, 'method');
+        $method_type = $node->get('method');
         if ('unpack' === $method_type) {
             $this->method_type = PackerBase::METHOD_UNPACK;
         } else {

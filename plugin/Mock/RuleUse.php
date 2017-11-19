@@ -5,6 +5,7 @@ namespace FFan\Dop\Plugin\Mock;
 use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\Protocol;
+use FFan\Dop\Schema\Item as SchemaItem;
 
 /**
  * @package FFan\Dop
@@ -35,13 +36,13 @@ class RuleUse extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param \DOMElement $node
+     * @param SchemaItem $node
      * @param Item $item
      * @return int error_code
      */
     function init(Protocol $parser, $node, $item)
     {
-        $use_str = self::read($node, 'use');
+        $use_str = $node->get('use');
         if (empty($use_str)) {
             return 1;
         }

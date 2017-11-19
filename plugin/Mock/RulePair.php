@@ -7,6 +7,7 @@ use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Std\Common\Str as FFanStr;
+use FFan\Dop\Schema\Item as SchemaItem;
 
 /**
  * @package FFan\Dop
@@ -35,17 +36,17 @@ class RulePair extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param \DOMElement $node
+     * @param SchemaItem $node
      * @param Item $item
      * @return int error_code
      */
     function init(Protocol $parser, $node, $item)
     {
-        $field = self::read($node, 'pair');
+        $field = $node->get('pair');
         if (empty($field)) {
             return 1;
         }
-        $map_set = self::read($node, 'map');
+        $map_set = $node->get('map');
         $value_set = FFanStr::dualSplit($map_set, ',', ':');
         if (empty($value_set)) {
             return 2;

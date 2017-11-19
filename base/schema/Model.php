@@ -44,14 +44,33 @@ class Model extends Node
     private $name;
 
     /**
+     * @var Action
+     */
+    private $action;
+
+    /**
+     * @var int 类型
+     */
+    private $type;
+
+    /**
+     * @var string
+     */
+    private $namespace;
+
+    /**
      * Model constructor.
+     * @param string $namespace
      * @param string $name
+     * @param int $type
      * @param \DOMElement $node
      */
-    public function __construct($name, \DOMElement $node)
+    public function __construct($namespace, $name, $type, \DOMElement $node)
     {
         parent::__construct($node);
         $this->name = $name;
+        $this->namespace = $namespace;
+        $this->type = $type;
     }
 
     /**
@@ -97,5 +116,37 @@ class Model extends Node
     public function getItemList()
     {
         return $this->item_list;
+    }
+
+    /**
+     * @param Action $action
+     */
+    public function setAction(Action $action)
+    {
+        $this->action = $action;
+    }
+
+    /**
+     * @return Action
+     */
+    public function getAction()
+    {
+        return $this->action;
+    }
+
+    /**
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNameSpace()
+    {
+        return $this->namespace;
     }
 }

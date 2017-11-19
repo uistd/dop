@@ -9,6 +9,7 @@ use FFan\Dop\Build\StrBuf;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Struct;
+use FFan\Dop\Schema\File;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
@@ -42,9 +43,14 @@ class UisSdkPack extends PackerBase
         if (!$method_buf || !$property_buf) {
             return;
         }
-        $node = $struct->getNode();
-        $uri = $node->getAttribute('uri');
-        $method = $node->getAttribute('method');
+        $model_schema = $struct->getModelschema();
+        if (null === $model_schema) {
+            return;
+        }
+        $action_node = $model_schema->getAction();
+        $request_node = File::getModelSchema($action_node->getRequestModel());
+        $uri = $request_node->get('uri');
+        $method = $request_node->get('method');
         $method_buf->emptyLine();
         $method_buf->pushStr('/**');
         $method_buf->pushStr(' * @param string $uri');
@@ -64,23 +70,16 @@ class UisSdkPack extends PackerBase
         $method_buf->pushStr('parent::__construct($uri, $method);');
         $method_buf->backIndent()->pushStr('}');
 
-        //@todo 以下代码太难理解， 待优化
-        $response_node = $node->nextSibling;
-        //如果有response, 生成获取response结果
-        while (null !== $response_node) {
-            if (XML_ELEMENT_NODE !== $response_node->nodeType || 'response' !== $response_node->nodeName) {
-                $response_node = $response_node->nextSibling;
-                continue;
-            }
-            $action_node = $node->parentNode;
-            $name = FFanStr::camelName($action_node->getAttribute('name'));
-            $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) . '_class_suffix');
-            $response_class_name = $name . FFanStr::camelName($class_name_suffix);
-            $response_struct = $this->coder->getManager()->getStruct('/' . $struct->getFile(false) . '/' . $response_class_name);
-            if ($response_struct) {
-                $this->buildGetResult($response_struct, $method_buf);
-            }
-            break;
+        $response_model_name = $action_node->getResponseModel();
+        if (!$response_model_name) {
+            return;
+        }
+        $name = FFanStr::camelName($action_node->get('name'));
+        $class_name_suffix = $this->coder->getBuildOption()->getConfig(Struct::getTypeName(Struct::TYPE_RESPONSE) . '_class_suffix');
+        $response_class_name = $name . FFanStr::camelName($class_name_suffix);
+        $response_struct = $this->coder->getManager()->getStruct(dirname($response_class_name) . $response_class_name);
+        if ($response_struct) {
+            $this->buildGetResult($response_struct, $method_buf);
         }
     }
 

@@ -3,6 +3,7 @@
 namespace FFan\Dop\Protocol;
 
 use FFan\Dop\Exception;
+use FFan\Dop\Schema\Model;
 
 /**
  * Class Struct
@@ -81,9 +82,9 @@ class Struct
     private $load_from_cache = false;
 
     /**
-     * @var /DomElement 所在的节点(默认记录action所在的节点)
+     * @var Model 所在的节点
      */
-    private $node;
+    private $model_schema;
 
     /**
      * @var int
@@ -382,20 +383,20 @@ class Struct
 
     /**
      * 设置所在的节点
-     * @param \DOMElement $node
+     * @param Model $model_schema
      */
-    public function setNode(\DOMElement $node)
+    public function setModelSchema(Model $model_schema)
     {
-        $this->node = $node;
+        $this->model_schema = $model_schema;
     }
 
     /**
      * 获取所在节点
-     * @return \DOMElement|null
+     * @return Model|null
      */
-    public function getNode()
+    public function getModelSchema()
     {
-        return $this->node;
+        return $this->model_schema;
     }
 
     /**

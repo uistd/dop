@@ -6,6 +6,7 @@ use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Std\Common\Str as FFanStr;
+use FFan\Dop\Schema\Item as SchemaItem;
 
 /**
  * @package FFan\Dop
@@ -39,13 +40,13 @@ class RuleType extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param \DOMElement $node
+     * @param SchemaItem $node
      * @param Item $item
      * @return int error_code
      */
     function init(Protocol $parser, $node, $item)
     {
-        $this->build_in_type = FFanStr::camelName(self::read($node, 'type'), false);
+        $this->build_in_type = FFanStr::camelName($node->get('type'), false);
         if (!in_array($this->build_in_type, self::$allow_type)) {
             return 1;
         }

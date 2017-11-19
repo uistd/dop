@@ -118,10 +118,10 @@ class Shader
             } else {
                 $buf_name = $code_node['buf_name'];
             }
-            $this->addCode($code_node->nodeValue, $buf_name);
+            $this->addCode($code_node['code_value'], $buf_name);
         }
         if (0 === $num) {
-            $this->addCode($shader_node['nodeValue']);
+            $this->addCode($shader_node['code_value']);
         }
     }
 

@@ -31,11 +31,6 @@ class File
     private $path_handle;
 
     /**
-     * @var array model列表
-     */
-    private $model_list;
-
-    /**
      * @var Shader[] 着色器
      */
     private $shader;
@@ -56,9 +51,9 @@ class File
     private $namespace;
 
     /**
-     * @var Model[] 所有的model
+     * @var Protocol
      */
-    private static $all_model = array();
+    private $protocol;
 
     /**
      * Scheme constructor.
@@ -68,6 +63,7 @@ class File
      */
     public function __construct(Manager $manager, $file_name)
     {
+        $this->protocol = Protocol::getInstance($manager);
         $this->manager = $manager;
         $base_path = $manager->getBasePath();
         $this->namespace = self::fileToNamespace($file_name);
@@ -156,6 +152,7 @@ class File
         if (empty($action_method)) {
             $action_method = 'get';
         }
+        $action_object = new Action($action);
         $extra_packer = $this->parseExtraPacer($action);
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
@@ -163,7 +160,6 @@ class File
             if (XML_ELEMENT_NODE !== $node->nodeType) {
                 continue;
             }
-            $node->setAttribute('name', $name);
             $node_name = strtolower($node->nodeName);
             if ('request' === $node_name) {
                 if (++$request_count > 1) {
@@ -175,11 +171,13 @@ class File
                     $method = $action_method;
                     $node->setAttribute('method', $method);
                 }
+                $node->setAttribute('class_name', $name . '/request');
                 $type = Model::TYPE_REQUEST;
             } elseif ('response' === $node_name) {
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
+                $node->setAttribute('class_name', $name . '/response');
                 $type = Model::TYPE_RESPONSE;
             } else {
                 throw new Exception('Unknown node:' . $node_name);
@@ -188,7 +186,17 @@ class File
             if (!empty($extra_packer)) {
                 $node->setAttribute('packer-extra', $extra_packer);
             }
-            $this->parseModel($node, $type);
+            $model_class_name = $this->parseModel($node, $type);
+            if (Model::TYPE_REQUEST === $type) {
+                $action_object->setRequestModel($model_class_name);
+            } else {
+                $action_object->setResponseMode($model_class_name);
+            }
+            $model = $this->protocol->getModel($model_class_name);
+            if (null === $model) {
+                throw new Exception('Unknown error');
+            }
+            $model->setAction($action_object);
         }
     }
 
@@ -329,6 +337,9 @@ class File
             if (empty($extend_name)) {
                 throw new Exception('extend 不能为空');
             }
+            if (false === strpos($extend_name, '/')) {
+                $extend_name = $this->namespace . '/' . $extend_name;
+            }
         }
         //如果item为空
         if (empty($item_arr)) {
@@ -342,7 +353,7 @@ class File
             }
         }
         $class_name = trim($class_name);
-        $model = new Model($class_name, $model_node);
+        $model = new Model($this->namespace, $class_name, $type, $model_node);
         foreach ($item_arr as $name => $item) {
             $model->addItem($name, $item);
         }
@@ -351,11 +362,10 @@ class File
         }
         Manager::setCurrentStruct(null);
         if (isset($this->model_list[$type][$class_name])) {
-            throw new Exception('class_name 类名冲突');
+            throw new Exception('class_name：' . $class_name . ' 类名冲突');
         }
-        $this->model_list[$type][$class_name] = $model;
-        self::$all_model[$this->namespace . '/' . $class_name] = $model;
-        return $class_name;
+        $this->protocol->addModel($this->namespace, $model);
+        return $this->namespace .'/'. $class_name;
     }
 
     /**
@@ -548,19 +558,6 @@ class File
     }
 
     /**
-     * 获取模型列表
-     * @param int $model_type
-     * @return Model[]
-     */
-    public function getModels($model_type)
-    {
-        if (isset($this->model_list[$model_type])) {
-            return $this->model_list[$model_type];
-        }
-        return array();
-    }
-
-    /**
      * @return Shader[]|null
      */
     public function getShaderList()
@@ -581,17 +578,5 @@ class File
             $path = '/' . $path . '/';
         }
         return $path . basename($file_name, '.xml');
-    }
-
-    /**
-     * @param string $full_name
-     * @return Model|null
-     */
-    public static function getModelSchema($full_name)
-    {
-        if (!isset(self::$all_model[$full_name])) {
-            return null;
-        }
-        return self::$all_model[$full_name];
     }
 }

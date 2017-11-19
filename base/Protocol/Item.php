@@ -2,12 +2,13 @@
 
 namespace FFan\Dop\Protocol;
 
-use FFan\Dop\Build\NodeBase;
 use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Build\Trigger;
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
 use FFan\Std\Common\Str as FFanStr;
+use FFan\Dop\Schema\Item as SchemaItem;
+use FFan\Dop\Schema\Protocol as SchemaProtocol;
 
 /**
  * Class Item 协议的每一项
@@ -129,24 +130,24 @@ abstract class Item
     /**
      * 添加插件数据
      * @param string $plugin_name
-     * @param \DOMElement $node
+     * @param SchemaItem $node
      * @param PluginRule $rule
-     * @param Protocol $parser
+     * @param SchemaProtocol $parser
      */
-    public function addPluginData($plugin_name, \DOMElement $node, $rule, Protocol $parser)
+    public function addPluginData($plugin_name, SchemaItem $node, $rule, SchemaProtocol $parser)
     {
         if (null !== $rule && !($rule instanceof PluginRule)) {
             return;
         }
         //如果有继承
         if ($node->hasAttribute('extend')) {
-            $extend_str = NodeBase::read($node, 'extend');
+            $extend_str = $node->get('extend');
             if (!empty($extend_str)) {
                 if (null === $rule) {
                     $rule = new PluginRule();
                 }
                 $rule->extend_item = $parser->fixItemName(basename($extend_str));;
-                $rule->extend_class = $parser->getFullName(dirname($extend_str));
+                $rule->extend_class = $extend_str;
             }
         }
         if (null == $node) {

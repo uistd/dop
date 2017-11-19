@@ -17,6 +17,7 @@ use FFan\Dop\Protocol\StructItem;
 use FFan\Dop\Schema\File;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
+use FFan\Dop\Schema\Protocol as SchemaProtocol;
 
 /**
  * Class Manager
@@ -424,13 +425,8 @@ class Manager
             $this->scheme_list[$xml_file] = new Schema\File($this, $xml_file);
         }
         self::setCurrentStruct(null);
-        /**
-         * @var string $name_space
-         * @var File $file
-         */
-        foreach ($this->scheme_list as $xml_file => $file) {
-            new Protocol($this, $xml_file);
-        }
+        SchemaProtocol::getInstance($this)->makeStruct();
+        die();
 
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {

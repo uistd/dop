@@ -6,6 +6,7 @@ use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Protocol;
+use FFan\Dop\Schema\Item as SchemaItem;
 
 /**
  * @package FFan\Dop
@@ -37,7 +38,7 @@ class RuleIncrease extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param \DOMElement $node
+     * @param SchemaItem $node
      * @param Item $item
      * @return int error_code
      */
@@ -46,8 +47,8 @@ class RuleIncrease extends PluginRule
         if (ItemType::INT !== $item->getType()) {
             return 1;
         }
-        $this->begin = self::readInt($node, 'begin', 1);
-        $this->step = self::readInt($node, 'step', 1);
+        $this->begin = $node->getInt('begin', 1);
+        $this->step = $node->getInt('step', 1);
         return 0;
     }
 }

@@ -6,6 +6,7 @@ use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\Protocol;
 use FFan\Std\Common\Str as FFanStr;
+use FFan\Dop\Schema\Item as SchemaItem;
 
 /**
  * @package FFan\Dop
@@ -37,14 +38,14 @@ class RuleEnum extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param \DOMElement $node
+     * @param SchemaItem $node
      * @param Item $item
      * @return int error_code
      */
     function init(Protocol $parser, $node, $item)
     {
         $item_type = $item->getType();
-        $enum_set = FFanStr::split(self::read($node, 'enum'), ',');
+        $enum_set = FFanStr::split($node->get('enum'), ',');
         if (empty($enum_set)) {
             return 1;
         }

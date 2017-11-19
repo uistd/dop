@@ -334,6 +334,7 @@ class Protocol
         }
         $this->manager->addStruct($struct_obj);
         self::$all_struct[$full_name] = $struct_obj;
+        $struct_obj->setModelSchema($model);
         return $struct_obj;
     }
 
