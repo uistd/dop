@@ -380,6 +380,7 @@ class Protocol
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
+                $this->responseModelClassName($node, $action_name);
                 $type = Struct::TYPE_RESPONSE;
             } else {
                 throw new Exception('Unknown node:' . $node_name);
@@ -405,6 +406,34 @@ class Protocol
                 }
             }
             $this->addExtraPacker($extra_packer, $struct);
+        }
+    }
+
+    /**
+     * 自动给response下面的model生成class_name
+     * @param \DOMDocument $struct_node
+     * @param string $action_name
+     */
+    private function responseModelClassName($struct_node, $action_name)
+    {
+        $node_list = $struct_node->childNodes;
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            $node = $node_list->item($i);
+            if (XML_ELEMENT_NODE !== $node->nodeType) {
+                continue;
+            }
+            $node_name = $node->nodeName;
+            if (!$this->isStruct($node_name)) {
+                continue;
+            }
+            if ($node->getAttribute('class_name')) {
+                continue;
+            }
+            $name = $node->getAttribute('name');
+            if (!$name) {
+                continue;
+            }
+            $node->setAttribute('class_name', $action_name .'_'. $name);
         }
     }
 
