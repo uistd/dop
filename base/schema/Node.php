@@ -19,11 +19,17 @@ class Node
     private $node_name;
 
     /**
+     * @var string 文档
+     */
+    private $doc;
+
+    /**
      * Node constructor.
      * @param \DOMElement $node
      */
     public function __construct(\DOMElement $node)
     {
+        $this->doc = $node->C14N();
         $this->node_name = $node->nodeName;
         $this->attributes = $this->getAllAttribute($node);
     }
@@ -149,5 +155,13 @@ class Node
     public function getNodeName()
     {
         return $this->node_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDoc()
+    {
+        return $this->doc;
     }
 }

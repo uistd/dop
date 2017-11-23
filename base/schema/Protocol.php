@@ -125,6 +125,7 @@ class Protocol
         if (isset($this->struct_list[$full_name])) {
             return $this->struct_list[$full_name];
         }
+        Manager::setCurrentSchema($model->getDoc());
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
@@ -345,13 +346,14 @@ class Protocol
 
     /**
      * 解析trigger
-     * @param Item $dom_node
+     * @param Plugin $plugin_node
      * @param ProtocolItem $item
      * @throws Exception
      */
-    private function parseTrigger($dom_node, $item)
+    private function parseTrigger($plugin_node, $item)
     {
-        $type = $dom_node->get('type');
+        Manager::setCurrentSchema($plugin_node->getDoc());
+        $type = $plugin_node->get('type');
         switch ($type) {
             case 'buf':
                 $trigger = new BufTrigger();
@@ -359,7 +361,7 @@ class Protocol
             default:
                 throw new Exception('Unknown trigger:'. $type);
         }
-        $trigger->init($dom_node);
+        $trigger->init($plugin_node);
         $item->addTrigger($trigger);
     }
 
@@ -378,7 +380,7 @@ class Protocol
         foreach ($plugin_list as $plugin_name => $plugin) {
             //如果是触发器，特殊处理
             if ('trigger' === $plugin_name) {
-                //$this->parseTrigger($dom_node, $item);
+                $this->parseTrigger($plugin, $item);
             } else {
                 $plugin = $this->manager->getPlugin($plugin_name);
                 if (!$plugin) {

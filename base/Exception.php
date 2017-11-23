@@ -36,9 +36,9 @@ class Exception extends \Exception
         if (!empty(self::$append_msg)) {
             $message = self::$append_msg . ', ' . $message;
         }
-        $current_struct = Manager::getCurrentStruct();
-        if (null !== $current_struct) {
-            $message .= PHP_EOL. $current_struct->C14N();
+        $current_schema = Manager::getCurrentSchema();
+        if (!empty($current_schema)) {
+            $message .= PHP_EOL. $current_schema;
         }
         $message .= PHP_EOL;
         $message .= PHP_EOL .Debug::codeTrace();

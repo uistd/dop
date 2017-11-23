@@ -123,7 +123,7 @@ class File
         for ($i = 0; $i < $action_list->length; ++$i) {
             /** @var \DOMElement $action */
             $action = $action_list->item($i);
-            Manager::setCurrentStruct($action);
+            Manager::setCurrentSchema($action->C14N());
             $this->setLineNumber($action->getLineNo());
             if (!$action->hasAttribute('name')) {
                 throw new Exception('Action must have name attribute');
@@ -133,7 +133,6 @@ class File
                 $name = str_replace('/', '_', $name);
             }
             $this->parseAction($name, $action);
-            Manager::setCurrentStruct(null);
         }
     }
 
@@ -244,11 +243,10 @@ class File
             if (empty($shader_node->getAttribute('name'))) {
                 throw new Exception('Shader name missing');
             }
-            Manager::setCurrentStruct($shader_node);
+            Manager::setCurrentSchema($shader_node->C14N());
             $this->setLineNumber($shader_node->getLineNo());
             $shader = new Shader($shader_node);
             $this->shader[] = $shader;
-            Manager::setCurrentStruct(null);
         }
     }
 
@@ -284,7 +282,7 @@ class File
      */
     private function parseModel(\DomElement $model_node, $type = Model::TYPE_STRUCT)
     {
-        Manager::setCurrentStruct($model_node);
+        Manager::setCurrentSchema($model_node->C14N());
         //model 取名 的时候，优先使用 class_name
         $name_attr = $model_node->hasAttribute('class_name') ? 'class_name' : 'name';
         $class_name = $model_node->getAttribute($name_attr);
@@ -345,7 +343,6 @@ class File
         if (empty($item_arr)) {
             //完全继承
             if (!empty($extend_name)) {
-                Manager::setCurrentStruct(null);
                 return $extend_name;
             } //data 和 struct不允许空item
             elseif (Model::TYPE_STRUCT === $type || Model::TYPE_DATA === $type) {
@@ -360,7 +357,6 @@ class File
         if (!empty($extend_name)) {
             $model->setExtend($extend_name);
         }
-        Manager::setCurrentStruct(null);
         if (isset($this->model_list[$type][$class_name])) {
             throw new Exception('class_name：' . $class_name . ' 类名冲突');
         }
@@ -516,12 +512,11 @@ class File
             if (!$this->isPluginNode($tmp_node)) {
                 continue;
             }
-            Manager::setCurrentStruct($tmp_node);
+            Manager::setCurrentSchema($tmp_node->C14N());
             $this->setLineNumber($tmp_node->getLineNo());
             $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
             $plugin = new Plugin($plugin_name, $tmp_node);
             $item->addPlugin($plugin_name, $plugin);
-            Manager::setCurrentStruct(null);
         }
     }
 

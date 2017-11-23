@@ -2,7 +2,7 @@
 
 namespace FFan\Dop\Build;
 
-use FFan\Dop\Schema\Item;
+use FFan\Dop\Schema\Plugin;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
@@ -47,7 +47,7 @@ abstract class Trigger extends NodeBase
 
     /**
      * 全局初始化
-     * @param Item $node
+     * @param Plugin $node
      * @return void
      */
     public function init($node)

@@ -2,6 +2,7 @@
 namespace FFan\Dop\Build;
 
 use FFan\Dop\Exception;
+use FFan\Dop\Schema\Plugin;
 
 /**
  * Class BufTrigger
@@ -21,18 +22,18 @@ class BufTrigger extends Trigger
 
     /**
      * 初始化
-     * @param \DomElement $node
+     * @param Plugin $node
      * @return void
      * @throws Exception
      */
     public function parse($node)
     {
-        $buf_name = self::read($node, 'buf_name');
+        $buf_name = $node->get('buf_name');
         if (empty($buf_name)) {
             throw new Exception('Trigger buf_name mission');
         }
         $this->buf_name = $buf_name;
-        $this->buf_type = self::read($node, 'type', 'code');
+        $this->buf_type = $node->get('type', 'code');
     }
 
     /**

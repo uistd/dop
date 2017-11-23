@@ -127,9 +127,9 @@ class Manager
     private $scheme_list;
 
     /**
-     * @var \DOMElement 当前正在解析的节点
+     * @var string 当前正在解析的xml
      */
-    private static $current_struct;
+    private static $schema_doc;
 
     /**
      * 初始化
@@ -419,12 +419,12 @@ class Manager
         //解析文件
         foreach ($build_list as $xml_file => $v) {
             if ($build_opt->isIgnoreFile($xml_file)) {
-                $this->buildLog('Ignore file:'. $xml_file);
+                $this->buildLog('Ignore file:' . $xml_file);
                 continue;
             }
             $this->scheme_list[$xml_file] = new Schema\File($this, $xml_file);
         }
-        self::setCurrentStruct(null);
+        self::setCurrentSchema();
         SchemaProtocol::getInstance($this)->makeStruct();
         die();
 
@@ -612,19 +612,19 @@ class Manager
     }
 
     /**
-     * @param \DOMElement $struct
+     * @param string $schema
      */
-    public static function setCurrentStruct($struct)
+    public static function setCurrentSchema($schema = '')
     {
-        self::$current_struct = $struct;
+        self::$schema_doc = $schema;
     }
 
     /**
-     * @return \DOMElement
+     * @return string
      */
-    public static function getCurrentStruct()
+    public static function getCurrentSchema()
     {
-        return self::$current_struct;
+        return self::$schema_doc;
     }
 
     /**
