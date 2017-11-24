@@ -1,5 +1,6 @@
 <?php
 use FFan\Dop\Build\CodeBuf;
+use FFan\Std\Common\Utils;
 
 /**
  * Class SwaggerToXml
@@ -72,22 +73,24 @@ class SwaggerToXml
     private $api_group = '';
 
     /**
+     * @var string 协议文档
+     */
+    private $doc_file;
+
+    /**
      * SwaggerToXml constructor.
      * @param string $doc_file
      * @param string $file_name
-     * @param array $exist_action_name 指定 action name
-     * @param array $exist_model_name 指定 model_name
      */
-    function __construct($doc_file, $file_name, array $exist_action_name = [], array $exist_model_name = [])
+    function __construct($doc_file, $file_name)
     {
         if (empty($file_name)) {
             $file_name = 'protocol';
         }
         $this->api_group = basename($file_name, '.xml');
         $this->save_file_name = $file_name;
-        $this->exist_model_name = $exist_model_name;
-        $this->exist_action_name = $exist_action_name;
         $this->parseCurrentFile();
+        $this->doc_file = $doc_file;
         $this->read($doc_file);
     }
 
@@ -157,7 +160,7 @@ class SwaggerToXml
      */
     private function read($doc_file)
     {
-        echo 'Load swagger schema...', PHP_EOL;
+        echo 'Load ' . $doc_file . ' ...', PHP_EOL;
         $content = file_get_contents($doc_file);
         if (empty($content)) {
             exit('无法获取 ' . $doc_file . " 内容\n");
@@ -245,7 +248,7 @@ class SwaggerToXml
         $dom = new CodeBuf();
         $dom->pushStr('<?xml version="1.0" encoding="UTF-8"?>');
         //  创建根节点
-        $dom->pushStr('<protocol>')->indent();
+        $dom->pushStr('<protocol type="swagger" doc="' . $this->doc_file . '">')->indent();
         $action_node = new CodeBuf();
         $model_node = new CodeBuf();
         $dom->push($model_node);
@@ -478,14 +481,16 @@ class SwaggerToXml
             if (!isset($response_info['schema'])) {
                 continue;
             }
-            $ref = $response_info['schema']['$ref'];
-            if (!isset($this->models[$ref])) {
-                $response = array();
-            } else {
-                $response = $this->models[$ref];
-                if (isset($response['data'], $response['status'], $response['message'])) {
-                    $response['is_standard_api'] = true;
-                    unset($response['status'], $response['message']);
+            $response = array();
+            //有的response 并不是#ref.
+            if (isset($response_info['schema']['$ref'])) {
+                $ref = $response_info['schema']['$ref'];
+                if (isset($this->models[$ref])) {
+                    $response = $this->models[$ref];
+                    if (isset($response['data'], $response['status'], $response['message'])) {
+                        $response['is_standard_api'] = true;
+                        unset($response['status'], $response['message']);
+                    }
                 }
             }
             $action['response'] = $response;
@@ -574,5 +579,48 @@ class SwaggerToXml
             $model[$name] = $tmp_item;
         }
         return $model;
+    }
+
+    /**
+     * 检测整个目录
+     * @param string $folder
+     */
+    public static function folderDetect($folder)
+    {
+        $dir_fd = opendir($folder);
+        if (!$dir_fd) {
+            return;
+        }
+        while ($file = readdir($dir_fd)) {
+            $file = strtolower($file);
+            if ('.' === $file{0}) {
+                continue;
+            }
+            $full_file = Utils::joinFilePath($folder, $file);
+            if (is_dir($full_file)) {
+                self::folderDetect($full_file);
+            }
+            if ('.xml' === substr($file, -4)) {
+                self::xmlInstance($full_file);
+            }
+        }
+    }
+
+    /**
+     * 获取实例
+     * @param string $file_name
+     */
+    private static function xmlInstance($file_name)
+    {
+        $xml_doc = new DOMDocument();
+        $xml_doc->load($file_name);
+        $xml_path = new DOMXPath($xml_doc);
+        $protocol = $xml_path->query('/protocol');
+        $main_node = $protocol->item(0);
+        if ('swagger' !== $main_node->getAttribute('type')) {
+            return;
+        }
+        $doc = $main_node->getAttribute('doc');
+        new self($doc, $file_name);
     }
 }
