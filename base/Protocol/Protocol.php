@@ -75,7 +75,7 @@ class Protocol
     /**
      * @var array 允许的方法
      */
-    private static $allow_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'DELETE');
+    private static $allow_method_list = array('GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH');
 
     /**
      * @var Manager
