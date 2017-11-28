@@ -9,7 +9,7 @@ use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Schema\Protocol;
-use FFan\Dop\Schema\Item as SchemaItem;
+use FFan\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
  * Class Plugin 数据有效性检验
@@ -24,11 +24,11 @@ class Plugin extends PluginBase
 
     /**
      * 初始化
-     * @param SchemaItem $node
-     * @param Item $item
      * @param Protocol $parser 解析器
+     * @param SchemaPlugin $node
+     * @param Item $item
      */
-    public function init(Protocol $parser, SchemaItem $node, Item $item)
+    public function init(Protocol $parser, SchemaPlugin $node, Item $item)
     {
         if (!$this->isSupport($item)) {
             return;
@@ -36,12 +36,13 @@ class Plugin extends PluginBase
         $valid_rule = new ValidRule();
         $valid_rule->is_require = $node->getBool('require', false);
         $valid_rule->require_msg = $node->get('require-msg');
+        echo $valid_rule->require_msg, PHP_EOL;
         $valid_rule->range_msg = $node->get('range-msg');
         $valid_rule->length_msg = $node->get('length-msg');
         $valid_rule->format_msg = $node->get('format-msg');
         $valid_rule->err_msg = $node->get('msg');
         if (null === $valid_rule->err_msg) {
-            $valid_rule->err_msg = 'Invalid `'. $item->getName() .'`';
+            $valid_rule->err_msg = 'Invalid `' . $item->getName() . '`';
         }
         $type = $item->getType();
         //如果是字符串
@@ -60,7 +61,7 @@ class Plugin extends PluginBase
 
     /**
      * int 配置
-     * @param SchemaItem $node
+     * @param SchemaPlugin $node
      * @param ValidRule $valid_rule
      */
     private function readIntSet($node, $valid_rule)
@@ -76,7 +77,7 @@ class Plugin extends PluginBase
 
     /**
      * float 配置
-     * @param SchemaItem $node
+     * @param SchemaPlugin $node
      * @param ValidRule $valid_rule
      */
     private function readFloatSet($node, $valid_rule)
@@ -92,7 +93,7 @@ class Plugin extends PluginBase
 
     /**
      * 字符串配置
-     * @param SchemaItem $node
+     * @param SchemaPlugin $node
      * @param ValidRule $valid_rule
      * @throws Exception
      */
@@ -118,7 +119,7 @@ class Plugin extends PluginBase
         if (!empty($format_set)) {
             $valid_rule->format_set = str_replace('#', '\#', $format_set);
             if ('/' !== $valid_rule->format_set[0] && !ValidRule::isBuildInType($valid_rule->format_set)) {
-                throw new Exception('Unknown format set:'. $format_set);
+                throw new Exception('Unknown format set:' . $format_set);
             }
         }
         //长度计算方式

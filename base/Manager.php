@@ -12,9 +12,9 @@ use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\ListItem;
 use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\Protocol;
 use FFan\Dop\Protocol\StructItem;
 use FFan\Dop\Schema\File;
+use FFan\Dop\Schema\Protocol;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
 use FFan\Dop\Schema\Protocol as SchemaProtocol;
@@ -130,6 +130,11 @@ class Manager
      * @var string 当前正在解析的xml
      */
     private static $schema_doc;
+
+    /**
+     * @var Protocol
+     */
+    private $schema_protocol;
 
     /**
      * 初始化
@@ -425,8 +430,8 @@ class Manager
             $this->scheme_list[$xml_file] = new Schema\File($this, $xml_file);
         }
         self::setCurrentSchema();
-        SchemaProtocol::getInstance($this)->makeStruct();
-        die();
+        $this->schema_protocol = Protocol::getInstance($this);
+        $this->schema_protocol->makeStruct();
 
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {
@@ -951,5 +956,13 @@ class Manager
     public function getCurrentBuildOpt()
     {
         return $this->current_build_opt;
+    }
+
+    /**
+     * @return SchemaProtocol
+     */
+    public function getProtocol()
+    {
+        return $this->schema_protocol;
     }
 }

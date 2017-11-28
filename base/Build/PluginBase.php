@@ -5,9 +5,9 @@ namespace FFan\Dop\Build;
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
 use FFan\Dop\Protocol\Item;
+use FFan\Dop\Schema\Plugin;
 use FFan\Dop\Schema\Protocol;
 use FFan\Std\Common\ConfigBase;
-use FFan\Dop\Schema\Item as SchemaItem;
 use FFan\Std\Common\Utils as FFanUtils;
 
 /**
@@ -70,11 +70,11 @@ abstract class PluginBase extends ConfigBase
     /**
      * 初始化
      * @param Protocol $parser 解析器
-     * @param SchemaItem $node
+     * @param Plugin $node
      * @param Item $item
      * @return
      */
-    abstract public function init(Protocol $parser, SchemaItem $node, Item $item);
+    abstract public function init(Protocol $parser, Plugin $node, Item $item);
 
     /**
      * 获取插件名称

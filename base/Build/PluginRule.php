@@ -3,7 +3,8 @@
 namespace FFan\Dop\Build;
 
 use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\Protocol;
+use FFan\Dop\Schema\Plugin;
+use FFan\Dop\Schema\Protocol;
 
 /**
  * Class PluginRule 插件规则
@@ -35,7 +36,7 @@ class PluginRule extends NodeBase
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param \DOMElement $node
+     * @param Plugin $node
      * @param Item $item
      * @return int error_code
      */

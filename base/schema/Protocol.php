@@ -377,16 +377,16 @@ class Protocol
         if (!$plugin_list) {
             return;
         }
-        foreach ($plugin_list as $plugin_name => $plugin) {
+        foreach ($plugin_list as $plugin_name => $plugin_node) {
             //如果是触发器，特殊处理
             if ('trigger' === $plugin_name) {
-                $this->parseTrigger($plugin, $item);
+                $this->parseTrigger($plugin_node, $item);
             } else {
                 $plugin = $this->manager->getPlugin($plugin_name);
                 if (!$plugin) {
                     continue;
                 }
-                $plugin->init($this, $dom_node, $item);
+                $plugin->init($this, $plugin_node, $item);
             }
         }
     }

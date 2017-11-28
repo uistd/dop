@@ -152,8 +152,6 @@ class BuildOption
             'code_side' => 'server',
             'utf8_bom' => false,
             'packer' => '',
-            'request_class_suffix' => 'Request',
-            'response_class_suffix' => 'Response',
             //忽略GET请求
             'ignore_get' => false,
             //是否保持原始名称

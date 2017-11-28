@@ -7,9 +7,7 @@ use FFan\Dop\Build\FileBuf;
 use FFan\Dop\Build\PackerBase;
 use FFan\Dop\Build\StrBuf;
 use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Schema\File;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
@@ -48,7 +46,8 @@ class UisSdkPack extends PackerBase
             return;
         }
         $action_node = $model_schema->getAction();
-        $request_node = File::getModelSchema($action_node->getRequestModel());
+        $protocol = $this->coder->getManager()->getProtocol();
+        $request_node = $protocol->getModel($action_node->getRequestModel());
         $uri = $request_node->get('uri');
         $method = $request_node->get('method');
         $method_buf->emptyLine();

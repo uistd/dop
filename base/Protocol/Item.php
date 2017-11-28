@@ -6,8 +6,8 @@ use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Build\Trigger;
 use FFan\Dop\Exception;
 use FFan\Dop\Manager;
+use FFan\Dop\Schema\Plugin;
 use FFan\Std\Common\Str as FFanStr;
-use FFan\Dop\Schema\Item as SchemaItem;
 use FFan\Dop\Schema\Protocol as SchemaProtocol;
 
 /**
@@ -130,11 +130,11 @@ abstract class Item
     /**
      * 添加插件数据
      * @param string $plugin_name
-     * @param SchemaItem $node
+     * @param Plugin $node
      * @param PluginRule $rule
      * @param SchemaProtocol $parser
      */
-    public function addPluginData($plugin_name, SchemaItem $node, $rule, SchemaProtocol $parser)
+    public function addPluginData($plugin_name, Plugin $node, $rule, SchemaProtocol $parser)
     {
         if (null !== $rule && !($rule instanceof PluginRule)) {
             return;

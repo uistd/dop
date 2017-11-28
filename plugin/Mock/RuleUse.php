@@ -4,8 +4,8 @@ namespace FFan\Dop\Plugin\Mock;
 
 use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\Protocol;
-use FFan\Dop\Schema\Item as SchemaItem;
+use FFan\Dop\Schema\Plugin as SchemaPlugin;
+use FFan\Dop\Schema\Protocol;
 
 /**
  * @package FFan\Dop
@@ -36,7 +36,7 @@ class RuleUse extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param SchemaItem $node
+     * @param SchemaPlugin $node
      * @param Item $item
      * @return int error_code
      */
@@ -47,7 +47,7 @@ class RuleUse extends PluginRule
             return 1;
         }
         $this->use_item = $parser->fixItemName(basename($use_str));
-        $this->use_class = $parser->getFullName(dirname($use_str));
+        $this->use_class = $use_str;
         return 0;
     }
 }

@@ -4,8 +4,8 @@ namespace FFan\Dop\Plugin\Valid;
 
 use FFan\Dop\Build\PluginRule;
 use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\Protocol;
-use FFan\Dop\Schema\Item as SchemaItem;
+use FFan\Dop\Schema\Plugin as SchemaPlugin;
+use FFan\Dop\Schema\Protocol;
 
 /**
  * Class ValidRule 数据有效规则
@@ -148,7 +148,7 @@ class ValidRule extends PluginRule
     /**
      * 解析规则
      * @param Protocol $parser
-     * @param SchemaItem $node
+     * @param SchemaPlugin $node
      * @param Item $item
      * @return int error_code
      */

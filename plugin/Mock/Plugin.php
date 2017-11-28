@@ -8,7 +8,7 @@ use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\ListItem;
 use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Schema\Protocol;
-use FFan\Dop\Schema\Item as SchemaItem;
+use FFan\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
  * Class Plugin
@@ -23,11 +23,11 @@ class Plugin extends PluginBase
 
     /**
      * 初始化
-     * @param SchemaItem $node
+     * @param SchemaPlugin $node
      * @param Item $item
      * @param Protocol $parser 解析器
      */
-    public function init(Protocol $parser, SchemaItem $node, Item $item)
+    public function init(Protocol $parser, SchemaPlugin $node, Item $item)
     {
         if (!self::isSupport($item)) {
             return;
