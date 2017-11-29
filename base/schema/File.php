@@ -153,6 +153,7 @@ class File
         }
         $action_object = new Action($action);
         $extra_packer = $this->parseExtraPacer($action);
+        $note = $action->getAttribute('note');
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
             $this->setLineNumber($node->getLineNo());
@@ -180,6 +181,9 @@ class File
                 $type = Model::TYPE_RESPONSE;
             } else {
                 throw new Exception('Unknown node:' . $node_name);
+            }
+            if (!empty($note)) {
+                $node->setAttribute('note', $note);
             }
             /** @var \DOMElement $node */
             if (!empty($extra_packer)) {

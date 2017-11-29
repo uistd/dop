@@ -26,7 +26,7 @@ class PhpMockCoder extends PluginCoderBase
     /**
      * @var string 当前正在使用的协议文件
      */
-    private $current_file;
+    private $current_name_space;
 
     /**
      * @var Struct[] 使用到的struct
@@ -70,7 +70,7 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function mockCode($file_name, $struct_list)
     {
-        $this->current_file = $file_name;
+        $this->current_name_space = substr($file_name, 1);
         $build_path = $this->plugin->getBuildPath();
         //如果 带 子目录
         if (false !== strpos($file_name, '/')) {
@@ -128,7 +128,7 @@ class PhpMockCoder extends PluginCoderBase
      * @param FileBuf $file_buf
      * @param string $file_name 所在文件名
      */
-    private function buildStructCode($struct, $file_buf, $file_name)
+    private function buildStructCode($struct, $file_buf)
     {
         $import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
         $mock_buf = $file_buf->getBuf(FileBuf::METHOD_BUF);
@@ -175,7 +175,7 @@ class PhpMockCoder extends PluginCoderBase
             $struct = $item->getStruct();
             $ns = $struct->getNamespace();
             if ($ns !== $base_ns) {
-                $full_file = $struct->getFullName(false);
+                $full_file = $struct->getFullName();
                 $import_ns = $this->makeClassNs($full_file);
                 $import_class = $this->fileNameToClassName($full_file);
                 $use_buf->pushUniqueStr('use ' . $import_ns . '\\' . $import_class . ';');
@@ -234,7 +234,7 @@ class PhpMockCoder extends PluginCoderBase
                 $func_name = 'mock' . $item->getStructName();
                 $sub_struct = $item->getStruct();
                 $sub_file = $sub_struct->getFile(false);
-                if ($sub_file !== $this->current_file) {
+                if ($sub_file !== $this->current_name_space) {
                     $mock_class_name = $this->fileNameToClassName($sub_file);
                 } else {
                     $mock_class_name = 'self';

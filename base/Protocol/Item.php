@@ -147,7 +147,7 @@ abstract class Item
                     $rule = new PluginRule();
                 }
                 $rule->extend_item = $parser->fixItemName(basename($extend_str));;
-                $rule->extend_class = $extend_str;
+                $rule->extend_class = dirname($extend_str);
             }
         }
         if (null == $node) {
@@ -172,6 +172,7 @@ abstract class Item
         if (null !== $plugin_rule->extend_item && null !== $plugin_rule->extend_class) {
             $struct =$this->protocol_manager->getStruct($plugin_rule->extend_class);
             if (null === $struct) {
+                dd($plugin_rule->extend_class);
                 return $plugin_rule;
             }
             $item = $struct->getItem($plugin_rule->extend_item);

@@ -677,7 +677,7 @@ class Manager
      */
     public function getStruct($full_name)
     {
-        return isset($this->struct_list[$full_name]) ? $this->struct_list[$full_name] : null;
+        return $this->schema_protocol->getStruct($full_name);
     }
 
     /**

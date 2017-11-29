@@ -472,4 +472,14 @@ class Protocol
     {
         return $this->struct_list;
     }
+
+    /**
+     * 获取struct
+     * @param string $name
+     * @return Struct|null
+     */
+    public function getStruct($name)
+    {
+        return isset($this->struct_list[$name]) ? $this->struct_list[$name] : null;
+    }
 }
