@@ -161,7 +161,7 @@ abstract class CoderBase extends ConfigBase
             }
             $this->loadAllRequireStruct($all_require_struct, $struct);
             //忽略主StructModel
-            if (Struct::TYPE_RESPONSE === $struct_type && $this->isIgnoreResponseStruct()) {
+            if (Struct::TYPE_RESPONSE === $struct_type && $this->isIgnoreResponseStruct($struct)) {
                 continue;
             }
             call_user_func($callback, $struct);
@@ -377,7 +377,7 @@ abstract class CoderBase extends ConfigBase
      * @param PackerBase $packer
      * @throws Exception
      */
-    private function writePackCode($struct, FileBuf $file_buf, PackerBase $packer)
+    private function writePackCode($struct, $file_buf, $packer)
     {
         $code_buf = $file_buf->getBuf(FileBuf::METHOD_BUF);
         if (null === $code_buf) {
@@ -385,9 +385,28 @@ abstract class CoderBase extends ConfigBase
         }
         $packer->setFileBuf($file_buf);
         $packer->build();
+        $build_method = $this->tryBuildMethod($struct, $packer);
+        if (($build_method & PackerBase::METHOD_PACK) > 0) {
+            $packer->setCurrentMethod(PackerBase::METHOD_PACK);
+            $packer->buildPackMethod($struct, $code_buf);
+        }
+        if (($build_method & PackerBase::METHOD_UNPACK) > 0) {
+            $packer->setCurrentMethod(PackerBase::METHOD_UNPACK);
+            $packer->buildUnpackMethod($struct, $code_buf);
+        }
+    }
+
+    /**
+     * 尝试buildMethod
+     * @param Struct $struct
+     * @param PackerBase $packer
+     * @return int
+     */
+    private function tryBuildMethod($struct, $packer)
+    {
+        $build_method = 0;
         $struct_type = $struct->getType();
         $pack_name = $packer->getMainPackerName();
-        $build_method = 0;
         //如果是 struct
         if (Struct::TYPE_STRUCT === $struct_type) {
             if ($struct->hasPackerMethod($pack_name, PackerBase::METHOD_PACK)) {
@@ -399,7 +418,7 @@ abstract class CoderBase extends ConfigBase
         } else {
             //如果 这个packer 不生成这种类型 struct 的代码
             if (!$this->build_opt->hasPackerStruct($pack_name, $struct_type)) {
-                return;
+                return 0;
             }
             $main_packer = $packer->getMainPacker();
             if (!$main_packer) {
@@ -407,7 +426,7 @@ abstract class CoderBase extends ConfigBase
             }
             //该packer只生成指定了packer-extra的方法
             if ($main_packer->getExtraFlag() && !$struct->isSetExtraPacker($pack_name)) {
-                return;
+                return 0;
             }
             if ($this->isBuildPackMethod($packer->getCodeSide())) {
                 $build_method |= PackerBase::METHOD_PACK;
@@ -418,14 +437,7 @@ abstract class CoderBase extends ConfigBase
                 $struct->addPackerMethod($pack_name, PackerBase::METHOD_UNPACK);
             }
         }
-        if (($build_method & PackerBase::METHOD_PACK) > 0) {
-            $packer->setCurrentMethod(PackerBase::METHOD_PACK);
-            $packer->buildPackMethod($struct, $code_buf);
-        }
-        if (($build_method & PackerBase::METHOD_UNPACK) > 0) {
-            $packer->setCurrentMethod(PackerBase::METHOD_UNPACK);
-            $packer->buildUnpackMethod($struct, $code_buf);
-        }
+        return $build_method;
     }
 
     /**
@@ -750,10 +762,20 @@ abstract class CoderBase extends ConfigBase
 
     /**
      * 是否忽略返回主协议，只生成数据model
+     * @param Struct $struct
      * @return bool
      */
-    private function isIgnoreResponseStruct()
+    private function isIgnoreResponseStruct($struct)
     {
-        return (bool)$this->build_opt->getConfig('ignore_response_main_model', false);
+        $result = (bool)$this->build_opt->getConfig('ignore_response_main_model', false);
+        if (!$result) {
+            return false;
+        }
+        //虽然主协议不生成，但要检查它需要依赖哪些packer的method
+        $packer_object_arr = $this->getPackerList();
+        foreach ($packer_object_arr as $name => $packer) {
+            $this->tryBuildMethod($struct, $packer);
+        }
+        return $result;
     }
 }

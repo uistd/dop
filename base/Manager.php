@@ -510,7 +510,7 @@ class Manager
                 $replace_record[$full_name] = $max_version_struct;
             }
             $new_full_name = Struct::ignoreVersion($struct->getNamespace()) . '/' . $struct->getClassName();
-            $this->struct_list[$new_full_name] = $struct;
+            $this->struct_list[$new_full_name] = $max_version_struct;
         }
         //遍历所有的struct，将item中有引用到struct的地方都检查一下，检查是否被替换了
         //设置依赖关系

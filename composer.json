@@ -16,7 +16,8 @@
   "require": {
     "php": ">=5.5.0",
     "ffan/std-common": "2.*",
-    "ffan/std-console": "1.*"
+    "ffan/std-console": "1.*",
+    "ffan/std-git": "1.*"
   },
   "autoload": {
     "psr-4": {

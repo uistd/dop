@@ -238,6 +238,9 @@ class BuildOption
     private function parseFileFilter($file_filter)
     {
         $filter_arr = FFanStr::split($file_filter, ',');
+        foreach ($filter_arr as &$item) {
+            $item = strtolower($item);
+        }
         return array_flip($filter_arr);
     }
 
@@ -248,6 +251,7 @@ class BuildOption
      */
     public function isIgnoreFile($file)
     {
+        $file = strtolower($file);
         //在排除的文件里
         if (isset($this->exclude_file[$file])) {
             return true;
