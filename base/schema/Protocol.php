@@ -19,6 +19,7 @@ use FFan\Dop\Protocol\StringItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\StructItem;
 use FFan\Std\Common\Str;
+use FFan\Dop\Build\Shader as BuildShader;
 
 /**
  * Class Protocol
@@ -35,6 +36,11 @@ class Protocol
      * @var Model[]
      */
     private $all_model;
+
+    /**
+     * @var Shader[]
+     */
+    private $shader_list;
 
     /**
      * @var Struct[] 已经完成的
@@ -104,6 +110,15 @@ class Protocol
     }
 
     /**
+     * 添加shader
+     * @param Shader $shader
+     */
+    public function addShader(Shader $shader)
+    {
+        $this->shader_list[] = $shader;
+    }
+
+    /**
      * @param string $full_name
      * @return Model
      */
@@ -121,6 +136,21 @@ class Protocol
             $this->extend_stack[$full_name] = true;
             $this->parseStruct($model);
         }
+        if (!empty($this->shader_list)) {
+            foreach ($this->shader_list as $shader) {
+                $this->parseShader($shader);
+            }
+        }
+    }
+
+    /**
+     * parseShader
+     * @param Shader $shader
+     */
+    private function parseShader($shader)
+    {
+        $shader = new BuildShader($this->manager, $shader);
+        $this->manager->addShader($shader);
     }
 
     /**

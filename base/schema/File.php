@@ -246,7 +246,7 @@ class File
             Manager::setCurrentSchema($shader_node->C14N());
             $this->setLineNumber($shader_node->getLineNo());
             $shader = new Shader($shader_node);
-            $this->shader[] = $shader;
+            $this->protocol->addShader($shader);
         }
     }
 
