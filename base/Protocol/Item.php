@@ -172,7 +172,6 @@ abstract class Item
         if (null !== $plugin_rule->extend_item && null !== $plugin_rule->extend_class) {
             $struct =$this->protocol_manager->getStruct($plugin_rule->extend_class);
             if (null === $struct) {
-                dd($plugin_rule->extend_class);
                 return $plugin_rule;
             }
             $item = $struct->getItem($plugin_rule->extend_item);

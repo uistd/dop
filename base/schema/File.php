@@ -31,11 +31,6 @@ class File
     private $path_handle;
 
     /**
-     * @var Shader[] 着色器
-     */
-    private $shader;
-
-    /**
      * @var string
      */
     private $file_name;
@@ -369,8 +364,11 @@ class File
             if (empty($extend_name)) {
                 throw new Exception('extend 不能为空');
             }
+            //补全
             if (false === strpos($extend_name, '/')) {
                 $extend_name = $this->namespace . '/' . $extend_name;
+            } else {
+                $this->protocol->setFileAffect(dirname($extend_name), $this->namespace);
             }
         }
         //如果item为空
@@ -584,14 +582,6 @@ class File
         if (empty($name) || 0 === preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name) > 0) {
             throw new Exception('Name:' . $name . ' is invalid');
         }
-    }
-
-    /**
-     * @return Shader[]|null
-     */
-    public function getShaderList()
-    {
-        return $this->shader;
     }
 
     /**

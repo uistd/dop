@@ -73,6 +73,11 @@ class Protocol
     private $name_stack;
 
     /**
+     * @var array 文件间的依赖
+     */
+    private $file_affect_arr;
+
+    /**
      * Protocol constructor.
      * @param Manager $manager
      */
@@ -481,5 +486,15 @@ class Protocol
     public function getStruct($name)
     {
         return isset($this->struct_list[$name]) ? $this->struct_list[$name] : null;
+    }
+
+    /**
+     * 记录文件之间的依赖关系
+     * @param string $namespace
+     * @param string $affect_namespace
+     */
+    public function setFileAffect($namespace, $affect_namespace)
+    {
+        $this->file_affect_arr[$namespace] = $affect_namespace;
     }
 }
