@@ -15,6 +15,7 @@ use FFan\Dop\Protocol\ListItem;
 use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\StructItem;
+use FFan\Dop\Schema\Protocol;
 use FFan\Std\Common\Str as FFanStr;
 
 /**
@@ -38,7 +39,7 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function buildCode()
     {
-        $this->coder->structIterator(array($this, 'getAllstruct'));
+        $this->coder->structIterator(array($this, 'getAllStruct'));
         //按xml文件生成代码
         $this->coder->xmlFileIterator(array($this, 'mockCode'));
     }
@@ -47,7 +48,7 @@ class PhpMockCoder extends PluginCoderBase
      * 保存使用到的struct
      * @param Struct $struct
      */
-    public function getAllstruct(Struct $struct)
+    public function getAllStruct(Struct $struct)
     {
         $key = $struct->getFullName();
         $this->struct_list[$key] = true;
@@ -70,7 +71,7 @@ class PhpMockCoder extends PluginCoderBase
      */
     public function mockCode($file_name, $struct_list)
     {
-        $this->current_name_space = substr($file_name, 1);
+        $this->current_name_space = '/' . $file_name;
         $build_path = $this->plugin->getBuildPath();
         //如果 带 子目录
         if (false !== strpos($file_name, '/')) {
@@ -98,7 +99,7 @@ class PhpMockCoder extends PluginCoderBase
             if (!isset($this->struct_list[$full_name])) {
                 continue;
             }
-            $this->buildStructCode($struct, $main_buf, $file_name);
+            $this->buildStructCode($struct, $main_buf);
         }
     }
 
@@ -126,7 +127,6 @@ class PhpMockCoder extends PluginCoderBase
      * 生成每个struct的代码
      * @param Struct $struct
      * @param FileBuf $file_buf
-     * @param string $file_name 所在文件名
      */
     private function buildStructCode($struct, $file_buf)
     {
@@ -145,14 +145,13 @@ class PhpMockCoder extends PluginCoderBase
         $import_buf->pushUniqueStr('use ' . $use_ns . '\\' . $class_name . ';');
         $mock_buf->pushStr('$data = new ' . $class_name . '();');
         $all_item = $struct->getAllExtendItem();
-        $base_ns = $struct->getNamespace();
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($all_item as $name => $item) {
             $name = $this->coder->fixPropertyName($name, $item);
-            $this->makeImportCode($item, $base_ns, $import_buf);
+            $this->makeImportCode($item, $import_buf);
             $mock_rule = $item->getPluginData($this->plugin->getPluginName());
             Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
@@ -164,28 +163,33 @@ class PhpMockCoder extends PluginCoderBase
     /**
      * 生成引用相关的代码
      * @param Item $item
-     * @param string $base_ns 基准命名空间
      * @param CodeBuf $use_buf
      */
-    private function makeImportCode($item, $base_ns, $use_buf)
+    private function makeImportCode($item, $use_buf)
     {
         $type = $item->getType();
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
             $ns = $struct->getNamespace();
-            if ($ns !== $base_ns) {
-                $full_file = $struct->getFullName();
-                $import_ns = $this->makeClassNs($full_file);
-                $import_class = $this->fileNameToClassName($full_file);
-                $use_buf->pushUniqueStr('use ' . $import_ns . '\\' . $import_class . ';');
+            if ($ns === $this->current_name_space) {
+                return;
             }
+            if (dirname($this->current_name_space) === dirname($ns)) {
+                return;
+            }
+            $import_ns = $this->makeClassNs($ns);
+            $import_class = $this->fileNameToClassName($ns);
+            if ('\\' !== $import_ns{(strlen($import_ns) - 1)}) {
+                $import_ns .= '\\';
+            }
+            $use_buf->pushUniqueStr('use ' . $import_ns . $import_class . ';');
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
-            $this->makeImportCode($item->getItem(), $base_ns, $use_buf);
+            $this->makeImportCode($item->getItem(), $use_buf);
         } elseif (ItemType::MAP === $type) {
             /** @var MapItem $item */
-            $this->makeImportCode($item->getValueItem(), $base_ns, $use_buf);
+            $this->makeImportCode($item->getValueItem(), $use_buf);
         }
     }
 
@@ -234,10 +238,10 @@ class PhpMockCoder extends PluginCoderBase
                 $func_name = 'mock' . $item->getStructName();
                 $sub_struct = $item->getStruct();
                 $sub_file = $sub_struct->getFile(false);
-                if ($sub_file !== $this->current_name_space) {
-                    $mock_class_name = $this->fileNameToClassName($sub_file);
-                } else {
+                if ($this->current_name_space === $sub_struct->getNamespace()) {
                     $mock_class_name = 'self';
+                } else {
+                    $mock_class_name = $this->fileNameToClassName($sub_file);
                 }
                 $mock_buf->pushStr($mock_item . ' = ' . $mock_class_name . '::' . $func_name . '();');
                 break;

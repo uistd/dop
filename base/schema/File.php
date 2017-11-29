@@ -178,6 +178,7 @@ class File
                     throw new Exception('Only one response node allowed');
                 }
                 $node->setAttribute('class_name', $name . '/response');
+                $this->responseModelClassName($node, $name);
                 $type = Model::TYPE_RESPONSE;
             } else {
                 throw new Exception('Unknown node:' . $node_name);
@@ -202,6 +203,35 @@ class File
             $model->setAction($action_object);
         }
     }
+
+    /**
+     * 自动给response下面的model生成class_name
+     * @param \DOMElement $struct_node
+     * @param string $action_name
+     */
+    private function responseModelClassName($struct_node, $action_name)
+    {
+        $node_list = $struct_node->childNodes;
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            $node = $node_list->item($i);
+            if (XML_ELEMENT_NODE !== $node->nodeType) {
+                continue;
+            }
+            $node_name = $node->nodeName;
+            if (!$this->isStruct($node_name)) {
+                continue;
+            }
+            if ($node->getAttribute('class_name')) {
+                continue;
+            }
+            $name = $node->getAttribute('name');
+            if (!$name) {
+                continue;
+            }
+            $node->setAttribute('class_name', $action_name .'_'. $name);
+        }
+    }
+
 
     /**
      * 解析extra-packer设置
