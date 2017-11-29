@@ -75,7 +75,7 @@ class Protocol
     /**
      * @var array 文件间的依赖
      */
-    private $file_affect_arr;
+    private $file_require_arr;
 
     /**
      * Protocol constructor.
@@ -138,7 +138,6 @@ class Protocol
     public function makeStruct()
     {
         foreach ($this->all_model as $full_name => $model) {
-            $this->extend_stack[$full_name] = true;
             $this->parseStruct($model);
         }
         if (!empty($this->shader_list)) {
@@ -146,6 +145,7 @@ class Protocol
                 $this->parseShader($shader);
             }
         }
+        $this->manager->getCache()->set('file_require', $this->file_require_arr);
     }
 
     /**
@@ -170,6 +170,10 @@ class Protocol
         if (isset($this->struct_list[$full_name])) {
             return $this->struct_list[$full_name];
         }
+        if (isset($this->extend_stack[$full_name])) {
+            throw new Exception('检测到循环继承');
+        }
+        $this->extend_stack[$full_name] = true;
         Manager::setCurrentSchema($model->getDoc());
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
@@ -209,15 +213,12 @@ class Protocol
         //继承关系
         $extend_struct_name = $model->getExtend();
         if ($extend_struct_name) {
+            echo $extend_struct_name, PHP_EOL;
             $extend_model = $this->getModel($extend_struct_name);
             if (null === $extend_model) {
                 throw new Exception('无法 extend "' . $extend_struct_name . '"');
             }
             if (!isset($this->struct_list[$extend_struct_name])) {
-                if (isset($this->extend_stack[$extend_struct_name])) {
-                    throw new Exception('检测到循环引用.' . $extend_struct_name);
-                }
-                $this->extend_stack[$extend_struct_name] = true;
                 $this->parseStruct($extend_model);
             }
             $extend_struct = $this->struct_list[$extend_struct_name];
@@ -264,6 +265,7 @@ class Protocol
         $struct_obj->setModelSchema($model);
         $this->struct_list[$full_name] = $struct_obj;
         $this->namespace_struct_list[$namespace][] = $struct_obj;
+        unset($this->extend_stack[$full_name]);
         return $struct_obj;
     }
 
@@ -491,10 +493,10 @@ class Protocol
     /**
      * 记录文件之间的依赖关系
      * @param string $namespace
-     * @param string $affect_namespace
+     * @param string $require_namespace
      */
-    public function setFileAffect($namespace, $affect_namespace)
+    public function setFileRequire($namespace, $require_namespace)
     {
-        $this->file_affect_arr[$namespace] = $affect_namespace;
+        $this->file_require_arr[$namespace][] = $require_namespace;
     }
 }

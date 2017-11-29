@@ -157,7 +157,8 @@ class BuildOption
             //是否保持原始名称
             'keep_original_name' => false,
             'include_file' => null,
-            'exclude_file' => null
+            'exclude_file' => null,
+            'build_cache' => true
         );
         if (is_array($public_conf)) {
             //将Public config append to section_conf

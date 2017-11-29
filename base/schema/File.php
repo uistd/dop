@@ -368,7 +368,7 @@ class File
             if (false === strpos($extend_name, '/')) {
                 $extend_name = $this->namespace . '/' . $extend_name;
             } else {
-                $this->protocol->setFileAffect(dirname($extend_name), $this->namespace);
+                $this->protocol->setFileRequire($this->namespace, dirname($extend_name));
             }
         }
         //如果item为空

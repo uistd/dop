@@ -13,6 +13,7 @@ use FFan\Dop\Protocol\ListItem;
 use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\StructItem;
+use FFan\Dop\Schema\Cache;
 use FFan\Dop\Schema\File;
 use FFan\Dop\Schema\Protocol;
 use FFan\Std\Common\Str as FFanStr;
@@ -29,11 +30,6 @@ class Manager
      * @var Struct[] 所有的struct列表
      */
     private $struct_list = [];
-
-    /**
-     * @var array 解析过的xml列表
-     */
-    private $xml_list = [];
 
     /**
      * @var array 所有的协议文件
@@ -54,12 +50,6 @@ class Manager
      * @var string 编译结果
      */
     private $build_message;
-
-    /**
-     * @var array 文件之间的依赖关系
-     */
-    private $require_map;
-
 
     /**
      * @var array 缓存数据
@@ -97,11 +87,6 @@ class Manager
     private $build_section;
 
     /**
-     * @var bool 是否解析过协议文件
-     */
-    private $init_protocol_flag = false;
-
-    /**
      * @var CoderBase 当前Coder
      */
     private $current_coder;
@@ -135,6 +120,11 @@ class Manager
      * @var Protocol
      */
     private $schema_protocol;
+
+    /**
+     * @var Cache 缓存
+     */
+    private $build_cache;
 
     /**
      * 初始化
@@ -228,74 +218,6 @@ class Manager
             $this->file_struct_list[$file] = array();
         }
         $this->file_struct_list[$file][] = $struct;
-    }
-
-    /**
-     * 加载依赖的某个struct
-     * @param string $class_name 依赖的class
-     * @param string $current_xml 当前正在解析的xml文件
-     * @return Struct|null
-     * @throws Exception
-     */
-    public function loadRequireStruct($class_name, $current_xml)
-    {
-        $tmp_struct = $this->getStruct($class_name);
-        if (null !== $tmp_struct) {
-            return $tmp_struct;
-        }
-        //类名
-        $struct_name = basename($class_name);
-        if (empty($struct_name)) {
-            throw new Exception('Can not loadStruct ' . $class_name);
-        }
-        $xml_file = dirname($class_name) . '.xml';
-        if ('/' === $xml_file[0]) {
-            $xml_file = substr($xml_file, 1);
-        }
-        $this->setRequireRelation($xml_file, $current_xml);
-        $xml_protocol = $this->loadXmlProtocol($xml_file);
-        $xml_protocol->queryStruct();
-        return $this->getStruct($class_name);
-    }
-
-    /**
-     * 设置xml之间的依赖关系
-     * @param string $require_xml
-     * @param string $current_xml
-     */
-    private function setRequireRelation($require_xml, $current_xml)
-    {
-        if (!isset($this->require_map[$require_xml])) {
-            $this->require_map[$require_xml] = array();
-        }
-        $this->require_map[$require_xml][$current_xml] = true;
-    }
-
-    /**
-     * 加载指定的xml
-     * @param string $xml_file 文件相对于base_path的路径
-     * @return Protocol
-     * @throws Exception
-     */
-    private function loadXmlProtocol($xml_file)
-    {
-        if (isset($this->xml_list[$xml_file])) {
-            return $this->xml_list[$xml_file];
-        }
-        $this->buildLog('Load ' . $xml_file);
-        $protocol_obj = new Protocol($this, $xml_file);
-        $this->xml_list[$xml_file] = $protocol_obj;
-        return $protocol_obj;
-    }
-
-    /**
-     * 解析指定文件
-     * @param string $file
-     */
-    public function parseFile($file)
-    {
-        $xml_protocol = $this->loadXmlProtocol($file);
-        $xml_protocol->parse();
     }
 
     /**
@@ -399,6 +321,17 @@ class Manager
         return $this->scheme_list[$namespace];
     }
 
+    /**
+     * 生成缓存文件名
+     * @param string $section
+     * @return string
+     */
+    private function makeCacheFile($section)
+    {
+        $file = md5($this->base_path . $section);
+        $path = FFanUtils::fixWithRuntimePath('build');
+        return FFanUtils::joinFilePath($path, $file);
+    }
 
     /**
      * 初始化协议文件
@@ -415,9 +348,15 @@ class Manager
         $section_config = $this->build_section[$name];
         $build_opt = new BuildOption($section, $section_config, $this->config);
         $this->current_build_opt = $build_opt;
+        $use_cache = $build_opt->getConfig('build_cache');
         $this->build_message = '';
-
-        $this->init_protocol_flag = true;
+        if ($use_cache) {
+            $cache_key = md5(json_encode($section_config));
+            $cache_file = $this->makeCacheFile($section);
+        } else {
+            $cache_key = $cache_file = 'not_exist';
+        }
+        $this->build_cache = new Cache($cache_key, $cache_file);
         $file_list = $this->getAllFileList();
         $build_list = $file_list;
         $this->build_file_list = $build_list;
@@ -432,7 +371,9 @@ class Manager
         self::setCurrentSchema();
         $this->schema_protocol = Protocol::getInstance($this);
         $this->schema_protocol->makeStruct();
-
+        if ($use_cache) {
+            $this->build_cache->save();
+        }
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {
             $this->ignoreVersion();
@@ -961,5 +902,13 @@ class Manager
     public function getProtocol()
     {
         return $this->schema_protocol;
+    }
+
+    /**
+     * @return Cache
+     */
+    public function getCache()
+    {
+       return $this->build_cache;
     }
 }
