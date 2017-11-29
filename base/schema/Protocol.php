@@ -42,6 +42,11 @@ class Protocol
     private $struct_list;
 
     /**
+     * @var array 按namespace分组的model[]
+     */
+    private $namespace_struct_list;
+
+    /**
      * @var BuildOption
      */
     private $build_opt;
@@ -55,6 +60,11 @@ class Protocol
      * @var array 继承堆栈
      */
     private $extend_stack;
+
+    /**
+     * @var array 名称
+     */
+    private $name_stack;
 
     /**
      * Protocol constructor.
@@ -170,7 +180,7 @@ class Protocol
             }
             if (!isset($this->struct_list[$extend_struct_name])) {
                 if (isset($this->extend_stack[$extend_struct_name])) {
-                    throw new Exception('检测到循环引用.'. $extend_struct_name);
+                    throw new Exception('检测到循环引用.' . $extend_struct_name);
                 }
                 $this->extend_stack[$extend_struct_name] = true;
                 $this->parseStruct($extend_model);
@@ -200,6 +210,10 @@ class Protocol
             $struct_class_name = $this->joinName(Str::camelName($class_name_suffix), $class_name);
         }
         $namespace = $model->getNameSpace();
+        if (isset($this->name_stack[$namespace][$struct_class_name])) {
+            throw new Exception('类名' . $namespace . '/' . $struct_class_name . '冲突');
+        }
+        $this->name_stack[$full_name][$struct_class_name] = true;
         $struct_obj = new Struct($namespace, $struct_class_name, $namespace, $model_type);
         //如果有注释
         if ($model->hasAttribute('note')) {
@@ -214,6 +228,7 @@ class Protocol
         $this->manager->addStruct($struct_obj);
         $struct_obj->setModelSchema($model);
         $this->struct_list[$full_name] = $struct_obj;
+        $this->namespace_struct_list[$namespace][] = $struct_obj;
         return $struct_obj;
     }
 
@@ -359,7 +374,7 @@ class Protocol
                 $trigger = new BufTrigger();
                 break;
             default:
-                throw new Exception('Unknown trigger:'. $type);
+                throw new Exception('Unknown trigger:' . $type);
         }
         $trigger->init($plugin_node);
         $item->addTrigger($trigger);
@@ -403,9 +418,28 @@ class Protocol
         if (!empty($prefix)) {
             $name = $prefix . $name;
         }
-        if (isset($this->name_stack[$name])) {
-            throw new Exception('Name:' . $name . ' 已经存在');
-        }
         return Str::camelName($name, true);
+    }
+
+    /**
+     * 按namespace获取model list
+     * @param string $namespace
+     * @return Struct[]
+     */
+    public function getStructByNameSpace($namespace)
+    {
+        if (!isset($this->namespace_struct_list[$namespace])) {
+            return [];
+        }
+        return $this->namespace_struct_list[$namespace];
+    }
+
+    /**
+     * 获取所有的struct
+     * @return Struct[]
+     */
+    public function getAllStruct()
+    {
+        return $this->struct_list;
     }
 }

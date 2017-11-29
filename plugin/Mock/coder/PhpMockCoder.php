@@ -145,7 +145,7 @@ class PhpMockCoder extends PluginCoderBase
         $import_buf->pushUniqueStr('use ' . $use_ns . '\\' . $class_name . ';');
         $mock_buf->pushStr('$data = new ' . $class_name . '();');
         $all_item = $struct->getAllExtendItem();
-        $base_ns = dirname($file_name);
+        $base_ns = $struct->getNamespace();
         /**
          * @var string $name
          * @var Item $item
@@ -173,12 +173,9 @@ class PhpMockCoder extends PluginCoderBase
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
-            $full_file = $struct->getFile(false);
-            $struct_file = dirname($full_file);
-            if ('.' === $struct_file) {
-                $struct_file = $full_file;
-            }
-            if ($struct_file !== $base_ns && '.' !== $base_ns) {
+            $ns = $struct->getNamespace();
+            if ($ns !== $base_ns) {
+                $full_file = $struct->getFullName(false);
                 $import_ns = $this->makeClassNs($full_file);
                 $import_class = $this->fileNameToClassName($full_file);
                 $use_buf->pushUniqueStr('use ' . $import_ns . '\\' . $import_class . ';');

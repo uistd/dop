@@ -201,8 +201,8 @@ abstract class CoderBase extends ConfigBase
     {
         $file_list = $this->manager->getBuildFileList();
         foreach ($file_list as $file => $t) {
-            $struct_list = $this->manager->getStructByFile($file);
             $file_name = substr($file, 0, strlen('.xml') * -1);
+            $struct_list = $this->manager->getStructByFile('/'. $file_name);
             call_user_func_array($call_back, array($file_name, $struct_list));
         }
     }

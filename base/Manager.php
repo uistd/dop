@@ -766,10 +766,7 @@ class Manager
      */
     public function getStructByFile($file_name)
     {
-        if (!isset($this->file_struct_list[$file_name])) {
-            return array();
-        }
-        return $this->file_struct_list[$file_name];
+        return $this->schema_protocol->getStructByNameSpace($file_name);
     }
 
     /**

@@ -36,7 +36,6 @@ class Plugin extends PluginBase
         $valid_rule = new ValidRule();
         $valid_rule->is_require = $node->getBool('require', false);
         $valid_rule->require_msg = $node->get('require-msg');
-        echo $valid_rule->require_msg, PHP_EOL;
         $valid_rule->range_msg = $node->get('range-msg');
         $valid_rule->length_msg = $node->get('length-msg');
         $valid_rule->format_msg = $node->get('format-msg');
