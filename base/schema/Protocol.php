@@ -213,7 +213,6 @@ class Protocol
         //继承关系
         $extend_struct_name = $model->getExtend();
         if ($extend_struct_name) {
-            echo $extend_struct_name, PHP_EOL;
             $extend_model = $this->getModel($extend_struct_name);
             if (null === $extend_model) {
                 throw new Exception('无法 extend "' . $extend_struct_name . '"');

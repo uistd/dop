@@ -52,11 +52,6 @@ class Manager
     private $build_message;
 
     /**
-     * @var array 缓存数据
-     */
-    private $cache_data;
-
-    /**
      * @var array 代码生成器
      */
     private $coder_list;
@@ -75,11 +70,6 @@ class Manager
      * @var array 本次编译的文件
      */
     private $build_file_list;
-
-    /**
-     * @var array 每个文件的struct
-     */
-    private $file_struct_list = [];
 
     /**
      * @var array 生成代码的配置项
@@ -213,11 +203,6 @@ class Manager
             throw new Exception('struct:' . $full_name . ' conflict');
         }
         $this->struct_list[$full_name] = $struct;
-        $file = $struct->getFile();
-        if (!isset($this->file_struct_list[$file])) {
-            $this->file_struct_list[$file] = array();
-        }
-        $this->file_struct_list[$file][] = $struct;
     }
 
     /**
@@ -309,19 +294,6 @@ class Manager
     }
 
     /**
-     * 获取scheme
-     * @param $namespace
-     * @return File|null
-     */
-    public function getScheme($namespace)
-    {
-        if (!isset($this->scheme_list[$namespace])) {
-            return null;
-        }
-        return $this->scheme_list[$namespace];
-    }
-
-    /**
      * 生成缓存文件名
      * @param string $section
      * @return string
@@ -372,7 +344,8 @@ class Manager
         $this->schema_protocol = Protocol::getInstance($this);
         $this->schema_protocol->makeStruct();
         if ($use_cache) {
-            $this->build_cache->save();
+            //@todo 缓存功能未完成
+            //$this->build_cache->save();
         }
         //如果忽略版本号，先整理版本号
         if ($build_opt->getConfig('ignore_version')) {
@@ -536,16 +509,6 @@ class Manager
     public function buildLogNotice($msg)
     {
         $this->buildLog($msg, 'notice');
-    }
-
-    /**
-     * 设置缓存
-     * @param string $key
-     * @param mixed $value
-     */
-    public function setCache($key, $value)
-    {
-        $this->cache_data[$key] = $value;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace FFan\Dop\Schema;
 
+use FFan\Std\Common\Utils;
+
 /**
  * Class Cache 编译缓存
  * @package ffan\dop\build
@@ -102,6 +104,7 @@ class Cache
             $this->data = array();
         }
         $content = $this->pack($this->data);
+        Utils::pathWriteCheck(dirname($this->file_name));
         return file_put_contents($this->file_name, $content);
     }
 
