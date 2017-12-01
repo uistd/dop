@@ -376,7 +376,7 @@ class PhpValidCoder extends PluginCoderBase
             $if_str = '!preg_match(\'' . $rule->format_set . '\', $' . $var_name . ')';
         } else {
             $this->dop_file->pushImport('use FFan\Dop\DopValidator;');
-            $if_str = 'DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
+            $if_str = '!DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
             $use_code_flag = true;
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');
