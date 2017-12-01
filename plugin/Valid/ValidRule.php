@@ -47,6 +47,11 @@ class ValidRule extends PluginRule
     );
 
     /**
+     * @var array 指定集合
+     */
+    public $sets;
+
+    /**
      * @var int|float 最小值
      */
     public $min_value;

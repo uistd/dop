@@ -10,6 +10,7 @@ use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Schema\Protocol;
 use FFan\Dop\Schema\Plugin as SchemaPlugin;
+use FFan\Std\Common\Str;
 
 /**
  * Class Plugin 数据有效性检验
@@ -55,7 +56,35 @@ class Plugin extends PluginBase
         elseif (ItemType::ARR === $type || ItemType::MAP === $item) {
             $this->readIntSet($node, $valid_rule);
         }
+        //指定集合
+        if ($node->hasAttribute('set')) {
+            $this->readSet($node->get('set'), $type, $valid_rule);
+        }
         $item->addPluginData($this->plugin_name, $node, $valid_rule, $parser);
+    }
+
+    /**
+     * 指定集合
+     * @param string $value
+     * @param int $type
+     * @param ValidRule $valid_rule
+     */
+    private function readSet($value, $type, $valid_rule)
+    {
+        if (ItemType::STRING !== $type && ItemType::INT !== $type) {
+            return;
+        }
+        $enum_arr = Str::split($value, ',');
+        if (ItemType::INT === $type) {
+            foreach ($enum_arr as &$item) {
+                $item = (int)$item;
+            }
+        } else {
+            foreach ($enum_arr as &$item) {
+                $item = "'" . addcslashes($item, "'") . "'";
+            }
+        }
+        $valid_rule->sets = $enum_arr;
     }
 
     /**

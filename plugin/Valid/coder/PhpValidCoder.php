@@ -8,7 +8,6 @@ use FFan\Dop\Build\PackerBase;
 use FFan\Dop\Build\PluginCoderBase;
 use FFan\Dop\Build\StrBuf;
 use FFan\Dop\Coder\Php\Coder;
-use FFan\Dop\Plugin\Mock\RuleRange;
 use FFan\Dop\Protocol\IntItem;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
@@ -140,7 +139,9 @@ class PhpValidCoder extends PluginCoderBase
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
                 $rule = $this->fixedRangeRule($rule, $item);
-                if (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
+                if (!empty($rule->sets)) {
+                    $this->setCheck($if_buf, $var_name, $rule);
+                } elseif (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
                     $this->rangeCheck($if_buf, $var_name, $rule);
                 }
                 break;
@@ -148,13 +149,17 @@ class PhpValidCoder extends PluginCoderBase
                 if (null === $rule) {
                     $this->strSafeConvert($valid_buf, $var_name);
                 } else {
-                    //长度
-                    if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
-                        $this->lengthCheck($if_buf, $var_name, $rule);
-                        $this->import_flag = true;
-                    }
-                    if (null !== $rule->format_set) {
-                        $this->formatCheck($if_buf, $var_name, $rule, $use_code_flag);
+                    if (!empty($rule->sets)) {
+                        $this->setCheck($if_buf, $var_name, $rule);
+                    } else {
+                        //长度
+                        if (null !== $rule->min_str_len || null !== $rule->max_str_len) {
+                            $this->lengthCheck($if_buf, $var_name, $rule);
+                            $this->import_flag = true;
+                        }
+                        if (null !== $rule->format_set) {
+                            $this->formatCheck($if_buf, $var_name, $rule);
+                        }
                     }
                 }
                 break;
@@ -363,13 +368,24 @@ class PhpValidCoder extends PluginCoderBase
     }
 
     /**
+     * 集合检查
+     * @param CodeBuf $valid_buf
+     * @param string $var_name
+     * @param ValidRule $rule
+     */
+    private function setCheck($valid_buf, $var_name, $rule)
+    {
+        $if_str = '!in_array($' . $var_name . ', [' . join(', ', $rule->sets) . '])';
+        $this->conditionCode($valid_buf, $if_str, $rule, 'format');
+    }
+
+    /**
      * 范围检查
      * @param CodeBuf $valid_buf
      * @param string $var_name
      * @param ValidRule $rule
-     * @param bool $use_code_flag
      */
-    private function formatCheck($valid_buf, $var_name, $rule, &$use_code_flag)
+    private function formatCheck($valid_buf, $var_name, $rule)
     {
         //如果以 / 开始的字符串，表示为正则表达式
         if ('/' === $rule->format_set[0]) {
@@ -377,7 +393,6 @@ class PhpValidCoder extends PluginCoderBase
         } else {
             $this->dop_file->pushImport('use FFan\Dop\DopValidator;');
             $if_str = '!DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
-            $use_code_flag = true;
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');
     }
