@@ -211,4 +211,16 @@ class FileBuf extends CodeBuf
         $this->buf_arr[$name]->push($content);
         return true;
     }
+
+    /**
+     * 在import区push代码
+     * @param string $str
+     */
+    public function pushImport($str)
+    {
+        $buf = $this->getBuf(FileBuf::IMPORT_BUF);
+        if ($buf) {
+            $buf->pushUniqueStr($str);
+        }
+    }
 }

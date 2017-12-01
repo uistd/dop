@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "b35742739cfe5e1d6d2b7b14e8216ece",
+    "content-hash": "2c9216609ea9321ced336fedcff6e82a",
     "packages": [
         {
             "name": "ffan/std-common",
-            "version": "2.0.8",
+            "version": "2.0.9",
             "source": {
                 "type": "git",
                 "url": "http://gitlab.ffan.biz/php/ffan-utils.git",
-                "reference": "0db50c6039040f481d6d389fa17335435698031c"
+                "reference": "d6749b04445de43e3527e1d332c836b11c07eef7"
             },
             "dist": {
                 "type": "zip",
-                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-common/2.0.8.0/0db50c6039040f481d6d389fa17335435698031c.zip",
-                "reference": "0db50c6039040f481d6d389fa17335435698031c",
+                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-common/2.0.9.0/d6749b04445de43e3527e1d332c836b11c07eef7.zip",
+                "reference": "d6749b04445de43e3527e1d332c836b11c07eef7",
                 "shasum": null,
                 "mirrors": [
                     {
@@ -55,7 +55,7 @@
                 "php",
                 "utils"
             ],
-            "time": "2017-11-28T05:46:59+00:00"
+            "time": "2017-12-01T02:41:51+00:00"
         },
         {
             "name": "ffan/std-console",
@@ -163,17 +163,69 @@
             "time": "2017-11-23T05:50:52+00:00"
         },
         {
-            "name": "ffan/std-logger",
-            "version": "1.0.8",
+            "name": "ffan/std-git",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
-                "url": "http://gitlab.ffan.biz/php/logger.git",
-                "reference": "9a027d2251dbf80073d1bcaa39341836d01a686e"
+                "url": "http://gitlab.ffan.biz/php/git.git",
+                "reference": "1c79292379866dd5ffb5e8d8184efc59a5f851fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-logger/1.0.8.0/9a027d2251dbf80073d1bcaa39341836d01a686e.zip",
-                "reference": "9a027d2251dbf80073d1bcaa39341836d01a686e",
+                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-git/1.0.1.0/1c79292379866dd5ffb5e8d8184efc59a5f851fe.zip",
+                "reference": "1c79292379866dd5ffb5e8d8184efc59a5f851fe",
+                "shasum": null,
+                "mirrors": [
+                    {
+                        "url": "http://composer.intra.ffan.com/repo/private/dists/%package%/%version%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "archive": {
+                "exclude": [
+                    "test",
+                    ".gitignore"
+                ]
+            },
+            "require": {
+                "ffan/std-common": "2.*",
+                "ffan/std-logger": "1.*",
+                "php": ">=5.5.0"
+            },
+            "type": "composer",
+            "autoload": {
+                "psr-4": {
+                    "FFan\\Std\\Git\\": "src"
+                }
+            },
+            "authors": [
+                {
+                    "name": "huangshunzhao",
+                    "email": "huangshunzhao@wanda.cn",
+                    "role": "Founder and project lead"
+                }
+            ],
+            "description": "FFan php git components",
+            "keywords": [
+                "ffan",
+                "git",
+                "php"
+            ],
+            "time": "2017-09-02T09:50:06+00:00"
+        },
+        {
+            "name": "ffan/std-logger",
+            "version": "1.0.9",
+            "source": {
+                "type": "git",
+                "url": "http://gitlab.ffan.biz/php/logger.git",
+                "reference": "0d753ebee68a547c7a33c4b6d8f493dbee1ef666"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-logger/1.0.9.0/0d753ebee68a547c7a33c4b6d8f493dbee1ef666.zip",
+                "reference": "0d753ebee68a547c7a33c4b6d8f493dbee1ef666",
                 "shasum": null,
                 "mirrors": [
                     {
@@ -211,7 +263,7 @@
                 "ffan",
                 "logger"
             ],
-            "time": "2017-11-16T05:47:26+00:00"
+            "time": "2017-11-30T14:28:58+00:00"
         }
     ],
     "packages-dev": [],

@@ -37,6 +37,11 @@ class PhpValidCoder extends PluginCoderBase
     protected $coder;
 
     /**
+     * @var FileBuf
+     */
+    private $dop_file;
+
+    /**
      * 生成插件代码
      */
     public function buildCode()
@@ -57,6 +62,7 @@ class PhpValidCoder extends PluginCoderBase
         if (!$dop_file) {
             return;
         }
+        $this->dop_file = $dop_file;
         $method_buf = $dop_file->getBuf(FileBuf::METHOD_BUF);
         $property_buf = $dop_file->getBuf(FileBuf::PROPERTY_BUF);
         if (!$method_buf || !$property_buf) {
@@ -312,6 +318,7 @@ class PhpValidCoder extends PluginCoderBase
         if ('/' === $rule->format_set[0]) {
             $if_str = '!preg_match(\'' . $rule->format_set . '\', $' . $var_name . ')';
         } else {
+            $this->dop_file->pushImport('use FFan\Dop\DopValidator;');
             $if_str = 'DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
             $use_code_flag = true;
         }

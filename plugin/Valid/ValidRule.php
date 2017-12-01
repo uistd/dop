@@ -22,7 +22,7 @@ class ValidRule extends PluginRule
      * 字符串长度计算方式：按显示宽度 传统的 ascii 占1位，其它2位
      */
     const STR_LEN_BY_DISPLAY = 2;
-    
+
     /**
      * 字符串长度计算方式: 按字数 英文字母和汉字都是1的长度，比较容易理解
      */
@@ -43,6 +43,7 @@ class ValidRule extends PluginRule
         'phone' => true, //电话号码
         'id_card' => true, //中国居民身份,
         'price' => true, //价格
+        'md5' => true,
     );
 
     /**
