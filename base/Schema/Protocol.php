@@ -265,6 +265,9 @@ class Protocol
         $this->struct_list[$full_name] = $struct_obj;
         $this->namespace_struct_list[$namespace][] = $struct_obj;
         unset($this->extend_stack[$full_name]);
+        if ($model->hasAttribute('method')) {
+            $struct_obj->setMethod(strtoupper($model->get('method')));
+        }
         return $struct_obj;
     }
 

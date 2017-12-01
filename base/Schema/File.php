@@ -51,6 +51,16 @@ class File
     private $protocol;
 
     /**
+     * @var array 依赖
+     */
+    private static $require_ns = array();
+
+    /**
+     * @var array 已经解析的namespace列表
+     */
+    private static $namespace_list = array();
+
+    /**
      * Scheme constructor.
      * @param Manager $manager
      * @param $file_name
@@ -62,6 +72,7 @@ class File
         $this->manager = $manager;
         $base_path = $manager->getBasePath();
         $this->namespace = self::fileToNamespace($file_name);
+        static::$namespace_list[$this->namespace] = true;
         $full_name = FFanUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
             throw new Exception('找不到协议文件:' . $full_name);
@@ -166,13 +177,13 @@ class File
                     $method = $action_method;
                     $node->setAttribute('method', $method);
                 }
-                $node->setAttribute('class_name', $name . '/request');
+                $node->setAttribute('class_name', $name . '_request');
                 $type = Model::TYPE_REQUEST;
             } elseif ('response' === $node_name) {
                 if (++$response_count > 1) {
                     throw new Exception('Only one response node allowed');
                 }
-                $node->setAttribute('class_name', $name . '/response');
+                $node->setAttribute('class_name', $name . '_response');
                 $this->responseModelClassName($node, $name);
                 $type = Model::TYPE_RESPONSE;
             } else {
@@ -223,7 +234,7 @@ class File
             if (!$name) {
                 continue;
             }
-            $node->setAttribute('class_name', $action_name .'_'. $name);
+            $node->setAttribute('class_name', $action_name . '_' . $name);
         }
     }
 
@@ -375,6 +386,7 @@ class File
         if (empty($item_arr)) {
             //完全继承
             if (!empty($extend_name)) {
+                self::addExtend($extend_name, $model_node->C14N());
                 return $extend_name;
             } //data 和 struct不允许空item
             elseif (Model::TYPE_STRUCT === $type || Model::TYPE_DATA === $type) {
@@ -387,13 +399,44 @@ class File
             $model->addItem($name, $item);
         }
         if (!empty($extend_name)) {
+            self::addExtend($extend_name, $model_node->C14N());
             $model->setExtend($extend_name);
         }
-        if (isset($this->model_list[$type][$class_name])) {
-            throw new Exception('class_name：' . $class_name . ' 类名冲突');
-        }
         $this->protocol->addModel($this->namespace, $model);
-        return $this->namespace .'/'. $class_name;
+        return $this->namespace . '/' . $class_name;
+    }
+
+    /**
+     * 设置extend
+     * @param string $extend_name
+     * @param string $doc
+     */
+    private static function addExtend($extend_name, $doc)
+    {
+        $ns = dirname($extend_name);
+        if (isset(self::$require_ns[$ns])) {
+            return;
+        }
+        self::$require_ns[$ns] = $doc;
+    }
+
+    /**
+     * 获取需要加载的命名空间
+     * @return array|null
+     */
+    public static function getRequireNameSpace()
+    {
+        if (empty(self::$require_ns)) {
+            return null;
+        }
+        $require_ns = self::$require_ns;
+        self::$require_ns = array();
+        foreach ($require_ns as $ns => $doc) {
+            if (isset(self::$namespace_list[$ns])) {
+                unset($require_ns[$ns]);
+            }
+        }
+        return $require_ns;
     }
 
     /**
@@ -545,6 +588,12 @@ class File
                 continue;
             }
             Manager::setCurrentSchema($tmp_node->C14N());
+            //如果 节点中包含 extend, 要检测文件是否被加载
+            if ($tmp_node->hasAttribute('extend')) {
+                $extend = $tmp_node->getAttribute('extend');
+                //去掉一层 item 如:/common/user/puid puid是字段, 去掉
+                self::addExtend(dirname($extend), '');
+            }
             $this->setLineNumber($tmp_node->getLineNo());
             $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
             $plugin = new Plugin($plugin_name, $tmp_node);

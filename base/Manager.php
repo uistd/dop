@@ -97,11 +97,6 @@ class Manager
     private $shader_list;
 
     /**
-     * @var File[] 协议列表
-     */
-    private $scheme_list;
-
-    /**
      * @var string 当前正在解析的xml
      */
     private static $schema_doc;
@@ -338,8 +333,9 @@ class Manager
                 $this->buildLog('Ignore file:' . $xml_file);
                 continue;
             }
-            $this->scheme_list[$xml_file] = new Schema\File($this, $xml_file);
+            new Schema\File($this, $xml_file);
         }
+        $this->loadRequireSchema();
         self::setCurrentSchema();
         $this->schema_protocol = Protocol::getInstance($this);
         $this->schema_protocol->makeStruct();
@@ -368,6 +364,25 @@ class Manager
             }
         }
         return true;
+    }
+
+    /**
+     * 加载依赖的文件
+     */
+    private function loadRequireSchema()
+    {
+        $require_ns = Schema\File::getRequireNameSpace();
+        if (empty($require_ns)) {
+            return;
+        }
+        foreach ($require_ns as $ns => $doc) {
+            self::setCurrentSchema($doc);
+            if ('/' === $ns{0}) {
+                $ns = substr($ns, 1);
+            }
+            new Schema\File($this, $ns . '.xml');
+        }
+        $this->loadRequireSchema();
     }
 
     /**
@@ -872,6 +887,6 @@ class Manager
      */
     public function getCache()
     {
-       return $this->build_cache;
+        return $this->build_cache;
     }
 }
