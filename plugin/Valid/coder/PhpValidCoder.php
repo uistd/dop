@@ -8,6 +8,8 @@ use FFan\Dop\Build\PackerBase;
 use FFan\Dop\Build\PluginCoderBase;
 use FFan\Dop\Build\StrBuf;
 use FFan\Dop\Coder\Php\Coder;
+use FFan\Dop\Plugin\Mock\RuleRange;
+use FFan\Dop\Protocol\IntItem;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
 use FFan\Dop\Protocol\ListItem;
@@ -137,6 +139,7 @@ class PhpValidCoder extends PluginCoderBase
             case ItemType::INT:
             case ItemType::FLOAT:
             case ItemType::DOUBLE:
+                $rule = $this->fixedRangeRule($rule, $item);
                 if (null !== $rule && (null !== $rule->min_value || null !== $rule->max_value)) {
                     $this->rangeCheck($if_buf, $var_name, $rule);
                 }
@@ -213,6 +216,60 @@ class PhpValidCoder extends PluginCoderBase
                 $valid_buf->backIndent()->pushStr('}');
             }
         }
+    }
+
+    /**
+     * require检查
+     * @param ValidRule $rule
+     * @param Item $item
+     * @return ValidRule
+     */
+    private function fixedRangeRule($rule, $item)
+    {
+        $item_type = $item->getType();
+        if (ItemType::INT !== $item_type) {
+            return $rule;
+        }
+        /** @var IntItem $item */
+        $byte = $item->getByte();
+        $key = $byte . '_';
+        $key .= $item->isUnsigned() ? '1' : '0';
+        $min_map = array(
+            '1_0' => '-0x80',
+            '1_1' => 0,
+            '2_0' => '-0x8000',
+            '2_1' => 0,
+            '4_0' => '-0x80000000',
+            '4_1' => 0,
+            '8_0' => '-0x7fffffffffffffff'
+        );
+        $max_map = array(
+            '1_0' => '0x7f',
+            '1_1' => '0xff',
+            '2_0' => '0x7fff',
+            '2_1' => '0xffff',
+            '4_0' => '0x7fffffff',
+            '4_1' => '0xffffffff',
+            '8_0' => '0x7fffffffffffffff'
+        );
+        if (!isset($max_map[$key])) {
+            return $rule;
+        }
+        if (null === $rule) {
+            $rule = new ValidRule();
+        }
+        $min_value = hexdec($min_map[$key]);
+        $max_value = hexdec($max_map[$key]);
+        if (null === $rule->min_value || $rule->min_value < $min_value) {
+            $rule->min_value = $min_map[$key];
+        }
+        if (null === $rule->max_value || $rule->max_value > $max_value) {
+            $rule->max_value = $max_map[$key];
+        }
+        if (null === $rule->range_msg) {
+            $rule->range_msg = 'Invalid integer range.';
+        }
+        return $rule;
     }
 
 
