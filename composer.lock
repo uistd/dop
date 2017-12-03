@@ -216,16 +216,16 @@
         },
         {
             "name": "ffan/std-logger",
-            "version": "1.0.9",
+            "version": "1.0.10",
             "source": {
                 "type": "git",
                 "url": "http://gitlab.ffan.biz/php/logger.git",
-                "reference": "0d753ebee68a547c7a33c4b6d8f493dbee1ef666"
+                "reference": "4e6fb25003d56ae6ff712ec9cd60131018cac21d"
             },
             "dist": {
                 "type": "zip",
-                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-logger/1.0.9.0/0d753ebee68a547c7a33c4b6d8f493dbee1ef666.zip",
-                "reference": "0d753ebee68a547c7a33c4b6d8f493dbee1ef666",
+                "url": "http://composer.intra.ffan.com/repo/private/dists/ffan/std-logger/1.0.10.0/4e6fb25003d56ae6ff712ec9cd60131018cac21d.zip",
+                "reference": "4e6fb25003d56ae6ff712ec9cd60131018cac21d",
                 "shasum": null,
                 "mirrors": [
                     {
@@ -263,7 +263,7 @@
                 "ffan",
                 "logger"
             ],
-            "time": "2017-11-30T14:28:58+00:00"
+            "time": "2017-12-02T15:15:10+00:00"
         }
     ],
     "packages-dev": [],

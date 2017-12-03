@@ -4,6 +4,7 @@ namespace FFan\Dop;
 require_once '../vendor/autoload.php';
 require_once 'config.php';
 $manager = new Manager('test/protocol');
+$manager->registerPacker('fix_data', __DIR__ .'/FixDataPack.php');
 $section_name = isset($argv[1]) ? $argv[1] : 'main';
 $build_result = $manager->build($section_name);
 if (true !== $build_result) {

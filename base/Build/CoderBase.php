@@ -36,11 +36,6 @@ abstract class CoderBase extends ConfigBase
     private $pack_instance_arr;
 
     /**
-     * @var array 注册的打包器
-     */
-    private $reg_packer;
-
-    /**
      * @var string 生成代码的基础目录
      */
     private $build_base_path;
@@ -202,7 +197,7 @@ abstract class CoderBase extends ConfigBase
         $file_list = $this->manager->getBuildFileList();
         foreach ($file_list as $file => $t) {
             $file_name = substr($file, 0, strlen('.xml') * -1);
-            $struct_list = $this->manager->getStructByFile('/'. $file_name);
+            $struct_list = $this->manager->getStructByFile('/' . $file_name);
             call_user_func_array($call_back, array($file_name, $struct_list));
         }
     }
@@ -451,9 +446,15 @@ abstract class CoderBase extends ConfigBase
         if (isset($this->pack_instance_arr[$pack_type])) {
             return $this->pack_instance_arr[$pack_type];
         }
-        $class_name = ucfirst($pack_type) . 'Pack';
-        $base_dir = $this->manager->getCoderPath($this->coder_name);
-        $file = $base_dir . $class_name . '.php';
+        $class_name = FFanStr::camelName($pack_type) . 'Pack';
+        $reg_packer_file = $this->manager->getRegisterPacker($pack_type);
+        if ($reg_packer_file) {
+            $file = $reg_packer_file;
+        } else {
+            $base_dir = $this->manager->getCoderPath($this->coder_name);
+            $file = $base_dir . $class_name . '.php';
+        }
+
         //文件不存在
         if (!is_file($file)) {
             throw new Exception('Can not find packer ' . $pack_type . ' file:' . $file);
@@ -510,20 +511,6 @@ abstract class CoderBase extends ConfigBase
         }
 
         return $result;
-    }
-
-    /**
-     * 注册自定义数据打包器
-     * @param string $name
-     * @param string $class_file
-     */
-    public function registerPacker($name, $class_file)
-    {
-        if (!isset($this->reg_packer[$name])) {
-            $this->manager->buildLogError('Packer ' . $name . ' conflict');
-            return;
-        }
-        $this->reg_packer[$name] = $class_file;
     }
 
     /**

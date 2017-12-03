@@ -112,6 +112,11 @@ class Manager
     private $build_cache;
 
     /**
+     * @var string[] 注册的packer
+     */
+    private $reg_packer_list;
+
+    /**
      * 初始化
      * ProtocolManager constructor.
      * @param string $base_path 协议文件所在的目录
@@ -764,6 +769,26 @@ class Manager
             return null;
         }
         return $this->plugin_config[$plugin_name];
+    }
+
+    /**
+     * 注册一个packer
+     * @param string $name
+     * @param string $class_file
+     */
+    public function registerPacker($name, $class_file)
+    {
+        $this->reg_packer_list[$name] = $class_file;
+    }
+
+    /**
+     * 获取注册的packer的类文件
+     * @param string $name
+     * @return null|string
+     */
+    public function getRegisterPacker($name)
+    {
+        return isset($this->reg_packer_list[$name]) ? $this->reg_packer_list[$name] : null;
     }
 
     /**

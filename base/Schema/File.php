@@ -414,7 +414,7 @@ class File
     private static function addExtend($extend_name, $doc)
     {
         $ns = dirname($extend_name);
-        if (isset(self::$require_ns[$ns])) {
+        if (isset(self::$require_ns[$ns]) || '.' === $ns) {
             return;
         }
         self::$require_ns[$ns] = $doc;
