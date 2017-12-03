@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol type="mysql" host="127.0.0.1:3306" user="ffan" password="www.ffan.com" database="feed_activity">
+    <data name="life_star_model" note="table of life_star">
+        <int name="id" note=""/>
+        <string name="puid" note=""/>
+        <bigint name="tag_id" note="标签ID"/>
+        <int name="is_meet" note=""/>
+        <bigint name="blog_id" note="满足条件的blogId"/>
+        <int name="is_coupon" note="是否发放优惠券"/>
+        <int name="lottery_time" note="已经抽奖次数"/>
+        <int name="lottery_left" note="剩余的抽奖次数"/>
+    </data>
+
+    <data name="life_star_coupon_model" note="table of life_star_coupon">
+        <int name="id" note=""/>
+        <string name="puid" note=""/>
+        <string name="tag_id" note="标签ID"/>
+        <string name="result" note="结果"/>
+        <int name="create_time" note="创建时间"/>
+    </data>
+
+    <data name="life_star_lottery_model" note="table of life_star_lottery">
+        <int name="id" note=""/>
+        <string name="puid" note=""/>
+        <string name="tag_id" note="标签"/>
+        <int name="time_id" note="抽奖的次数"/>
+        <string name="result" note="结果"/>
+        <int name="create_time" note="创建时间"/>
+    </data>
+
+    <data name="life_star_record_model" note="table of life_star_record">
+        <int name="id" note=""/>
+        <string name="puid" note="用户puid"/>
+        <bigint name="blog_id" note="文章"/>
+        <string name="title" note="文章标题"/>
+        <bigint name="tag_id" note="被打上的标签"/>
+        <int name="pic" note="图片数"/>
+        <int name="words" note="文字数"/>
+        <int name="share_flag" note="是否分享"/>
+        <string name="devInfo" note="发文章时的devInfo"/>
+        <string name="wdId" note="设备设备"/>
+        <string name="ddId" note="设备ID"/>
+        <string name="siedc" note="设备号"/>
+    </data>
+
+</protocol>
