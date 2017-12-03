@@ -725,6 +725,9 @@ abstract class CoderBase extends ConfigBase
      */
     public function fixPropertyName($camel_name, $item)
     {
+        if ($item->isKeepOriginalName()) {
+            return $item->getOriginalName();
+        }
         $result_name = BuildOption::CAMEL_NAME === $this->build_opt->item_name_property ? $camel_name : $item->getUnderLineName();
         //如果有名字映射, 转换
         if (isset(static::$name_convert_map[$result_name])) {
