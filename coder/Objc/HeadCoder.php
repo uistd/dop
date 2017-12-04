@@ -9,6 +9,8 @@ use FFan\Dop\Build\StrBuf;
 use FFan\Dop\Exception;
 use FFan\Dop\Protocol\Item;
 use FFan\Dop\Protocol\ItemType;
+use FFan\Dop\Protocol\ListItem;
+use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\StructItem;
 
@@ -55,10 +57,13 @@ class HeadCoder extends CoderBase
     {
         $head_file = $this->getClassFileBuf($struct);
         $this->loadTpl($head_file, 'tpl/header.h');
-
+        $this->readClassConfig($head_file, $struct);
         $head_import_buf = $head_file->getBuf(FileBuf::IMPORT_BUF);
         $head_property_buf = $head_file->getBuf(FileBuf::PROPERTY_BUF);
         $head_file->setVariableValue('class_name', $this->parent->makeClassName($struct));
+        $implement_buf = new StrBuf();
+        $this->fixClassName($implement_buf, $head_file);
+        $head_file->setVariableValue('implement', $implement_buf->dump());
         $item_list = $struct->getAllExtendItem();
         $is_first_property = true;
         /**
@@ -104,6 +109,24 @@ class HeadCoder extends CoderBase
         } elseif (ItemType::MAP === $type) {
             /** @var MapItem $item */
             $this->makeHeaderImportCode($item->getValueItem(), $import_buf);
+        }
+    }
+
+    /**
+     * @param StrBuf $class_name_buf
+     * @param FileBuf $file_buf
+     */
+    public function fixClassName($class_name_buf, $file_buf)
+    {
+        $import = $file_buf->getBuf(FileBuf::IMPORT_BUF);
+        /** @var StrBuf $implement_buf */
+        $implement_buf = $file_buf->getBuf(FileBuf::IMPLEMENT_BUF);
+        if ($implement_buf && !$implement_buf->isEmpty()) {
+            $import_class = $implement_buf->dump();
+            if ($import) {
+                $import->pushStr('#import "'.$import_class.'.h"');
+            }
+            $class_name_buf->pushStr( ' <'. $import_class.'>');
         }
     }
 
