@@ -132,7 +132,7 @@ class HeadCoder extends CoderBase
      */
     public function getPackInstance($pack_type)
     {
-        $pack_type = 'head' . ucfirst($pack_type);
+        $pack_type = 'head_' . $pack_type;
         return parent::getPackInstance($pack_type);
     }
 }

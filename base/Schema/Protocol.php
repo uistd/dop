@@ -265,6 +265,15 @@ class Protocol
         $this->struct_list[$full_name] = $struct_obj;
         $this->namespace_struct_list[$namespace][] = $struct_obj;
         unset($this->extend_stack[$full_name]);
+        //如果 是request 生成uri
+        if (Model::TYPE_REQUEST === $model_type) {
+            $uri = $model->get('uri');
+            if (empty($uri)) {
+                $uri_prefix = $this->build_opt->getConfig('uri_prefix', 'ffan/v1');
+                $uri = $uri_prefix . $namespace . '/' . $class_name;
+            }
+            $struct_obj->setUri($uri);
+        }
         if ($model->hasAttribute('method')) {
             $struct_obj->setMethod(strtoupper($model->get('method')));
         }
