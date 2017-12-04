@@ -64,7 +64,16 @@ class HeadCoder extends CoderBase
         $implement_buf = new StrBuf();
         $this->fixClassName($implement_buf, $head_file);
         $head_file->setVariableValue('implement', $implement_buf->dump());
-        $item_list = $struct->getAllExtendItem();
+        $parent_class = 'NSObject';
+        $extend_class = $struct->getParent();
+        if (null !== $extend_class) {
+            /** @var Coder $current_coder */
+            $current_coder = $this->manager->getCurrentCoder();
+            $parent_class = $current_coder->makeClassName($extend_class);
+            $head_import_buf->pushStr('#import "' . $parent_class . '.h"');
+        }
+        $head_file->setVariableValue('parent', $parent_class);
+        $item_list = $struct->getAllItem();
         $is_first_property = true;
         /**
          * @var string $name
@@ -85,7 +94,7 @@ class HeadCoder extends CoderBase
             }
             $property_line_buf = new StrBuf();
             $head_property_buf->insertBuf($property_line_buf);
-            $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item->getType()) . ') ' . $this->parent->varType($item) . ' ' . $name .';');
+            $property_line_buf->pushStr('@property (nonatomic, ' . $this->propertyType($item->getType()) . ') ' . $this->parent->varType($item) . ' ' . $name . ';');
         }
         $this->packMethodCode($head_file, $struct);
     }
@@ -124,9 +133,9 @@ class HeadCoder extends CoderBase
         if ($implement_buf && !$implement_buf->isEmpty()) {
             $import_class = $implement_buf->dump();
             if ($import) {
-                $import->pushStr('#import "'.$import_class.'.h"');
+                $import->pushStr('#import "' . $import_class . '.h"');
             }
-            $class_name_buf->pushStr( ' <'. $import_class.'>');
+            $class_name_buf->pushStr(' <' . $import_class . '>');
         }
     }
 
