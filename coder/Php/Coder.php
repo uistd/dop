@@ -22,11 +22,6 @@ use FFan\Std\Common\Str;
 class Coder extends CoderBase
 {
     /**
-     * 生成后的主文件
-     */
-    const MAIN_FILE = 'dop.php';
-
-    /**
      * 变量类型
      * @param Item $item
      * @return string
@@ -151,32 +146,6 @@ class Coder extends CoderBase
             /** @var MapItem $item */
             $this->makeImportCode($item->getValueItem(), $name_space, $use_buf);
         }
-    }
-
-    /**
-     * 通用文件
-     */
-    public function buildCommonCode()
-    {
-        if ($this->build_opt->getConfig('no_autoload_file')) {
-            return;
-        }
-        $main_buf = $this->getFolder()->touch('', self::MAIN_FILE);
-        $this->loadTpl($main_buf, 'tpl/dop.tpl');
-    }
-
-    /**
-     * 按xml文件生成代码
-     * @param string $xml_file
-     * @param array $ns_struct
-     */
-    public function codeByXml($xml_file, $ns_struct)
-    {
-        $autoload_buf = $this->getBuf('', 'dop.php', 'autoload');
-        if (!$autoload_buf) {
-            return;
-        }
-        $autoload_buf->pushStr("'\\" . $this->joinNameSpace($xml_file) . "' => \$dop_file_dir . '" . $xml_file . "',");
     }
 
     /**

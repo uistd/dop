@@ -78,6 +78,11 @@ class Protocol
     private $file_require_arr;
 
     /**
+     * @var bool 是否使用action name. 不在request类加自动加 Request
+     */
+    private $is_keep_action_name;
+
+    /**
      * Protocol constructor.
      * @param Manager $manager
      */
@@ -85,6 +90,7 @@ class Protocol
     {
         $this->manager = $manager;
         $this->build_opt = $manager->getCurrentBuildOpt();
+        $this->is_keep_action_name = (bool)$this->build_opt->getConfig('keep_action_name', false);
     }
 
     /**
@@ -237,12 +243,25 @@ class Protocol
                 throw new Exception($class_name . ' is empty struct');
             }
         }
+        //类名前缀
         $class_name_prefix = $this->build_opt->getConfig(Struct::getTypeName($model_type) . '_class_prefix');
+        //类名后缀
+        $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($model_type) . '_class_suffix');
+        //是否使用action name
+        if ($this->is_keep_action_name && (!empty($class_name_prefix) || !empty($class_name_suffix))) {
+            if (Model::TYPE_REQUEST === $model_type) {
+                $class_name = str_replace('Request', '', $class_name);
+            }
+            if (Model::TYPE_RESPONSE === $model_type) {
+                $class_name = str_replace('Response', '', $class_name);
+            }
+        }
         if (!empty($class_name_prefix)) {
             $struct_class_name = $this->joinName($class_name, Str::camelName($class_name_prefix));
-        } else {
-            $class_name_suffix = $this->build_opt->getConfig(Struct::getTypeName($model_type) . '_class_suffix');
+        } elseif (!empty($class_name_suffix)) {
             $struct_class_name = $this->joinName(Str::camelName($class_name_suffix), $class_name);
+        } else {
+            $struct_class_name = Str::camelName($class_name);
         }
         $namespace = $model->getNameSpace();
         if (isset($this->name_stack[$namespace][$struct_class_name])) {
@@ -270,7 +289,8 @@ class Protocol
             $uri = $model->get('uri');
             if (empty($uri)) {
                 $uri_prefix = $this->build_opt->getConfig('uri_prefix', 'ffan/v1');
-                $uri = $uri_prefix . $namespace . '/' . $class_name;
+                $action = $model->getAction();
+                $uri = $uri_prefix . $namespace . '/' . $action->get('name');
             }
             $struct_obj->setUri($uri);
         }

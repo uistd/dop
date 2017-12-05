@@ -137,6 +137,7 @@ class File
             $name = $action->getAttribute('name');
             if (false !== strpos($name, '/')) {
                 $name = str_replace('/', '_', $name);
+                $action->setAttribute('name', $name);
             }
             $this->parseAction($name, $action);
         }
