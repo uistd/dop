@@ -50,7 +50,7 @@ class SwaggerToXml
     /**
      * @var array 当前存在的model 使用的名称
      */
-    private $exist_model_name;
+    private $exist_model_name = array();
 
     /**
      * @var array 当前存在的action 使用的名称
@@ -187,6 +187,8 @@ class SwaggerToXml
         $tmp_action_arr = array();
         foreach ($paths as $full_path => $actions) {
             $path = preg_replace('#\{(.*?)\}#', 'by_$1', $full_path);
+            $path = str_replace('}', '', $path);
+            $path = str_replace('{', '', $path);
             $path_arr = \FFan\Std\Common\Str::split($path, '/');
             foreach ($actions as $method => $info) {
                 $full_name = $method . $full_path;
