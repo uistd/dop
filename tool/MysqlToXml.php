@@ -1,7 +1,9 @@
 <?php
 
 use FFan\Dop\Build\CodeBuf;
+use FFan\Std\Common\Config;
 use FFan\Std\Common\ConfigBase;
+use FFan\Std\Common\Str;
 use FFan\Std\Common\Utils;
 
 /**
@@ -30,6 +32,11 @@ class MysqlToXml extends ConfigBase
     private $file_buf;
 
     /**
+     * @var string mysql配置名称
+     */
+    private $config_name;
+
+    /**
      * SwaggerToXml constructor.
      * @param string $file_name
      * @param array $mysql_conf
@@ -39,18 +46,30 @@ class MysqlToXml extends ConfigBase
     {
         $this->file_name = $file_name;
         $this->initConfig($mysql_conf);
-        $host = $this->getConfig('host', '127.0.0.1');
-        $port = 3306;
-        if (false !== strpos($host, ':')) {
-            $tmp = \FFan\Std\Common\Str::split($host, ':');
-            $host = $tmp[0];
-            $port = (int)$tmp[1];
+        $this->config_name = $this->getConfigString('config_name', 'main');
+        $config_key = 'ffan-mysql:' . $this->config_name;
+        $db_config = Config::get($config_key);
+        //如果存在数据库配置
+        if (is_array($db_config)) {
+            $host = $db_config['host'];
+            $port = isset($db_config['port']) ? $db_config['port'] : 3306;
+            $user = $db_config['user'];
+            $password = $db_config['password'];
+            $database = $db_config['database'];
+        } else {
+            $host = $this->getConfig('host', '127.0.0.1');
+            $user = $this->getConfig('user');
+            $password = $this->getConfig('password', '');
+            $database = $this->getConfig('database');
+            $port = 3306;
+            if (false !== strpos($host, ':')) {
+                $tmp = Str::split($host, ':');
+                $host = $tmp[0];
+                $port = (int)$tmp[1];
+            }
         }
-        $user = $this->getConfig('user');
-        $password = $this->getConfig('password', '');
-        $database = $this->getConfig('database');
         if (empty($user) || empty($database)) {
-            throw new Exception($this->file_name .' 缺少mysql配置');
+            throw new Exception($this->file_name . ' 缺少mysql配置');
         }
         $link_obj = new mysqli($host, $user, $password, 'information_schema', $port);
         if ($link_obj->connect_errno) {
@@ -59,8 +78,18 @@ class MysqlToXml extends ConfigBase
         $this->mysal_obj = $link_obj;
         $this->db_name = $database;
         $this->file_buf = new CodeBuf();
+        $conf_arr = array('type="mysql"');
+        if (!empty($this->config_name)) {
+            $conf_arr[] = 'config_name="' . $this->config_name . '"';
+        } else {
+            $conf_arr[] = 'host="' . $host . ':' . $port . '"';
+            $conf_arr[] = 'user="' . $user . '"';
+            $conf_arr[] = 'password="' . $password . '"';
+            $conf_arr[] = 'database="' . $database . '"';
+        }
+        $conf_arr_str = join(' ', $conf_arr);
         $this->file_buf->pushStr('<?xml version="1.0" encoding="UTF-8"?>');
-        $this->file_buf->pushStr('<protocol type="mysql" host="' . $host . ':' . $port . '" user="' . $user . '" password="' . $password . '" database="' . $database . '">');
+        $this->file_buf->pushStr('<protocol ' . $conf_arr_str . '>');
         $this->file_buf->indent();
         $this->build();
     }
@@ -77,7 +106,7 @@ class MysqlToXml extends ConfigBase
         $this->file_buf->backIndent()->pushStr('</protocol>')->emptyLine();
         $content = $this->file_buf->dump();
         file_put_contents($this->file_name, $content);
-        echo $this->file_name .' done!', PHP_EOL;
+        echo $this->file_name . ' done!', PHP_EOL;
     }
 
     /**
@@ -169,6 +198,7 @@ class MysqlToXml extends ConfigBase
             }
         }
     }
+
     /**
      * @param \DOMElement $node
      * @return null|array
@@ -202,7 +232,7 @@ class MysqlToXml extends ConfigBase
             return;
         }
         $mysql_conf = self::getAllAttribute($main_node);
-        echo $file_name .' begin!', PHP_EOL;
+        echo $file_name . ' begin!', PHP_EOL;
         new self($file_name, $mysql_conf);
     }
 }
