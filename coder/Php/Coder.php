@@ -91,9 +91,14 @@ class Coder extends CoderBase
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
         $use_buf->setPrefixEmptyLine();
+        $extend = $struct->getParent();
+        if ($extend) {
+            $this->pushUseClass($use_buf, $name_space, $extend);
+            $class_name_buf->pushStr( ' extends '. $extend->getClassName());
+        }
         $property_buf->setPrefixEmptyLine();
         $this->readClassConfig($class_file, $struct);
-        $item_list = $struct->getAllExtendItem();
+        $item_list = $struct->getAllItem();
         /**
          * @var string $name
          * @var Item $item
@@ -134,17 +139,28 @@ class Coder extends CoderBase
         if (ItemType::STRUCT === $type) {
             /** @var StructItem $item */
             $struct = $item->getStruct();
-            $use_ns = $struct->getNamespace();
-            if ($use_ns !== $name_space) {
-                $use_name_space = $this->joinNameSpace($use_ns, $struct->getClassName());
-                $use_buf->pushUniqueStr('use ' . $use_name_space . ';');
-            }
+            $this->pushUseClass($use_buf, $name_space, $struct);
         } elseif (ItemType::ARR === $type) {
             /** @var ListItem $item */
             $this->makeImportCode($item->getItem(), $name_space, $use_buf);
         } elseif (ItemType::MAP === $type) {
             /** @var MapItem $item */
             $this->makeImportCode($item->getValueItem(), $name_space, $use_buf);
+        }
+    }
+
+    /**
+     * 生成use 代码
+     * @param CodeBuf $use_buf
+     * @param string $name_space 所在命名空间
+     * @param Struct $use_struct 引用的struct
+     */
+    private function pushUseClass($use_buf, $name_space, $use_struct)
+    {
+        $use_ns = $use_struct->getNamespace();
+        if ($use_ns !== $name_space) {
+            $use_name_space = $this->joinNameSpace($use_ns, $use_struct->getClassName());
+            $use_buf->pushUniqueStr('use ' . $use_name_space . ';');
         }
     }
 

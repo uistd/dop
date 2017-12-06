@@ -137,7 +137,9 @@ abstract class CoderBase extends ConfigBase
     public function structIterator(callable $callback, $ignore_cache = false)
     {
         $all_struct = $this->manager->getAllStruct();
+        /** @var Struct[] $all_require_struct */
         $all_require_struct = array();
+        $done_list = array();
         foreach ($all_struct as $struct) {
             if ($struct->loadFromCache() && !$ignore_cache) {
                 continue;
@@ -155,19 +157,32 @@ abstract class CoderBase extends ConfigBase
                 continue;
             }
             $this->loadAllRequireStruct($all_require_struct, $struct);
+            $extend = $struct->getParent();
+            if ($extend) {
+                $all_require_struct[$extend->getId()] = $extend;
+            }
             //忽略主StructModel
             if (Struct::TYPE_RESPONSE === $struct_type && $this->isIgnoreResponseStruct($struct)) {
                 continue;
             }
             call_user_func($callback, $struct);
+            //记录已经处理过了
+            $done_list[$struct->getId()] = true;
         }
-        //生成依赖的struct
-        /**
-         * @var int $id
-         * @var Struct $req_struct
-         */
-        foreach ($all_require_struct as $id => $req_struct) {
+        //处理其它 依赖的项
+        while (!empty($all_require_struct)) {
+            $id = key($all_require_struct);
+            $req_struct = $all_require_struct[$id];
+            unset($all_require_struct[$id]);
+            if (isset($done_list[$id])) {
+                continue;
+            }
+            $extend = $req_struct->getParent();
+            if ($extend) {
+                $all_require_struct[$extend->getId()] = $extend;
+            }
             call_user_func($callback, $req_struct);
+            $done_list[$id] = true;
         }
     }
 

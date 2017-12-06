@@ -549,4 +549,12 @@ class Struct
         $this->namespace = self::ignoreVersion($this->namespace);
         $this->file = self::ignoreVersion($this->file);
     }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 }
