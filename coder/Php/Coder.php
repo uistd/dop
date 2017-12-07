@@ -99,12 +99,22 @@ class Coder extends CoderBase
         $property_buf->setPrefixEmptyLine();
         $this->readClassConfig($class_file, $struct);
         $item_list = $struct->getAllItem();
+
+        //临时解决方法, 解决引用问题
+        $all_item_list = $struct->getAllExtendItem();
+        /**
+         * @var string $name
+         * @var Item $item
+         */
+        foreach ($all_item_list as $name => $item) {
+            $this->makeImportCode($item, $name_space, $use_buf);
+        }
+
         /**
          * @var string $name
          * @var Item $item
          */
         foreach ($item_list as $name => $item) {
-            $this->makeImportCode($item, $name_space, $use_buf);
             $property_buf->pushStr('/**');
             $item_type = self::varType($item);
             $property_desc_buf = new StrBuf();
