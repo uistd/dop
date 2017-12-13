@@ -38,7 +38,7 @@ public class GsonTest {
     	data.map.put(1, "this is one");
     	data.map.put(2, "this is two");
     	
-    	data.string = "www.ffan.com";
+    	data.string = "www.abc.com";
     	
     	data.test_arr = new TestArr();
     	
@@ -103,9 +103,9 @@ public class GsonTest {
 		encode.writeFloat(123743.13F);
 		encode.writeDouble(9293892.929394);
 		
-		encode.writeString("www.ffan.com");
-		encode.writeString("www.飞sss凡.com");
-		encode.mask("www.ffan.com");
+		encode.writeString("www.aaa.com");
+		encode.writeString("www.abc.com");
+		encode.mask("www.abc.com");
 		encode.pack();
 		
 		byte[] pack_re = encode.getBuffer();

@@ -56,13 +56,13 @@ public class BinaryTest {
         byte[] bin_data_3 = data.binaryEncode(true, true);
         System.out.println("len:" + bin_data_3.length + " md5:" + DopEncode.md5(bin_data_3));
 
-        byte[] bin_data_4 = data.binaryEncode(true, "www.ffan.com");
+        byte[] bin_data_4 = data.binaryEncode(true, "www.abc.com");
         System.out.println("len:" + bin_data_4.length + " md5:" + DopEncode.md5(bin_data_4));
         
         TestData data2 = new TestData();
         System.out.println(0 == data2.binaryDecode(bin_data_1) ? "success" : "failed");
         System.out.println(0 == data2.binaryDecode(bin_data_2) ? "success" : "failed");
         System.out.println(0 == data2.binaryDecode(bin_data_3) ? "success" : "failed");
-        System.out.println(0 == data2.binaryDecode(bin_data_4, "www.ffan.com") ? "success" : "failed");
+        System.out.println(0 == data2.binaryDecode(bin_data_4, "www.abc.com") ? "success" : "failed");
     }
 }

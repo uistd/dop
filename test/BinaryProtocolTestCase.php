@@ -78,10 +78,10 @@ if ($re) {
     echo $buffer3->getErrorMessage(), PHP_EOL;
 }
 
-$bin_data4 = $data->binaryEncode(true, true, 'www.ffan.com');
+$bin_data4 = $data->binaryEncode(true, true, 'www.abc.com');
 echo 'pack mask result:' . md5($bin_data4) . ' strlen:' . strlen($bin_data4), PHP_EOL;
 $new_data4 = new TestData();
-$re = $new_data4->binaryDecode($new_data4, 'www.ffan.com');
+$re = $new_data4->binaryDecode($new_data4, 'www.abc.com');
 if ($re) {
     echo ' success', PHP_EOL;
 }

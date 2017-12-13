@@ -118,10 +118,10 @@ int main(int argc, const char * argv[]) {
         int re_3 = [new_test_data binaryDecode:bin_data_3];
         NSLog(@"Binary decode result:%d", re_3);
 
-        NSData *bin_data_4 = [test binaryEncode:YES mask_key:@"www.ffan.com"];
+        NSData *bin_data_4 = [test binaryEncode:YES mask_key:@"www.abc.com"];
         NSLog(@"length: %@ md5:%@", @(bin_data_4.length), [FFANDOPUtils md5Hex:(unsigned char*)bin_data_4.bytes length:bin_data_4.length]);
 
-        int re_4 = [new_test_data binaryDecode:bin_data_1 mask_key:@"www.ffan.com"];
+        int re_4 = [new_test_data binaryDecode:bin_data_1 mask_key:@"www.abc.com"];
         NSLog(@"Binary decode result:%d", re_4);
     }
     return 0;

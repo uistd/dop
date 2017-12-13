@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<protocol type="mysql" host="127.0.0.1:3306" user="ffan" password="www.ffan.com" database="feed_activity">
+<protocol type="mysql" host="127.0.0.1:3306" user="ffan" password="www.abc.com" database="feed_activity">
     <data name="life_star_model" note="table of life_star">
         <int name="id" note=""/>
         <string name="puid" note=""/>

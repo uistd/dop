@@ -34,7 +34,7 @@ var bin_data2 = data.binaryEncode(true);
 console.log('len:', bin_data2.length, dopBase.md5(bin_data2));
 var bin_data3 = data.binaryEncode(true, true);
 console.log('len:', bin_data3.length, dopBase.md5(bin_data3));
-var bin_data4 = data.binaryEncode(true, true, 'www.ffan.com');
+var bin_data4 = data.binaryEncode(true, true, 'www.abc.com');
 console.log('len:', bin_data4.length, dopBase.md5(bin_data4));
 
 
@@ -51,5 +51,5 @@ var arr3 = decoder3.unpack();
 console.dir(arr3);
 
 var decoder4 = new DopDecode(bin_data4);
-var arr4 = decoder4.unpack('www.ffan.com');
+var arr4 = decoder4.unpack('www.abc.com');
 console.dir(arr4);
