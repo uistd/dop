@@ -2,65 +2,65 @@
 <protocol>
     <struct name="role_info" note="用户信息">
         <string name="user_name" note="用户名">
-            <plugin_mock range="8,15"/>
+            <mock range="8,15"/>
         </string>
         <string name="name" note="真实姓名">
-            <plugin_mock range="6, 9"/>
+            <mock range="6, 9"/>
         </string>
         <string name="mobile" note="手机号">
-            <plugin_mock type="mobile"/>
+            <mock type="mobile"/>
         </string>
         <string name="email" note="电子邮件" default="demo@wanda.cn" mock-type="email">
-            <plugin_mock type="email"/>
+            <mock type="email"/>
         </string>
         <int name="level" note="等级" mock-range="10, 20">
-            <plugin_mock range="10, 20"/>
-            <plugin_valid range="10, 20"/>
+            <mock range="10, 20"/>
+            <valid range="10, 20"/>
         </int>
         <string name="address" note="地址" mock-range="20, 30">
-            <plugin_mock range="20, 30"/>
+            <mock range="20, 30"/>
         </string>
         <string name="country" note="国籍" default="中国">
-            <plugin_mock value="中国"/>
+            <mock value="中国"/>
         </string>
         <bool name="is_reg" note="是否注册用户"/>
         <int name="gender" note="性别" default="1" mock-enum="1,2">
-            <plugin_mock enum="1,2"/>
+            <mock enum="1,2"/>
         </int>
         <list name="exp" mock-range="1, 10">
-            <plugin_mock range="1, 10"/>
+            <mock range="1, 10"/>
             <int>
-                <plugin_mock range="100, 100000"/>
+                <mock range="100, 100000"/>
             </int>
         </list>
         <list name="info">
-            <plugin_mock  range="1,2"/>
+            <mock  range="1,2"/>
             <string>
-                <plugin_mock range="10,20"/>
+                <mock range="10,20"/>
             </string>
         </list>
         <list name="demo" info="测试">
-            <plugin_mock range="1,10"/>
+            <mock range="1,10"/>
             <list>
-                <plugin_mock range="1,10"/>
+                <mock range="1,10"/>
                 <list>
-                    <plugin_mock range="1,10"/>
-                    <int><plugin_mock range="20,110000"/></int>
+                    <mock range="1,10"/>
+                    <int><mock range="20,110000"/></int>
                 </list>
             </list>
         </list>
         <list name="children">
-            <plugin_mock range="1,3"/>
+            <mock range="1,3"/>
             <plugin_trigger type="buf" buf_name="trigger_add_buf"/>
             <struct>
                 <int name="gender" default="1" note="性别">
-                    <plugin_mock enum="1,2"/>
+                    <mock enum="1,2"/>
                 </int>
                 <int name="age">
-                    <plugin_mock range="1, 30"/>
+                    <mock range="1, 30"/>
                 </int>
                 <string name="name">
-                    <plugin_mock type="chinese_name"/>
+                    <mock type="chinese_name"/>
                 </string>
             </struct>
         </list>
@@ -68,7 +68,7 @@
     <action name="get_demo_role" packer-extra="binary">
         <request uri="/cda/aaa/bbb/{role_id}" method="put">
             <int name="role_id">
-                <plugin_valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>
+                <valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>
             </int>
         </request>
         <response extend="/api/result">
@@ -78,8 +78,8 @@
     <action name="post_demo_role">
         <request>
             <string name="role_ids">
-                <plugin_valid require="1" error-msg="role_ids参数错误" format="mobile"/>
-                <plugin_mock enum="10,20|30,35"/>
+                <valid require="1" error-msg="role_ids参数错误" format="mobile"/>
+                <mock enum="10,20|30,35"/>
             </string>
         </request>
         <response extend="/api/result">
@@ -91,9 +91,9 @@
     <action name="new_role" method="post">
         <request>
             <list name="roles">
-                <plugin_valid require="1" range="5, 10"/>
+                <valid require="1" range="5, 10"/>
                 <int>
-                    <plugin_valid range="10, 100"/>
+                    <valid range="10, 100"/>
                 </int>
             </list>
             <model name="info">
@@ -101,7 +101,7 @@
                     <int/>
                 </list>
                 <int name="id">
-                    <plugin_valid extend="role_info/level"/>
+                    <valid extend="role_info/level"/>
                 </int>
             </model>
         </request>
@@ -115,8 +115,8 @@
     <action name="del_demo_role">
         <request>
             <int name="role_id">
-                <plugin_mock value="10"/>
-                <plugin_valid  require="1" range="1," range-msg="role_id不能小于1" require-msg="role_id为必传参数"/>
+                <mock value="10"/>
+                <valid  require="1" range="1," range-msg="role_id不能小于1" require-msg="role_id为必传参数"/>
             </int>
         </request>
         <response extend="/api/result">
@@ -135,7 +135,7 @@
     <action name="put_demo_role">
         <request>
             <string name="role_ids">
-                <plugin_valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>
+                <valid require="1" msg="role_ids参数错误" length="200" format="/^(\d+,\s?){1,}$/"/>
             </string>
         </request>
         <response extend="/api/result">
@@ -143,17 +143,17 @@
                 <int note="role_id"/>
                 <struct extend="role_info" class_name="new_role_info" note="用户信息">
                     <string name="remark" note="备注">
-                        <plugin_mock value="note"/>
+                        <mock value="note"/>
                     </string>
                     <struct name="demo">
                         <string name="user_name" note="用户名">
-                            <plugin_mock range="6,10"/>
+                            <mock range="6,10"/>
                         </string>
                         <string name="name" note="真实姓名">
-                            <plugin_mock type="chinese_name"/>
+                            <mock type="chinese_name"/>
                         </string>
                         <string name="mobile" note="手机号">
-                            <plugin_mock type="mobile"/>
+                            <mock type="mobile"/>
                         </string>
                     </struct>
                 </struct>

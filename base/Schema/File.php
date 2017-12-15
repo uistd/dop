@@ -596,7 +596,7 @@ class File
                 self::addExtend(dirname($extend), '');
             }
             $this->setLineNumber($tmp_node->getLineNo());
-            $plugin_name = substr($tmp_node->nodeName, strlen('plugin_'));
+            $plugin_name = str_replace('plugin_', '', $tmp_node->nodeName);
             $plugin = new Plugin($plugin_name, $tmp_node);
             $item->addPlugin($plugin_name, $plugin);
         }
@@ -609,7 +609,14 @@ class File
      */
     private function isPluginNode($node)
     {
-        return 0 === strpos($node->nodeName, 'plugin_');
+        if (null !== ItemType::getType($node->nodeName)) {
+            return false;
+        }
+        //如果以plugin_开始的字符串, 肯定是插件
+        if (0 === strpos($node->nodeName, 'plugin_')) {
+            return true;
+        }
+        return $this->manager->hasPlugin($node->nodeName);
     }
 
     /**

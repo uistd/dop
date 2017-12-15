@@ -2,10 +2,10 @@
 <protocol>
     <struct name="result" public="true">
         <int name="status" note="状态码">
-            <plugin_mock value="200"/>
+            <mock value="200"/>
         </int>
         <string name="message" note="消息">
-            <plugin_mock value="success"/>
+            <mock value="success"/>
         </string>
         <int name="data" note="数据"/>
     </struct>

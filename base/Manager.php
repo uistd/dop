@@ -759,6 +759,16 @@ class Manager
     }
 
     /**
+     * 是否存在某个插件
+     * @param string $plugin_name
+     * @return bool
+     */
+    public function hasPlugin($plugin_name)
+    {
+        return isset($this->plugin_list[ucfirst($plugin_name)]);
+    }
+
+    /**
      * 获取插件配置
      * @param $plugin_name
      * @return null|array
@@ -839,6 +849,9 @@ class Manager
         $plugin_name = FFanStr::camelName($plugin_name);
         if (isset($plugin_instance[$plugin_name])) {
             return $plugin_instance[$plugin_name];
+        }
+        if (!$this->hasPlugin($plugin_name)) {
+            throw new Exception('Plugin '. $plugin_name .' not exist');
         }
         $plugin_dir = $this->plugin_list[$plugin_name];
         $class_name = 'Plugin';
