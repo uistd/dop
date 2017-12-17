@@ -272,7 +272,7 @@ class PhpValidCoder extends PluginCoderBase
             $rule->max_value = $max_map[$key];
         }
         if (null === $rule->range_msg) {
-            $rule->range_msg = 'Invalid integer range.';
+            $rule->range_msg = 'Invalid integer range of `'. $item->getName() .'`.';
         }
         return $rule;
     }
