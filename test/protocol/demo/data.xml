@@ -51,9 +51,13 @@
         <string name="string"/>
         <float name="float32"/>
         <double name="double64"/>
+        <list name="short_list" item="string"/>
+        <list name="short_model" item="model.test_arr"/>
         <binary name="binary"/>
         <bool name="is_ok" default="false"/>
-        <list name="list"><string/></list>
+        <list name="list">
+            <string/>
+        </list>
         <map name="map"><int/><string/></map>
     </data>
 </protocol>

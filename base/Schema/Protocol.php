@@ -148,7 +148,9 @@ class Protocol
         }
         if (!empty($this->shader_list)) {
             foreach ($this->shader_list as $shader) {
+                Exception::pushStack('Parse shader');
                 $this->parseShader($shader);
+                Exception::popStack();
             }
         }
         $this->manager->getCache()->set('file_require', $this->file_require_arr);
@@ -176,11 +178,11 @@ class Protocol
         if (isset($this->struct_list[$full_name])) {
             return $this->struct_list[$full_name];
         }
+        Exception::pushStack($model->getDoc());
         if (isset($this->extend_stack[$full_name])) {
             throw new Exception('检测到循环继承');
         }
         $this->extend_stack[$full_name] = true;
-        Manager::setCurrentSchema($model->getDoc());
         $keep_name_attr = 'keep_name';
         //保持 原始字段 命名的权重
         $item_name_keep_original_weight = (int)$this->build_opt->isKeepOriginalName();
@@ -237,6 +239,7 @@ class Protocol
         if (empty($item_arr)) {
             //完全继承
             if ($extend_struct) {
+                Exception::popStack();
                 return $extend_struct;
             } //struct不允许空item
             elseif (Struct::TYPE_STRUCT === $model_type || Struct::TYPE_DATA === $model_type) {
@@ -297,6 +300,7 @@ class Protocol
         if ($model->hasAttribute('method')) {
             $struct_obj->setMethod(strtoupper($model->get('method')));
         }
+        Exception::popStack();
         return $struct_obj;
     }
 
@@ -322,13 +326,14 @@ class Protocol
     /**
      * 生成item对象
      * @param string $name
-     * @param Item $dom_node 节点
+     * @param Item $item_node 节点
      * @return ProtocolItem
      * @throws Exception
      */
-    private function makeItemObject($name, $dom_node)
+    private function makeItemObject($name, $item_node)
     {
-        $type = $dom_node->getType();
+        Exception::pushStack('Parse Item ' . $item_node->getDoc());
+        $type = $item_node->getType();
         switch ($type) {
             case ItemType::STRING:
                 $item_obj = new StringItem($name, $this->manager);
@@ -341,21 +346,27 @@ class Protocol
                 break;
             case ItemType::ARR:
                 $item_obj = new ListItem($name, $this->manager);
-                $list_item = $this->parseList($name, $dom_node);
+                Exception::pushStack('Parse list item');
+                $list_item = $this->parseList($name, $item_node);
                 $item_obj->setItem($list_item);
+                Exception::popStack();
                 break;
             case ItemType::STRUCT:
                 $item_obj = new StructItem($name, $this->manager);
-                $struct_obj = $this->parsePrivateStruct($dom_node);
+                Exception::pushStack('Parse model item');
+                $struct_obj = $this->parsePrivateStruct($item_node);
                 $item_obj->setStruct($struct_obj);
+                Exception::popStack();
                 break;
             case ItemType::MAP:
                 $item_obj = new MapItem($name, $this->manager);
-                $this->parseMap($name, $dom_node, $item_obj);
+                Exception::pushStack('Parse map item');
+                $this->parseMap($name, $item_node, $item_obj);
+                Exception::popStack();
                 break;
             case ItemType::INT:
                 $item_obj = new IntItem($name, $this->manager);
-                $item_obj->setIntType($dom_node->getNodeName());
+                $item_obj->setIntType($item_node->getNodeName());
                 break;
             case ItemType::DOUBLE:
                 $item_obj = new DoubleItem($name, $this->manager);
@@ -367,15 +378,16 @@ class Protocol
                 throw new Exception('Unknown type');
         }
         //注释
-        /** @var \DOMElement $dom_node */
-        if ($dom_node->hasAttribute('note')) {
-            $item_obj->setNote($dom_node->get('note'));
+        /** @var \DOMElement $item_node */
+        if ($item_node->hasAttribute('note')) {
+            $item_obj->setNote($item_node->get('note'));
         }
         //默认值
-        if ($dom_node->hasAttribute('default')) {
-            $item_obj->setDefault($dom_node->get('default'));
+        if ($item_node->hasAttribute('default')) {
+            $item_obj->setDefault($item_node->get('default'));
         }
-        $this->parsePlugin($dom_node, $item_obj);
+        $this->parsePlugin($item_node, $item_obj);
+        Exception::popStack();
         return $item_obj;
     }
 
@@ -435,7 +447,6 @@ class Protocol
      */
     private function parseTrigger($plugin_node, $item)
     {
-        Manager::setCurrentSchema($plugin_node->getDoc());
         $type = $plugin_node->get('type');
         switch ($type) {
             case 'buf':

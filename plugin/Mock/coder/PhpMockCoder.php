@@ -153,7 +153,7 @@ class PhpMockCoder extends PluginCoderBase
             $name = $this->coder->fixPropertyName($name, $item);
             $this->makeImportCode($item, $import_buf);
             $mock_rule = $item->getPluginData($this->plugin->getPluginName());
-            Exception::setAppendMsg('Mock ' . $class_name . '->' . $name);
+            Exception::pushStack('Mock ' . $class_name . '->' . $name);
             $this->buildItemCode($mock_buf, '$data->' . $name, $mock_rule, $item);
         }
         $mock_buf->pushStr('return $data;');

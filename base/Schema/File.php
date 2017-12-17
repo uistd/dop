@@ -89,11 +89,13 @@ class File
      */
     public function parse()
     {
+        Exception::pushStack('Parse file:'. $this->file_name);
         $this->queryModel('struct');
         $this->queryModel('model');
         $this->queryAction();
         $this->queryData();
         $this->queryShader();
+        Exception::popStack();
     }
 
     /**
@@ -111,8 +113,9 @@ class File
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $struct */
             $struct = $node_list->item($i);
-            $this->setLineNumber($struct->getLineNo());
+            Exception::pushStack($this->traceInfo($struct));
             $this->parseModel($struct);
+            Exception::popStack();
         }
     }
 
@@ -129,8 +132,7 @@ class File
         for ($i = 0; $i < $action_list->length; ++$i) {
             /** @var \DOMElement $action */
             $action = $action_list->item($i);
-            Manager::setCurrentSchema($action->C14N());
-            $this->setLineNumber($action->getLineNo());
+            Exception::pushStack($this->traceInfo($action));
             if (!$action->hasAttribute('name')) {
                 throw new Exception('Action must have name attribute');
             }
@@ -140,6 +142,7 @@ class File
                 $action->setAttribute('name', $name);
             }
             $this->parseAction($name, $action);
+            Exception::popStack();
         }
     }
 
@@ -163,7 +166,6 @@ class File
         $note = $action->getAttribute('note');
         for ($i = 0; $i < $node_list->length; ++$i) {
             $node = $node_list->item($i);
-            $this->setLineNumber($node->getLineNo());
             if (XML_ELEMENT_NODE !== $node->nodeType) {
                 continue;
             }
@@ -263,8 +265,9 @@ class File
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $data_node */
             $data_node = $node_list->item($i);
-            $this->setLineNumber($data_node->getLineNo());
+            Exception::pushStack($this->traceInfo($data_node));
             $this->parseModel($data_node, Model::TYPE_DATA);
+            Exception::popStack();
         }
     }
 
@@ -281,13 +284,13 @@ class File
         for ($i = 0; $i < $node_list->length; ++$i) {
             /** @var \DOMElement $shader_node */
             $shader_node = $node_list->item($i);
+            Exception::pushStack($this->traceInfo($shader_node));
             if (empty($shader_node->getAttribute('name'))) {
-                throw new Exception('Shader name missing');
+                throw new Exception('Shader name missing'. PHP_EOL. $shader_node->C14N());
             }
-            Manager::setCurrentSchema($shader_node->C14N());
-            $this->setLineNumber($shader_node->getLineNo());
             $shader = new Shader($shader_node);
             $this->protocol->addShader($shader);
+            Exception::popStack();
         }
     }
 
@@ -303,17 +306,6 @@ class File
         return $this->path_handle;
     }
 
-
-    /**
-     * 设置行号
-     * @param string $line_number
-     */
-    private function setLineNumber($line_number)
-    {
-        $position_info = 'File:' . $this->file_name . ' Line:' . $line_number;
-        Exception::setAppendMsg($position_info);
-    }
-
     /**
      * 解析一组协议
      * @param \DomElement $model_node
@@ -323,7 +315,6 @@ class File
      */
     private function parseModel(\DomElement $model_node, $type = Model::TYPE_STRUCT)
     {
-        Manager::setCurrentSchema($model_node->C14N());
         //model 取名 的时候，优先使用 class_name
         $name_attr = $model_node->hasAttribute('class_name') ? 'class_name' : 'name';
         $class_name = $model_node->getAttribute($name_attr);
@@ -345,7 +336,7 @@ class File
             if ($this->isPluginNode($node)) {
                 continue;
             }
-            $this->setLineNumber($node->getLineNo());
+            Exception::pushStack($this->traceInfo($node));
             /** @var \DOMElement $node */
             if (!$node->hasAttribute('name')) {
                 //如果 是struct 并且指定了 extend, 就不需要名字
@@ -368,10 +359,12 @@ class File
             $name_conflict[$camel_name] = true;
             $item = $this->makeItem($item_name, $node);
             $item_arr[$item_name] = $item;
+            Exception::popStack();
         }
         $extend_name = '';
         //继承关系
         if ($model_node->hasAttribute('extend')) {
+            Exception::pushStack('Parse extend');
             $extend_name = trim($model_node->getAttribute('extend'));
             if (empty($extend_name)) {
                 throw new Exception('extend 不能为空');
@@ -382,6 +375,7 @@ class File
             } else {
                 $this->protocol->setFileRequire($this->namespace, dirname($extend_name));
             }
+            Exception::popStack();
         }
         //如果item为空
         if (empty($item_arr)) {
@@ -453,7 +447,7 @@ class File
         if (null === $type) {
             throw new Exception('Unknown type `' . $item_node->nodeName . '`');
         }
-        $item = new Item($type, $item_node);
+        $item = new Item($type, $item_node, $this->namespace);
         switch ($type) {
             case ItemType::ARR:
                 $list_item = $this->parseList($name, $item_node);
@@ -477,17 +471,17 @@ class File
     /**
      * 解析list
      * @param string $name
-     * @param \DOMNode $item 节点
+     * @param \DomElement $item 节点
      * @return Item
      * @throws Exception
      */
-    private function parseList($name, \DOMNode $item)
+    private function parseList($name, $item)
     {
         $item_list = $item->childNodes;
         $type_node = null;
+        Exception::pushStack($this->traceInfo($item));
         for ($i = 0; $i < $item_list->length; ++$i) {
             $tmp_node = $item_list->item($i);
-            $this->setLineNumber($tmp_node->getLineNo());
             if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
                 continue;
             }
@@ -500,12 +494,44 @@ class File
             $type_node = $tmp_node;
         }
         if (null === $type_node) {
+            $short_value = $item->getAttribute('item');
+            if (!empty($short_value)) {
+                $type_node = $this->parseListItem($item, $short_value);
+            }
+        }
+        if (null === $type_node) {
             throw new Exception('List下必须包括一个指定list类型的节点');
         }
         if ($type_node->hasAttribute('name')) {
             $name = trim($type_node->getAttribute('name'));
         }
-        return $this->makeItem($name, $type_node);
+        $re = $this->makeItem($name, $type_node);
+        Exception::popStack();
+        return $re;
+    }
+
+    /**
+     * 解析list简要书写方式
+     * @param \DomElement $list_item
+     * @param string $short_value
+     * @return \DomElement|null
+     */
+    private function parseListItem($list_item, $short_value)
+    {
+        $node = null;
+        $item_type = ItemType::getType($short_value);
+        if ($item_type && ItemType::ARR !== $item_type && ItemType::STRUCT !== $item_type) {
+            $node = new \DomElement($short_value, '');
+            $list_item->appendChild($node);
+        }
+        //如果是指 model
+        elseif (0 === strpos($short_value, 'model.')) {
+            $model_name = str_replace('model.', '', $short_value);
+            $node = new \DomElement('model');
+            $list_item->appendChild($node);
+            $node->setAttribute('extend', $model_name);
+        }
+        return $node;
     }
 
     /**
@@ -522,7 +548,6 @@ class File
         $value_node = null;
         for ($i = 0; $i < $item_list->length; ++$i) {
             $tmp_node = $item_list->item($i);
-            $this->setLineNumber($tmp_node->getLineNo());
             if (XML_ELEMENT_NODE !== $tmp_node->nodeType) {
                 continue;
             }
@@ -562,6 +587,7 @@ class File
      */
     private function parsePrivateStruct($name, $item_node)
     {
+        Exception::pushStack($this->traceInfo($item_node));
         if ($item_node->hasAttribute('class_name')) {
             $class_name = trim($item_node->getAttribute('class_name'));
             if (!empty($class_name)) {
@@ -569,7 +595,9 @@ class File
             }
         }
         $item_node->setAttribute('name', $name);
-        return $this->parseModel($item_node, Model::TYPE_STRUCT);
+        $re = $this->parseModel($item_node, Model::TYPE_STRUCT);
+        Exception::popStack();
+        return $re;
     }
 
     /**
@@ -588,17 +616,17 @@ class File
             if (!$this->isPluginNode($tmp_node)) {
                 continue;
             }
-            Manager::setCurrentSchema($tmp_node->C14N());
+            Exception::pushStack($this->traceInfo($tmp_node));
             //如果 节点中包含 extend, 要检测文件是否被加载
             if ($tmp_node->hasAttribute('extend')) {
                 $extend = $tmp_node->getAttribute('extend');
                 //去掉一层 item 如:/common/user/puid puid是字段, 去掉
                 self::addExtend(dirname($extend), '');
             }
-            $this->setLineNumber($tmp_node->getLineNo());
             $plugin_name = str_replace('plugin_', '', $tmp_node->nodeName);
             $plugin = new Plugin($plugin_name, $tmp_node);
             $item->addPlugin($plugin_name, $plugin);
+            Exception::popStack();
         }
     }
 
@@ -654,5 +682,15 @@ class File
             $path = '/' . $path . '/';
         }
         return $path . basename($file_name, '.xml');
+    }
+
+    /**
+     * 生成追踪数据
+     * @param \DOMElement $node
+     * @return string
+     */
+    private function traceInfo($node)
+    {
+        return 'File:'. $this->file_name . ' Line '. $node->getLineNo(). PHP_EOL . $node->C14N() . PHP_EOL;
     }
 }

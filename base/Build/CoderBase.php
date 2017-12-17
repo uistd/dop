@@ -97,7 +97,7 @@ abstract class CoderBase extends ConfigBase
      */
     public function build()
     {
-        Exception::setAppendMsg('Build common file');
+        Exception::pushStack('Build common file');
         $this->buildCommonCode();
         $this->buildByStruct();
         $this->buildByXmlFile();
@@ -229,8 +229,9 @@ abstract class CoderBase extends ConfigBase
          */
         foreach ($plugin_coder_arr as $name => $plugin_coder) {
             $plugin_append_msg = 'Build plugin code: ' . $name;
-            Exception::setAppendMsg($plugin_append_msg);
+            Exception::pushStack($plugin_append_msg);
             $plugin_coder->buildCode();
+            Exception::popStack();
         }
     }
 
@@ -299,8 +300,9 @@ abstract class CoderBase extends ConfigBase
          * @var PackerBase $packer
          */
         foreach ($packer_object_arr as $name => $packer) {
-            Exception::setAppendMsg('Build packer ' . $name);
+            Exception::pushStack('Build packer ' . $name);
             $this->writePackCode($struct, $file_buf, $packer);
+            Exception::popStack();
         }
     }
 

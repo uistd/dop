@@ -14,7 +14,6 @@ use FFan\Dop\Protocol\MapItem;
 use FFan\Dop\Protocol\Struct;
 use FFan\Dop\Protocol\StructItem;
 use FFan\Dop\Schema\Cache;
-use FFan\Dop\Schema\File;
 use FFan\Dop\Schema\Protocol;
 use FFan\Std\Common\Str as FFanStr;
 use FFan\Std\Common\Utils as FFanUtils;
@@ -95,11 +94,6 @@ class Manager
      * @var Shader[] 着色器列表
      */
     private $shader_list;
-
-    /**
-     * @var string 当前正在解析的xml
-     */
-    private static $schema_doc;
 
     /**
      * @var Protocol
@@ -341,7 +335,6 @@ class Manager
             new Schema\File($this, $xml_file);
         }
         $this->loadRequireSchema();
-        self::setCurrentSchema();
         $this->schema_protocol = Protocol::getInstance($this);
         $this->schema_protocol->makeStruct();
         if ($use_cache) {
@@ -381,11 +374,12 @@ class Manager
             return;
         }
         foreach ($require_ns as $ns => $doc) {
-            self::setCurrentSchema($doc);
+            Exception::pushStack('Load require '. $ns .'xml');
             if ('/' === $ns{0}) {
                 $ns = substr($ns, 1);
             }
             new Schema\File($this, $ns . '.xml');
+            Exception::popStack();
         }
         $this->loadRequireSchema();
     }
@@ -538,22 +532,6 @@ class Manager
     public function getBuildLog()
     {
         return $this->build_message;
-    }
-
-    /**
-     * @param string $schema
-     */
-    public static function setCurrentSchema($schema = '')
-    {
-        self::$schema_doc = $schema;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getCurrentSchema()
-    {
-        return self::$schema_doc;
     }
 
     /**

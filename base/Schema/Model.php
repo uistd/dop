@@ -59,6 +59,11 @@ class Model extends Node
     private $namespace;
 
     /**
+     * @var string 文档
+     */
+    private $doc;
+
+    /**
      * Model constructor.
      * @param string $namespace
      * @param string $name
@@ -68,6 +73,7 @@ class Model extends Node
     public function __construct($namespace, $name, $type, \DOMElement $node)
     {
         parent::__construct($node);
+        $this->doc = $namespace . '/' . $name . ' line:' . $node->getLineNo() . PHP_EOL . $node->C14N();
         $this->name = $name;
         $this->namespace = $namespace;
         $this->type = $type;
@@ -148,5 +154,13 @@ class Model extends Node
     public function getNameSpace()
     {
         return $this->namespace;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDoc()
+    {
+        return $this->doc;
     }
 }

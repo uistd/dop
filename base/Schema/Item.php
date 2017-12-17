@@ -29,14 +29,21 @@ class Item extends Node
     private $sub_model_name;
 
     /**
+     * @var string
+     */
+    private $doc;
+
+    /**
      * Node constructor.
      * @param int $type
      * @param \DOMElement $node
+     * @param string $namespace
      */
-    public function __construct($type, \DOMElement $node)
+    public function __construct($type, \DOMElement $node, $namespace)
     {
         parent::__construct($node);
         $this->type = $type;
+        $this->doc = $namespace . ' Line' . $node->getLineNo() . ' ' . $node->C14N();
     }
 
     /**
@@ -76,7 +83,8 @@ class Item extends Node
     /**
      * @param string $model_name
      */
-    public function setSubModel($model_name) {
+    public function setSubModel($model_name)
+    {
         $this->sub_model_name = $model_name;
     }
 
@@ -94,5 +102,13 @@ class Item extends Node
     public function getPluginList()
     {
         return $this->plugin_list;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDoc()
+    {
+        return $this->doc;
     }
 }
