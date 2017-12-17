@@ -67,9 +67,17 @@ class FixPack extends PackerBase
                     break;
                 case ItemType::STRUCT:
                     /** @var StructItem $item */
-                    $code_buf->pushStr('if (null != $this->'. $name. ') {');
-                    $code_buf->pushIndent('$this->'. $name. '->fixNullData();');
-                    $code_buf->pushStr('}');
+                    if (Struct::TYPE_RESPONSE === $struct->getType()) {
+                        $sub_struct = $item->getStruct();
+                        $code_buf->pushStr('if (null === $this->'. $name. ') {');
+                        $code_buf->pushIndent('$this->'. $name. ' = new '. $sub_struct->getClassName() .'();');
+                        $code_buf->pushStr('}');
+                        $code_buf->pushIndent('$this->'. $name. '->fixNullData();');
+                    } else {
+                        $code_buf->pushStr('if (null != $this->'. $name. ') {');
+                        $code_buf->pushIndent('$this->'. $name. '->fixNullData();');
+                        $code_buf->pushStr('}');
+                    }
                     break;
             }
         }
