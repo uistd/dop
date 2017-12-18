@@ -1,13 +1,13 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Exception;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class TplLoader 模板加载器
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class TplLoader
 {

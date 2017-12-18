@@ -1,5 +1,5 @@
 <?php
-use FFan\Std\Common\Config as FFanConfig;
+use UiStd\Common\Config as FFanConfig;
 
 FFanConfig::addArray(
     array(

@@ -1,27 +1,27 @@
 <?php
 
-namespace FFan\Dop;
+namespace UiStd\Dop;
 
-use FFan\Dop\Build\BuildOption;
-use FFan\Dop\Build\CoderBase;
-use FFan\Dop\Build\Folder;
-use FFan\Dop\Build\PluginBase;
-use FFan\Dop\Build\Shader;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
-use FFan\Dop\Schema\Cache;
-use FFan\Dop\Schema\Protocol;
-use FFan\Std\Common\Str as FFanStr;
-use FFan\Std\Common\Utils as FFanUtils;
-use FFan\Dop\Schema\Protocol as SchemaProtocol;
+use UiStd\Dop\Build\BuildOption;
+use UiStd\Dop\Build\CoderBase;
+use UiStd\Dop\Build\Folder;
+use UiStd\Dop\Build\PluginBase;
+use UiStd\Dop\Build\Shader;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
+use UiStd\Dop\Schema\Cache;
+use UiStd\Dop\Schema\Protocol;
+use UiStd\Common\Str as UisStr;
+use UiStd\Common\Utils as UisUtils;
+use UiStd\Dop\Schema\Protocol as SchemaProtocol;
 
 /**
  * Class Manager
- * @package FFan\Dop
+ * @package UiStd\Dop
  */
 class Manager
 {
@@ -119,7 +119,7 @@ class Manager
      */
     public function __construct($base_path, $build_ini_content = '')
     {
-        $base_path = FFanUtils::fixWithRootPath($base_path);
+        $base_path = UisUtils::fixWithRootPath($base_path);
         if (!is_dir($base_path)) {
             throw new Exception('Protocol path:' . $base_path . ' not exist!');
         }
@@ -295,8 +295,8 @@ class Manager
     private function makeCacheFile($section)
     {
         $file = md5($this->base_path . $section);
-        $path = FFanUtils::fixWithRuntimePath('build');
-        return FFanUtils::joinFilePath($path, $file);
+        $path = UisUtils::fixWithRuntimePath('build');
+        return UisUtils::joinFilePath($path, $file);
     }
 
     /**
@@ -552,7 +552,7 @@ class Manager
             }
             $file_path = $dir . DIRECTORY_SEPARATOR . $file;
             if (is_dir($file_path)) {
-                if (!FFanStr::isValidVarName($file)) {
+                if (!UisStr::isValidVarName($file)) {
                     $this->buildLogError($file_list . ' 目录名:' . $file . '不能用作命名空间');
                     continue;
                 }
@@ -562,7 +562,7 @@ class Manager
                     continue;
                 }
                 $tmp_name = basename($file, '.xml');
-                if (!FFanStr::isValidVarName($tmp_name)) {
+                if (!UisStr::isValidVarName($tmp_name)) {
                     $this->buildLogError($file_list . ' 目录名:' . $tmp_name . '不能用作命名空间');
                     continue;
                 }
@@ -705,7 +705,7 @@ class Manager
         if (isset($this->coder_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->coder_list[$name] = FFanUtils::fixPath($base_path);
+        $this->coder_list[$name] = UisUtils::fixPath($base_path);
     }
 
     /**
@@ -719,7 +719,7 @@ class Manager
         if (isset($this->plugin_list[$name])) {
             throw new Exception('Coder ' . $name . ' has exist!');
         }
-        $this->plugin_list[$name] = FFanUtils::fixPath($base_path);
+        $this->plugin_list[$name] = UisUtils::fixPath($base_path);
     }
 
     /**
@@ -787,7 +787,7 @@ class Manager
      */
     private function getCoderClass($coder_name)
     {
-        $coder_name = FFanStr::camelName($coder_name);
+        $coder_name = UisStr::camelName($coder_name);
         static $coder_instance_arr = [];
         if (isset($coder_instance_arr[$coder_name])) {
             return $coder_instance_arr[$coder_name];
@@ -803,12 +803,12 @@ class Manager
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = '\FFan\Dop\Coder\\' . $coder_name . '\\' . $class_name;
+        $full_class = '\UiStd\Dop\Coder\\' . $coder_name . '\\' . $class_name;
         if (!class_exists($full_class)) {
             throw new Exception('Unknown class name ' . $full_class);
         }
         $parents = class_parents($full_class);
-        if (!isset($parents['FFan\Dop\Build\CoderBase'])) {
+        if (!isset($parents['UiStd\Dop\Build\CoderBase'])) {
             throw new Exception('Coder ' . $coder_name . ' must be implements of CoderBase');
         }
         $coder_instance_arr[$coder_name] = $full_class;
@@ -824,7 +824,7 @@ class Manager
     public function getPlugin($plugin_name)
     {
         static $plugin_instance = [];
-        $plugin_name = FFanStr::camelName($plugin_name);
+        $plugin_name = UisStr::camelName($plugin_name);
         if (isset($plugin_instance[$plugin_name])) {
             return $plugin_instance[$plugin_name];
         }
@@ -833,18 +833,18 @@ class Manager
         }
         $plugin_dir = $this->plugin_list[$plugin_name];
         $class_name = 'Plugin';
-        $file = FFanUtils::joinFilePath($plugin_dir, $class_name . '.php');
+        $file = UisUtils::joinFilePath($plugin_dir, $class_name . '.php');
         if (!is_file($file)) {
             return null;
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $full_class = 'FFan\Dop\Plugin\\' . $plugin_name . '\\' . $class_name;
+        $full_class = 'UiStd\Dop\Plugin\\' . $plugin_name . '\\' . $class_name;
         if (!class_exists($full_class)) {
             return null;
         }
         $parents = class_parents($full_class);
-        if (!isset($parents['FFan\Dop\Build\PluginBase'])) {
+        if (!isset($parents['UiStd\Dop\Build\PluginBase'])) {
             throw new Exception('Plugin ' . $full_class . ' must be implements of PluginBase');
         }
         $plugin_instance[$plugin_name] = new $full_class($this, $plugin_name);
@@ -859,7 +859,7 @@ class Manager
      */
     public function getCoderPath($coder_name)
     {
-        $coder_name = FFanStr::camelName($coder_name);
+        $coder_name = UisStr::camelName($coder_name);
         if (!isset($this->coder_list[$coder_name])) {
             throw new Exception('Coder "' . $coder_name . '" is unregistered!');
         }
@@ -873,7 +873,7 @@ class Manager
      */
     public function getFolder($path)
     {
-        $path = FFanUtils::fixWithRuntimePath($path);
+        $path = UisUtils::fixWithRuntimePath($path);
         if (!isset($this->folder_list[$path])) {
             $dop_folder = new Folder($path, $this);
             $this->folder_list[$path] = $dop_folder;

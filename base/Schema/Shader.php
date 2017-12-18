@@ -1,10 +1,10 @@
 <?php
 
-namespace FFan\Dop\Schema;
+namespace UiStd\Dop\Schema;
 
 /**
  * Class Shader
- * @package FFan\Dop\Scheme
+ * @package UiStd\Dop\Scheme
  */
 class Shader extends Node
 {

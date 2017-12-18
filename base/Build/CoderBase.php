@@ -1,19 +1,19 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\Struct;
-use FFan\Std\Common\ConfigBase;
-use FFan\Std\Common\Utils as FFanUtils;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Common\ConfigBase;
+use UiStd\Common\Utils as UisUtils;
+use UiStd\Common\Str as UisStr;
 
 
 /**
  * Class CoderBase 生成器基类
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 abstract class CoderBase extends ConfigBase
 {
@@ -463,7 +463,7 @@ abstract class CoderBase extends ConfigBase
         if (isset($this->pack_instance_arr[$pack_type])) {
             return $this->pack_instance_arr[$pack_type];
         }
-        $class_name = FFanStr::camelName($pack_type) . 'Pack';
+        $class_name = UisStr::camelName($pack_type) . 'Pack';
         $reg_packer_file = $this->manager->getRegisterPacker($pack_type);
         if ($reg_packer_file) {
             $file = $reg_packer_file;
@@ -478,13 +478,13 @@ abstract class CoderBase extends ConfigBase
         }
         /** @noinspection PhpIncludeInspection */
         require_once $file;
-        $ns = 'FFan\Dop\Coder\\' . $this->coder_name . '\\';
+        $ns = 'UiStd\Dop\Coder\\' . $this->coder_name . '\\';
         $full_class_name = $ns . $class_name;
         if (!class_exists($full_class_name)) {
             throw new Exception('Can not load class ' . $full_class_name);
         }
         $parents = class_parents($full_class_name);
-        if (!isset($parents['FFan\Dop\Build\PackerBase'])) {
+        if (!isset($parents['UiStd\Dop\Build\PackerBase'])) {
             throw new Exception('Class ' . $full_class_name . ' must extend of PackerBase');
         }
         /** @var PackerBase $packer */
@@ -587,7 +587,7 @@ abstract class CoderBase extends ConfigBase
     public function loadTpl(FileBuf $file_buf, $tpl_name, $data = null)
     {
         $path = $this->manager->getCoderPath($this->coder_name);
-        $tpl_file = FFanUtils::joinFilePath($path, $tpl_name);
+        $tpl_file = UisUtils::joinFilePath($path, $tpl_name);
         $tpl_loader = TplLoader::getInstance($tpl_file);
         $tpl_loader->execute($file_buf, $data);
     }
@@ -609,8 +609,8 @@ abstract class CoderBase extends ConfigBase
             if (isset($cache_path[$key])) {
                 $relative_path = $cache_path[$key];
             } else {
-                $require_path_arr = FFanStr::split($path, '/');
-                $current_path_arr = FFanStr::split($this_path, '/');
+                $require_path_arr = UisStr::split($path, '/');
+                $current_path_arr = UisStr::split($this_path, '/');
                 $len = min(count($current_path_arr), count($require_path_arr));
                 for ($i = 0; $i < $len; ++$i) {
                     $tmp_path = current($require_path_arr);
@@ -676,21 +676,21 @@ abstract class CoderBase extends ConfigBase
         }
         $extends = $this->getConfigString($conf_name . '_class_extends');
         if (!empty($extends)) {
-            $extends = FFanStr::split($extends, ',');
+            $extends = UisStr::split($extends, ',');
             foreach ($extends as $item) {
                 $extends_buf->pushStr($item);
             }
         }
         $implement = $this->getConfigString($conf_name . '_class_implements');
         if (!empty($implement)) {
-            $implement = FFanStr::split($implement, ',');
+            $implement = UisStr::split($implement, ',');
             foreach ($implement as $item) {
                 $implements_buf->pushStr($item);
             }
         }
         $imports = $this->getConfigString($conf_name . '_class_import');
         if (!empty($imports)) {
-            $imports = FFanStr::split($imports, '|');
+            $imports = UisStr::split($imports, '|');
             $import_buf = $file_buf->getBuf(FileBuf::IMPORT_BUF);
             if ($import_buf) {
                 foreach ($imports as $str) {

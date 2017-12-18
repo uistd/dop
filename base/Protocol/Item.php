@@ -1,18 +1,18 @@
 <?php
 
-namespace FFan\Dop\Protocol;
+namespace UiStd\Dop\Protocol;
 
-use FFan\Dop\Build\PluginRule;
-use FFan\Dop\Build\Trigger;
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Dop\Schema\Plugin;
-use FFan\Std\Common\Str as FFanStr;
-use FFan\Dop\Schema\Protocol as SchemaProtocol;
+use UiStd\Dop\Build\PluginRule;
+use UiStd\Dop\Build\Trigger;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Dop\Schema\Plugin;
+use UiStd\Common\Str as FFanStr;
+use UiStd\Dop\Schema\Protocol as SchemaProtocol;
 
 /**
  * Class Item 协议的每一项
- * @package FFan\Dop\Protocol
+ * @package UiStd\Dop\Protocol
  */
 abstract class Item
 {

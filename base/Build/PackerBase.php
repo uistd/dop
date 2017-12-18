@@ -1,14 +1,14 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\Struct;
 
 /**
  * Class PackerBase 序列化和反序列化代码生成接口
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 abstract class PackerBase
 {

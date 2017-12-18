@@ -1,24 +1,24 @@
 <?php
 
-namespace FFan\Dop\Plugin\Valid;
+namespace UiStd\Dop\Plugin\Valid;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\FileBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Build\PluginCoderBase;
-use FFan\Dop\Build\StrBuf;
-use FFan\Dop\Coder\Php\Coder;
-use FFan\Dop\Protocol\IntItem;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\FileBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Build\PluginCoderBase;
+use UiStd\Dop\Build\StrBuf;
+use UiStd\Dop\Coder\Php\Coder;
+use UiStd\Dop\Protocol\IntItem;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class PhpValidCoder
- * @package FFan\Dop\Plugin\Validator
+ * @package UiStd\Dop\Plugin\Validator
  */
 class PhpValidCoder extends PluginCoderBase
 {
@@ -111,7 +111,7 @@ class PhpValidCoder extends PluginCoderBase
         if ($this->import_flag) {
             $use_buf = $dop_file->getBuf(FileBuf::IMPORT_BUF);
             if ($use_buf) {
-                $use_buf->pushUniqueStr('use FFan\Dop\DopValidator;');
+                $use_buf->pushUniqueStr('use UiStd\Dop\DopValidator;');
             }
         }
     }
@@ -391,7 +391,7 @@ class PhpValidCoder extends PluginCoderBase
         if ('/' === $rule->format_set[0]) {
             $if_str = '!preg_match(\'' . $rule->format_set . '\', $' . $var_name . ')';
         } else {
-            $this->dop_file->pushImport('use FFan\Dop\DopValidator;');
+            $this->dop_file->pushImport('use UiStd\Dop\DopValidator;');
             $if_str = '!DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');

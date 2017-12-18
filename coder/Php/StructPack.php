@@ -1,19 +1,19 @@
 <?php
 
-namespace FFan\Dop\Coder\Php;
+namespace UiStd\Dop\Coder\Php;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
 
 /**
  * Class StructPack
- * @package FFan\Dop\Coder\Php
+ * @package UiStd\Dop\Coder\Php
  */
 class StructPack extends PackerBase
 {
@@ -30,7 +30,7 @@ class StructPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        $this->pushImportCode('use FFan\\Dop\\DopEncode;');
+        $this->pushImportCode('use UiStd\\Dop\\DopEncode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 生成二进制协议头');

@@ -1,10 +1,10 @@
 <?php
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Std\Common\Config;
-use FFan\Std\Common\ConfigBase;
-use FFan\Std\Common\Str;
-use FFan\Std\Common\Utils;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Common\Config;
+use UiStd\Common\ConfigBase;
+use UiStd\Common\Str;
+use UiStd\Common\Utils;
 
 /**
  * Class MysqlToXml

@@ -1,14 +1,14 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Dop\Schema\Shader as ShaderSchema;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Dop\Schema\Shader as ShaderSchema;
 
 /**
  * Class Shader 着色器
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class Shader
 {

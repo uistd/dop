@@ -1,12 +1,12 @@
 <?php
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Schema\Plugin;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Schema\Plugin;
 
 /**
  * Class BufTrigger
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class BufTrigger extends Trigger
 {

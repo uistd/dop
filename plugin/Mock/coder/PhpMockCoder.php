@@ -1,26 +1,26 @@
 <?php
 
-namespace FFan\Dop\Plugin\Mock;
+namespace UiStd\Dop\Plugin\Mock;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\FileBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Build\PluginCoderBase;
-use FFan\Dop\Build\PluginRule;
-use FFan\Dop\Build\StrBuf;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
-use FFan\Dop\Schema\Protocol;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\FileBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Build\PluginCoderBase;
+use UiStd\Dop\Build\PluginRule;
+use UiStd\Dop\Build\StrBuf;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
+use UiStd\Dop\Schema\Protocol;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class PhpMockCode
- * @package FFan\Dop\Plugin\Mock
+ * @package UiStd\Dop\Plugin\Mock
  */
 class PhpMockCoder extends PluginCoderBase
 {
@@ -87,7 +87,7 @@ class PhpMockCoder extends PluginCoderBase
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
         $main_buf->emptyLine();
-        $main_buf->pushStr('class ' . $class_name . ' extends \FFan\Dop\DopMock');
+        $main_buf->pushStr('class ' . $class_name . ' extends \UiStd\Dop\DopMock');
         $main_buf->pushStr('{');
         $main_buf->indent();
         $main_buf->touchBuf(FileBuf::METHOD_BUF);

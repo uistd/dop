@@ -1,10 +1,10 @@
 <?php
 
-namespace FFan\Dop\Schema;
+namespace UiStd\Dop\Schema;
 
 /**
  * Class Model
- * @package FFan\Dop\Scheme
+ * @package UiStd\Dop\Scheme
  */
 class Model extends Node
 {

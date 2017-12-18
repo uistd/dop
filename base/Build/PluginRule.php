@@ -1,14 +1,14 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Schema\Plugin;
-use FFan\Dop\Schema\Protocol;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Schema\Plugin;
+use UiStd\Dop\Schema\Protocol;
 
 /**
  * Class PluginRule 插件规则
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class PluginRule extends NodeBase
 {

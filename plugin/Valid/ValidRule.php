@@ -1,15 +1,15 @@
 <?php
 
-namespace FFan\Dop\Plugin\Valid;
+namespace UiStd\Dop\Plugin\Valid;
 
-use FFan\Dop\Build\PluginRule;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Schema\Plugin as SchemaPlugin;
-use FFan\Dop\Schema\Protocol;
+use UiStd\Dop\Build\PluginRule;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Schema\Plugin as SchemaPlugin;
+use UiStd\Dop\Schema\Protocol;
 
 /**
  * Class ValidRule 数据有效规则
- * @package FFan\Dop
+ * @package UiStd\Dop
  */
 class ValidRule extends PluginRule
 {

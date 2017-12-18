@@ -1,9 +1,9 @@
 <?php
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
 /**
  * Class NodeBase 节点属性读取
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class NodeBase
 {

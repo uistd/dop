@@ -1,20 +1,20 @@
 <?php
 
-namespace FFan\Dop\Coder\Js;
+namespace UiStd\Dop\Coder\Js;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\FileBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\FileBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
 
 /**
  * Class StructPack
- * @package FFan\Dop\Coder\Js
+ * @package UiStd\Dop\Coder\Js
  */
 class StructPack extends PackerBase
 {
@@ -77,7 +77,7 @@ class StructPack extends PackerBase
     }
 
     /**
-     * 将use FFan\Dop\BinaryBuffer写入
+     * 将use UiStd\Dop\BinaryBuffer写入
      * @param Struct $struct
      */
     private function buildUseCode($struct)

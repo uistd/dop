@@ -1,13 +1,13 @@
 <?php
 
-namespace FFan\Dop\Coder\Php;
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Protocol\Struct;
+namespace UiStd\Dop\Coder\Php;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Protocol\Struct;
 
 /**
  * Class JsonPack
- * @package FFan\Dop\pack\php
+ * @package UiStd\Dop\pack\php
  */
 class JsonPack extends PackerBase
 {

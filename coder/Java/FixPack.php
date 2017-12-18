@@ -1,16 +1,16 @@
 <?php
 
-namespace FFan\Dop\Coder\Java;
+namespace UiStd\Dop\Coder\Java;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\Struct;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\Struct;
 
 /**
  * Class Fix 修正数据
- * @package FFan\Dop\Coder\Java
+ * @package UiStd\Dop\Coder\Java
  */
 class FixPack extends PackerBase
 {

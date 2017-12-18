@@ -1,7 +1,7 @@
 <?php
-namespace FFan\Dop\Coder\Php;
+namespace UiStd\Dop\Coder\Php;
 
-class FixDataPack extends \FFan\Dop\Build\PackerBase
+class FixDataPack extends \UiStd\Dop\Build\PackerBase
 {
     public function buildPackMethod($struct, $code_buf)
     {

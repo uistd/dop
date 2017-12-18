@@ -1,13 +1,13 @@
 <?php
 
-namespace FFan\Dop\Protocol;
+namespace UiStd\Dop\Protocol;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Schema\Model;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Schema\Model;
 
 /**
  * Class Struct
- * @package FFan\Dop\Protocol
+ * @package UiStd\Dop\Protocol
  */
 class Struct
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace FFan\Dop;
+namespace UiStd\Dop;
 
-use FFan\Dop\Build\CoderBase;
+use UiStd\Dop\Build\CoderBase;
 
 require_once '../vendor/autoload.php';
 

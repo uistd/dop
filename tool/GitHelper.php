@@ -1,8 +1,8 @@
 <?php
-use FFan\Std\Common\Config;
-use FFan\Std\Git\Git;
-use FFan\Std\Git\GitRepo;
-use FFan\Std\Logger\LoggerBase;
+use UiStd\Common\Config;
+use UiStd\Git\Git;
+use UiStd\Git\GitRepo;
+use UiStd\Logger\LoggerBase;
 
 /**
  * Class GitHelper
@@ -43,7 +43,7 @@ class GitHelper extends LoggerBase
         }
         $this->build_name = $build_name;
         $build_conf[$git_conf]['repo_path'] = 'tool';
-        Config::add('ffan-git:' . $build_name, $build_conf[$git_conf]);
+        Config::add('uis-git:' . $build_name, $build_conf[$git_conf]);
         $this->git_instance = $this->getGitInstance();
         $branch = isset($build_conf[$git_conf]['branch']) ? $build_conf[$git_conf]['branch'] : 'origin/master';
         $this->branchCheck($branch);

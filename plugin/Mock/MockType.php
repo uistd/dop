@@ -1,10 +1,10 @@
 <?php
 
-namespace FFan\Dop\Plugin\Mock;
+namespace UiStd\Dop\Plugin\Mock;
 
 /**
  * Class MockType
- * @package FFan\Dop\Plugin\Mock
+ * @package UiStd\Dop\Plugin\Mock
  */
 class MockType
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace FFan\Dop\Protocol;
+namespace UiStd\Dop\Protocol;
 
 /**
  * Class ItemType 变量类型
- * @package FFan\Dop\Protocol
+ * @package UiStd\Dop\Protocol
  */
 class ItemType
 {

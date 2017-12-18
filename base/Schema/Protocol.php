@@ -1,29 +1,29 @@
 <?php
 
-namespace FFan\Dop\Schema;
+namespace UiStd\Dop\Schema;
 
-use FFan\Dop\Build\BufTrigger;
-use FFan\Dop\Build\BuildOption;
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Dop\Protocol\BinaryItem;
-use FFan\Dop\Protocol\BoolItem;
-use FFan\Dop\Protocol\DoubleItem;
-use FFan\Dop\Protocol\FloatItem;
-use FFan\Dop\Protocol\IntItem;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Item as ProtocolItem;
-use FFan\Dop\Protocol\StringItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
-use FFan\Std\Common\Str;
-use FFan\Dop\Build\Shader as BuildShader;
+use UiStd\Dop\Build\BufTrigger;
+use UiStd\Dop\Build\BuildOption;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Dop\Protocol\BinaryItem;
+use UiStd\Dop\Protocol\BoolItem;
+use UiStd\Dop\Protocol\DoubleItem;
+use UiStd\Dop\Protocol\FloatItem;
+use UiStd\Dop\Protocol\IntItem;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Item as ProtocolItem;
+use UiStd\Dop\Protocol\StringItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
+use UiStd\Common\Str;
+use UiStd\Dop\Build\Shader as BuildShader;
 
 /**
  * Class Protocol
- * @package FFan\Dop\Schema
+ * @package UiStd\Dop\Schema
  */
 class Protocol
 {

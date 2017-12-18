@@ -1,12 +1,12 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
+use UiStd\Dop\Exception;
 
 /**
  * Class CodeBuf
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class CodeBuf implements BufInterface
 {

@@ -1,14 +1,14 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Std\Common\Utils as FFanUtils;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Common\Utils as UisUtils;
 
 /**
  * Class Folder 虚拟目录
- * @package FFan\Dop
+ * @package UiStd\Dop
  */
 class Folder
 {
@@ -34,9 +34,9 @@ class Folder
      */
     public function __construct($base_dir, Manager $manager)
     {
-        $this->base_dir = FFanUtils::fixWithRootPath($base_dir);
+        $this->base_dir = UisUtils::fixWithRootPath($base_dir);
         if (is_dir($this->base_dir)) {
-            FFanUtils::delDir($this->base_dir);
+            UisUtils::delDir($this->base_dir);
         }
         $this->manager = $manager;
     }
@@ -126,7 +126,7 @@ class Folder
                 if ($file_buf->isEmpty()) {
                     return;
                 }
-                $full_file_name = FFanUtils::joinFilePath($abs_path, $file_name);
+                $full_file_name = UisUtils::joinFilePath($abs_path, $file_name);
                 $content = $file_buf->dump();
                 //utf8 bom头
                 if (($option & BuildOption::FILE_OPTION_UTF8_BOM)) {
@@ -167,8 +167,8 @@ class Folder
      */
     private function checkPatch($path)
     {
-        $file_path = FFanUtils::joinPath($this->base_dir, $path);
-        FFanUtils::pathWriteCheck($file_path);
+        $file_path = UisUtils::joinPath($this->base_dir, $path);
+        UisUtils::pathWriteCheck($file_path);
         return $file_path;
     }
 

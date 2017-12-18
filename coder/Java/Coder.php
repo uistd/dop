@@ -1,24 +1,24 @@
 <?php
 
-namespace FFan\Dop\Coder\Java;
+namespace UiStd\Dop\Coder\Java;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\CoderBase;
-use FFan\Dop\Build\FileBuf;
-use FFan\Dop\Build\StrBuf;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\IntItem;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\CoderBase;
+use UiStd\Dop\Build\FileBuf;
+use UiStd\Dop\Build\StrBuf;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\IntItem;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class Coder
- * @package FFan\Dop\Coder\Java
+ * @package UiStd\Dop\Coder\Java
  */
 class Coder extends CoderBase
 {

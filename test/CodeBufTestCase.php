@@ -1,6 +1,6 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
 require_once '../vendor/autoload.php';
 

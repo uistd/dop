@@ -1,8 +1,9 @@
 {
-  "name": "ffan/dop",
-  "description": "FFan DOP",
+  "name": "uistd/dop",
+  "description": "数据转对象的代码自动生成工具，主要用于模型对象的自动生成的数据 打包、解包方法生成。",
   "keywords": [
-    "ffan",
+    "ui service",
+    "uistd",
     "dop"
   ],
   "type": "composer",
@@ -15,16 +16,16 @@
   ],
   "require": {
     "php": ">=5.5.0",
-    "ffan/std-common": "2.*",
-    "ffan/std-console": "1.*",
-    "ffan/std-git": "1.*"
+    "uistd/common": "3.*",
+    "uistd/console": "2.*",
+    "uistd/git": "2.*"
   },
   "autoload": {
     "psr-4": {
-      "FFan\\Dop\\" : "base",
-      "FFan\\Dop\\Coder\\" : "coder",
-      "FFan\\Dop\\Plugin\\" : "plugin",
-      "FFan\\Dop\\Tool\\" : "tool"
+      "UiStd\\Dop\\" : "base",
+      "UiStd\\Dop\\Coder\\" : "coder",
+      "UiStd\\Dop\\Plugin\\" : "plugin",
+      "UiStd\\Dop\\Tool\\" : "tool"
     }
   },
   "minimum-stability": "stable",

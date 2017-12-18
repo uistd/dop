@@ -1,11 +1,11 @@
 <?php
 
-namespace FFan\Dop\Build;
-use FFan\Dop\Exception;
+namespace UiStd\Dop\Build;
+use UiStd\Dop\Exception;
 
 /**
  * Class StrBuf
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class StrBuf implements BufInterface
 {

@@ -1,19 +1,19 @@
 <?php
 
-namespace FFan\Dop\Coder\Objc;
+namespace UiStd\Dop\Coder\Objc;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Build\StrBuf;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\IntItem;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\Struct;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Build\StrBuf;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\IntItem;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\Struct;
 
 /**
  * Class json json代码生成
- * @package FFan\Dop\Coder\Ojbc
+ * @package UiStd\Dop\Coder\Ojbc
  */
 class JsonPack extends PackerBase
 {

@@ -1,15 +1,15 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\Struct;
-use FFan\Std\Common\Utils as FFanUtils;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Common\Utils as FFanUtils;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class BuildOption 生成文件参数
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 class BuildOption
 {
@@ -147,7 +147,7 @@ class BuildOption
         //默认配置
         static $default_config = array(
             'build_path' => 'build',
-            'namespace' => 'FFan\Dop',
+            'namespace' => 'UiStd\Dop',
             'protocol_type' => 'action',
             'code_side' => 'server',
             'utf8_bom' => false,

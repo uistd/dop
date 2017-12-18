@@ -1,22 +1,22 @@
 <?php
 
-namespace FFan\Dop\Coder\Objc;
+namespace UiStd\Dop\Coder\Objc;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\CoderBase;
-use FFan\Dop\Build\FileBuf;
-use FFan\Dop\Build\StrBuf;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\CoderBase;
+use UiStd\Dop\Build\FileBuf;
+use UiStd\Dop\Build\StrBuf;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
 
 /**
  * Class HeadCoder
- * @package FFan\Dop\Coder\Ojbc
+ * @package UiStd\Dop\Coder\Ojbc
  */
 class HeadCoder extends CoderBase
 {
@@ -160,7 +160,7 @@ class HeadCoder extends CoderBase
     /**
      * 获取coder
      * @param string $pack_type
-     * @return \FFan\Dop\Build\PackerBase
+     * @return \UiStd\Dop\Build\PackerBase
      */
     public function getPackInstance($pack_type)
     {

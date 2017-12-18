@@ -1,13 +1,13 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Schema\Plugin;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Schema\Plugin;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class Trigger 触发器
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 abstract class Trigger extends NodeBase
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace FFan\Dop;
+namespace UiStd\Dop;
 
-use FFan\Dop\Demo\Role\RoleInfo;
-use FFan\Dop\Demo\Role\RoleInfoChildren;
+use UiStd\Dop\Demo\Role\RoleInfo;
+use UiStd\Dop\Demo\Role\RoleInfoChildren;
 
 require_once '../vendor/autoload.php';
 require_once 'runtime/build/demo/role/RoleInfo.php';

@@ -1,20 +1,20 @@
 <?php
 
-namespace FFan\Dop\Coder\Objc;
+namespace UiStd\Dop\Coder\Objc;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\IntItem;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Protocol\IntItem;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
 
 /**
  * Class BinaryPack
- * @package FFan\Dop\Coder\Ojbc
+ * @package UiStd\Dop\Coder\Ojbc
  */
 class BinaryPack extends PackerBase
 {

@@ -1,20 +1,20 @@
 <?php
 
-namespace FFan\Dop\Plugin\Valid;
+namespace UiStd\Dop\Plugin\Valid;
 
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Build\PluginBase;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Schema\Protocol;
-use FFan\Dop\Schema\Plugin as SchemaPlugin;
-use FFan\Std\Common\Str;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Build\PluginBase;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Schema\Protocol;
+use UiStd\Dop\Schema\Plugin as SchemaPlugin;
+use UiStd\Common\Str;
 
 /**
  * Class Plugin 数据有效性检验
- * @package FFan\Dop\Plugin\Validator
+ * @package UiStd\Dop\Plugin\Validator
  */
 class Plugin extends PluginBase
 {

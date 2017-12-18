@@ -1,12 +1,12 @@
 <?php
 
-namespace FFan\Dop\Protocol;
+namespace UiStd\Dop\Protocol;
 
-use FFan\Dop\Exception;
+use UiStd\Dop\Exception;
 
 /**
  * Class StringItem
- * @package FFan\Dop\Protocol
+ * @package UiStd\Dop\Protocol
  */
 class StringItem extends Item
 {

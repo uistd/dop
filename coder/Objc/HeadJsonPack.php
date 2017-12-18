@@ -1,12 +1,12 @@
 <?php
 
-namespace FFan\Dop\Coder\Objc;
+namespace UiStd\Dop\Coder\Objc;
 
-use FFan\Dop\Build\PackerBase;
+use UiStd\Dop\Build\PackerBase;
 
 /**
  * Class HeadJsonPack header代码生成
- * @package FFan\Dop\Coder\Ojbc
+ * @package UiStd\Dop\Coder\Ojbc
  */
 class HeadJsonPack extends PackerBase
 {

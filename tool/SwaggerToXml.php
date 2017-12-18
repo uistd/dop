@@ -1,6 +1,6 @@
 <?php
-use FFan\Dop\Build\CodeBuf;
-use FFan\Std\Common\Utils;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Common\Utils;
 
 /**
  * Class SwaggerToXml
@@ -189,7 +189,7 @@ class SwaggerToXml
             $path = preg_replace('#\{(.*?)\}#', 'by_$1', $full_path);
             $path = str_replace('}', '', $path);
             $path = str_replace('{', '', $path);
-            $path_arr = \FFan\Std\Common\Str::split($path, '/');
+            $path_arr = \UiStd\Common\Str::split($path, '/');
             foreach ($actions as $method => $info) {
                 $full_name = $method . $full_path;
                 $tmp_action = array(
@@ -311,7 +311,7 @@ class SwaggerToXml
         $dom->pushStr("\n");
         $file_content = $dom->dump();
         $save_path = dirname($this->save_file_name);
-        \FFan\Std\Common\Utils::pathWriteCheck($save_path);
+        \UiStd\Common\Utils::pathWriteCheck($save_path);
         file_put_contents($this->save_file_name, $file_content);
         echo 'Done, save protocol file to ' . $this->save_file_name, PHP_EOL, PHP_EOL;
     }
@@ -347,7 +347,7 @@ class SwaggerToXml
      */
     private function makePublicModelName($name, $parentName)
     {
-        $public_name = \FFan\Std\Common\Str::underlineName($parentName);
+        $public_name = \UiStd\Common\Str::underlineName($parentName);
         $name_arr = explode('_', $public_name);
         $tmp_name_arr = [];
         $tmp_name = '';

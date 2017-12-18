@@ -1,18 +1,18 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Schema\Plugin;
-use FFan\Dop\Schema\Protocol;
-use FFan\Std\Common\ConfigBase;
-use FFan\Std\Common\Utils as FFanUtils;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Schema\Plugin;
+use UiStd\Dop\Schema\Protocol;
+use UiStd\Common\ConfigBase;
+use UiStd\Common\Utils as FFanUtils;
 
 /**
  * Class PluginBase 插件基类
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 abstract class PluginBase extends ConfigBase
 {
@@ -127,7 +127,7 @@ abstract class PluginBase extends ConfigBase
             if (class_exists($full_class)) {
                 $parents = class_parents($full_class);
                 //类是否 继续 PluginCoderBase
-                if (isset($parents['FFan\Dop\Build\PluginCoderBase'])) {
+                if (isset($parents['UiStd\Dop\Build\PluginCoderBase'])) {
                     $coder = new $full_class($this);
                 }
             }
@@ -160,7 +160,7 @@ abstract class PluginBase extends ConfigBase
     {
         $class_name = ucfirst($coder_name) . ucfirst($this->plugin_name) . 'Coder';
         if ($ns) {
-            $ns_str = 'FFan\Dop\Plugin\\' . $this->plugin_name;
+            $ns_str = 'UiStd\Dop\Plugin\\' . $this->plugin_name;
             $class_name = $ns_str . '\\' . $class_name;
         }
         return $class_name;

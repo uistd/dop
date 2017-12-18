@@ -1,12 +1,12 @@
 <?php
 
-namespace FFan\Dop\Schema;
+namespace UiStd\Dop\Schema;
 
-use FFan\Std\Common\Utils;
+use UiStd\Common\Utils;
 
 /**
  * Class Cache 编译缓存
- * @package ffan\dop\build
+ * @package UiStd\Dop\build
  */
 class Cache
 {

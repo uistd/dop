@@ -1,12 +1,12 @@
 <?php
 
-namespace FFan\Dop\Build;
+namespace UiStd\Dop\Build;
 
-use FFan\Dop\Exception;
+use UiStd\Dop\Exception;
 
 /**
  * Class PluginCoderBase
- * @package FFan\Dop\Build
+ * @package UiStd\Dop\Build
  */
 abstract class PluginCoderBase
 {

@@ -1,15 +1,15 @@
 <?php
 
-namespace FFan\Dop\Plugin\Mock;
+namespace UiStd\Dop\Plugin\Mock;
 
-use FFan\Dop\Build\PluginRule;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Schema\Protocol;
-use FFan\Std\Common\Str as FFanStr;
-use FFan\Dop\Schema\Plugin as SchemaPlugin;
+use UiStd\Dop\Build\PluginRule;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Schema\Protocol;
+use UiStd\Common\Str as FFanStr;
+use UiStd\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
- * @package FFan\Dop
+ * @package UiStd\Dop
  */
 class RuleType extends PluginRule
 {

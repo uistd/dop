@@ -1,21 +1,21 @@
 <?php
 
-namespace FFan\Dop\Coder\Java;
+namespace UiStd\Dop\Coder\Java;
 
-use FFan\Dop\Build\CodeBuf;
-use FFan\Dop\Build\PackerBase;
-use FFan\Dop\Exception;
-use FFan\Dop\Protocol\IntItem;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Protocol\Struct;
-use FFan\Dop\Protocol\StructItem;
+use UiStd\Dop\Build\CodeBuf;
+use UiStd\Dop\Build\PackerBase;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Protocol\IntItem;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Protocol\Struct;
+use UiStd\Dop\Protocol\StructItem;
 
 /**
  * Class BinaryPack
- * @package FFan\Dop\Coder\Java
+ * @package UiStd\Dop\Coder\Java
  */
 class BinaryPack extends PackerBase
 {

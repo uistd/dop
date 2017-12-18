@@ -1,17 +1,17 @@
 <?php
 
-namespace FFan\Dop\Schema;
+namespace UiStd\Dop\Schema;
 
-use FFan\Dop\Build\BuildOption;
-use FFan\Dop\Exception;
-use FFan\Dop\Manager;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Std\Common\Utils as FFanUtils;
-use FFan\Std\Common\Str as FFanStr;
+use UiStd\Dop\Build\BuildOption;
+use UiStd\Dop\Exception;
+use UiStd\Dop\Manager;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Common\Utils as FFanUtils;
+use UiStd\Common\Str as FFanStr;
 
 /**
  * Class File
- * @package FFan\Dop\Scheme
+ * @package UiStd\Dop\Scheme
  */
 class File
 {

@@ -1,18 +1,18 @@
 <?php
 
-namespace FFan\Dop\Plugin\Mock;
+namespace UiStd\Dop\Plugin\Mock;
 
-use FFan\Dop\Build\PluginBase;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Protocol\ListItem;
-use FFan\Dop\Protocol\MapItem;
-use FFan\Dop\Schema\Protocol;
-use FFan\Dop\Schema\Plugin as SchemaPlugin;
+use UiStd\Dop\Build\PluginBase;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Protocol\ListItem;
+use UiStd\Dop\Protocol\MapItem;
+use UiStd\Dop\Schema\Protocol;
+use UiStd\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
  * Class Plugin
- * @package FFan\Dop\Plugin\Mock
+ * @package UiStd\Dop\Plugin\Mock
  */
 class Plugin extends PluginBase
 {

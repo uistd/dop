@@ -1,15 +1,15 @@
 <?php
 
-namespace FFan\Dop\Plugin\Mock;
+namespace UiStd\Dop\Plugin\Mock;
 
-use FFan\Dop\Build\PluginRule;
-use FFan\Dop\Protocol\Item;
-use FFan\Dop\Protocol\ItemType;
-use FFan\Dop\Schema\Plugin as SchemaPlugin;
-use FFan\Dop\Schema\Protocol;
+use UiStd\Dop\Build\PluginRule;
+use UiStd\Dop\Protocol\Item;
+use UiStd\Dop\Protocol\ItemType;
+use UiStd\Dop\Schema\Plugin as SchemaPlugin;
+use UiStd\Dop\Schema\Protocol;
 
 /**
- * @package FFan\Dop
+ * @package UiStd\Dop
  */
 class RuleIncrease extends PluginRule
 {
