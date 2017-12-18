@@ -5,7 +5,7 @@ namespace UiStd\Dop\Plugin\Mock;
 use UiStd\Dop\Build\PluginRule;
 use UiStd\Dop\Protocol\Item;
 use UiStd\Dop\Schema\Protocol;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 use UiStd\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
@@ -45,7 +45,7 @@ class RuleEnum extends PluginRule
     function init(Protocol $parser, $node, $item)
     {
         $item_type = $item->getType();
-        $enum_set = FFanStr::split($node->get('enum'), ',');
+        $enum_set = UisStr::split($node->get('enum'), ',');
         if (empty($enum_set)) {
             return 1;
         }

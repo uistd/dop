@@ -3,7 +3,7 @@
 namespace UiStd\Dop\Build;
 
 use UiStd\Dop\Schema\Plugin;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class Trigger 触发器
@@ -54,12 +54,12 @@ abstract class Trigger extends NodeBase
     {
         $coder_set = $node->get('coder');
         if (null !== $coder_set) {
-            $this->coder_list = FFanStr::split($coder_set);
+            $this->coder_list = UisStr::split($coder_set);
         }
 
         $packer_set = $node->get('packer');
         if (null !== $packer_set) {
-            $this->packer_list = FFanStr::split($packer_set);
+            $this->packer_list = UisStr::split($packer_set);
         }
         $method_type = $node->get('method');
         if ('unpack' === $method_type) {

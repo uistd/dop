@@ -5,7 +5,7 @@ namespace UiStd\Dop\Plugin\Mock;
 use UiStd\Dop\Build\PluginRule;
 use UiStd\Dop\Protocol\Item;
 use UiStd\Dop\Schema\Protocol;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 use UiStd\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
@@ -46,7 +46,7 @@ class RuleType extends PluginRule
      */
     function init(Protocol $parser, $node, $item)
     {
-        $this->build_in_type = FFanStr::camelName($node->get('type'), false);
+        $this->build_in_type = UisStr::camelName($node->get('type'), false);
         if (!in_array($this->build_in_type, self::$allow_type)) {
             return 1;
         }
