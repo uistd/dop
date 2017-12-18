@@ -226,7 +226,7 @@ class Coder extends CoderBase
     public function joinNameSpace($ns, $class_name = '', $separator = '.')
     {
         $ns = trim($this->pathToNs($ns), ' .');
-        $result = $this->getConfig('package', 'com.ffan.dop');
+        $result = $this->getConfig('package', 'com.uis.dop');
         if (!empty($ns)) {
             $result .= '.'. $ns;
         }
