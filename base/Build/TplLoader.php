@@ -3,7 +3,7 @@
 namespace UiStd\Dop\Build;
 
 use UiStd\Dop\Exception;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class TplLoader 模板加载器
@@ -325,7 +325,7 @@ class TplLoader
         //变量直接替换
         if ('$' === $tag_content[0]) {
             $var_name = substr($tag_content, 1);
-            if (!FFanStr::isValidVarName($var_name)) {
+            if (!UisStr::isValidVarName($var_name)) {
                 $err_msg = $this->errorMsg('Invalid name:' . $var_name);
                 throw new Exception($err_msg);
             }
@@ -349,9 +349,9 @@ class TplLoader
                 $buf_name = $buf_arg_str;
             } else {
                 $buf_name = substr($buf_arg_str, 0, $arg_pos);
-                $arg_arr = FFanStr::dualSplit(substr($buf_arg_str, $arg_pos + 1), ' ', '=');
+                $arg_arr = UisStr::dualSplit(substr($buf_arg_str, $arg_pos + 1), ' ', '=');
             }
-            if (!FFanStr::isValidVarName($buf_name)) {
+            if (!UisStr::isValidVarName($buf_name)) {
                 throw new Exception($err_msg);
             }
             switch ($buf_type) {

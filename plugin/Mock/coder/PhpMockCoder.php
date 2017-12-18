@@ -15,8 +15,7 @@ use UiStd\Dop\Protocol\ListItem;
 use UiStd\Dop\Protocol\MapItem;
 use UiStd\Dop\Protocol\Struct;
 use UiStd\Dop\Protocol\StructItem;
-use UiStd\Dop\Schema\Protocol;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class PhpMockCode
@@ -61,7 +60,7 @@ class PhpMockCoder extends PluginCoderBase
      */
     private function fileNameToClassName($file_name)
     {
-        return FFanStr::camelName('mock_' . str_replace('/', '_', $file_name));
+        return UisStr::camelName('mock_' . str_replace('/', '_', $file_name));
     }
 
     /**
@@ -75,7 +74,7 @@ class PhpMockCoder extends PluginCoderBase
         $build_path = $this->plugin->getBuildPath();
         //如果 带 子目录
         if (false !== strpos($file_name, '/')) {
-            $path_name = '/' . FFanStr::camelName(dirname($file_name));
+            $path_name = '/' . UisStr::camelName(dirname($file_name));
             $build_path .= $path_name;
         }
         $class_name = $this->fileNameToClassName($file_name);
@@ -113,10 +112,10 @@ class PhpMockCoder extends PluginCoderBase
         $ns = $this->plugin->getNameSpace();
         $pos = strpos($file_name, '/');
         if (false !== $pos) {
-            $tmp_arr = FFanStr::split($file_name, '/');
+            $tmp_arr = UisStr::split($file_name, '/');
             array_pop($tmp_arr);
             foreach ($tmp_arr as &$tmp) {
-                $tmp = FFanStr::camelName($tmp);
+                $tmp = UisStr::camelName($tmp);
             }
             $ns .= '\\' . join('\\', $tmp_arr);
         }
@@ -350,7 +349,7 @@ class PhpMockCoder extends PluginCoderBase
                     $tmp_line = new StrBuf();
                     $mock_buf->insertBuf($tmp_line);
                     $tmp_line->pushStr($arr_name . ' = array(');
-                    $tmp_line->pushStr(FFanStr::dualJoin($mock_rule->value_set, ',', ' => '));
+                    $tmp_line->pushStr(UisStr::dualJoin($mock_rule->value_set, ',', ' => '));
                     $tmp_line->pushStr(');');
                     $tmp_code = $arr_name . '[$data->' . $mock_rule->key_field . ']';
                     $mock_buf->pushStr($mock_item . ' = isset(' . $tmp_code . ') ? ' . $tmp_code . ' : null;');

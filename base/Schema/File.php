@@ -6,8 +6,8 @@ use UiStd\Dop\Build\BuildOption;
 use UiStd\Dop\Exception;
 use UiStd\Dop\Manager;
 use UiStd\Dop\Protocol\ItemType;
-use UiStd\Common\Utils as FFanUtils;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Utils as UisUtils;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class File
@@ -73,7 +73,7 @@ class File
         $base_path = $manager->getBasePath();
         $this->namespace = self::fileToNamespace($file_name);
         static::$namespace_list[$this->namespace] = true;
-        $full_name = FFanUtils::joinFilePath($base_path, $file_name);
+        $full_name = UisUtils::joinFilePath($base_path, $file_name);
         if (!is_file($full_name)) {
             throw new Exception('找不到协议文件:' . $full_name);
         }
@@ -352,7 +352,7 @@ class File
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Item name:' . $item_name . ' 已经存在');
             }
-            $camel_name = FFanStr::camelName($item_name);
+            $camel_name = UisStr::camelName($item_name);
             if (isset($name_conflict[$camel_name])) {
                 throw new Exception('Item name 驼峰命名:' . $camel_name . ' 冲突');
             }
@@ -564,7 +564,7 @@ class File
                     $tmp_name = trim($tmp_node->getAttribute('name'));
                     if (!empty($tmp_name)) {
                         $this->checkName($tmp_name);
-                        $name = FFanStr::camelName($tmp_name);
+                        $name = UisStr::camelName($tmp_name);
                     }
                 }
                 $value_item = $this->makeItem($name, $value_node);

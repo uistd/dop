@@ -14,7 +14,7 @@ use UiStd\Dop\Protocol\ItemType;
 use UiStd\Dop\Protocol\ListItem;
 use UiStd\Dop\Protocol\Struct;
 use UiStd\Dop\Protocol\StructItem;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class PhpValidCoder
@@ -392,7 +392,7 @@ class PhpValidCoder extends PluginCoderBase
             $if_str = '!preg_match(\'' . $rule->format_set . '\', $' . $var_name . ')';
         } else {
             $this->dop_file->pushImport('use UiStd\Dop\DopValidator;');
-            $if_str = '!DopValidator::is' . FFanStr::camelName($rule->format_set) . '($' . $var_name . ')';
+            $if_str = '!DopValidator::is' . UisStr::camelName($rule->format_set) . '($' . $var_name . ')';
         }
         $this->conditionCode($valid_buf, $if_str, $rule, 'format');
     }

@@ -6,7 +6,7 @@ use UiStd\Dop\Build\PluginRule;
 use UiStd\Dop\Protocol\Item;
 use UiStd\Dop\Protocol\ItemType;
 use UiStd\Dop\Schema\Protocol;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 use UiStd\Dop\Schema\Plugin as SchemaPlugin;
 
 /**
@@ -47,7 +47,7 @@ class RulePair extends PluginRule
             return 1;
         }
         $map_set = $node->get('map');
-        $value_set = FFanStr::dualSplit($map_set, ',', ':');
+        $value_set = UisStr::dualSplit($map_set, ',', ':');
         if (empty($value_set)) {
             return 2;
         }

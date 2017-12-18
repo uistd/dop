@@ -7,7 +7,7 @@ use UiStd\Dop\Build\Trigger;
 use UiStd\Dop\Exception;
 use UiStd\Dop\Manager;
 use UiStd\Dop\Schema\Plugin;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 use UiStd\Dop\Schema\Protocol as SchemaProtocol;
 
 /**
@@ -75,7 +75,7 @@ abstract class Item
     {
         $this->camelName = $camel_name_name;
         $this->protocol_manager = $manger;
-        $this->underline_name = FFanStr::underlineName($camel_name_name);
+        $this->underline_name = UisStr::underlineName($camel_name_name);
     }
 
     /**

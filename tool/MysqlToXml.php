@@ -47,7 +47,7 @@ class MysqlToXml extends ConfigBase
         $this->file_name = $file_name;
         $this->initConfig($mysql_conf);
         $this->config_name = $this->getConfigString('config_name', 'main');
-        $config_key = 'ffan-mysql:' . $this->config_name;
+        $config_key = 'uis-mysql:' . $this->config_name;
         $db_config = Config::get($config_key);
         //如果存在数据库配置
         if (is_array($db_config)) {

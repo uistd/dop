@@ -8,7 +8,7 @@ use UiStd\Dop\Protocol\Item;
 use UiStd\Dop\Schema\Plugin;
 use UiStd\Dop\Schema\Protocol;
 use UiStd\Common\ConfigBase;
-use UiStd\Common\Utils as FFanUtils;
+use UiStd\Common\Utils as UisUtils;
 
 /**
  * Class PluginBase 插件基类
@@ -145,7 +145,7 @@ abstract class PluginBase extends ConfigBase
     public function loadTpl(FileBuf $file_buf, $tpl_name, $data = null)
     {
         $path = $this->manager->getPluginMainPath($this->plugin_name);
-        $tpl_file = FFanUtils::joinFilePath($path, $tpl_name);
+        $tpl_file = UisUtils::joinFilePath($path, $tpl_name);
         $tpl_loader = TplLoader::getInstance($tpl_file);
         $tpl_loader->execute($file_buf, $data);
     }

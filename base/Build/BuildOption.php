@@ -4,8 +4,8 @@ namespace UiStd\Dop\Build;
 
 use UiStd\Dop\Exception;
 use UiStd\Dop\Protocol\Struct;
-use UiStd\Common\Utils as FFanUtils;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Utils as UisUtils;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class BuildOption 生成文件参数
@@ -196,14 +196,14 @@ class BuildOption
     {
         $build_path = $section_conf['build_path'];
         if (isset($this->section_conf['root_path'])) {
-            $build_path = FFanUtils::joinPath($this->section_conf['root_path'], $build_path);
+            $build_path = UisUtils::joinPath($this->section_conf['root_path'], $build_path);
         }
         //代码生成目录 如果使用root path
         if (isset($section_conf['path_type']) && 'root' === $section_conf['path_type']) {
-            $this->build_path = FFanUtils::fixWithRootPath($build_path);
+            $this->build_path = UisUtils::fixWithRootPath($build_path);
         } //生成代码目录 使用 runtime path
         else {
-            $this->build_path = FFanUtils::fixWithRuntimePath($build_path);
+            $this->build_path = UisUtils::fixWithRuntimePath($build_path);
         }
         $this->namespace_prefix = $section_conf['namespace'];
         $this->use_plugin = str_replace(' ', '', $this->getConfig('plugin', '')) . ',';
@@ -219,7 +219,7 @@ class BuildOption
             $this->packer_struct = $this->parsePackerStruct($section_conf['packer_struct']);
         }
         if (isset($section_conf['packer_extra'])) {
-            $this->packer_extra = FFanStr::split($section_conf['packer_extra']);
+            $this->packer_extra = UisStr::split($section_conf['packer_extra']);
         }
         $this->item_name_property = $this->fixNameRuleConfig('property_name');
         $this->item_name_output = $this->fixNameRuleConfig('output_name');
@@ -238,7 +238,7 @@ class BuildOption
      */
     private function parseFileFilter($file_filter)
     {
-        $filter_arr = FFanStr::split($file_filter, ',');
+        $filter_arr = UisStr::split($file_filter, ',');
         foreach ($filter_arr as &$item) {
             $item = strtolower($item);
         }
@@ -275,7 +275,7 @@ class BuildOption
      */
     private function parsePackerSide($conf_str)
     {
-        $conf_arr = FFanStr::dualSplit($conf_str);
+        $conf_arr = UisStr::dualSplit($conf_str);
         $result = array();
         $value_arr = array(
             'client' => self::SIDE_CLIENT,
@@ -303,7 +303,7 @@ class BuildOption
      */
     private function parsePackerStruct($conf_str)
     {
-        $conf_arr = FFanStr::dualSplit($conf_str);
+        $conf_arr = UisStr::dualSplit($conf_str);
         $result = array();
         $value_arr = array(
             'request' => Struct::TYPE_REQUEST,
@@ -324,7 +324,7 @@ class BuildOption
      */
     private function parseCommonOrValue($conf_str, $value_arr)
     {
-        $arr = FFanStr::split($conf_str, '|');
+        $arr = UisStr::split($conf_str, '|');
         $value = 0;
         if (empty($arr)) {
             return $value;
@@ -383,7 +383,7 @@ class BuildOption
      */
     public function parsePacker($packer_set)
     {
-        $packer = FFanStr::split($packer_set);
+        $packer = UisStr::split($packer_set);
         foreach ($packer as $name) {
             $this->addPacker($name);
         }
@@ -443,7 +443,7 @@ class BuildOption
     public function parseBuildStructType($struct_type)
     {
         $result = 0;
-        $arr = FFanstr::split($struct_type, ',');
+        $arr = UisStr::split($struct_type, ',');
         if (in_array('action', $arr)) {
             $result |= Struct::TYPE_REQUEST;
             $result |= Struct::TYPE_RESPONSE;
@@ -469,7 +469,7 @@ class BuildOption
     private function parseCodeSide($code_side)
     {
         $result = 0;
-        $arr = FFanstr::split($code_side, ',');
+        $arr = UisStr::split($code_side, ',');
         if (in_array('client', $arr)) {
             $result |= self::SIDE_CLIENT;
         }
@@ -530,7 +530,7 @@ class BuildOption
      */
     public function addPacker($packer_name)
     {
-        if (!FFanStr::isValidVarName($packer_name)) {
+        if (!UisStr::isValidVarName($packer_name)) {
             throw new Exception('Packer name:' . $packer_name . ' is invalid');
         }
         $this->packer_arr[$packer_name] = true;

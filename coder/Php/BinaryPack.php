@@ -42,7 +42,7 @@ class BinaryPack extends PackerBase
      */
     public function buildPackMethod($struct, $code_buf)
     {
-        $this->pushImportCode('use FFan\\Dop\\DopEncode;');
+        $this->pushImportCode('use UiStd\\DopLib\\DopEncode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制打包');
@@ -128,7 +128,7 @@ class BinaryPack extends PackerBase
         if ($struct->isSubStruct()) {
             return;
         }
-        $this->pushImportCode('use FFan\\Dop\\DopDecode;');
+        $this->pushImportCode('use UiStd\\DopLib\\DopDecode;');
         $code_buf->emptyLine();
         $code_buf->pushStr('/**');
         $code_buf->pushStr(' * 二进制解包');

@@ -14,7 +14,7 @@ use UiStd\Dop\Protocol\ListItem;
 use UiStd\Dop\Protocol\MapItem;
 use UiStd\Dop\Protocol\Struct;
 use UiStd\Dop\Protocol\StructItem;
-use UiStd\Common\Str as FFanStr;
+use UiStd\Common\Str as UisStr;
 
 /**
  * Class Coder
@@ -147,7 +147,7 @@ class Coder extends CoderBase
             $property_line_buf->pushStr(';');
 
             $method_buf->emptyLine();
-            $p_name = FFanStr::camelName($name);
+            $p_name = UisStr::camelName($name);
             $method_buf->pushStr('public '. $item_type .' get'.$p_name .' {');
             $method_buf->pushIndent('return this.'. $name.';');
             $method_buf->pushStr('}');
