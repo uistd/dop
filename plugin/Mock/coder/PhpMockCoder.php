@@ -86,7 +86,7 @@ class PhpMockCoder extends PluginCoderBase
         $import_buf = $main_buf->touchBuf(FileBuf::IMPORT_BUF);
         $import_buf->emptyLine();
         $main_buf->emptyLine();
-        $main_buf->pushStr('class ' . $class_name . ' extends \UiStd\Dop\DopMock');
+        $main_buf->pushStr('class ' . $class_name . ' extends \UiStd\DopLib\DopMock');
         $main_buf->pushStr('{');
         $main_buf->indent();
         $main_buf->touchBuf(FileBuf::METHOD_BUF);
