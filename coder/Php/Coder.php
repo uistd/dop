@@ -91,10 +91,15 @@ class Coder extends CoderBase
             throw new Exception('Tpl error, METHOD_BUF or PROPERTY_BUF or IMPORT_BUF not found!');
         }
         $use_buf->setPrefixEmptyLine();
+        //如果配置了文件创建标志
+        $file_mark = $this->build_opt->getConfig('file_mark');
+        if (!empty($file_mark)) {
+            $use_buf->pushStr('//' . $file_mark);
+        }
         $extend = $struct->getParent();
         if ($extend) {
             $this->pushUseClass($use_buf, $name_space, $extend);
-            $class_name_buf->pushStr( ' extends '. $extend->getClassName());
+            $class_name_buf->pushStr(' extends ' . $extend->getClassName());
         }
         $property_buf->setPrefixEmptyLine();
         $this->readClassConfig($class_file, $struct);
