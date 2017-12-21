@@ -225,9 +225,9 @@ class MysqlToXml extends ConfigBase
      */
     private static function xmlInstance($file_name)
     {
-        $xml_doc = new DOMDocument();
+        $xml_doc = new \DOMDocument();
         $xml_doc->load($file_name);
-        $xml_path = new DOMXPath($xml_doc);
+        $xml_path = new \DOMXPath($xml_doc);
         $protocol = $xml_path->query('/protocol');
         $main_node = $protocol->item(0);
         if ('mysql' !== $main_node->getAttribute('type')) {
