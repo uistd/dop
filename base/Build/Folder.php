@@ -116,7 +116,6 @@ class Folder
         $this->manager->buildLog('Save file of folder:' . $this->base_dir);
         foreach ($this->file_list as $path => $dir) {
             $abs_path = $this->checkPatch($path);
-            echo $abs_path, PHP_EOL;
             $path_file_list = $this->getPathFileMd5($abs_path);
             /**
              * @var string $file_name
