@@ -1,5 +1,7 @@
 <?php
 
+namespace UiStd\Dop\Tool;
+
 use UiStd\Dop\Build\CodeBuf;
 use UiStd\Common\Config;
 use UiStd\Common\ConfigBase;
@@ -17,7 +19,7 @@ class MysqlToXml extends ConfigBase
     private $file_name;
 
     /**
-     * @var Mysqli
+     * @var \Mysqli
      */
     private $mysal_obj;
 
@@ -40,7 +42,7 @@ class MysqlToXml extends ConfigBase
      * SwaggerToXml constructor.
      * @param string $file_name
      * @param array $mysql_conf
-     * @throws Exception
+     * @throws \Exception
      */
     public function __construct($file_name, $mysql_conf)
     {
@@ -69,11 +71,11 @@ class MysqlToXml extends ConfigBase
             }
         }
         if (empty($user) || empty($database)) {
-            throw new Exception($this->file_name . ' 缺少mysql配置');
+            throw new \Exception($this->file_name . ' 缺少mysql配置');
         }
-        $link_obj = new mysqli($host, $user, $password, 'information_schema', $port);
+        $link_obj = new \mysqli($host, $user, $password, 'information_schema', $port);
         if ($link_obj->connect_errno) {
-            throw new Exception($link_obj->connect_error);
+            throw new \Exception($link_obj->connect_error);
         }
         $this->mysal_obj = $link_obj;
         $this->db_name = $database;

@@ -1,4 +1,7 @@
 <?php
+
+namespace UiStd\Dop\Tool;
+
 use UiStd\Common\Config;
 use UiStd\Git\Git;
 use UiStd\Git\GitRepo;
@@ -30,6 +33,18 @@ class GitHelper extends LoggerBase
     }
 
     /**
+     * 获取仓库的目录
+     * @return string
+     */
+    public function getRepoPath()
+    {
+        if ($this->git_instance) {
+            return $this->git_instance->getRepoPath();
+        }
+        return 'not init';
+    }
+
+    /**
      * 初始化
      * @param array $build_conf
      * @param string $build_name
@@ -42,7 +57,9 @@ class GitHelper extends LoggerBase
             return;
         }
         $this->build_name = $build_name;
-        $build_conf[$git_conf]['repo_path'] = 'tool';
+        if (!isset($build_conf[$git_conf]['repo_path'])) {
+            $build_conf[$git_conf]['repo_path'] = 'tool';
+        }
         Config::add('uis-git:' . $build_name, $build_conf[$git_conf]);
         $this->git_instance = $this->getGitInstance();
         $branch = isset($build_conf[$git_conf]['branch']) ? $build_conf[$git_conf]['branch'] : 'origin/master';
@@ -57,7 +74,7 @@ class GitHelper extends LoggerBase
     {
         $branch_list = $this->getBranchList();
         if (!in_array($branch, $branch_list)) {
-            exit('远程没有找到指定的分支:' . $branch . "\n");
+            return;
         }
         $local_branch_list = $this->git_instance->getLocalBranch();
         $local_branch = str_replace('origin/', '', $branch);
@@ -122,8 +139,28 @@ class GitHelper extends LoggerBase
         foreach ($files as $each_file) {
             $this->git_instance->add($each_file);
         }
-        $this->git_instance->commit('Dop tool generate code at '. date('Y-m-d H:i:s', time()));
+        $this->git_instance->commit('Dop tool generate code at ' . date('Y-m-d H:i:s', time()));
         $this->git_instance->push();
         return 'finish';
+    }
+
+    /**
+     * 拉代码
+     */
+    public function pull()
+    {
+        if (!$this->git_instance) {
+            return;
+        }
+        $this->git_instance->pull();
+    }
+
+    /**
+     * 获取git类
+     * @return GitRepo
+     */
+    public function getGitRepo()
+    {
+        return $this->git_instance;
     }
 }

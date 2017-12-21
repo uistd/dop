@@ -1,4 +1,8 @@
 <?php
+
+namespace UiStd\Dop\Tool;
+
+use UiStd\Common\Str;
 use UiStd\Dop\Build\CodeBuf;
 use UiStd\Common\Utils;
 
@@ -104,7 +108,7 @@ class SwaggerToXml
         }
         $xml_handle = new \DOMDocument();
         $xml_handle->load($this->save_file_name);
-        $xml_path = new DOMXpath($xml_handle);
+        $xml_path = new \DOMXpath($xml_handle);
         $model_list = $xml_path->query('/protocol/model');
         if (null === $model_list) {
             return;
@@ -189,7 +193,7 @@ class SwaggerToXml
             $path = preg_replace('#\{(.*?)\}#', 'by_$1', $full_path);
             $path = str_replace('}', '', $path);
             $path = str_replace('{', '', $path);
-            $path_arr = \UiStd\Common\Str::split($path, '/');
+            $path_arr = Str::split($path, '/');
             foreach ($actions as $method => $info) {
                 $full_name = $method . $full_path;
                 $tmp_action = array(
@@ -311,7 +315,7 @@ class SwaggerToXml
         $dom->pushStr("\n");
         $file_content = $dom->dump();
         $save_path = dirname($this->save_file_name);
-        \UiStd\Common\Utils::pathWriteCheck($save_path);
+        Utils::pathWriteCheck($save_path);
         file_put_contents($this->save_file_name, $file_content);
         echo 'Done, save protocol file to ' . $this->save_file_name, PHP_EOL, PHP_EOL;
     }
@@ -347,7 +351,7 @@ class SwaggerToXml
      */
     private function makePublicModelName($name, $parentName)
     {
-        $public_name = \UiStd\Common\Str::underlineName($parentName);
+        $public_name = Str::underlineName($parentName);
         $name_arr = explode('_', $public_name);
         $tmp_name_arr = [];
         $tmp_name = '';
@@ -614,9 +618,9 @@ class SwaggerToXml
      */
     private static function xmlInstance($file_name)
     {
-        $xml_doc = new DOMDocument();
+        $xml_doc = new \DOMDocument();
         $xml_doc->load($file_name);
-        $xml_path = new DOMXPath($xml_doc);
+        $xml_path = new \DOMXPath($xml_doc);
         $protocol = $xml_path->query('/protocol');
         $main_node = $protocol->item(0);
         if ('swagger' !== $main_node->getAttribute('type')) {
