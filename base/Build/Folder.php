@@ -2,6 +2,7 @@
 
 namespace UiStd\Dop\Build;
 
+use UiStd\Common\Utils;
 use UiStd\Dop\Exception;
 use UiStd\Dop\Manager;
 use UiStd\Common\Utils as UisUtils;
@@ -35,9 +36,6 @@ class Folder
     public function __construct($base_dir, Manager $manager)
     {
         $this->base_dir = UisUtils::fixWithRootPath($base_dir);
-        if (is_dir($this->base_dir)) {
-            UisUtils::delDir($this->base_dir);
-        }
         $this->manager = $manager;
     }
 
@@ -118,6 +116,8 @@ class Folder
         $this->manager->buildLog('Save file of folder:' . $this->base_dir);
         foreach ($this->file_list as $path => $dir) {
             $abs_path = $this->checkPatch($path);
+            echo $abs_path, PHP_EOL;
+            $path_file_list = $this->getPathFileMd5($abs_path);
             /**
              * @var string $file_name
              * @var FileBuf $file_buf
@@ -128,15 +128,54 @@ class Folder
                 }
                 $full_file_name = UisUtils::joinFilePath($abs_path, $file_name);
                 $content = $file_buf->dump();
+                $log_file_name = $path . '/' . $file_name;
+                //如果内容没有发生改变
+                if (isset($path_file_list[$file_name])) {
+                    $file_md5 = $path_file_list[$file_name];
+                    unset($path_file_list[$file_name]);
+                    if (md5($content) === $file_md5) {
+                        $this->manager->buildLog($log_file_name . ' unchanged.');
+                        continue;
+                    }
+                }
                 //utf8 bom头
                 if (($option & BuildOption::FILE_OPTION_UTF8_BOM)) {
                     $content = chr(0xEF) . chr(0xBB) . chr(0xBF) . $content;
                 }
                 $re = file_put_contents($full_file_name, $content);
-                $log_file_name = $path . '/' . $file_name;
                 $this->manager->buildLog('Build file ' . $log_file_name . ($re ? ' success' : ' failed'));
             }
+            //如果有文件未找到
+            foreach ($path_file_list as $file_name => $md5) {
+                $this->manager->buildLog($path . '/' . $file_name .' removed.');
+                unlink($abs_path . $file_name);
+            }
         }
+    }
+
+    /**
+     * 获取目录里所有文件, 以及文件的md5值
+     * @param string $path
+     * @return array
+     */
+    private function getPathFileMd5($path)
+    {
+        $dh = opendir($path);
+        $result = array();
+        if (!$dh) {
+            return $result;
+        }
+        while ($file = readdir($dh)) {
+            if ('.' === $file{0}) {
+                continue;
+            }
+            $full_file = $path . '/' . $file;
+            if (is_dir($full_file)) {
+                continue;
+            }
+            $result[$file] = md5_file($full_file);
+        }
+        return $result;
     }
 
     /**
@@ -246,6 +285,6 @@ class Folder
             return true;
         }
         $key = str_replace('*', '[a-zA-Z\d_]*', $key);
-        return preg_match('#'. $key .'#', $str) > 0;
+        return preg_match('#' . $key . '#', $str) > 0;
     }
 }

@@ -246,47 +246,6 @@
         </response>
     </action>
 
-    <action name="put_blogId" note="修改随享">
-        <request method="put">
-            <bigint name="blogId" note="随享ID"/>
-            <string name="author" note="文章作者"/>
-            <string name="cityId" note="城市ID"/>
-            <int name="collectNum" note="收藏总数"/>
-            <string name="content" note="随享内容"/>
-            <list name="contentTagList" note="内容标签集合">
-                <string/>
-            </list>
-            <string name="contentType" note="随享内容类型 - 1,文本；2,H5"/>
-            <int name="coverHeight" note="封面图高"/>
-            <string name="coverUrl" note="封面图url"/>
-            <int name="coverWidth" note="封面图宽"/>
-            <float name="latitude" note="纬度"/>
-            <int name="likedNum" note="点赞总数"/>
-            <float name="longitude" note="经度"/>
-            <string name="originChannel" note="文章来源渠道"/>
-            <list name="pics" note="随享图片集合">
-                <model extend="blog_pics"/>
-            </list>
-            <string name="position" note="位置字符串"/>
-            <string name="preview" note="内容预览"/>
-            <string name="provinceId" note="省份ID"/>
-            <int name="readNum" note="阅读总数"/>
-            <list name="recommends" note="随享推荐集合">
-                <model extend="blog_recommends"/>
-            </list>
-            <list name="tagList" note="分类标签集合">
-                <string/>
-            </list>
-            <string name="throwType" note="投放渠道,多渠道用英文逗号分隔.默认为1(首页-精选),可能取值:1-精选(包含电影美食逛街等tab页);2-发现(行动派)"/>
-            <string name="title" note="随享标题"/>
-            <int name="type" note="随享类型，1:PGC 2:UGC 3:KOL"/>
-            <string name="userId" note="用户ID"/>
-            <string name="weixinDesc" note="微信文案"/>
-        </request>
-        <response extend="/api/result">
-        </response>
-    </action>
-
     <action name="delete_blogId" note="删除">
         <request method="delete">
             <bigint name="blogId" note="随享ID"/>
