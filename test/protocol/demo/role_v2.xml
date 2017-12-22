@@ -23,11 +23,11 @@
         <response extend="/api/result">
             <map name="data">
                 <int note="role_id"/>
-                <struct extend="role_info" class_name="new_role_info" note="用户信息">
+                <model extend="role_info" class_name="new_role_info" note="用户信息">
                     <string name="remark" note="备注">
                         <mock value="note"/>
                     </string>
-                    <struct name="demo">
+                    <model name="demo">
                         <string name="user_name" note="用户名">
                             <mock range="6,10"/>
                         </string>
@@ -37,8 +37,8 @@
                         <string name="mobile" note="手机号">
                             <mock type="mobile"/>
                         </string>
-                    </struct>
-                </struct>
+                    </model>
+                </model>
             </map>
         </response>
     </action>

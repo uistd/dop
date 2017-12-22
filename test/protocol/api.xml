@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
-    <struct name="result" public="true">
+    <model name="result" public="true">
         <int name="status" note="状态码">
             <mock value="200"/>
         </int>
@@ -8,5 +8,5 @@
             <mock value="success"/>
         </string>
         <int name="data" note="数据"/>
-    </struct>
+    </model>
 </protocol>

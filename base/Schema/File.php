@@ -90,8 +90,7 @@ class File
     public function parse()
     {
         Exception::pushStack('Parse file:'. $this->file_name);
-        $this->queryModel('struct');
-        $this->queryModel('model');
+        $this->queryModel();
         $this->queryAction();
         $this->queryData();
         $this->queryShader();
@@ -100,13 +99,12 @@ class File
 
     /**
      * 解析model
-     * @param string $tag_name
      * @throws Exception
      */
-    private function queryModel($tag_name)
+    private function queryModel()
     {
         $path_handle = $this->getPathHandle();
-        $node_list = $path_handle->query('/protocol/' . $tag_name);
+        $node_list = $path_handle->query('/protocol/model');
         if (null === $node_list) {
             return;
         }

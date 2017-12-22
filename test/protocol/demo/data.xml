@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol>
-    <struct name="test_arr">
+    <model name="test_arr">
         <string name="name"/>
         <string name="mobile"/>
         <int name="age"/>
-    </struct>
+    </model>
     <data name="test_data">
         <int8 name="int8"/>
         <uint8 name="uint8"/>
@@ -25,10 +25,10 @@
         <list name="list"><string/></list>
         <list name="list_list" keep_name="1"><list name="list"><int/></list></list>
         <map name="map"><int/><string/></map>
-        <struct name="null_struct">
+        <model name="null_struct">
             <int name="no_value"/>
-        </struct>
-        <struct name="test_struct" keep_name="true">
+        </model>
+        <model name="test_struct" keep_name="true">
             <string name="first_name">
                 <mock range="10, 20"/>
             </string>
@@ -36,8 +36,8 @@
                 <mock use="test_struct/first_name"/>
             </string>
             <int8 name="gender"/>
-        </struct>
-        <struct name="test_arr" extend="test_arr"/>
+        </model>
+        <model name="test_arr" extend="test_arr"/>
     </data>
     
     <data name="simple_data">

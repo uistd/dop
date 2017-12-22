@@ -10,9 +10,9 @@
         </response>
     </action>
     <data name="math">
-        <struct name="role_info" extend="/demo/role/role_info"/>
-        <struct name="test_arr" extend="/demo/data/test_arr">
+        <model name="role_info" extend="/demo/role/role_info"/>
+        <model name="test_arr" extend="/demo/data/test_arr">
             <int name="gender"/>
-        </struct>
+        </model>
     </data>
 </protocol>
