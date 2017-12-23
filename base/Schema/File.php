@@ -89,12 +89,71 @@ class File
      */
     public function parse()
     {
-        Exception::pushStack('Parse file:'. $this->file_name);
+        Exception::pushStack('Parse file:' . $this->file_name);
+        $this->queryDefine();
         $this->queryModel();
         $this->queryAction();
         $this->queryData();
         $this->queryShader();
         Exception::popStack();
+    }
+
+    /**
+     * 解析define
+     */
+    private function queryDefine()
+    {
+        $path_handle = $this->getPathHandle();
+        $node_list = $path_handle->query('/protocol/define');
+        if (null === $node_list || 0 === $node_list->length) {
+            return;
+        }
+        if ($node_list->length > 1) {
+            throw new Exception('Only one define node allowed in a file');
+        }
+        /** @var \DOMElement $struct */
+        $struct = $node_list->item(0);
+        Exception::pushStack($this->traceInfo($struct));
+        $this->parseDefine($struct);
+        Exception::popStack();
+    }
+
+    /**
+     * 解析define item
+     * @param \DOMElement $define_node
+     * @throws Exception
+     */
+    private function parseDefine(\DOMElement $define_node)
+    {
+        $node_list = $define_node->childNodes;
+        $item_arr = array();
+        $all_type = array(
+            ItemType::STRING, ItemType::INT, ItemType::BOOL, ItemType::FLOAT, ItemType::DOUBLE, ItemType::BINARY
+        );
+        for ($i = 0; $i < $node_list->length; ++$i) {
+            $node = $node_list->item($i);
+            if (XML_ELEMENT_NODE !== $node->nodeType) {
+                continue;
+            }
+            $item_node = $node_list->item($i);
+            Exception::pushStack($this->traceInfo($node));
+            $type = ItemType::getType($item_node->nodeName);
+            if (null === $type || !in_array($type, $all_type)) {
+                throw new Exception('define not support item of ' . $item_node->nodeName);
+            }
+            /** @var \DOMElement $node */
+            if (!$node->hasAttribute('name')) {
+                throw new Exception('Attribute `name` required!');
+            }
+            $item_name = trim($node->getAttribute('name'));
+            if (isset($item_arr[$item_name])) {
+                throw new Exception('Name `' . $item_name . '` conflict');
+            }
+            $item = new Item($type, $item_node, $this->namespace);
+            $this->parsePlugin($item_node, $item);
+            $item_arr[$item_name] = $item;
+        }
+        $this->protocol->addDefine($this->namespace, $item_arr);
     }
 
     /**
@@ -284,7 +343,7 @@ class File
             $shader_node = $node_list->item($i);
             Exception::pushStack($this->traceInfo($shader_node));
             if (empty($shader_node->getAttribute('name'))) {
-                throw new Exception('Shader name missing'. PHP_EOL. $shader_node->C14N());
+                throw new Exception('Shader name missing' . PHP_EOL . $shader_node->C14N());
             }
             $shader = new Shader($shader_node);
             $this->protocol->addShader($shader);
@@ -521,8 +580,7 @@ class File
         if ($item_type && ItemType::ARR !== $item_type && ItemType::STRUCT !== $item_type) {
             $node = new \DomElement($short_value, '');
             $list_item->appendChild($node);
-        }
-        //如果是指 model
+        } //如果是指 model
         elseif (0 === strpos($short_value, 'model.')) {
             $model_name = str_replace('model.', '', $short_value);
             $node = new \DomElement('model');
@@ -689,6 +747,6 @@ class File
      */
     private function traceInfo($node)
     {
-        return 'File:'. $this->file_name . ' Line '. $node->getLineNo(). PHP_EOL . $node->C14N() . PHP_EOL;
+        return 'File:' . $this->file_name . ' Line ' . $node->getLineNo() . PHP_EOL . $node->C14N() . PHP_EOL;
     }
 }

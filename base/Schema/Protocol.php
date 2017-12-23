@@ -83,6 +83,11 @@ class Protocol
     private $is_keep_action_name;
 
     /**
+     * @var array define
+     */
+    private $define_list;
+
+    /**
      * Protocol constructor.
      * @param Manager $manager
      */
@@ -540,5 +545,17 @@ class Protocol
     public function setFileRequire($namespace, $require_namespace)
     {
         $this->file_require_arr[$namespace][] = $require_namespace;
+    }
+
+    /**
+     * 加入define
+     * @param string $namespace
+     * @param string $item_arr
+     */
+    public function addDefine($namespace, $item_arr)
+    {
+        $namespace = trim($namespace, '/');
+        $namespace = strtr($namespace, '/', '.');
+        $this->define_list[$namespace] = $item_arr;
     }
 }
