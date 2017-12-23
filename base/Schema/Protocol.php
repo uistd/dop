@@ -203,6 +203,10 @@ class Protocol
         $item_arr = array();
         foreach ($item_list as $original_name => $item_schema) {
             $item_name = $this->fixItemName($original_name);
+            //如果是define
+            if (Item::TYPE_DEFINE === $item_schema->getType()) {
+                $item_schema = $this->getDefine($item_schema->getUseNs(), $original_name);
+            }
             $item = $this->makeItemObject($item_name, $item_schema);
             $item_weight = 0;
             //如果有在字段指定keep_name
@@ -550,12 +554,26 @@ class Protocol
     /**
      * 加入define
      * @param string $namespace
-     * @param string $item_arr
+     * @param \UiStd\Dop\Protocol\Item[] $item_arr
      */
     public function addDefine($namespace, $item_arr)
     {
-        $namespace = trim($namespace, '/');
-        $namespace = strtr($namespace, '/', '.');
         $this->define_list[$namespace] = $item_arr;
     }
+
+    /**
+     * 获取define
+     * @param string $namespace
+     * @param string $name
+     * @return \UiStd\Dop\Protocol\Item
+     * @throws Exception
+     */
+    public function getDefine($namespace, $name)
+    {
+        if (!isset($this->define_list[$namespace][$name])) {
+            throw new Exception('define `' . $name . '`not found in ' . $namespace);
+        }
+        return $this->define_list[$namespace][$name];
+    }
+
 }

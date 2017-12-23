@@ -31,14 +31,19 @@ class File
     private $path_handle;
 
     /**
-     * @var string
+     * @var string 文件路径
      */
-    private $file_name;
+    private $full_name;
 
     /**
      * @var BuildOption 生成参数配置
      */
     private $build_opt;
+
+    /**
+     * @var string 文件名
+     */
+    private $file_name;
 
     /**
      * @var string 命名空间
@@ -79,7 +84,8 @@ class File
         }
         $this->xml_handle = new \DOMDocument();
         $this->xml_handle->load($full_name);
-        $this->file_name = $full_name;
+        $this->full_name = $full_name;
+        $this->file_name = basename($full_name, '.xml');
         $this->build_opt = $manager->getCurrentBuildOpt();
         $this->parse();
     }
@@ -89,7 +95,7 @@ class File
      */
     public function parse()
     {
-        Exception::pushStack('Parse file:' . $this->file_name);
+        Exception::pushStack('Parse file:' . $this->full_name);
         $this->queryDefine();
         $this->queryModel();
         $this->queryAction();
@@ -145,7 +151,8 @@ class File
             if (!$node->hasAttribute('name')) {
                 throw new Exception('Attribute `name` required!');
             }
-            $item_name = trim($node->getAttribute('name'));
+            $item_name = $node->getAttribute('name');
+            $this->checkName($item_name);
             if (isset($item_arr[$item_name])) {
                 throw new Exception('Name `' . $item_name . '` conflict');
             }
@@ -394,27 +401,43 @@ class File
                 continue;
             }
             Exception::pushStack($this->traceInfo($node));
-            /** @var \DOMElement $node */
-            if (!$node->hasAttribute('name')) {
-                //如果 是struct 并且指定了 extend, 就不需要名字
-                if ($this->isStruct($node->tagName) && $node->hasAttribute('extend')) {
-                    $extend = basename($node->getAttribute('extend'));
-                    $node->setAttribute('name', $extend);
+            //使用了define
+            if (false !== strpos($node->nodeName, '.')) {
+                $tmp_path = explode('.', $node->nodeName);
+                $item_name = array_pop($tmp_path);
+                $this->checkName($item_name);
+                //如果只有一项， 并且就是当前的文件名
+                if (1 === count($tmp_path) && $this->file_name === $tmp_path[0]) {
+                    $ns = $this->namespace;
                 } else {
-                    throw new Exception('Attribute `name` required!');
+                    $ns = '/' . join('/', $tmp_path);
+                    self::addExtend($ns, $model_node->C14N());
                 }
+                $item = new Item(Item::TYPE_DEFINE, $node, $this->namespace);
+                $item->setUseNs($ns);
+            } else {
+                /** @var \DOMElement $node */
+                if (!$node->hasAttribute('name')) {
+                    //如果 是struct 并且指定了 extend, 就不需要名字
+                    if ($this->isStruct($node->tagName) && $node->hasAttribute('extend')) {
+                        $extend = basename($node->getAttribute('extend'));
+                        $node->setAttribute('name', $extend);
+                    } else {
+                        throw new Exception('Attribute `name` required!');
+                    }
+                }
+                $item_name = trim($node->getAttribute('name'));
+                $this->checkName($item_name);
+                if (isset($item_arr[$item_name])) {
+                    throw new Exception('Item name:' . $item_name . ' 已经存在');
+                }
+                $item = $this->makeItem($item_name, $node);
             }
-            $item_name = trim($node->getAttribute('name'));
-            $this->checkName($item_name);
-            if (isset($item_arr[$item_name])) {
-                throw new Exception('Item name:' . $item_name . ' 已经存在');
-            }
-            $camel_name = UisStr::camelName($item_name);
+            $camel_name = $this->protocol->fixItemName($item_name);
             if (isset($name_conflict[$camel_name])) {
                 throw new Exception('Item name 驼峰命名:' . $camel_name . ' 冲突');
             }
             $name_conflict[$camel_name] = true;
-            $item = $this->makeItem($item_name, $node);
             $item_arr[$item_name] = $item;
             Exception::popStack();
         }
@@ -747,6 +770,6 @@ class File
      */
     private function traceInfo($node)
     {
-        return 'File:' . $this->file_name . ' Line ' . $node->getLineNo() . PHP_EOL . $node->C14N() . PHP_EOL;
+        return 'File:' . $this->full_name . ' Line ' . $node->getLineNo() . PHP_EOL . $node->C14N() . PHP_EOL;
     }
 }

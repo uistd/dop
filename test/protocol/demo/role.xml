@@ -72,9 +72,7 @@
     </model>
     <action name="get_demo_role" packer-extra="binary">
         <request uri="/cda/aaa/bbb/{role_id}" method="put">
-            <int name="role_id">
-                <valid  require="1" require-msg="role_id参数不可为空" range="1, 1000" range-msg="role_id必须在1-1000范围"/>
-            </int>
+            <role.role_id/>
         </request>
         <response extend="/api/result">
             <model name="data" extend="role_info"/>

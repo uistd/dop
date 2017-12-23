@@ -9,6 +9,11 @@ namespace UiStd\Dop\Schema;
 class Item extends Node
 {
     /**
+     * define类型
+     */
+    const TYPE_DEFINE = 0xff;
+
+    /**
      * @var int
      */
     private $type;
@@ -32,6 +37,11 @@ class Item extends Node
      * @var string
      */
     private $doc;
+
+    /**
+     * @var string 如果 是define类型，使用的namespace
+     */
+    private $use_ns;
 
     /**
      * Node constructor.
@@ -70,6 +80,23 @@ class Item extends Node
     public function getType()
     {
         return $this->type;
+    }
+
+    /**
+     * @param string $ns
+     */
+    public function setUseNs($ns)
+    {
+        $this->use_ns = $ns;
+    }
+
+    /**
+     * 获取使用的ns
+     * @return string
+     */
+    public function getUseNs()
+    {
+        return $this->use_ns;
     }
 
     /**
