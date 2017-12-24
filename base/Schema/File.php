@@ -15,6 +15,9 @@ use UiStd\Common\Str as UisStr;
  */
 class File
 {
+
+    const PLUGIN_VALID = 'valid';
+
     /**
      * @var Manager;
      */
@@ -415,6 +418,17 @@ class File
                 }
                 $item = new Item(Item::TYPE_DEFINE, $node, $this->namespace);
                 $item->setUseNs($ns);
+                //如果有设置note
+                if ($node->getAttribute('note')) {
+                    $item->set('note', $node->getAttribute('note'));
+                }
+                //是否是必须
+                if ($node->getAttribute('require')) {
+                    $is_require = (int)$node->getAttribute('require');
+                    $plugin = new Plugin(self::PLUGIN_VALID, $node);
+                    $plugin->set('require', $is_require);
+                    $item->addPlugin(self::PLUGIN_VALID, $plugin);
+                }
             } else {
                 /** @var \DOMElement $node */
                 if (!$node->hasAttribute('name')) {

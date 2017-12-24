@@ -204,8 +204,9 @@ class Protocol
         foreach ($item_list as $original_name => $item_schema) {
             $item_name = $this->fixItemName($original_name);
             //如果是define
-            if (Item::TYPE_DEFINE === $item_schema->getType()) {
-                $item_schema = $this->getDefine($item_schema->getUseNs(), $original_name);
+            $schema_type = $item_schema->getType();
+            if (Item::TYPE_DEFINE === $schema_type) {
+                $item_schema = $this->convertDefineItem($item_schema, $original_name);
             }
             $item = $this->makeItemObject($item_name, $item_schema);
             $item_weight = 0;
@@ -311,6 +312,36 @@ class Protocol
         }
         Exception::popStack();
         return $struct_obj;
+    }
+
+    /**
+     * define item 转换
+     * @param Item $item_schema
+     * @param string $original_name
+     * @return Item
+     */
+    private function convertDefineItem($item_schema, $original_name)
+    {
+        $note = $item_schema->get('note');
+        $plugin = $item_schema->getPlugin(File::PLUGIN_VALID);
+        $item_schema = $this->getDefine($item_schema->getUseNs(), $original_name);
+        //如果有自定义的note和valid
+        if ($note || $plugin) {
+            $new_item_schema = clone $item_schema;
+            if ($note) {
+                $new_item_schema->set('note', $note);
+            }
+            if ($plugin) {
+                $tmp_plugin = $new_item_schema->getPlugin(File::PLUGIN_VALID);
+                if ($tmp_plugin) {
+                    $tmp_plugin->set('require', $plugin->get('require'));
+                } else {
+                    $new_item_schema->addPlugin(File::PLUGIN_VALID, $plugin);
+                }
+            }
+            $item_schema = $new_item_schema;
+        }
+        return $item_schema;
     }
 
     /**
@@ -554,7 +585,7 @@ class Protocol
     /**
      * 加入define
      * @param string $namespace
-     * @param \UiStd\Dop\Protocol\Item[] $item_arr
+     * @param ProtocolItem[] $item_arr
      */
     public function addDefine($namespace, $item_arr)
     {
@@ -565,7 +596,7 @@ class Protocol
      * 获取define
      * @param string $namespace
      * @param string $name
-     * @return \UiStd\Dop\Protocol\Item
+     * @return Item
      * @throws Exception
      */
     public function getDefine($namespace, $name)

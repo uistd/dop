@@ -61,6 +61,16 @@ class Node
     }
 
     /**
+     * 设置值
+     * @param string $attr_name
+     * @param string $value
+     */
+    public function set($attr_name, $value)
+    {
+        $this->attributes[$attr_name] = $value;
+    }
+
+    /**
      * 读取一个bool值
      * @param string $name
      * @param bool $default 默认值

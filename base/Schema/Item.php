@@ -132,6 +132,16 @@ class Item extends Node
     }
 
     /**
+     * 获取某个Plugin
+     * @param string $plugin_name
+     * @return Plugin|null
+     */
+    public function getPlugin($plugin_name)
+    {
+        return isset($this->plugin_list[$plugin_name]) ? $this->plugin_list[$plugin_name] : null;
+    }
+
+    /**
      * @return string
      */
     public function getDoc()

@@ -58,7 +58,7 @@
         <list name="list">
             <string/>
         </list>
-        <demo.role.role_id/>
+        <demo.role.role_id valid="1" note="测试自定义note"/>
         <map name="map"><int/><string/></map>
     </data>
 </protocol>
