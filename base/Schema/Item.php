@@ -41,7 +41,7 @@ class Item extends Node
     /**
      * @var string 如果 是define类型，使用的namespace
      */
-    private $use_ns;
+    private $use_define;
 
     /**
      * Node constructor.
@@ -83,20 +83,20 @@ class Item extends Node
     }
 
     /**
-     * @param string $ns
+     * @param string $define_item
      */
-    public function setUseNs($ns)
+    public function setUseDefine($define_item)
     {
-        $this->use_ns = $ns;
+        $this->use_define = $define_item;
     }
 
     /**
      * 获取使用的ns
      * @return string
      */
-    public function getUseNs()
+    public function getUseDefine()
     {
-        return $this->use_ns;
+        return $this->use_define;
     }
 
     /**

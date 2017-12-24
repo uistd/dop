@@ -206,7 +206,7 @@ class Protocol
             //如果是define
             $schema_type = $item_schema->getType();
             if (Item::TYPE_DEFINE === $schema_type) {
-                $item_schema = $this->convertDefineItem($item_schema, $original_name);
+                $item_schema = $this->convertDefineItem($item_schema);
             }
             $item = $this->makeItemObject($item_name, $item_schema);
             $item_weight = 0;
@@ -317,16 +317,16 @@ class Protocol
     /**
      * define item 转换
      * @param Item $item_schema
-     * @param string $original_name
      * @return Item
      */
-    private function convertDefineItem($item_schema, $original_name)
+    private function convertDefineItem($item_schema)
     {
         $note = $item_schema->get('note');
         $plugin = $item_schema->getPlugin(File::PLUGIN_VALID);
-        $item_schema = $this->getDefine($item_schema->getUseNs(), $original_name);
-        //如果有自定义的note和valid
-        if ($note || $plugin) {
+        $name = $item_schema->get('name');
+        $item_schema = $this->getDefine($item_schema->getUseDefine());
+        //如果有自定义的note 或者 valid 或者 name
+        if ($note || $plugin || $name) {
             $new_item_schema = clone $item_schema;
             if ($note) {
                 $new_item_schema->set('note', $note);
@@ -334,12 +334,18 @@ class Protocol
             if ($plugin) {
                 $tmp_plugin = $new_item_schema->getPlugin(File::PLUGIN_VALID);
                 if ($tmp_plugin) {
+                    $tmp_plugin = clone $tmp_plugin;
                     $tmp_plugin->set('require', $plugin->get('require'));
+                    $new_item_schema->addPlugin(File::PLUGIN_VALID, $tmp_plugin);
                 } else {
                     $new_item_schema->addPlugin(File::PLUGIN_VALID, $plugin);
                 }
             }
+            if ($name) {
+                $new_item_schema->set('name', $name);
+            }
             $item_schema = $new_item_schema;
+            print_r($item_schema);
         }
         return $item_schema;
     }
@@ -594,13 +600,14 @@ class Protocol
 
     /**
      * 获取define
-     * @param string $namespace
-     * @param string $name
+     * @param string $use_define
      * @return Item
      * @throws Exception
      */
-    public function getDefine($namespace, $name)
+    public function getDefine($use_define)
     {
+        $namespace = dirname($use_define);
+        $name = basename($use_define);
         if (!isset($this->define_list[$namespace][$name])) {
             throw new Exception('define `' . $name . '`not found in ' . $namespace);
         }

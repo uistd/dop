@@ -407,17 +407,22 @@ class File
             //使用了define
             if (false !== strpos($node->nodeName, '.')) {
                 $tmp_path = explode('.', $node->nodeName);
-                $item_name = array_pop($tmp_path);
-                $this->checkName($item_name);
-                //如果只有一项， 并且就是当前的文件名
-                if (1 === count($tmp_path) && $this->file_name === $tmp_path[0]) {
-                    $ns = $this->namespace;
+                $path_len = count($tmp_path);
+                //如果只有两项， 并且第一项就是当前的文件名
+                if (2 === $path_len && $this->file_name === $tmp_path[0]) {
+                    $use_define = $this->namespace . '/' . $tmp_path[1];
                 } else {
-                    $ns = '/' . join('/', $tmp_path);
-                    self::addExtend($ns . '/' . $item_name, $model_node->C14N());
+                    $use_define = '/' . join('/', $tmp_path);
+                    self::addExtend($use_define, $model_node->C14N());
                 }
                 $item = new Item(Item::TYPE_DEFINE, $node, $this->namespace);
-                $item->setUseNs($ns);
+                $item->setUseDefine($use_define);
+                $item_name = $tmp_path[$path_len - 1];
+                //如果有name属性
+                if ($node->getAttribute('name')) {
+                    $item_name = $node->getAttribute('name');
+                }
+                $this->checkName($item_name);
                 //如果有设置note
                 if ($node->getAttribute('note')) {
                     $item->set('note', $node->getAttribute('note'));

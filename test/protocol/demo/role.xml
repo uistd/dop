@@ -84,6 +84,7 @@
                 <valid require="1" error-msg="role_ids参数错误" format="mobile"/>
                 <mock enum="10,20|30,35"/>
             </string>
+            <role.role_id name="host_role_id"/>
         </request>
         <response extend="/api/result">
             <list name="data">
