@@ -240,22 +240,22 @@ class PhpValidCoder extends PluginCoderBase
         $key = $byte . '_';
         $key .= $item->isUnsigned() ? '1' : '0';
         $min_map = array(
-            '1_0' => '-0x80',
+            '1_0' => -128,
             '1_1' => 0,
-            '2_0' => '-0x8000',
+            '2_0' => -32768,
             '2_1' => 0,
-            '4_0' => '-0x80000000',
+            '4_0' => -2147483648,
             '4_1' => 0,
-            '8_0' => '-0x7fffffffffffffff'
+            '8_0' => -9223372036854775807
         );
         $max_map = array(
-            '1_0' => '0x7f',
-            '1_1' => '0xff',
-            '2_0' => '0x7fff',
-            '2_1' => '0xffff',
-            '4_0' => '0x7fffffff',
-            '4_1' => '0xffffffff',
-            '8_0' => '0x7fffffffffffffff'
+            '1_0' => 127,
+            '1_1' => 244,
+            '2_0' => 32767,
+            '2_1' => 65535,
+            '4_0' => 2147483647,
+            '4_1' => 4294967295,
+            '8_0' => 9223372036854775807
         );
         if (!isset($max_map[$key])) {
             return $rule;
@@ -263,13 +263,13 @@ class PhpValidCoder extends PluginCoderBase
         if (null === $rule) {
             $rule = new ValidRule();
         }
-        $min_value = hexdec($min_map[$key]);
-        $max_value = hexdec($max_map[$key]);
+        $min_value = $min_map[$key];
+        $max_value = $max_map[$key];
         if (null === $rule->min_value || $rule->min_value < $min_value) {
-            $rule->min_value = $min_map[$key];
+            $rule->min_value = $min_value;
         }
         if (null === $rule->max_value || $rule->max_value > $max_value) {
-            $rule->max_value = $max_map[$key];
+            $rule->max_value = $max_value;
         }
         if (null === $rule->range_msg) {
             $rule->range_msg = 'Invalid integer range of `'. $item->getName() .'`.';

@@ -345,7 +345,6 @@ class Protocol
                 $new_item_schema->set('name', $name);
             }
             $item_schema = $new_item_schema;
-            print_r($item_schema);
         }
         return $item_schema;
     }
