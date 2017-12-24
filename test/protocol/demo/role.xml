@@ -133,6 +133,7 @@
         <request></request>
         <response extend="/api/result">
             <int name="re_code"/>
+            <role.role_id/>
         </response>
     </action>
     <action name="put_demo_role">

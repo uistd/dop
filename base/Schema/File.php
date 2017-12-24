@@ -411,7 +411,7 @@ class File
                     $ns = $this->namespace;
                 } else {
                     $ns = '/' . join('/', $tmp_path);
-                    self::addExtend($ns, $model_node->C14N());
+                    self::addExtend($ns . '/' . $item_name, $model_node->C14N());
                 }
                 $item = new Item(Item::TYPE_DEFINE, $node, $this->namespace);
                 $item->setUseNs($ns);

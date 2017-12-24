@@ -58,6 +58,7 @@
         <list name="list">
             <string/>
         </list>
+        <demo.role.role_id/>
         <map name="map"><int/><string/></map>
     </data>
 </protocol>
